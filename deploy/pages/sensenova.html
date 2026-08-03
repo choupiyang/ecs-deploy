@@ -1,175 +1,747 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>SenseNova-Vision — 统一多模态视觉生成</title>
-<style>
-:root{--bg:#E5E1D6;--text:#111817;--accent:#C8FF00;--func:#7F8270;--card-w:min(360px,92vw);--card-h:calc(var(--card-w)*16/9)}
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#0a0a1a;color:#fff;font-family:PingFang SC,Microsoft YaHei,system-ui,-apple-system,sans-serif;line-height:1.7;min-height:100vh;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;align-items:center}
-canvas#bg3d{position:fixed;inset:0;z-index:0;pointer-events:none}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0A0A1A">
+  <title>SenseNova-Vision — 统一多模态视觉生成</title>
+  <link rel="preconnect" href="https://fonts.googleapis.cn">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.cn/css2?family=Cormorant+Garamond:ital@0;1&family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0A0A1A;
+      --bg-2: #0F0F22;
+      --accent: #4ADE80;
+      --accent-light: #86EFAC;
+      --accent-blue: #38BDF8;
+      --text: #F0F0F0;
+      --muted: #6B7280;
+      --surface: #1A1A30;
+      --border: #2A2A45;
+      --glow: #4ADE80;
+      --serif: 'Cormorant Garamond', serif;
+      --cn: 'Noto Serif SC', serif;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Noto Sans SC', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-/* 卡片容器 - 9:16 fixed */
-.card-wrap{position:relative;z-index:1;width:var(--card-w);margin:24px auto 0;perspective:1200px}
-.card-916{position:relative;width:100%;height:var(--card-h);background:var(--bg);color:var(--text);border-radius:8px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+    .stage {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 0 16px 80px;
+      position: relative;
+      z-index: 1;
+    }
 
-/* 封面区 - 深色背景+SVG+标题 */
-.cover-area{height:45%;background:linear-gradient(135deg,#1a1a2e,#0f3460);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
-.cover-area svg{position:absolute;inset:0;width:100%;height:100%;opacity:.4}
-.cover-title{position:relative;z-index:2;text-align:center;color:#c8ff00}
-.cover-title h1{font-size:clamp(20px,5vw,32px);font-weight:900;letter-spacing:-.04em;text-shadow:0 0 20px rgba(200,255,0,.3)}
-.cover-title p{font-size:clamp(10px,2.5vw,13px);color:rgba(200,255,0,.7);margin-top:4px;letter-spacing:.5px}
+    /* Reveal animations */
+    .reveal { opacity: 0; transform: translateY(20px); transition: opacity .7s, transform .7s cubic-bezier(.16,1,.3,1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
 
-/* 内容区 */
-.content-area{padding:16px 18px;height:55%;overflow-y:auto;background:var(--bg)}
-.content-area::-webkit-scrollbar{width:3px}
-.content-area::-webkit-scrollbar-thumb{background:var(--accent);border-radius:2px}
+    /* Top Bar */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 0 8px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .brand-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+    }
+    .back-link {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      transition: color .2s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .back-link:hover { color: var(--text); }
 
-.meta{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px}
-.meta span{padding:2px 8px;border-radius:3px;font-size:11px;font-weight:600;background:rgba(200,255,0,.12);color:var(--text)}
-.meta span.org{background:var(--text);color:var(--bg)}
+    /* Hero */
+    .hero {
+      padding: 24px 0 16px;
+      text-align: center;
+    }
+    .hero-svg {
+      width: 100%;
+      max-width: 280px;
+      margin: 0 auto 20px;
+      aspect-ratio: 1;
+      position: relative;
+    }
+    .hero-svg svg {
+      width: 100%;
+      height: 100%;
+    }
+    .meta-row {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .meta-pill {
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 500;
+      background: var(--surface);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .meta-pill.accent {
+      background: rgba(74, 222, 128, 0.08);
+      color: var(--accent);
+      border-color: rgba(74, 222, 128, 0.2);
+    }
+    .title-block {
+      margin-bottom: 4px;
+    }
+    .title-text {
+      font-family: var(--serif);
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      color: var(--text);
+      line-height: 1.15;
+    }
+    .title-text .accent { color: var(--accent); }
+    .superdesign-line {
+      width: 40px; height: 2px;
+      background: var(--accent);
+      margin: 10px auto;
+      border-radius: 1px;
+    }
+    .tagline {
+      font-family: var(--cn);
+      font-size: 14px;
+      color: var(--muted);
+      margin-top: 4px;
+      line-height: 1.5;
+    }
 
-.desc{font-size:13px;line-height:1.6;color:#2a2f2a;margin-bottom:10px}
-.desc strong{color:var(--text)}
+    /* Intro */
+    .intro { padding: 8px 0 20px; }
+    .intro-inner {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .intro-line {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 6px;
+    }
+    .intro-text {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+    .intro-text strong { color: var(--text); }
 
-.bench-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
-.bench-item{background:rgba(200,255,0,.06);border:1px solid rgba(200,255,0,.12);border-radius:4px;padding:8px 10px;font-size:11px}
-.bench-item .num{display:block;font-size:16px;font-weight:900;color:var(--accent);letter-spacing:-.04em}
-.bench-item .label{color:var(--func);font-size:10px;margin-top:2px}
+    /* Stats */
+    .stats-section { padding: 0 0 20px; }
+    .stats-header {
+      font-family: var(--serif);
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 14px;
+      color: var(--text);
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--accent);
+      opacity: .4;
+    }
+    .stat-num {
+      font-family: var(--serif);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+      margin-bottom: 2px;
+    }
+    .stat-num .accent { color: var(--accent); }
+    .stat-label {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 500;
+    }
 
-.links{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
-.links a{display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border-radius:4px;font-size:12px;font-weight:700;text-decoration:none;transition:.2s;background:var(--text);color:var(--bg)}
-.links a:hover{background:var(--accent);color:var(--text)}
+    /* Features */
+    .features { padding: 0 0 20px; }
+    .features-header {
+      font-family: var(--serif);
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+    }
+    .feature:active { background: #222240; }
+    .feature-icon {
+      width: 36px; height: 36px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      background: rgba(74, 222, 128, .08);
+    }
+    .feature-icon svg { width: 18px; height: 18px; stroke: var(--accent); fill: none; stroke-width: 1.8; }
+    .feature-content { flex: 1; min-width: 0; }
+    .feature-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 1px;
+    }
+    .feature-desc {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .feature-arrow {
+      color: var(--muted);
+      font-size: 14px;
+      flex-shrink: 0;
+    }
 
-.back{display:inline-flex;align-items:center;gap:4px;margin:8px 0 16px;color:var(--func);text-decoration:none;font-size:12px;position:relative;z-index:1}
-.back:hover{color:var(--accent)}
+    /* Tech */
+    .tech-section { padding: 0 0 20px; }
+    .tech-header {
+      font-family: var(--serif);
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+    .tech-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .tech-pill {
+      padding: 5px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      background: var(--surface);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .tech-pill.accent {
+      background: rgba(74, 222, 128, 0.08);
+      color: var(--accent);
+      border-color: rgba(74, 222, 128, 0.2);
+    }
+    .tech-pill.blue {
+      background: rgba(56, 189, 248, .08);
+      color: var(--accent-blue);
+      border-color: rgba(56, 189, 248, .2);
+    }
 
-@media(max-width:400px){.bench-grid{grid-template-columns:1fr}.card-wrap{margin:12px auto 0}.content-area{padding:12px 14px}}
-</style>
+    /* Bottom Bar */
+    .bottombar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-top: 1px solid var(--border);
+      margin-top: 8px;
+    }
+    .github-link {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      transition: color .2s;
+    }
+    .github-link:hover { color: var(--text); }
+    .github-link svg { width: 16px; height: 16px; fill: currentColor; }
+    .visit-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 16px;
+      border-radius: 6px;
+      background: var(--accent);
+      color: var(--bg);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .02em;
+      transition: opacity .2s;
+    }
+    .visit-btn:hover { opacity: .85; }
+
+    /* Overlay / Sheet */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(0,0,0,.6);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s;
+      backdrop-filter: blur(4px);
+    }
+    .overlay.open { opacity: 1; pointer-events: auto; }
+    .sheet {
+      position: fixed;
+      bottom: 0;
+      left: 0; right: 0;
+      z-index: 101;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-radius: 16px 16px 0 0;
+      padding: 24px 20px 32px;
+      transform: translateY(100%);
+      transition: transform .4s cubic-bezier(.16,1,.3,1);
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    .sheet.open { transform: translateY(0); }
+    .sheet-handle {
+      width: 36px; height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 0 auto 16px;
+    }
+    .sheet-title {
+      font-family: var(--serif);
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .sheet-desc {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+    .sheet-point {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 10px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .sheet-point::before {
+      content: '▸';
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+    .sheet-close {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin-top: 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color .2s, color .2s;
+    }
+    .sheet-close:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 20px;
+      font-size: 13px;
+      color: var(--text);
+      opacity: 0;
+      transition: opacity .3s, transform .3s;
+      z-index: 200;
+      backdrop-filter: blur(8px);
+      white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @keyframes pulse { 0%,100% { opacity: .6; } 50% { opacity: 1; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
 </head>
 <body>
-<a class="back" href="/youngsinsight/">← 返回首页</a>
-<div class="card-wrap">
-<div class="card-916">
-  <div class="cover-area">
-    <svg viewBox="0 0 360 180" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#c8ff00" stop-opacity=".3"/><stop offset="100%" stop-color="#00e5ff" stop-opacity=".1"/></linearGradient>
-      </defs>
-      <!-- Grid pattern -->
-      <g stroke="#c8ff00" stroke-width=".3" opacity=".15">
-        <line x1="0" y1="40" x2="360" y2="40"/><line x1="0" y1="60" x2="360" y2="60"/>
-        <line x1="0" y1="80" x2="360" y2="80"/><line x1="0" y1="100" x2="360" y2="100"/>
-        <line x1="0" y1="120" x2="360" y2="120"/>
-        <line x1="60" y1="30" x2="60" y2="140"/><line x1="120" y1="30" x2="120" y2="140"/>
-        <line x1="180" y1="30" x2="180" y2="140"/><line x1="240" y1="30" x2="240" y2="140"/>
-        <line x1="300" y1="30" x2="300" y2="140"/>
-      </g>
-      <!-- Wireframe camera/lens -->
-      <g transform="translate(180,75)" stroke="#c8ff00" fill="none" stroke-width="1.8" opacity=".8">
-        <rect x="-35" y="-22" width="70" height="44" rx="6"/>
-        <circle cx="0" cy="0" r="14"/><circle cx="0" cy="0" r="7" opacity=".5"/><circle cx="0" cy="0" r="2.5" fill="#c8ff00" opacity=".7"/>
-        <rect x="22" y="-18" width="7" height="5" rx="1"/>
-      </g>
-      <!-- Neural net lines -->
-      <g opacity=".35" stroke="#00e5ff" stroke-width=".6">
-        <circle cx="50" cy="40" r="2.5" fill="#c8ff00"/><circle cx="310" cy="40" r="2.5" fill="#c8ff00"/>
-        <circle cx="40" cy="100" r="2" fill="#c8ff00"/><circle cx="320" cy="100" r="2" fill="#c8ff00"/>
-        <line x1="50" y1="40" x2="310" y2="40" opacity=".2"/><line x1="40" y1="100" x2="320" y2="100" opacity=".2"/>
-      </g>
-      <!-- Code-like wave -->
-      <g transform="translate(30,130)" opacity=".25" fill="none" stroke="#c8ff00" stroke-width=".8">
-        <polyline points="0,0 40,-8 80,4 120,-12 160,2 200,-6 240,8 280,-4 310,6"/>
-        <polyline points="0,8 40,0 80,12 120,-4 160,10 200,2 240,16 280,4 310,14" opacity=".12" stroke="#00e5ff"/>
-      </g>
-    </svg>
-    <div class="cover-title">
-      <h1>SenseNova-Vision</h1>
-      <p>7B · MoT · Unified Vision</p>
+  <!-- 3D Background -->
+  <div id="vision-3d" style="position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden"></div>
+
+  <div class="stage">
+    <!-- Top Bar -->
+    <div class="topbar reveal">
+      <a href="/youngsinsight/" class="brand">
+        <span class="brand-dot"></span>
+        Info Cards
+      </a>
+      <a href="/youngsinsight/" class="back-link">← Back</a>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero reveal">
+      <div class="hero-svg">
+        <svg viewBox="0 0 280 280" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4ade80" stop-opacity=".15"/><stop offset="100%" stop-color="#0a0a1a" stop-opacity="0"/></linearGradient>
+          </defs>
+          <rect x="10" y="10" width="260" height="260" rx="8" fill="url(#sg)" stroke="#2a2a45" stroke-width=".5"/>
+          <!-- Grid -->
+          <g stroke="#4ade80" stroke-width=".3" opacity=".08">
+            <line x1="30" y1="60" x2="30" y2="220"/><line x1="80" y1="60" x2="80" y2="220"/>
+            <line x1="130" y1="60" x2="130" y2="220"/><line x1="180" y1="60" x2="180" y2="220"/><line x1="230" y1="60" x2="230" y2="220"/>
+            <line x1="30" y1="80" x2="250" y2="80"/><line x1="30" y1="110" x2="250" y2="110"/>
+            <line x1="30" y1="140" x2="250" y2="140"/><line x1="30" y1="170" x2="250" y2="170"/><line x1="30" y1="200" x2="250" y2="200"/>
+          </g>
+          <!-- Camera/lens wireframe -->
+          <g transform="translate(140,120)" stroke="#4ade80" fill="none" stroke-width="1.5" opacity=".8">
+            <rect x="-40" y="-28" width="80" height="56" rx="6"/>
+            <circle cx="0" cy="0" r="17" opacity=".9"/><circle cx="0" cy="0" r="9" opacity=".4"/>
+            <circle cx="0" cy="0" r="3" fill="#4ade80" opacity=".6"/>
+            <rect x="28" y="-20" width="8" height="5" rx="1.5"/>
+          </g>
+          <!-- Neural connections -->
+          <g opacity=".25" stroke="#38bdf8" stroke-width=".5">
+            <circle cx="50" cy="80" r="2.5" fill="#4ade80"/>
+            <circle cx="230" cy="80" r="2.5" fill="#4ade80"/>
+            <circle cx="50" cy="190" r="2" fill="#4ade80"/>
+            <circle cx="230" cy="190" r="2" fill="#4ade80"/>
+            <line x1="50" y1="80" x2="230" y2="80" opacity=".15"/>
+            <line x1="50" y1="190" x2="230" y2="190" opacity=".15"/>
+          </g>
+          <!-- Waveform -->
+          <g transform="translate(30,230)" opacity=".15" fill="none" stroke="#4ade80" stroke-width=".6">
+            <polyline points="0,0 25,-6 50,3 75,-10 100,2 125,-5 150,7 175,-3 200,5 225,-4 240,6"/>
+          </g>
+          <!-- Segmentation mask hint -->
+          <g transform="translate(140,165)" opacity=".15" stroke="#38bdf8" stroke-width=".3" fill="none">
+            <rect x="-40" y="-20" width="80" height="40" rx="3"/>
+            <ellipse cx="0" cy="0" rx="20" ry="10" opacity=".3"/>
+          </g>
+        </svg>
+      </div>
+      <div class="meta-row">
+        <span class="meta-pill accent">商汤科技</span>
+        <span class="meta-pill">7B</span>
+        <span class="meta-pill">MoT</span>
+        <span class="meta-pill">CC BY-NC 4.0</span>
+      </div>
+      <div class="title-block">
+        <div class="title-text">SenseNova-<span class="accent">Vision</span></div>
+        <div class="superdesign-line"></div>
+        <div class="tagline">把一切 CV 任务统一成图像生成——不做检测头、不做分割解码器、不做深度分支。</div>
+      </div>
+    </div>
+
+    <!-- Intro -->
+    <div class="intro reveal">
+      <div class="intro-inner">
+        <div class="intro-line">Unified Multimodal Generation</div>
+        <div class="intro-text">
+          <strong>SenseNova-Vision</strong> 是商汤团队提出的统一多模态视觉生成模型。将物体检测、语义分割、深度估计、法线估计、OCR、姿态估计等 CV 任务统一为 UMM（Unified Masked Modeling）框架下的文本+图像生成任务。7B 参数量，MoT（Multi-modal Tokenizer）架构，是第一个纯生成式统一视觉 foundation model。
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats / Benchmarks -->
+    <div class="stats-section reveal">
+      <div class="stats-header">Benchmarks</div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-num"><span class="accent">56.6</span></div><div class="stat-label">COCO 检测 mAP</div></div>
+        <div class="stat-card"><div class="stat-num"><span class="accent">54.8</span></div><div class="stat-label">LVIS 长尾检测</div></div>
+        <div class="stat-card"><div class="stat-num"><span class="accent">66.8</span></div><div class="stat-label">Dense200 密集检测</div></div>
+        <div class="stat-card"><div class="stat-num"><span class="accent">49.5</span></div><div class="stat-label">ICDAR15 OCR</div></div>
+        <div class="stat-card"><div class="stat-num"><span class="accent">98.1</span></div><div class="stat-label">NYUv2 深度 δ↑</div></div>
+        <div class="stat-card"><div class="stat-num"><span class="accent">68.9</span></div><div class="stat-label">ScanNet 法线 11.25°↑</div></div>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <div class="features reveal">
+      <div class="features-header">Architecture</div>
+      <div class="feature" data-f="0">
+        <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+        <div class="feature-content">
+          <div class="feature-title">UMM 统一框架</div>
+          <div class="feature-desc">All CV tasks as generation</div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="1">
+        <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <div class="feature-content">
+          <div class="feature-title">MoT 多模态分词器</div>
+          <div class="feature-desc">Multi-modal Tokenizer</div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="2">
+        <div class="feature-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6"/></svg></div>
+        <div class="feature-content">
+          <div class="feature-title">无检测头/分割解码器</div>
+          <div class="feature-desc">Pure generative paradigm</div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="3">
+        <div class="feature-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg></div>
+        <div class="feature-content">
+          <div class="feature-title">跨任务</div>
+          <div class="feature-desc">Detection / Seg / Depth / OCR / Pose</div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+    </div>
+
+    <!-- Tech Stack -->
+    <div class="tech-section reveal">
+      <div class="tech-header">Tech Stack</div>
+      <div class="tech-pills">
+        <span class="tech-pill accent">UMM</span>
+        <span class="tech-pill accent">MoT</span>
+        <span class="tech-pill">Transformers</span>
+        <span class="tech-pill blue">ViT</span>
+        <span class="tech-pill">VQGAN</span>
+        <span class="tech-pill">7B</span>
+      </div>
+    </div>
+
+    <!-- Bottom Bar -->
+    <div class="bottombar reveal">
+      <a href="https://github.com/OpenSenseNova/SenseNova-Vision" target="_blank" class="github-link">
+        <svg viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        OpenSenseNova/Vision
+      </a>
+      <a href="https://modelscope.cn/models/SenseNova/SenseNova-Vision-7B-MoT" target="_blank" class="visit-btn">ModelScope →</a>
     </div>
   </div>
-  <div class="content-area">
-    <div class="meta">
-      <span class="org">商汤科技</span>
-      <span>7B</span>
-      <span>MoT</span>
-      <span>CC BY-NC 4.0</span>
-    </div>
-    <div class="desc">
-      <strong>统一多模态视觉生成模型</strong>——把所有 CV 任务统一成 UMM 的文本+图像生成，不需要专用检测头/分割解码器/深度分支。
-    </div>
-    <div class="bench-grid">
-      <div class="bench-item"><span class="num">56.6</span><span class="label">COCO 检测 mAP</span></div>
-      <div class="bench-item"><span class="num">54.8</span><span class="label">LVIS 长尾检测</span></div>
-      <div class="bench-item"><span class="num">66.8</span><span class="label">Dense200 密集检测</span></div>
-      <div class="bench-item"><span class="num">49.5</span><span class="label">ICDAR15 OCR</span></div>
-      <div class="bench-item"><span class="num">98.1</span><span class="label">NYUv2 深度 δ1↑</span></div>
-      <div class="bench-item"><span class="num">68.9</span><span class="label">ScanNet 法线 11.25°↑</span></div>
-    </div>
-    <div class="links">
-      <a href="https://github.com/OpenSenseNova/SenseNova-Vision">GitHub</a>
-      <a href="https://modelscope.cn/models/SenseNova/SenseNova-Vision-7B-MoT">ModelScope</a>
-      <a href="https://arxiv.org/abs/2607.06560">arXiv</a>
+
+  <!-- Overlay -->
+  <div class="overlay" id="overlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" id="sheetTitle"></div>
+      <div class="sheet-desc" id="sheetDesc"></div>
+      <div class="sheet-points" id="sheetPoints"></div>
+      <button class="sheet-close" id="sheetClose">CLOSE</button>
     </div>
   </div>
-</div>
-</div>
 
-<script>
-// Simple 3D background with Three.js (async)
-(function(){
-  var c=document.createElement('script');
-  c.src='https://cdn.bootcdn.net/ajax/libs/three.js/r134/three.min.js';
-  c.onload=function(){
-    var canvas=document.createElement('canvas');
-    canvas.id='bg3d';
-    canvas.style.cssText='position:fixed;inset:0;z-index:0;pointer-events:none';
-    document.body.prepend(canvas);
-    
-    var scene=new THREE.Scene();
-    scene.fog=new THREE.Fog(0x0a0a1a,20,60);
-    var cam=new THREE.PerspectiveCamera(60,window.innerWidth/window.innerHeight,0.1,100);
-    cam.position.set(0,4,18);
-    cam.lookAt(0,0,0);
-    var renderer=new THREE.WebGLRenderer({canvas:canvas,alpha:true});
-    renderer.setSize(window.innerWidth,window.innerHeight);
-    renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
 
-    // Grid
-    var grid=new THREE.GridHelper(40,20,0x1a1a2e,0x1a1a2e);
-    grid.position.y=-2;scene.add(grid);
+  <script>
+    // Feature data
+    const features = [
+      {
+        title: 'UMM 统一框架',
+        desc: 'SenseNova-Vision 的核心创新——把所有 CV 任务统一成 UMM 框架下的文本+图像生成。不需要专用的检测头、分割解码器、深度分支。一个模型，一个框架，所有任务。',
+        points: ['统一 Masked Modeling 框架，视觉任务 = 图像生成', '物体检测：生成包含边界框的标注图像', '语义分割：生成分割 Mask 图像', '深度/法线/姿态估计：生成对应视觉特征图', 'OCR：生成框+文字的可视化输出']
+      },
+      {
+        title: 'MoT 多模态分词器',
+        desc: 'Multi-modal Tokenizer——统一多模态分词器，将图像和文本映射到共享的 token 空间。Visual tokens 和 text tokens 在同一序列中交错排列，实现真正的跨模态理解。',
+        points: ['图像 → VQGAN tokenizer 编码为 visual tokens', '文本 → BPE tokenizer 编码为 text tokens', '共享 token 序列，支持多模态自回归生成', 'Visual tokens 数量可调节（perceptual / dense 模式）']
+      },
+      {
+        title: '纯生成式范式',
+        desc: '没有检测头、没有分割解码器、没有深度估计头、没有额外的分类器。一切 CV 任务都被重新定义为 UMM 框架下的条件图像生成任务。训练和推理流程高度统一。',
+        points: ['零专用任务头——全部通过生成完成', '训练时：输入图像 + 任务文本 → 生成标注图像', '推理时：输入图像 + 任务提示 → 生成结果图像', '架构极度简洁，扩展性强']
+      },
+      {
+        title: '跨任务能力',
+        desc: '单个模型在多个视觉任务上达到或接近 SOTA。从通用检测（COCO/LVIS）到密集任务（Dense200），从底层视觉（深度/法线）到高层理解（OCR/姿态），全部覆盖。',
+        points: ['检测：COCO mAP 56.6', '分割：语义/实例/全景 Seg 统一处理', '深度/法线：NYUv2 深度 δ1=98.1%，ScanNet 法线 68.9%', 'OCR：ICDAR15 端到端识别 49.5', '姿态：人体关键点估计统一输出']
+      }
+    ];
 
-    // Floating particles
-    var pGeo=new THREE.BufferGeometry();
-    var pCount=200;
-    var pPos=new Float32Array(pCount*3);
-    for(var i=0;i<pCount*3;i++)pPos[i]=(Math.random()-0.5)*40;
-    pGeo.setAttribute('position',new THREE.BufferAttribute(pPos,3));
-    var pMat=new THREE.PointsMaterial({color:0x1a1a2e,size:0.08,transparent:true,opacity:0.6});
-    scene.add(new THREE.Points(pGeo,pMat));
+    // Feature click
+    document.querySelectorAll('.feature').forEach(el => {
+      el.addEventListener('click', function() {
+        const i = parseInt(this.dataset.f);
+        const f = features[i];
+        document.getElementById('sheetTitle').textContent = f.title;
+        document.getElementById('sheetDesc').textContent = f.desc;
+        document.getElementById('sheetPoints').innerHTML = f.points.map(p => '<div class="sheet-point">' + p + '</div>').join('');
+        document.getElementById('overlay').classList.add('open');
+        document.querySelector('.sheet').classList.add('open');
+      });
+    });
+
+    // Close overlay
+    document.getElementById('sheetClose').addEventListener('click', closeSheet);
+    document.getElementById('overlay').addEventListener('click', function(e) {
+      if (e.target === this) closeSheet();
+    });
+
+    function closeSheet() {
+      document.getElementById('overlay').classList.remove('open');
+      document.querySelector('.sheet').classList.remove('open');
+    }
+
+    // Toast
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    // Scroll reveal observer
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) e.target.classList.add('visible');
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    // Trigger initial visible
+    setTimeout(() => document.querySelectorAll('.reveal').forEach(el => {
+      if (el.getBoundingClientRect().top < window.innerHeight) el.classList.add('visible');
+    }), 100);
+  </script>
+
+  <!-- Three.js -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    const container = document.getElementById('vision-3d');
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0x0A0A1A, 25, 60);
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0, 3, 18);
+    camera.lookAt(0, 0, 0);
+
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    container.appendChild(renderer.domElement);
+
+    // Grid floor
+    const gridHelper = new THREE.GridHelper(30, 16, 0x1A1A30, 0x1A1A30);
+    gridHelper.position.y = -2;
+    scene.add(gridHelper);
+
+    // Wireframe camera model
+    const camGeo = new THREE.BoxGeometry(2.2, 1.6, 1.8);
+    const camMat = new THREE.MeshBasicMaterial({ color: 0x4ade80, wireframe: true, transparent: true, opacity: 0.25 });
+    const camMesh = new THREE.Mesh(camGeo, camMat);
+    camMesh.position.set(0, 0.8, 0);
+    scene.add(camMesh);
+
+    const lensGeo = new THREE.SphereGeometry(0.7, 12, 12);
+    const lensMat = new THREE.MeshBasicMaterial({ color: 0x4ade80, wireframe: true, transparent: true, opacity: 0.15 });
+    const lensMesh = new THREE.Mesh(lensGeo, lensMat);
+    lensMesh.position.set(0.6, 0.2, 1);
+    scene.add(lensMesh);
+
+    // Particles
+    const count = 300;
+    const pos = new Float32Array(count * 3);
+    for (let i = 0; i < count * 3; i++) pos[i] = (Math.random() - 0.5) * 40;
+    const pGeo = new THREE.BufferGeometry();
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const pMat = new THREE.PointsMaterial({ color: 0x4ade80, size: 0.06, transparent: true, opacity: 0.25 });
+    scene.add(new THREE.Points(pGeo, pMat));
 
     // Accent particles
-    var aMat=new THREE.PointsMaterial({color:0xc8ff00,size:0.06,transparent:true,opacity:0.3});
-    scene.add(new THREE.Points(pGeo.clone(),aMat));
+    const aMat = new THREE.PointsMaterial({ color: 0x38bdf8, size: 0.04, transparent: true, opacity: 0.15 });
+    scene.add(new THREE.Points(pGeo.clone(), aMat));
 
-    var t=0;
-    function animate(){
+    let t = 0;
+    function animate() {
       requestAnimationFrame(animate);
-      t+=0.005;
-      scene.rotation.y=Math.sin(t*0.05)*0.1;
-      renderer.render(scene,cam);
+      t += 0.003;
+      camMesh.rotation.y = Math.sin(t * 0.3) * 0.4;
+      camMesh.rotation.x = Math.sin(t * 0.2) * 0.1;
+      lensMesh.rotation.y = Math.sin(t * 0.3 + 0.5) * 0.4;
+      scene.rotation.y = Math.sin(t * 0.08) * 0.15;
+      renderer.render(scene, camera);
     }
     animate();
 
-    window.addEventListener('resize',function(){
-      cam.aspect=window.innerWidth/window.innerHeight;cam.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth,window.innerHeight);
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
     });
-  };
-  c.onerror=function(){};
-  document.head.appendChild(c);
-})();
-</script>
+  </script>
 </body>
 </html>
