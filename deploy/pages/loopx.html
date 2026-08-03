@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#050514">
+  <title>LoopX — Local Control Plane for Long-Running AI Agents</title>
+  <link rel="preconnect" href="https://fonts.googleapis.cn">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.cn/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Noto+Serif+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #050514;
+      --bg-2: #0D0D24;
+      --accent: #8B5CF6;
+      --accent-light: #A78BFA;
+      --cyan: #22D3EE;
+      --text: #F0F0F0;
+      --muted: #6B7280;
+      --success: #22C55E;
+      --warning: #F59E0B;
+      --surface: #16162E;
+      --glow: #8B5CF6;
+      --serif: 'Cormorant Garamond', serif;
+      --cn: 'Noto Serif SC', serif;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Noto Sans SC', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; background: #030309; font-family: 'Noto Sans SC', sans-serif; color: #F0F0F0; -webkit-font-smoothing: antialiased; }
+    body { display: flex; align-items: center; justify-content: center; }
+
+    /* 舞台 */
+    .stage {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      height: min(100vh, calc(100vw * 16 / 9));
+      width: min(100vw, calc(100vh * 9 / 16));
+      background: #050514;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,.6);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 16px 10px;
+    }
+
+    /* 背景光晕 */
+    .stage::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 75% 6%, rgba(139, 92, 246, .18) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 35% at 12% 50%, rgba(34, 211, 238, .08) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 50% 100%, rgba(76, 29, 149, .12) 0%, transparent 60%);
+    }
+
+    /* 网格纹理 */
+    .stage::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(rgba(240, 240, 240, .012) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(240, 240, 240, .012) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    /* 3D 轨道核心容器 */
+    .orbit-3d-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 180px;
+      z-index: 1;
+      pointer-events: none;
+    }
+    .orbit-3d-container canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* 顶部条 */
+    .topbar {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .16em;
+      color: #6B7280;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(240, 240, 240, .06);
+    }
+    .brand { display: flex; align-items: center; gap: 6px; color: #F0F0F0; }
+    .brand-dot { width: 5px; height: 5px; background: #8B5CF6; border-radius: 50%; box-shadow: 0 0 8px #8B5CF6; animation: pulse 2.2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .3; transform: scale(.6); } }
+    .share-btn {
+      background: none;
+      border: 1px solid rgba(240, 240, 240, .2);
+      padding: 4px 8px 3px;
+      font: inherit;
+      color: #F0F0F0;
+      cursor: pointer;
+      letter-spacing: .12em;
+      transition: all .3s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 7.5px;
+    }
+    .share-btn:active { background: #8B5CF6; color: #050514; border-color: #8B5CF6; }
+
+    /* Hero */
+    .hero { position: relative; z-index: 5; flex-shrink: 0; margin-top: 10px; }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #6B7280;
+      margin-bottom: 6px;
+    }
+    .vol { color: #22D3EE; }
+    .title-block { display: flex; align-items: flex-start; gap: 10px; }
+    .loopx-stamp {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(139, 92, 246, .6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 18px;
+      color: #A78BFA;
+      flex-shrink: 0;
+      cursor: pointer;
+      position: relative;
+      transition: all .4s cubic-bezier(.7, 0, .3, 1);
+      box-shadow: 0 0 18px rgba(139, 92, 246, .25) inset, 0 0 12px rgba(139, 92, 246, .15);
+    }
+    .loopx-stamp:active { transform: rotate(180deg) scale(.9); }
+    .loopx-stamp::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 1px dashed rgba(34, 211, 238, .35);
+      animation: spin 9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .title-text { min-width: 0; }
+    .loopx-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 34px;
+      font-weight: 600;
+      letter-spacing: -.02em;
+      line-height: 1;
+      color: #F0F0F0;
+    }
+    .loopx-title .dot { color: #8B5CF6; }
+    .superdesign-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 5px;
+    }
+    .superdesign {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .14em;
+      color: #9CA3AF;
+    }
+    .v-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      letter-spacing: .14em;
+      color: #22D3EE;
+      border: 1px solid rgba(34, 211, 238, .3);
+      padding: 1px 5px;
+      border-radius: 2px;
+      background: rgba(34, 211, 238, .06);
+    }
+    .tagline {
+      margin-top: 7px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 11px;
+      color: #D1D5DB;
+      line-height: 1.45;
+    }
+    .tagline em { color: #A78BFA; font-style: normal; font-weight: 500; }
+
+    /* Intro */
+    .intro { position: relative; z-index: 5; margin-top: 8px; flex-shrink: 0; }
+    .intro-inner { display: flex; gap: 9px; align-items: stretch; }
+    .intro-line { width: 2px; background: linear-gradient(180deg, #8B5CF6, #22D3EE); border-radius: 1px; flex-shrink: 0; }
+    .intro-text {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 9.5px;
+      line-height: 1.6;
+      color: #9CA3AF;
+    }
+    .intro-text strong { color: #F0F0F0; font-weight: 500; }
+
+    /* Stats */
+    .stats-section { position: relative; z-index: 5; margin-top: 10px; flex-shrink: 0; }
+    .stats-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .stats-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .18em;
+      color: #D1D5DB;
+    }
+    .stats-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      letter-spacing: .16em;
+      color: #22D3EE;
+      border: 1px solid rgba(34, 211, 238, .3);
+      padding: 1px 5px;
+      border-radius: 2px;
+    }
+    .stats-chart {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+    .stat-card {
+      background: rgba(240, 240, 240, .02);
+      border: 1px solid rgba(240, 240, 240, .07);
+      border-radius: 7px;
+      padding: 7px 6px 5px;
+      cursor: pointer;
+      transition: all .25s;
+      min-width: 0;
+    }
+    .stat-card:active { background: rgba(139, 92, 246, .08); border-color: rgba(139, 92, 246, .25); transform: scale(.96); }
+    .stat-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 17px;
+      font-weight: 600;
+      color: #F0F0F0;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    .stat-num .accent { color: var(--stat-color, #8B5CF6); }
+    .stat-label {
+      font-size: 7px;
+      color: #6B7280;
+      margin-top: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .stat-mini-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 12px;
+      margin-top: 4px;
+    }
+    .stat-bar {
+      width: 4px;
+      background: var(--stat-color, #8B5CF6);
+      opacity: .55;
+      border-radius: 1px;
+      transform-origin: bottom;
+    }
+
+    /* Flow */
+    .flow-section { position: relative; z-index: 5; margin-top: 10px; flex-shrink: 0; }
+    .flow-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .18em;
+      color: #D1D5DB;
+      margin-bottom: 6px;
+    }
+    .flow-header::after { content: ''; flex: 1; height: 1px; background: rgba(240, 240, 240, .06); }
+    .flow-diagram { position: relative; }
+    .flow-svg { width: 100%; height: auto; display: block; }
+    .flow-node { cursor: pointer; }
+    .flow-node:active { transform: scale(.95); }
+    .flow-arrow { animation: flowPulse 2s ease-in-out infinite; }
+    @keyframes flowPulse {
+      0%, 100% { stroke-opacity: .5; }
+      50% { stroke-opacity: 1; }
+    }
+
+    /* Features */
+    .features { position: relative; z-index: 5; margin-top: 10px; display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; }
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      background: rgba(240, 240, 240, .02);
+      border: 1px solid rgba(240, 240, 240, .07);
+      border-radius: 7px;
+      padding: 7px 9px;
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .feature:active { background: rgba(139, 92, 246, .06); border-color: rgba(139, 92, 246, .2); }
+    .feature-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      background: rgba(139, 92, 246, .1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-icon svg { width: 14px; height: 14px; stroke: #8B5CF6; fill: none; stroke-width: 1.5; }
+    .feature-icon::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 120%, rgba(34, 211, 238, .25), transparent 60%);
+      opacity: 0;
+      transition: opacity .25s;
+    }
+    .feature:active .feature-icon::after { opacity: 1; }
+    .feature-content { flex: 1; min-width: 0; }
+    .feature-title {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 9.5px;
+      font-weight: 500;
+      color: #F0F0F0;
+      letter-spacing: .02em;
+    }
+    .feature-desc {
+      font-size: 7.5px;
+      color: #6B7280;
+      margin-top: 1px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .feature-arrow {
+      font-size: 11px;
+      color: #8B5CF6;
+      opacity: 0;
+      transform: translateX(-2px);
+      transition: all .25s;
+      flex-shrink: 0;
+    }
+    .feature:active .feature-arrow { opacity: 1; transform: translateX(2px); }
+    .feature-progress {
+      height: 2px;
+      background: rgba(240, 240, 240, .06);
+      border-radius: 1px;
+      margin-top: 4px;
+      overflow: hidden;
+    }
+    .feature-progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #8B5CF6, #22D3EE);
+      border-radius: 1px;
+      transform-origin: left;
+      animation: progressIn .8s cubic-bezier(.4, 0, .2, 1) forwards;
+      transform: scaleX(0);
+    }
+    @keyframes progressIn { to { transform: scaleX(1); } }
+
+    /* Tech */
+    .tech-section { position: relative; z-index: 5; margin-top: 10px; flex-shrink: 0; }
+    .tech-header {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .18em;
+      color: #D1D5DB;
+      margin-bottom: 6px;
+    }
+    .tech-pills { display: flex; flex-wrap: wrap; gap: 5px; }
+    .tech-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .08em;
+      color: #9CA3AF;
+      border: 1px solid rgba(240, 240, 240, .1);
+      padding: 2px 7px;
+      border-radius: 10px;
+      cursor: pointer;
+      background: rgba(240, 240, 240, .02);
+      transition: all .2s;
+    }
+    .tech-pill:active { background: rgba(240, 240, 240, .08); }
+    .tech-pill.accent { border-color: rgba(139, 92, 246, .3); color: #A78BFA; }
+    .tech-pill.cyan { border-color: rgba(34, 211, 238, .25); color: #67E8F9; }
+
+    /* Bottom bar */
+    .bottombar {
+      position: relative;
+      z-index: 5;
+      margin-top: auto;
+      padding-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      border-top: 1px solid rgba(240, 240, 240, .06);
+    }
+    .github-link {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8.5px;
+      color: #D1D5DB;
+      text-decoration: none;
+    }
+    .github-link svg { width: 13px; height: 13px; fill: #9CA3AF; transition: fill .25s; }
+    .github-link:active svg { fill: #8B5CF6; }
+    .visit-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .14em;
+      color: #050514;
+      background: linear-gradient(90deg, #8B5CF6, #22D3EE);
+      padding: 6px 13px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all .25s;
+    }
+    .visit-btn:active { transform: scale(.95); filter: brightness(1.2); }
+
+    /* Overlay + Sheet */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: flex-end;
+      background: rgba(0, 0, 0, .5);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .35s;
+    }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+    .sheet {
+      width: 100%;
+      max-height: 72%;
+      background: linear-gradient(180deg, #12122C, #0A0A20);
+      border: 1px solid rgba(139, 92, 246, .2);
+      border-bottom: none;
+      border-radius: 16px 16px 0 0;
+      padding: 14px 18px 18px;
+      transform: translateY(101%);
+      transition: transform .45s cubic-bezier(.7, 0, .3, 1);
+      overflow-y: auto;
+    }
+    .overlay.active .sheet { transform: translateY(0); }
+    .sheet-handle { width: 32px; height: 3px; background: #3A3A5A; border-radius: 2px; margin: 0 auto 12px; }
+    .sheet-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: #F0F0F0;
+      margin-bottom: 7px;
+    }
+    .sheet-title em { color: #8B5CF6; font-style: normal; }
+    .sheet-desc {
+      font-size: 10.5px;
+      line-height: 1.65;
+      color: #9CA3AF;
+    }
+    .sheet-desc code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: #22D3EE;
+      background: rgba(34, 211, 238, .08);
+      padding: 1px 4px;
+      border-radius: 2px;
+    }
+    .sheet-points {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .sheet-point {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      color: #D0D0D8;
+      line-height: 1.55;
+    }
+    .sheet-point::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      background: #8B5CF6;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+    .sheet-close {
+      margin-top: 14px;
+      width: 100%;
+      padding: 10px;
+      background: rgba(139, 92, 246, .08);
+      border: 1px solid rgba(139, 92, 246, .25);
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .15em;
+      color: #A78BFA;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .sheet-close:active { background: #8B5CF6; color: #050514; }
+
+    /* Toast */
+    .toast {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #22C55E;
+      color: #050514;
+      padding: 7px 14px;
+      border-radius: 5px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: all .3s;
+      z-index: 200;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* 入场动画 */
+    .reveal { opacity: 0; transform: translateY(10px); transition: all .45s cubic-bezier(.4, 0, .2, 1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* 动态图表动画 */
+    @keyframes chartGrow {
+      from { transform: scaleY(0); }
+      to { transform: scaleY(1); }
+    }
+    .chart-animate { animation: chartGrow .6s cubic-bezier(.4, 0, .2, 1) forwards; }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <!-- 3D Orbit Core Container -->
+    <div class="orbit-3d-container" id="orbit3d"></div>
+
+    <!-- Topbar -->
+    <div class="topbar reveal">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <span>Young's Insight</span>
+      </div>
+      <button class="share-btn" id="shareBtn">
+        SHARE <span class="arr">↗</span>
+      </button>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero reveal">
+      <div class="meta-row">
+        <span class="vol">LOOP ENGINEERING</span>
+        <span>2026.08.04</span>
+      </div>
+      <div class="title-block">
+        <div class="loopx-stamp" id="stamp">∞</div>
+        <div class="title-text">
+          <div class="loopx-title">LoopX<span class="dot">.</span></div>
+          <div class="superdesign-line">
+            <span class="superdesign">by huangruiteng</span>
+            <span class="v-tag">MIT</span>
+          </div>
+        </div>
+      </div>
+      <div class="tagline">把会干活的 Agent，接成可管理、可复盘、可持续改进的<em>数字员工</em></div>
+    </div>
+
+    <!-- Intro -->
+    <div class="intro reveal">
+      <div class="intro-inner">
+        <div class="intro-line"></div>
+        <div class="intro-text">
+          面向<strong>长时间运行 AI Agent</strong>的本地控制平面。目标、门禁、待办、证据、配额、交接——六类状态持久化，跨 Codex / Claude Code / Cursor 等运行时通用，不替代 Agent 本体，把判断权留给人类。
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats with Mini Charts -->
+    <div class="stats-section reveal">
+      <div class="stats-header">
+        <span class="stats-title">Metrics</span>
+        <span class="stats-badge">OPEN SOURCE</span>
+      </div>
+      <div class="stats-chart">
+        <div class="stat-card" data-stat="stars" style="--stat-color: #8B5CF6">
+          <div class="stat-num"><span class="accent">1.1K</span></div>
+          <div class="stat-label">Stars</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 6px; animation-delay: .1s"></div>
+            <div class="stat-bar chart-animate" style="height: 9px; animation-delay: .15s"></div>
+            <div class="stat-bar chart-animate" style="height: 7px; animation-delay: .2s"></div>
+            <div class="stat-bar chart-animate" style="height: 11px; animation-delay: .25s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="forks" style="--stat-color: #22D3EE">
+          <div class="stat-num"><span class="accent">75</span></div>
+          <div class="stat-label">Forks</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 8px; animation-delay: .3s"></div>
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .35s"></div>
+            <div class="stat-bar chart-animate" style="height: 7px; animation-delay: .4s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="loops" style="--stat-color: #8B5CF6">
+          <div class="stat-num"><span class="accent">200</span>h+</div>
+          <div class="stat-label">Loop Tracks</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .45s"></div>
+            <div class="stat-bar chart-animate" style="height: 6px; animation-delay: .5s"></div>
+            <div class="stat-bar chart-animate" style="height: 9px; animation-delay: .55s"></div>
+            <div class="stat-bar chart-animate" style="height: 7px; animation-delay: .6s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="runtime" style="--stat-color: #22C55E">
+          <div class="stat-num" style="color: #22C55E">3+</div>
+          <div class="stat-label">Runtimes</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 10px; background: #22C55E; animation-delay: .65s"></div>
+            <div class="stat-bar chart-animate" style="height: 10px; background: #22C55E; animation-delay: .7s"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flow Diagram -->
+    <div class="flow-section reveal">
+      <div class="flow-header">Loop Flow</div>
+      <div class="flow-diagram">
+        <svg class="flow-svg" viewBox="0 0 350 50" fill="none">
+          <!-- Node 1: Goal -->
+          <g class="flow-node" id="flow-goal">
+            <rect x="3" y="12" width="62" height="26" rx="5" fill="rgba(139, 92, 246, .08)" stroke="#8B5CF6" stroke-width="1" stroke-opacity=".45"/>
+            <text x="34" y="24" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#F0F0F0" text-anchor="middle">GOAL</text>
+            <text x="34" y="33" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#6B7280" text-anchor="middle">objective+scope</text>
+          </g>
+
+          <!-- Arrow 1 -->
+          <path class="flow-arrow" d="M68 25 L84 25" stroke="#8B5CF6" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#arrowhead)"/>
+
+          <!-- Node 2: LoopX State -->
+          <g class="flow-node" id="flow-state">
+            <rect x="87" y="8" width="78" height="34" rx="6" fill="rgba(139, 92, 246, .12)" stroke="#8B5CF6" stroke-width="1.2"/>
+            <text x="126" y="21" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#A78BFA" text-anchor="middle">LOOPX STATE</text>
+            <text x="126" y="32" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#6B7280" text-anchor="middle">gates·todos·quota·evidence</text>
+          </g>
+
+          <!-- Arrow 2 -->
+          <path class="flow-arrow" d="M168 25 L184 25" stroke="#22D3EE" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#arrowhead2)" style="animation-delay: .3s"/>
+
+          <!-- Node 3: Agent Turn -->
+          <g class="flow-node" id="flow-agent">
+            <rect x="188" y="12" width="64" height="26" rx="5" fill="rgba(34, 211, 238, .08)" stroke="#22D3EE" stroke-width="1" stroke-opacity=".45"/>
+            <text x="220" y="24" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#F0F0F0" text-anchor="middle">AGENT TURN</text>
+            <text x="220" y="33" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#6B7280" text-anchor="middle">bounded slice</text>
+          </g>
+
+          <!-- Arrow 3 -->
+          <path class="flow-arrow" d="M255 25 L271 25" stroke="#8B5CF6" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#arrowhead)" style="animation-delay: .6s"/>
+
+          <!-- Node 4: Handoff -->
+          <g class="flow-node" id="flow-handoff">
+            <rect x="275" y="15" width="72" height="20" rx="4" fill="rgba(139, 92, 246, .08)" stroke="#8B5CF6" stroke-width=".8" stroke-opacity=".45"/>
+            <text x="311" y="25" font-family="JetBrains Mono, monospace" font-size="6" fill="#A78BFA" text-anchor="middle">EVIDENCE+HANDOFF</text>
+            <text x="311" y="33" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#6B7280" text-anchor="middle">quota→next tick</text>
+          </g>
+
+          <!-- Arrowheads -->
+          <defs>
+            <marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L6,3 z" fill="#8B5CF6" fill-opacity=".6"/>
+            </marker>
+            <marker id="arrowhead2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L6,3 z" fill="#22D3EE" fill-opacity=".6"/>
+            </marker>
+          </defs>
+
+          <!-- Animated pulse dots -->
+          <circle cx="76" cy="25" r="2" fill="#8B5CF6">
+            <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="176" cy="25" r="2" fill="#22D3EE">
+            <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0.5s"/>
+          </circle>
+          <circle cx="263" cy="25" r="2" fill="#8B5CF6">
+            <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="1s"/>
+          </circle>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Features with Progress -->
+    <div class="features reveal">
+      <div class="feature" data-f="0">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">持久目标 + 人工门禁</div>
+          <div class="feature-desc">目标/范围/权限跨轮次持久，需要人时给出具体问题</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 95%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="1">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">配额感知自动唤醒</div>
+          <div class="feature-desc">quota 决定该交付/提问/等待/自修复还是保持安静</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 100%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="2">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">可执行待办 + 证据日志</div>
+          <div class="feature-desc">认领/租约/写回，每次动作留痕可复盘</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 100%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="3">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">可验证交接</div>
+          <div class="feature-desc">Agent 互为对等节点，无需持久 leader</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 90%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+    </div>
+
+    <!-- Tech Stack -->
+    <div class="tech-section reveal">
+      <div class="tech-header">Tech Stack</div>
+      <div class="tech-pills">
+        <span class="tech-pill accent">Python 3.11+</span>
+        <span class="tech-pill">Codex</span>
+        <span class="tech-pill cyan">Claude Code</span>
+        <span class="tech-pill">Cursor</span>
+        <span class="tech-pill">OpenCode</span>
+        <span class="tech-pill accent">Agent-agnostic</span>
+      </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="bottombar reveal">
+      <a href="https://github.com/huangruiteng/loopx" target="_blank" class="github-link">
+        <svg viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        huangruiteng/loopx
+      </a>
+      <a href="https://github.com/huangruiteng/loopx" target="_blank" class="visit-btn">VISIT →</a>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title" id="sheetTitle"></div>
+        <div class="sheet-desc" id="sheetDesc"></div>
+        <div class="sheet-points" id="sheetPoints"></div>
+        <button class="sheet-close" id="sheetClose">CLOSE</button>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    // 3D Loop Core — state kernel with orbiting satellites
+    const container = document.getElementById('orbit3d');
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+
+    // Scene
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
+    camera.position.set(0, 0.6, 4.6);
+
+    const renderer = new THREE.WebGLRenderer({
+      alpha: true,
+      antialias: true
+    });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.appendChild(renderer.domElement);
+
+    // Lights
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
+    scene.add(ambientLight);
+
+    const mainLight = new THREE.DirectionalLight(0xffffff, 1);
+    mainLight.position.set(5, 5, 5);
+    scene.add(mainLight);
+
+    const accentLight = new THREE.PointLight(0x8B5CF6, 0.8, 12);
+    accentLight.position.set(-3, 2, 3);
+    scene.add(accentLight);
+
+    const cyanLight = new THREE.PointLight(0x22D3EE, 0.5, 12);
+    cyanLight.position.set(3, -2, -3);
+    scene.add(cyanLight);
+
+    // Materials
+    const coreMaterial = new THREE.MeshStandardMaterial({
+      color: 0x8B5CF6,
+      emissive: 0x4C1D95,
+      emissiveIntensity: 0.6,
+      roughness: 0.25,
+      metalness: 0.35
+    });
+
+    const coreShellMaterial = new THREE.MeshStandardMaterial({
+      color: 0x22D3EE,
+      emissive: 0x0E7490,
+      emissiveIntensity: 0.5,
+      roughness: 0.2,
+      metalness: 0.1
+    });
+
+    const ringMaterial = new THREE.MeshStandardMaterial({
+      color: 0x8B5CF6,
+      emissive: 0x6D28D9,
+      emissiveIntensity: 0.35,
+      roughness: 0.4,
+      transparent: true,
+      opacity: 0.55
+    });
+
+    const ringMaterial2 = new THREE.MeshStandardMaterial({
+      color: 0x22D3EE,
+      emissive: 0x0E7490,
+      emissiveIntensity: 0.3,
+      roughness: 0.4,
+      transparent: true,
+      opacity: 0.3
+    });
+
+    const satMaterial = new THREE.MeshStandardMaterial({
+      color: 0x67E8F9,
+      emissive: 0x22D3EE,
+      emissiveIntensity: 0.8,
+      roughness: 0.3
+    });
+
+    // Loop Group
+    const loopGroup = new THREE.Group();
+
+    // Core kernel (icosahedron reads as "kernel/state atom")
+    const coreGeometry = new THREE.IcosahedronGeometry(0.55, 1);
+    const core = new THREE.Mesh(coreGeometry, coreMaterial);
+    loopGroup.add(core);
+
+    // Inner shell (transparent cyan, slightly larger)
+    const shellGeometry = new THREE.IcosahedronGeometry(0.68, 0);
+    const shell = new THREE.Mesh(shellGeometry, coreShellMaterial);
+    shell.material.transparent = true;
+    shell.material.opacity = 0.22;
+    loopGroup.add(shell);
+
+    // Orbit rings
+    const ring1 = new THREE.Mesh(new THREE.TorusGeometry(1.15, 0.028, 16, 64), ringMaterial);
+    ring1.rotation.x = Math.PI / 2.2;
+    ring1.rotation.z = 0.25;
+    loopGroup.add(ring1);
+
+    const ring2 = new THREE.Mesh(new THREE.TorusGeometry(1.5, 0.02, 16, 64), ringMaterial2);
+    ring2.rotation.x = Math.PI / 1.8;
+    ring2.rotation.z = -0.3;
+    loopGroup.add(ring2);
+
+    // Orbiting satellites
+    const satGeometry = new THREE.SphereGeometry(0.09, 16, 16);
+    const satellites = [];
+    for (let i = 0; i < 3; i++) {
+      const sat = new THREE.Mesh(satGeometry, satMaterial);
+      sat.userData = { angle: (i / 3) * Math.PI * 2, speed: 1 + i * 0.25, radius: i === 1 ? 1.5 : 1.15, tilt: i === 1 ? -0.3 : 0.25 };
+      loopGroup.add(sat);
+      satellites.push(sat);
+    }
+
+    // Position
+    loopGroup.position.set(1.05, 0.55, 0);
+    loopGroup.scale.set(1.15, 1.15, 1.15);
+    scene.add(loopGroup);
+
+    // Controls
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.enableZoom = false;
+    controls.enablePan = false;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 2;
+
+    // Animation
+    let time = 0;
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      time += 0.02;
+
+      // Floating
+      loopGroup.position.y = 0.55 + Math.sin(time) * 0.08;
+
+      // Core pulse
+      core.scale.setScalar(1 + Math.sin(time * 2) * 0.05);
+      shell.rotation.y += 0.004;
+      shell.rotation.x += 0.002;
+
+      // Satellites orbit
+      satellites.forEach(sat => {
+        sat.userData.angle += 0.025 * sat.userData.speed;
+        const a = sat.userData.angle;
+        const r = sat.userData.radius;
+        const tilt = sat.userData.tilt;
+        sat.position.set(Math.cos(a) * r * Math.cos(tilt), Math.sin(a) * r * Math.sin(tilt) * 0.6, Math.sin(a) * r * Math.cos(tilt));
+      });
+
+      // Ring subtle counter-rotation
+      ring1.rotation.z += 0.0015;
+      ring2.rotation.z -= 0.001;
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    // Resize
+    window.addEventListener('resize', () => {
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    });
+  </script>
+
+  <script>
+    // Data
+    const features = [
+      {
+        title: '持久目标 + 人工门禁',
+        desc: '把目标、明确范围与当前权限沉淀为持久状态，跨轮次、跨工具、跨 Agent 不丢失。当决策点需要人时，给出<code>concrete user gate</code>——一个具体问题，而不是模糊的"等待负责人"。',
+        points: ['持久目标 (durable goals)', '具体人工门禁 (user gates)', '显式权限与范围边界']
+      },
+      {
+        title: '配额感知自动唤醒',
+        desc: 'quota 决定下一个 tick 该做什么：该交付、该提问、该等待、该自修复，还是保持安静。避免调度器在无有效进展时继续烧钱，防止 loop 空转。',
+        points: ['quota should-run 决策', '安全回退 (safe fallback)', '调度器提示 + 停止条件']
+      },
+      {
+        title: '可执行待办 + 证据日志',
+        desc: '待办带归属、认领 (claim) 与租约 (lease)，每次动作写回证据、校验结果与阻塞记录。紧凑的 run history 让长期工作随时可复盘、可重启。',
+        points: ['对等待办所有权 (peer ownership)', '证据校验 + 接受写回', '紧凑运行历史 (run history)']
+      },
+      {
+        title: '可验证交接',
+        desc: '注册 Agent 互为对等节点，认领、租约、能力边界与类型化延续决定谁执行下一步——无需持久 leader 身份。交接带证据链，可验证而非口头承诺。',
+        points: ['无持久 leader 架构', '类型化延续 (typed continuation)', '证据背书交接 (evidence-backed)']
+      }
+    ];
+
+    const statsInfo = {
+      stars: 'GitHub 1086 Stars，2026-05-31 创建，活跃迭代中（2026-08-03 仍有更新）。',
+      forks: '75 Forks，MIT 协议，社区可自由使用、修改与分发。',
+      loops: 'OpenViking Issue-Fix 与 Auto ML 两条轨迹各跨越 200+ 小时循环生命周期，经过大量有界轮次、决策与证据更新，全程可审查。',
+      runtime: '运行时无关：Codex App/CLI、Claude Code、OpenCode、Cursor、自定义 runner 均可接入。Python 3.11+，零运行时依赖。'
+    };
+
+    const flowInfo = {
+      goal: '目标层：objective / issue / project，定义"做什么"与"边界在哪"。',
+      state: 'LoopX 状态内核：objective + gates + todos + scope + evidence + quota 持久化。需要人类判断？问具体问题等待；有安全回退？跑一个有界 Agent slice。',
+      agent: 'Agent 执行层：Codex / Claude Code / Cursor / shell agent 执行一个回合（bounded turn），由 Kernel 控制。',
+      handoff: '写回证据 + 交接 + 下一个待办，quota 决定下一个 tick 时机。'
+    };
+
+    const techInfo = {
+      'Python 3.11+': '标准库即可运行，无任何第三方运行时依赖。',
+      Codex: '支持 Codex App（heartbeat 自动化）与 Codex CLI（可见 /goal 指令）。',
+      'Claude Code': '官方 opt-in adapter，原生 /loop 由 LoopX 门禁控制。',
+      Cursor: '通过 installer + loopx doctor 手动接入，或由 runner 调用。',
+      OpenCode: '静态命令 facade，可 opt-in --with-goal-bridge 支持循环目标。',
+      'Agent-agnostic': '运行时无关的设计哲学：LoopX 是状态内核，不替代任何 Agent 运行时。'
+    };
+
+    // Elements
+    const overlay = document.getElementById('overlay');
+    const sheetTitle = document.getElementById('sheetTitle');
+    const sheetDesc = document.getElementById('sheetDesc');
+    const sheetPoints = document.getElementById('sheetPoints');
+    const sheetClose = document.getElementById('sheetClose');
+    const toast = document.getElementById('toast');
+    const shareBtn = document.getElementById('shareBtn');
+    const stamp = document.getElementById('stamp');
+
+    // Reveal animation
+    setTimeout(() => {
+      document.querySelectorAll('.reveal').forEach((el, i) => {
+        setTimeout(() => el.classList.add('visible'), i * 60);
+      });
+    }, 100);
+
+    // Feature click
+    document.querySelectorAll('.feature').forEach(el => {
+      el.addEventListener('click', () => {
+        const i = +el.dataset.f;
+        const f = features[i];
+        sheetTitle.textContent = f.title;
+        sheetDesc.innerHTML = f.desc;
+        sheetPoints.innerHTML = f.points.map(p => `<div class="sheet-point">${p}</div>`).join('');
+        overlay.classList.add('active');
+      });
+    });
+
+    // Stat click
+    document.querySelectorAll('.stat-card').forEach(el => {
+      el.addEventListener('click', () => {
+        const key = el.dataset.stat;
+        const info = statsInfo[key];
+        if (info) {
+          sheetTitle.textContent = key.charAt(0).toUpperCase() + key.slice(1);
+          sheetDesc.textContent = info;
+          sheetPoints.innerHTML = '';
+          overlay.classList.add('active');
+        }
+      });
+    });
+
+    // Flow node click
+    document.querySelectorAll('.flow-node').forEach(el => {
+      el.addEventListener('click', () => {
+        const id = el.id.replace('flow-', '');
+        const info = flowInfo[id];
+        if (info) {
+          const titles = { goal: 'Goal 目标层', state: 'LoopX State 状态内核', agent: 'Agent Turn 执行层', handoff: 'Evidence + Handoff' };
+          sheetTitle.textContent = titles[id] || id;
+          sheetDesc.textContent = info;
+          sheetPoints.innerHTML = '';
+          overlay.classList.add('active');
+        }
+      });
+    });
+
+    // Tech pill click
+    document.querySelectorAll('.tech-pill').forEach(el => {
+      el.addEventListener('click', () => {
+        const tech = el.textContent.trim();
+        const info = techInfo[tech];
+        if (info) {
+          sheetTitle.textContent = tech;
+          sheetDesc.textContent = info;
+          sheetPoints.innerHTML = '';
+          overlay.classList.add('active');
+        }
+      });
+    });
+
+    // Stamp click
+    stamp.addEventListener('click', () => {
+      sheetTitle.innerHTML = 'LoopX <em>∞</em>';
+      sheetDesc.innerHTML = '长时间运行 AI Agent 团队的轻量循环工程状态内核（Lightweight loop engineering state kernel）。<strong>把会干活的 Agent，接成可管理、可复盘、可持续改进的数字员工。</strong>LoopX 不替代 Agent 运行时，它是所有 Agent 背后那个稳定的控制层。';
+      sheetPoints.innerHTML = `
+        <div class="sheet-point">本地优先 — 状态存于项目内，数据不出本地</div>
+        <div class="sheet-point">运行时无关 — Codex / Claude Code / Cursor / 自建 runner</div>
+        <div class="sheet-point">判断留人 — 危险权限、发布、生产写入归人类</div>
+        <div class="sheet-point">开源 — MIT 协议，Python 3.11+，零依赖</div>
+      `;
+      overlay.classList.add('active');
+    });
+
+    // Close sheet
+    sheetClose.addEventListener('click', () => overlay.classList.remove('active'));
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('active'); });
+
+    // Share
+    shareBtn.addEventListener('click', async () => {
+      const text = 'LoopX — Local Control Plane for Long-Running AI Agents\n把会干活的 Agent，接成可管理、可复盘、可持续改进的数字员工';
+      const url = 'https://mindresonance.online/youngsinsight/pages/loopx.html';
+      const full = text + '\n' + url;
+
+      try {
+        if (navigator.share) {
+          await navigator.share({ title: 'LoopX', text, url });
+          return;
+        }
+      } catch (e) {}
+
+      try {
+        await navigator.clipboard.writeText(full);
+        showToast('已复制标题与链接');
+      } catch (e) {
+        const ta = document.createElement('textarea');
+        ta.value = full;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('已复制标题与链接');
+      }
+    });
+
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+  </script>
+</body>
+</html>

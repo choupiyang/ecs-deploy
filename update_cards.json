@@ -1,10 +1,10 @@
 {
-  "id": "sensenova-vision",
-  "title": "SenseNova-Vision",
-  "subtitle": "Vision as Unified Multimodal Generation",
-  "image": "cards/sensenova-vision-cover.svg",
-  "page": "pages/sensenova.html",
-  "tags": ["商汤", "视觉生成", "MoT", "统一多模态", "7B"],
-  "date": "2026-07-22",
+  "id": "loopx",
+  "title": "LoopX",
+  "subtitle": "Local Control Plane for Long-Running AI Agents",
+  "image": "cards/loopx-cover.svg",
+  "page": "pages/loopx.html",
+  "tags": ["循环工程", "AI Agent", "控制平面", "Codex", "Python"],
+  "date": "2026-08-04",
   "type": "recommendation"
 }
