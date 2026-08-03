@@ -1,0 +1,10 @@
+{
+  "id": "sensenova-vision",
+  "title": "SenseNova-Vision",
+  "subtitle": "Vision as Unified Multimodal Generation",
+  "image": "cards/sensenova-vision-cover.svg",
+  "page": "pages/sensenova.html",
+  "tags": ["商汤", "视觉生成", "MoT", "统一多模态", "7B"],
+  "date": "2026-07-22",
+  "type": "recommendation"
+}

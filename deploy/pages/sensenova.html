@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SenseNova-Vision — 统一多模态视觉生成</title>
+<style>
+:root{--bg:#E5E1D6;--text:#111817;--accent:#C8FF00;--func:#7F8270}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:PingFang SC,Microsoft YaHei,system-ui,sans-serif;line-height:1.7;-webkit-font-smoothing:antialiased}
+.hero{background:#0f3460;color:#fff;padding:60px 24px 40px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 30% 50%,rgba(200,255,0,.08) 0,transparent 50%)}
+.hero-grid{position:absolute;inset:0;opacity:.08;background-image:linear-gradient(var(--accent) 1px,transparent 1px),linear-gradient(90deg,var(--accent) 1px,transparent 1px);background-size:30px 30px}
+.hero-inner{position:relative;max-width:720px;margin:0 auto}
+.hero h1{font-size:32px;font-weight:900;letter-spacing:-.04em;margin-bottom:8px}
+.hero .tagline{font-size:15px;color:var(--accent);font-weight:600;margin-bottom:16px}
+.hero .meta{font-size:13px;color:rgba(255,255,255,.6);display:flex;gap:16px;flex-wrap:wrap}
+.hero .meta span{background:rgba(255,255,255,.08);padding:4px 12px;border-radius:4px}
+.container{max-width:720px;margin:0 auto;padding:40px 24px 80px}
+h2{font-size:20px;font-weight:800;letter-spacing:-.03em;margin:36px 0 12px;padding-bottom:8px;border-bottom:3px solid var(--accent)}
+h3{font-size:16px;font-weight:700;margin:24px 0 8px}
+p,li{font-size:15px;margin-bottom:10px;color:#2a2f2a}
+ul{padding-left:20px;margin-bottom:16px}
+li{margin-bottom:6px}
+.highlight{background:rgba(200,255,0,.15);padding:2px 6px;border-radius:2px;font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+.grid-item{background:rgba(200,255,0,.06);border:1px solid rgba(200,255,0,.15);padding:16px;border-radius:6px;font-size:13px}
+.grid-item strong{display:block;font-size:14px;margin-bottom:4px;color:var(--text)}
+.table-wrap{overflow-x:auto;margin:16px 0}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--text);color:var(--bg);padding:8px 10px;text-align:left;font-weight:700;white-space:nowrap}
+td{padding:8px 10px;border-bottom:1px solid rgba(0,0,0,.08)}
+tr:hover td{background:rgba(200,255,0,.08)}
+.back{display:inline-flex;align-items:center;gap:6px;margin-bottom:24px;color:var(--func);text-decoration:none;font-size:14px}
+.back:hover{color:var(--text)}
+.links{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+.links a{display:inline-flex;align-items:center;gap:4px;padding:8px 16px;background:var(--text);color:var(--bg);text-decoration:none;font-size:13px;font-weight:600;border-radius:4px}
+.links a:hover{background:var(--accent);color:var(--text)}
+@media(max-width:560px){.hero h1{font-size:26px}.grid2{grid-template-columns:1fr}.container{padding:24px 16px 60px}}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-inner">
+    <h1>SenseNova-Vision</h1>
+    <div class="tagline">Vision as Unified Multimodal Generation</div>
+    <div class="meta">
+      <span>7B Parameters</span>
+      <span>Mixture-of-Transformers</span>
+      <span>CC BY-NC 4.0</span>
+      <span>商汤科技 / 日日新</span>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+<a class="back" href="/youngsinsight/">← 返回首页</a>
+
+<div class="links">
+  <a href="https://github.com/OpenSenseNova/SenseNova-Vision">GitHub</a>
+  <a href="https://modelscope.cn/models/SenseNova/SenseNova-Vision-7B-MoT">ModelScope</a>
+  <a href="https://huggingface.co/sensenova/SenseNova-Vision-7B-MoT">HuggingFace</a>
+  <a href="https://arxiv.org/abs/2607.06560">arXiv 报告</a>
+</div>
+
+<h2>是什么</h2>
+<p><strong>SenseNova-Vision</strong> 是商汤科技（日日新）提出的统一多模态视觉生成模型。它的核心思想是：<span class="highlight">把计算机视觉的所有任务都表达为统一多模态模型（UMM）的文本和图像生成</span>，而不是为检测、分割、深度估计等每个任务分别设计专用的预测头和解码器。</p>
+<p>简单说：过去做视觉任务需要一堆专用模型拼在一起，SenseNova-Vision 用<span class="highlight">一个模型</span>搞定目标检测、语义分割、深度估计、法线估计、OCR、关键点、多视图三维重建、相机位姿估计——而且全部通过自然语言指令控制。</p>
+
+<h2>核心架构：Mixture-of-Transformers (MoT)</h2>
+<p>SenseNova-Vision-7B-MoT 基于 MoT 架构，7B 参数规模。它将不同视觉任务统一到三种输出格式：</p>
+
+<div class="grid2">
+  <div class="grid-item">
+    <strong>📝 结构化文本</strong>
+    目标检测、引用定位、OCR、GUI定位、关键点、相机参数→输出归一化坐标+结构化字段
+  </div>
+  <div class="grid-item">
+    <strong>🖼️ 密集图像</strong>
+    深度图、法线图、点云图、二值掩码→输出像素对齐的目标图像
+  </div>
+  <div class="grid-item">
+    <strong>📄 图文混合</strong>
+    多实例分割、对话式分割→文本标签+生成的掩码或视觉图
+  </div>
+</div>
+
+<h2>关键贡献</h2>
+<ul>
+  <li><strong>统一范式</strong>：将异构视觉任务统一到 UMM 的输入输出空间，不需要任何任务专用预测头</li>
+  <li><strong>SenseNova-Vision Corpus</strong>：构建了 5000 万样本的大规模视觉指令微调数据集，覆盖文本、图像、图文混合三种目标类型</li>
+  <li><strong>全任务覆盖</strong>：同一个模型同时覆盖结构化视觉理解、密集几何预测、分割、多视图几何，且支持语言定义的任务变体</li>
+  <li><strong>无需专用分支</strong>：无检测头、无分割解码器、无深度预测分支——全靠统一生成</li>
+</ul>
+
+<h2>Benchmark 亮点</h2>
+
+<h3>结构化视觉理解（检测 / OCR / 关键点）</h3>
+<div class="table-wrap">
+<table>
+  <tr><th>任务</th><th>指标</th><th>SenseNova-Vision</th><th>对比最佳</th></tr>
+  <tr><td>COCO 通用检测</td><td>mAP</td><td>56.6</td><td>56.6 (Grounding DINO) — 持平</td></tr>
+  <tr><td>LVIS 长尾检测</td><td>mAP</td><td><strong>54.8</strong></td><td>50.7 (LocateAnything)</td></tr>
+  <tr><td>Dense200 密集检测</td><td>mAP</td><td><strong>66.8</strong></td><td>58.7 (LocateAnything)</td></tr>
+  <tr><td>VisDrone 无人机检测</td><td>mAP</td><td><strong>43.3</strong></td><td>39.9 (LocateAnything)</td></tr>
+  <tr><td>RefCOCOg 指代检测</td><td>mAP</td><td><strong>80.2/79.6/80.5</strong></td><td>79.9/76.7/77.8</td></tr>
+  <tr><td>ICDAR15 OCR</td><td>mAP</td><td><strong>49.5</strong></td><td>28.1 (Rex-Omni)</td></tr>
+  <tr><td>COCO 关键点</td><td>mAP</td><td><strong>34.6</strong></td><td>32.6 (Rex-Omni)</td></tr>
+</table>
+</div>
+
+<h3>密集几何预测（深度 + 法线）</h3>
+<div class="table-wrap">
+<table>
+  <tr><th>数据集</th><th>指标</th><th>SenseNova-Vision</th><th>对比最佳</th></tr>
+  <tr><td>NYUv2 深度</td><td>δ1↑</td><td><strong>98.1</strong></td><td>98.1 (DepthAnything) — 持平</td></tr>
+  <tr><td>KITTI 深度</td><td>δ1↑</td><td><u>95.9</u></td><td>97.7 (MoGe-2)</td></tr>
+  <tr><td>ScanNet 法线</td><td>Mean↓/11.25°↑</td><td><strong>12.8 / 68.9</strong></td><td>12.8/68.4 (MoGe-2)</td></tr>
+  <tr><td>NYUv2 法线</td><td>Mean↓/11.25°↑</td><td><strong>14.4 / 62.7</strong></td><td>14.7/62.3 (MoGe-2)</td></tr>
+</table>
+</div>
+
+<h3>多视图三维几何（重建 + 位姿）</h3>
+<div class="table-wrap">
+<table>
+  <tr><th>任务</th><th>指标</th><th>SenseNova-Vision</th></tr>
+  <tr><td>7Scenes 重建 F1↑</td><td>87.9</td><td>与 DepthAnything3 并列第一梯队</td></tr>
+  <tr><td>ETH3D 重建 F1↑</td><td><strong>72.2</strong></td><td>领先 VGGT (80.9→但 VGGT 在另一指标)</td></tr>
+  <tr><td>Re10K 位姿 AUC@30↑</td><td>77.3</td><td>与 DepthAnything3 (89.6) 有差距</td></tr>
+</table>
+</div>
+
+<h2>与通才视觉模型对比</h2>
+<p>与 Youtu-VL、Vision Banana 等同类通用视觉模型对比，SenseNova-Vision 在检测（COCO 53.7 vs 47.1）、语义分割（Cityscapes 71.2 vs 69.9/70.4）、深度估计（NYUv2 δ1 98.1 vs 90.4/94.8）上全线领先。</p>
+
+<h2>快速上手</h2>
+<pre style="background:#1a1a2e;color:#c8ff00;padding:16px;border-radius:6px;font-size:13px;overflow-x:auto;margin:12px 0">
+git clone https://github.com/OpenSenseNova/SenseNova-Vision.git
+cd SenseNova-Vision
+bash setup.sh sensenova-vision
+conda activate sensenova-vision
+
+# 运行示例
+bash scripts/run_sensenova_vision.sh example
+
+# 单次推理（例如人像二值分割）
+bash scripts/run_sensenova_vision.sh inference \
+  binary_seg "person" examples/images/2.jpg
+
+# 启动 Web Demo
+MODEL_PATH=/path/to/SenseNova-Vision-7B-MoT \
+  bash scripts/run_sensenova_vision.sh demo
+</pre>
+
+<h2>训练数据：SenseNova-Vision Corpus</h2>
+<p>5000 万样本，覆盖四大任务家族：</p>
+<ul>
+  <li><strong>结构化视觉理解</strong>（检测、指代定位、关键点、OCR、GUI）</li>
+  <li><strong>密集几何预测</strong>（深度、法线）</li>
+  <li><strong>分割</strong>（指代、推理、交互、通用、对话式）</li>
+  <li><strong>多视图几何</strong>（点云重建、相机位姿）</li>
+</ul>
+
+<h2>⚠️ 局限性</h2>
+<ul>
+  <li>不是每个任务的专用最优模型</li>
+  <li>文本输出需要任务专用解析器</li>
+  <li>深度/法线/点云/位姿预测需谨慎验证后再下游使用</li>
+  <li>对提示词措辞和输出格式敏感</li>
+  <li>非商业许可（CC BY-NC 4.0）</li>
+</ul>
+
+<h2>相关链接</h2>
+<div class="links">
+  <a href="https://github.com/OpenSenseNova/SenseNova-Vision">GitHub 仓库</a>
+  <a href="https://modelscope.cn/models/SenseNova/SenseNova-Vision-7B-MoT">ModelScope 模型页</a>
+  <a href="https://huggingface.co/sensenova/SenseNova-Vision-7B-MoT">HuggingFace 权重</a>
+  <a href="https://huggingface.co/datasets/sensenova/SenseNova-Vision-Corpus-50M">训练数据集</a>
+  <a href="https://arxiv.org/abs/2607.06560">arXiv 技术报告</a>
+</div>
+
+<p style="margin-top:40px;font-size:12px;color:var(--func);border-top:1px solid rgba(0,0,0,.08);padding-top:16px">
+  来源：SenseNova-Vision 官方 GitHub · 技术报告 arXiv:2607.06560 · 更新于 2026-07-22
+</p>
+
+</div>
+</body>
+</html>
