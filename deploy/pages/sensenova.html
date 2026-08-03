@@ -29,23 +29,33 @@
     html { scroll-behavior: smooth; }
     body {
       font-family: var(--sans);
-      background: var(--bg);
+      background: #000;
       color: var(--text);
       line-height: 1.6;
-      overflow-x: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       min-height: 100vh;
+      overflow: hidden;
     }
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
     .stage {
-      max-width: 480px;
-      margin: 0 auto;
-      padding: 0 16px 80px;
       position: relative;
+      aspect-ratio: 9 / 16;
+      height: min(100vh, calc(100vw * 16 / 9));
+      width: min(100vw, calc(100vh * 9 / 16));
+      margin: 0 auto;
+      background: #0A0A1A;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 0 16px 24px;
       z-index: 1;
     }
+    .stage::-webkit-scrollbar { width: 2px; }
+    .stage::-webkit-scrollbar-thumb { background: #2A2A45; border-radius: 1px; }
 
     /* Reveal animations */
     .reveal { opacity: 0; transform: translateY(20px); transition: opacity .7s, transform .7s cubic-bezier(.16,1,.3,1); }
