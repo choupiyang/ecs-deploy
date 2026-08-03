@@ -32,6 +32,10 @@ jobs:
             ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} 'python3 -c "import json;n=json.load(open(\"/var/www/youngsinsight/deploy_patch.json\"));d=json.load(open(\"/var/www/youngsinsight/cards.json\"));i=next((i for i,c in enumerate(d) if c.get(\"id\")==n[\"id\"]),None);exec(\"d[i]=n\" if i is not None else \"d.insert(0,n)\");json.dump(d,open(\"/var/www/youngsinsight/cards.json\",\"w\"),ensure_ascii=False,indent=2);print(len(d),\"cards\")"'
           fi
 
+      - name: Read existing cards for reference
+        run: |
+          ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} 'cat /var/www/youngsinsight/pages/buzz.html'
+
       - name: Verify
         run: |
           ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} "ls -lh /var/www/youngsinsight/cards/ /var/www/youngsinsight/pages/ 2>/dev/null; echo '---'; python3 -c \"import json;d=json.load(open('/var/www/youngsinsight/cards.json'));print(len(d),'cards');[print(' ',c['title'])for c in d[-3:]]\""
