@@ -102,7 +102,9 @@ if ! nginx -t 2>&1; then
   nginx -t
   exit 1
 fi
-systemctl reload nginx
+# nginx 可能不由 systemd 管理（ECS 常见），优先信号重载，兜底 systemctl
+nginx -s reload 2>/dev/null || systemctl reload nginx 2>/dev/null || systemctl restart nginx 2>/dev/null || echo "!! nginx reload failed, need manual reload"
+sleep 1
 
 echo "==> [5/5] 验证"
 sleep 1
