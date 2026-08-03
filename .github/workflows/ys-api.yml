@@ -1,0 +1,38 @@
+name: Deploy YS Subscription API
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ysapi/**'
+  workflow_dispatch:
+
+jobs:
+  deploy-api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.ECS_SSH_KEY }}" > ~/.ssh/ecs_key
+          chmod 600 ~/.ssh/ecs_key
+          ssh-keyscan -H ${{ secrets.ECS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Upload files
+        run: |
+          scp -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ysapi/ys_api.py ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:/var/www/youngsinsight/ys_api.py
+          scp -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ysapi/subscribe.html ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:/var/www/youngsinsight/subscribe.html
+          scp -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ysapi/ys-subscribe.md ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:/var/www/youngsinsight/ys-subscribe.md
+          scp -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ysapi/setup_ys_api.sh ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:/tmp/setup_ys_api.sh
+
+      - name: Run setup
+        run: |
+          ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} \
+            "chmod +x /tmp/setup_ys_api.sh && YS_STATS_KEY='${{ secrets.YS_STATS_KEY }}' bash /tmp/setup_ys_api.sh"
+
+      - name: Verify public endpoints
+        run: |
+          ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} \
+            "curl -s http://127.0.0.1:8080/health && echo && curl -s -o /dev/null -w 'subscribe.html: %{http_code}\n' -k https://mindresonance.online/youngsinsight/subscribe.html && curl -s -o /dev/null -w 'api via nginx: %{http_code}\n' -k https://mindresonance.online/youngsinsight/api/health"
