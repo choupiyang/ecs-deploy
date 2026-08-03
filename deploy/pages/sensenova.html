@@ -7,14 +7,13 @@
   <title>SenseNova-Vision — 统一多模态视觉生成</title>
   <link rel="preconnect" href="https://fonts.googleapis.cn">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.cn/css2?family=Cormorant+Garamond:ital@0;1&family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.cn/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Noto+Serif+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #0A0A1A;
       --bg-2: #0F0F22;
       --accent: #4ADE80;
       --accent-light: #86EFAC;
-      --accent-blue: #38BDF8;
       --text: #F0F0F0;
       --muted: #6B7280;
       --surface: #1A1A30;
@@ -26,522 +25,615 @@
       --sans: 'Noto Sans SC', sans-serif;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    html { scroll-behavior: smooth; }
-    body {
-      font-family: var(--sans);
-      background: #000;
-      color: var(--text);
-      line-height: 1.6;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      overflow: hidden;
-    }
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    html, body { height: 100%; overflow: hidden; background: #050510; font-family: 'Noto Sans SC', sans-serif; color: #F0F0F0; -webkit-font-smoothing: antialiased; }
+    body { display: flex; align-items: center; justify-content: center; }
 
     .stage {
       position: relative;
       aspect-ratio: 9 / 16;
       height: min(100vh, calc(100vw * 16 / 9));
       width: min(100vw, calc(100vh * 9 / 16));
-      margin: 0 auto;
       background: #0A0A1A;
-      overflow-y: auto;
-      overflow-x: hidden;
-      padding: 0 16px 24px;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,.6);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 16px 10px;
+    }
+
+    .stage::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 75% 8%, rgba(74, 222, 128, .12) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 35% at 15% 55%, rgba(56, 189, 248, .08) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 50% 100%, rgba(74, 222, 128, .04) 0%, transparent 60%);
+    }
+
+    .stage::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(rgba(240, 240, 240, .012) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(240, 240, 240, .012) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    /* 3D container */
+    .vision-3d-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 200px;
       z-index: 1;
+      pointer-events: none;
     }
-    .stage::-webkit-scrollbar { width: 2px; }
-    .stage::-webkit-scrollbar-thumb { background: #2A2A45; border-radius: 1px; }
+    .vision-3d-container canvas { width: 100%; height: 100%; }
 
-    /* Reveal animations */
-    .reveal { opacity: 0; transform: translateY(20px); transition: opacity .7s, transform .7s cubic-bezier(.16,1,.3,1); }
-    .reveal.visible { opacity: 1; transform: translateY(0); }
-
-    /* Top Bar */
     .topbar {
+      position: relative;
+      z-index: 10;
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      padding: 16px 0 8px;
-    }
-    .brand {
-      display: flex;
       align-items: center;
-      gap: 8px;
-      text-decoration: none;
-      color: var(--text);
-      font-size: 13px;
-      font-weight: 500;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .16em;
+      color: #6B7280;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(240, 240, 240, .06);
     }
-    .brand-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 8px var(--accent);
-    }
-    .back-link {
-      color: var(--muted);
-      text-decoration: none;
-      font-size: 13px;
-      transition: color .2s;
+    .brand { display: flex; align-items: center; gap: 6px; color: #F0F0F0; }
+    .brand-dot { width: 5px; height: 5px; background: #4ADE80; border-radius: 50%; box-shadow: 0 0 8px #4ADE80; animation: pulse 2.2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .3; transform: scale(.6); } }
+    .share-btn {
+      background: none;
+      border: 1px solid rgba(240, 240, 240, .2);
+      padding: 4px 8px 3px;
+      font: inherit;
+      color: #F0F0F0;
+      cursor: pointer;
+      letter-spacing: .12em;
+      transition: all .3s;
       display: flex;
       align-items: center;
       gap: 4px;
+      font-size: 7.5px;
     }
-    .back-link:hover { color: var(--text); }
+    .share-btn:active { background: #4ADE80; color: #0A0A1A; border-color: #4ADE80; }
+    .share-btn .arr { color: #4ADE80; transition: transform .3s; }
+    .share-btn:active .arr { color: #0A0A1A; transform: translate(2px, -2px); }
 
-    /* Hero */
-    .hero {
-      padding: 24px 0 16px;
-      text-align: center;
-    }
-    .hero-svg {
-      width: 100%;
-      max-width: 280px;
-      margin: 0 auto 20px;
-      aspect-ratio: 1;
-      position: relative;
-    }
-    .hero-svg svg {
-      width: 100%;
-      height: 100%;
-    }
+    .hero { position: relative; z-index: 5; flex-shrink: 0; margin-top: 8px; }
     .meta-row {
       display: flex;
-      justify-content: center;
-      gap: 8px;
-      margin-bottom: 12px;
-      flex-wrap: wrap;
-    }
-    .meta-pill {
-      padding: 3px 10px;
-      border-radius: 12px;
-      font-size: 11px;
-      font-weight: 500;
-      background: var(--surface);
-      color: var(--muted);
-      border: 1px solid var(--border);
-    }
-    .meta-pill.accent {
-      background: rgba(74, 222, 128, 0.08);
-      color: var(--accent);
-      border-color: rgba(74, 222, 128, 0.2);
-    }
-    .title-block {
-      margin-bottom: 4px;
-    }
-    .title-text {
-      font-family: var(--serif);
-      font-size: 36px;
-      font-weight: 700;
-      letter-spacing: -.02em;
-      color: var(--text);
-      line-height: 1.15;
-    }
-    .title-text .accent { color: var(--accent); }
-    .superdesign-line {
-      width: 40px; height: 2px;
-      background: var(--accent);
-      margin: 10px auto;
-      border-radius: 1px;
-    }
-    .tagline {
-      font-family: var(--cn);
-      font-size: 14px;
-      color: var(--muted);
-      margin-top: 4px;
-      line-height: 1.5;
-    }
-
-    /* Intro */
-    .intro { padding: 8px 0 20px; }
-    .intro-inner {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-    }
-    .intro-line {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--accent);
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #6B7280;
       text-transform: uppercase;
-      letter-spacing: .08em;
-      margin-bottom: 6px;
+      padding-bottom: 4px;
     }
-    .intro-text {
-      font-size: 14px;
-      color: var(--muted);
-      line-height: 1.7;
-    }
-    .intro-text strong { color: var(--text); }
+    .meta-row .vol { color: #4ADE80; font-weight: 500; position: relative; }
+    .meta-row .vol::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; background: #4ADE80; }
 
-    /* Stats */
-    .stats-section { padding: 0 0 20px; }
-    .stats-header {
-      font-family: var(--serif);
-      font-size: 22px;
-      font-weight: 600;
-      margin-bottom: 14px;
-      color: var(--text);
+    .title-block { display: flex; align-items: flex-start; gap: 3px; margin-top: 2px; }
+    .vision-stamp {
+      width: 32px; height: 32px; flex-shrink: 0; margin-top: 3px;
+      border: 1.5px solid #4ADE80; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Noto Serif SC', serif; font-weight: 900; font-size: 15px;
+      color: #4ADE80; cursor: pointer;
+      transition: transform .4s cubic-bezier(.7, 0, .3, 1);
+      background: rgba(74, 222, 128, .06);
     }
-    .stats-grid {
+    .vision-stamp:active { transform: rotate(180deg) scale(.9); }
+    .vision-stamp::before {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border: 1px dashed rgba(74, 222, 128, .3);
+      border-radius: 10px;
+      animation: spin 20s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .title-text { flex: 1; min-width: 0; }
+    .vision-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 500;
+      font-size: 34px;
+      line-height: .95;
+      letter-spacing: .02em;
+      color: #F0F0F0;
+    }
+    .vision-title .dot { color: #4ADE80; }
+    .superdesign-line {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-top: 1px;
+    }
+    .superdesign {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 400;
+      font-style: italic;
+      font-size: 13px;
+      color: #6B7280;
+      letter-spacing: .04em;
+    }
+    .v-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      color: #38BDF8;
+      border: 1px solid #38BDF8;
+      padding: 1px 4px;
+      letter-spacing: .1em;
+    }
+
+    .tagline {
+      margin-top: 4px;
+      font-family: 'Noto Serif SC', serif;
+      font-weight: 300;
+      font-size: 10px;
+      color: #F0F0F0;
+      letter-spacing: .05em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tagline::before { content: ''; width: 12px; height: 1px; background: #4ADE80; flex-shrink: 0; }
+    .tagline em { font-style: normal; color: #4ADE80; font-weight: 500; }
+
+    .intro { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .intro-inner {
+      display: flex; gap: 8px;
+      padding: 7px 10px;
+      background: rgba(26, 26, 48, .4);
+      border-radius: 6px;
+      border: 1px solid rgba(74, 222, 128, .08);
+    }
+    .intro-line { width: 2px; background: linear-gradient(180deg, #4ADE80, #38BDF8); border-radius: 1px; flex-shrink: 0; }
+    .intro-text {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 9px;
+      line-height: 1.65;
+      color: #B0B0B8;
+      letter-spacing: .02em;
+    }
+    .intro-text strong { color: #F0F0F0; font-weight: 500; }
+
+    .stats-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .stats-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 5px;
+    }
+    .stats-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px; letter-spacing: .2em;
+      color: #6B7280; text-transform: uppercase;
+    }
+    .stats-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px; letter-spacing: .1em;
+      color: #4ADE80; border: 1px solid #4ADE80;
+      padding: 1px 5px; border-radius: 2px;
+    }
+    .stats-chart {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
     }
     .stat-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px;
-      position: relative;
+      background: rgba(26, 26, 48, .3);
+      border: 1px solid rgba(240, 240, 240, .05);
+      border-radius: 6px;
+      padding: 6px 4px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .25s;
       overflow: hidden;
     }
+    .stat-card:active { background: rgba(74, 222, 128, .08); border-color: rgba(74, 222, 128, .2); }
     .stat-card::before {
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0;
       height: 2px;
-      background: var(--accent);
-      opacity: .4;
+      background: linear-gradient(90deg, transparent, var(--stat-color, #4ADE80), transparent);
+      opacity: 0; transition: opacity .3s;
     }
+    .stat-card:active::before { opacity: 1; }
     .stat-num {
-      font-family: var(--serif);
-      font-size: 28px;
-      font-weight: 700;
-      color: var(--text);
-      line-height: 1;
-      margin-bottom: 2px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px; font-weight: 600; color: #F0F0F0;
     }
-    .stat-num .accent { color: var(--accent); }
+    .stat-num .accent { color: #4ADE80; }
     .stat-label {
-      font-size: 11px;
-      color: var(--muted);
-      font-weight: 500;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px; letter-spacing: .12em;
+      color: #6B7280; text-transform: uppercase;
+      margin-top: 1px;
     }
+    .stat-mini-chart {
+      margin-top: 3px;
+      height: 10px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 1px;
+    }
+    .stat-bar {
+      width: 3px;
+      background: rgba(74, 222, 128, .3);
+      border-radius: 1px;
+      transition: height .3s, background .3s;
+    }
+    .stat-card:active .stat-bar { background: rgba(74, 222, 128, .6); }
+
+    /* Flow */
+    .flow-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .flow-header {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px; letter-spacing: .2em;
+      color: #6B7280; text-transform: uppercase;
+      margin-bottom: 5px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .flow-header::after { content: ''; flex: 1; height: 1px; background: rgba(240, 240, 240, .06); }
+    .flow-diagram {
+      background: rgba(26, 26, 48, .25);
+      border: 1px solid rgba(240, 240, 240, .05);
+      border-radius: 8px;
+      padding: 8px;
+    }
+    .flow-svg { width: 100%; height: auto; display: block; }
+    .flow-node { cursor: pointer; transition: transform .2s; }
+    .flow-node:active { transform: scale(.95); }
+    .flow-arrow { animation: flowPulse 2s ease-in-out infinite; }
+    @keyframes flowPulse { 0%, 100% { opacity: .4; } 50% { opacity: 1; } }
 
     /* Features */
-    .features { padding: 0 0 20px; }
-    .features-header {
-      font-family: var(--serif);
-      font-size: 22px;
-      font-weight: 600;
-      margin-bottom: 14px;
-    }
+    .features { position: relative; z-index: 5; margin-top: 7px; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 4px; }
     .feature {
+      flex: 1;
+      background: rgba(26, 26, 48, .3);
+      border: 1px solid rgba(240, 240, 240, .05);
+      border-radius: 6px;
+      padding: 7px 10px;
       display: flex;
       align-items: center;
-      gap: 12px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px;
-      margin-bottom: 8px;
+      gap: 8px;
       cursor: pointer;
-      transition: border-color .2s, background .2s;
+      transition: all .25s;
     }
-    .feature:active { background: #222240; }
+    .feature:active { background: rgba(74, 222, 128, .06); border-color: rgba(74, 222, 128, .2); }
     .feature-icon {
-      width: 36px; height: 36px;
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 8px;
-      background: rgba(74, 222, 128, .08);
+      width: 26px; height: 26px; border-radius: 6px;
+      background: rgba(74, 222, 128, .06);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; position: relative;
     }
-    .feature-icon svg { width: 18px; height: 18px; stroke: var(--accent); fill: none; stroke-width: 1.8; }
+    .feature-icon svg { width: 14px; height: 14px; stroke: #4ADE80; fill: none; stroke-width: 1.5; }
+    .feature-icon::after {
+      content: '';
+      position: absolute; inset: -2px;
+      border-radius: 8px;
+      border: 1px solid rgba(74, 222, 128, .15);
+      opacity: 0; transition: opacity .3s;
+    }
+    .feature:active .feature-icon::after { opacity: 1; }
     .feature-content { flex: 1; min-width: 0; }
     .feature-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text);
-      margin-bottom: 1px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px; font-weight: 500; color: #F0F0F0;
     }
     .feature-desc {
-      font-size: 12px;
-      color: var(--muted);
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 8px; color: #6B7280;
+      margin-top: 1px;
     }
     .feature-arrow {
-      color: var(--muted);
-      font-size: 14px;
-      flex-shrink: 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; color: #4ADE80;
+      opacity: .4; transition: all .25s;
+    }
+    .feature:active .feature-arrow { opacity: 1; transform: translateX(2px); }
+    .feature-progress {
+      width: 100%; height: 2px;
+      background: rgba(74, 222, 128, .1);
+      border-radius: 1px; margin-top: 3px; overflow: hidden;
+    }
+    .feature-progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #4ADE80, #38BDF8);
+      border-radius: 1px; transition: width .3s;
     }
 
-    /* Tech */
-    .tech-section { padding: 0 0 20px; }
+    .tech-section { position: relative; z-index: 5; margin-top: 6px; flex-shrink: 0; }
     .tech-header {
-      font-family: var(--serif);
-      font-size: 22px;
-      font-weight: 600;
-      margin-bottom: 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px; letter-spacing: .2em;
+      color: #6B7280; text-transform: uppercase;
+      margin-bottom: 4px;
     }
-    .tech-pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
+    .tech-pills { display: flex; flex-wrap: wrap; gap: 3px; }
     .tech-pill {
-      padding: 5px 12px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 500;
-      background: var(--surface);
-      color: var(--muted);
-      border: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px; letter-spacing: .08em;
+      padding: 3px 7px;
+      background: rgba(26, 26, 48, .35);
+      border: 1px solid rgba(240, 240, 240, .08);
+      border-radius: 10px;
+      color: #B0B0B8;
+      cursor: pointer;
+      transition: all .2s;
     }
-    .tech-pill.accent {
-      background: rgba(74, 222, 128, 0.08);
-      color: var(--accent);
-      border-color: rgba(74, 222, 128, 0.2);
-    }
-    .tech-pill.blue {
-      background: rgba(56, 189, 248, .08);
-      color: var(--accent-blue);
-      border-color: rgba(56, 189, 248, .2);
-    }
+    .tech-pill:active { background: rgba(74, 222, 128, .1); border-color: rgba(74, 222, 128, .3); color: #F0F0F0; }
+    .tech-pill.accent { border-color: rgba(74, 222, 128, .25); color: #86EFAC; }
+    .tech-pill.blue { border-color: rgba(56, 189, 248, .25); color: #38BDF8; }
 
-    /* Bottom Bar */
     .bottombar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 0;
-      border-top: 1px solid var(--border);
-      margin-top: 8px;
+      position: relative; z-index: 10;
+      margin-top: auto;
+      padding-top: 7px;
+      border-top: 1px solid rgba(240, 240, 240, .06);
+      display: flex; justify-content: space-between; align-items: center;
+      flex-shrink: 0;
     }
     .github-link {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      color: var(--muted);
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: 500;
-      transition: color .2s;
+      display: flex; align-items: center; gap: 5px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px; color: #6B7280; text-decoration: none;
+      letter-spacing: .08em; transition: color .2s;
     }
-    .github-link:hover { color: var(--text); }
-    .github-link svg { width: 16px; height: 16px; fill: currentColor; }
+    .github-link:active { color: #4ADE80; }
+    .github-link svg { width: 12px; height: 12px; fill: currentColor; }
     .visit-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 6px 16px;
-      border-radius: 6px;
-      background: var(--accent);
-      color: var(--bg);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px; letter-spacing: .1em;
+      color: #4ADE80;
+      border: 1px solid rgba(74, 222, 128, .35);
+      padding: 5px 10px; border-radius: 4px;
+      background: rgba(74, 222, 128, .05);
+      cursor: pointer; transition: all .2s;
       text-decoration: none;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: .02em;
-      transition: opacity .2s;
     }
-    .visit-btn:hover { opacity: .85; }
+    .visit-btn:active { background: #4ADE80; color: #0A0A1A; }
 
-    /* Overlay / Sheet */
     .overlay {
-      position: fixed;
-      inset: 0;
+      position: absolute; inset: 0;
+      background: rgba(10, 10, 26, .92);
+      backdrop-filter: blur(14px);
       z-index: 100;
-      background: rgba(0,0,0,.6);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .3s;
-      backdrop-filter: blur(4px);
+      opacity: 0; pointer-events: none;
+      display: flex; align-items: flex-end;
+      transition: opacity .35s;
     }
-    .overlay.open { opacity: 1; pointer-events: auto; }
+    .overlay.active { opacity: 1; pointer-events: auto; }
     .sheet {
-      position: fixed;
-      bottom: 0;
-      left: 0; right: 0;
-      z-index: 101;
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      border-radius: 16px 16px 0 0;
-      padding: 24px 20px 32px;
-      transform: translateY(100%);
-      transition: transform .4s cubic-bezier(.16,1,.3,1);
-      max-width: 480px;
-      margin: 0 auto;
+      width: 100%; max-height: 75%;
+      background: #0F0F22;
+      border-radius: 14px 14px 0 0;
+      transform: translateY(101%);
+      transition: transform .45s cubic-bezier(.7, 0, .3, 1);
+      padding: 16px 14px 20px;
+      overflow-y: auto;
     }
-    .sheet.open { transform: translateY(0); }
-    .sheet-handle {
-      width: 36px; height: 4px;
-      background: var(--border);
-      border-radius: 2px;
-      margin: 0 auto 16px;
-    }
+    .overlay.active .sheet { transform: translateY(0); }
+    .sheet-handle { width: 32px; height: 3px; background: #3A3A55; border-radius: 2px; margin: 0 auto 12px; }
     .sheet-title {
-      font-family: var(--serif);
-      font-size: 24px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 8px;
+      font-family: 'Noto Serif SC', serif;
+      font-size: 16px; font-weight: 500; color: #F0F0F0;
+      letter-spacing: .04em;
     }
     .sheet-desc {
-      font-size: 14px;
-      color: var(--muted);
-      line-height: 1.7;
-      margin-bottom: 16px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 11px; color: #B0B0B8; line-height: 1.75; margin-top: 10px;
     }
+    .sheet-desc code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; color: #4ADE80;
+      background: rgba(74, 222, 128, .1);
+      padding: 1px 4px; border-radius: 2px;
+    }
+    .sheet-points { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
     .sheet-point {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      margin-bottom: 10px;
-      font-size: 13px;
-      color: var(--muted);
+      display: flex; align-items: flex-start; gap: 8px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px; color: #D0D0D8; line-height: 1.55;
     }
     .sheet-point::before {
-      content: '▸';
-      color: var(--accent);
-      flex-shrink: 0;
+      content: '';
+      width: 5px; height: 5px;
+      background: #4ADE80; border-radius: 50%;
+      flex-shrink: 0; margin-top: 5px;
     }
     .sheet-close {
-      display: block;
-      width: 100%;
-      padding: 10px;
-      margin-top: 16px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: transparent;
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: border-color .2s, color .2s;
+      margin-top: 14px; width: 100%; padding: 10px;
+      background: rgba(74, 222, 128, .08);
+      border: 1px solid rgba(74, 222, 128, .25);
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; letter-spacing: .15em;
+      color: #4ADE80; cursor: pointer;
+      transition: all .2s;
     }
-    .sheet-close:hover { border-color: var(--accent); color: var(--accent); }
+    .sheet-close:active { background: #4ADE80; color: #0A0A1A; }
 
-    /* Toast */
     .toast {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%) translateY(80px);
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 10px 20px;
-      font-size: 13px;
-      color: var(--text);
-      opacity: 0;
-      transition: opacity .3s, transform .3s;
-      z-index: 200;
-      backdrop-filter: blur(8px);
-      white-space: nowrap;
+      position: absolute; bottom: 50px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #4ADE80; color: #0A0A1A;
+      padding: 7px 14px; border-radius: 5px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px; font-weight: 500;
+      opacity: 0; pointer-events: none;
+      transition: all .3s; z-index: 200;
     }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    @keyframes pulse { 0%,100% { opacity: .6; } 50% { opacity: 1; } }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .reveal { opacity: 0; transform: translateY(10px); transition: all .45s cubic-bezier(.4, 0, .2, 1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @keyframes chartGrow {
+      from { transform: scaleY(0); }
+      to { transform: scaleY(1); }
+    }
+    .chart-animate { animation: chartGrow .6s cubic-bezier(.4, 0, .2, 1) forwards; }
   </style>
 </head>
 <body>
-  <!-- 3D Background -->
-  <div id="vision-3d" style="position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden"></div>
-
   <div class="stage">
-    <!-- Top Bar -->
+    <div class="vision-3d-container" id="vision3d"></div>
+
     <div class="topbar reveal">
-      <a href="/youngsinsight/" class="brand">
-        <span class="brand-dot"></span>
-        Info Cards
-      </a>
-      <a href="/youngsinsight/" class="back-link">← Back</a>
+      <div class="brand"><span class="brand-dot"></span><span>Young's Insight</span></div>
+      <button class="share-btn" id="shareBtn">SHARE <span class="arr">↗</span></button>
     </div>
 
-    <!-- Hero -->
     <div class="hero reveal">
-      <div class="hero-svg">
-        <svg viewBox="0 0 280 280" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4ade80" stop-opacity=".15"/><stop offset="100%" stop-color="#0a0a1a" stop-opacity="0"/></linearGradient>
-          </defs>
-          <rect x="10" y="10" width="260" height="260" rx="8" fill="url(#sg)" stroke="#2a2a45" stroke-width=".5"/>
-          <!-- Grid -->
-          <g stroke="#4ade80" stroke-width=".3" opacity=".08">
-            <line x1="30" y1="60" x2="30" y2="220"/><line x1="80" y1="60" x2="80" y2="220"/>
-            <line x1="130" y1="60" x2="130" y2="220"/><line x1="180" y1="60" x2="180" y2="220"/><line x1="230" y1="60" x2="230" y2="220"/>
-            <line x1="30" y1="80" x2="250" y2="80"/><line x1="30" y1="110" x2="250" y2="110"/>
-            <line x1="30" y1="140" x2="250" y2="140"/><line x1="30" y1="170" x2="250" y2="170"/><line x1="30" y1="200" x2="250" y2="200"/>
-          </g>
-          <!-- Camera/lens wireframe -->
-          <g transform="translate(140,120)" stroke="#4ade80" fill="none" stroke-width="1.5" opacity=".8">
-            <rect x="-40" y="-28" width="80" height="56" rx="6"/>
-            <circle cx="0" cy="0" r="17" opacity=".9"/><circle cx="0" cy="0" r="9" opacity=".4"/>
-            <circle cx="0" cy="0" r="3" fill="#4ade80" opacity=".6"/>
-            <rect x="28" y="-20" width="8" height="5" rx="1.5"/>
-          </g>
-          <!-- Neural connections -->
-          <g opacity=".25" stroke="#38bdf8" stroke-width=".5">
-            <circle cx="50" cy="80" r="2.5" fill="#4ade80"/>
-            <circle cx="230" cy="80" r="2.5" fill="#4ade80"/>
-            <circle cx="50" cy="190" r="2" fill="#4ade80"/>
-            <circle cx="230" cy="190" r="2" fill="#4ade80"/>
-            <line x1="50" y1="80" x2="230" y2="80" opacity=".15"/>
-            <line x1="50" y1="190" x2="230" y2="190" opacity=".15"/>
-          </g>
-          <!-- Waveform -->
-          <g transform="translate(30,230)" opacity=".15" fill="none" stroke="#4ade80" stroke-width=".6">
-            <polyline points="0,0 25,-6 50,3 75,-10 100,2 125,-5 150,7 175,-3 200,5 225,-4 240,6"/>
-          </g>
-          <!-- Segmentation mask hint -->
-          <g transform="translate(140,165)" opacity=".15" stroke="#38bdf8" stroke-width=".3" fill="none">
-            <rect x="-40" y="-20" width="80" height="40" rx="3"/>
-            <ellipse cx="0" cy="0" rx="20" ry="10" opacity=".3"/>
-          </g>
-        </svg>
-      </div>
       <div class="meta-row">
-        <span class="meta-pill accent">商汤科技</span>
-        <span class="meta-pill">7B</span>
-        <span class="meta-pill">MoT</span>
-        <span class="meta-pill">CC BY-NC 4.0</span>
+        <span class="vol">商汤科技</span>
+        <span>2026.07.22</span>
       </div>
       <div class="title-block">
-        <div class="title-text">SenseNova-<span class="accent">Vision</span></div>
-        <div class="superdesign-line"></div>
-        <div class="tagline">把一切 CV 任务统一成图像生成——不做检测头、不做分割解码器、不做深度分支。</div>
+        <div class="vision-stamp" id="stamp">V</div>
+        <div class="title-text">
+          <div class="vision-title">SenseNova-<span class="dot">V</span></div>
+          <div class="superdesign-line">
+            <span class="superdesign">Unified Multimodal Generation</span>
+            <span class="v-tag">CC BY-NC 4.0</span>
+          </div>
+        </div>
       </div>
+      <div class="tagline">把一切 <em>CV 任务</em> 统一成图像生成</div>
     </div>
 
-    <!-- Intro -->
     <div class="intro reveal">
       <div class="intro-inner">
-        <div class="intro-line">Unified Multimodal Generation</div>
+        <div class="intro-line"></div>
         <div class="intro-text">
-          <strong>SenseNova-Vision</strong> 是商汤团队提出的统一多模态视觉生成模型。将物体检测、语义分割、深度估计、法线估计、OCR、姿态估计等 CV 任务统一为 UMM（Unified Masked Modeling）框架下的文本+图像生成任务。7B 参数量，MoT（Multi-modal Tokenizer）架构，是第一个纯生成式统一视觉 foundation model。
+          <strong>SenseNova-Vision</strong> 是商汤提出的统一多模态视觉生成模型。将检测、分割、深度、OCR、姿态等任务统一为 UMM 框架下的文本+图像生成。7B 参数，MoT 架构，首个纯生成式统一视觉 foundation model。
         </div>
       </div>
     </div>
 
-    <!-- Stats / Benchmarks -->
     <div class="stats-section reveal">
-      <div class="stats-header">Benchmarks</div>
-      <div class="stats-grid">
-        <div class="stat-card"><div class="stat-num"><span class="accent">56.6</span></div><div class="stat-label">COCO 检测 mAP</div></div>
-        <div class="stat-card"><div class="stat-num"><span class="accent">54.8</span></div><div class="stat-label">LVIS 长尾检测</div></div>
-        <div class="stat-card"><div class="stat-num"><span class="accent">66.8</span></div><div class="stat-label">Dense200 密集检测</div></div>
-        <div class="stat-card"><div class="stat-num"><span class="accent">49.5</span></div><div class="stat-label">ICDAR15 OCR</div></div>
-        <div class="stat-card"><div class="stat-num"><span class="accent">98.1</span></div><div class="stat-label">NYUv2 深度 δ↑</div></div>
-        <div class="stat-card"><div class="stat-num"><span class="accent">68.9</span></div><div class="stat-label">ScanNet 法线 11.25°↑</div></div>
+      <div class="stats-header">
+        <span class="stats-title">Benchmarks</span>
+        <span class="stats-badge">SOTA</span>
+      </div>
+      <div class="stats-chart">
+        <div class="stat-card" data-stat="coco" style="--stat-color: #4ADE80">
+          <div class="stat-num"><span class="accent">56.6</span></div>
+          <div class="stat-label">COCO 检测</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 10px"></div>
+            <div class="stat-bar chart-animate" style="height: 8px; animation-delay: .1s"></div>
+            <div class="stat-bar chart-animate" style="height: 9px; animation-delay: .15s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="lvis" style="--stat-color: #38BDF8">
+          <div class="stat-num"><span class="accent">54.8</span></div>
+          <div class="stat-label">LVIS 长尾</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 9px; animation-delay: .2s"></div>
+            <div class="stat-bar chart-animate" style="height: 7px; animation-delay: .25s"></div>
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .3s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="dense" style="--stat-color: #4ADE80">
+          <div class="stat-num"><span class="accent">66.8</span></div>
+          <div class="stat-label">Dense200</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .35s"></div>
+            <div class="stat-bar chart-animate" style="height: 8px; animation-delay: .4s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="ocr" style="--stat-color: #38BDF8">
+          <div class="stat-num"><span class="accent">49.5</span></div>
+          <div class="stat-label">ICDAR OCR</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 7px; animation-delay: .45s"></div>
+            <div class="stat-bar chart-animate" style="height: 9px; animation-delay: .5s"></div>
+            <div class="stat-bar chart-animate" style="height: 8px; animation-delay: .55s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="depth" style="--stat-color: #4ADE80">
+          <div class="stat-num"><span class="accent">98.1</span></div>
+          <div class="stat-label">深度 δ₁↑</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 10px; background: #4ADE80; animation-delay: .6s"></div>
+            <div class="stat-bar chart-animate" style="height: 10px; background: #4ADE80; animation-delay: .65s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="normal" style="--stat-color: #38BDF8">
+          <div class="stat-num"><span class="accent">68.9</span></div>
+          <div class="stat-label">法线 11.25°↑</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 9px; animation-delay: .7s"></div>
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .75s"></div>
+            <div class="stat-bar chart-animate" style="height: 8px; animation-delay: .8s"></div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Features -->
+    <div class="flow-section reveal">
+      <div class="flow-header">UMM Architecture</div>
+      <div class="flow-diagram">
+        <svg class="flow-svg" viewBox="0 0 350 45" fill="none">
+          <defs>
+            <marker id="ah1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#4ADE80" fill-opacity=".6"/></marker>
+            <marker id="ah2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#38BDF8" fill-opacity=".6"/></marker>
+          </defs>
+          <g class="flow-node" id="flow-input">
+            <rect x="3" y="10" width="60" height="24" rx="5" fill="rgba(74,222,128,.08)" stroke="#4ADE80" stroke-width="1" stroke-opacity=".4"/>
+            <text x="33" y="26" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#F0F0F0" text-anchor="middle">INPUT</text>
+          </g>
+          <path class="flow-arrow" d="M65 22 L80 22" stroke="#4ADE80" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#ah1)"/>
+          <g class="flow-node" id="flow-vit">
+            <rect x="83" y="8" width="70" height="28" rx="6" fill="rgba(56,189,248,.08)" stroke="#38BDF8" stroke-width="1"/>
+            <text x="118" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#38BDF8" text-anchor="middle">ViT Encoder</text>
+            <text x="118" y="31" font-family="JetBrains Mono, monospace" font-size="5" fill="#6B7280" text-anchor="middle">vision tokens</text>
+          </g>
+          <path class="flow-arrow" d="M156 22 L171 22" stroke="#4ADE80" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#ah1)" style="animation-delay: .3s"/>
+          <g class="flow-node" id="flow-umm">
+            <rect x="175" y="5" width="92" height="34" rx="7" fill="rgba(74,222,128,.1)" stroke="#4ADE80" stroke-width="1.2"/>
+            <text x="221" y="20" font-family="JetBrains Mono, monospace" font-size="7" fill="#4ADE80" text-anchor="middle">UMM Decoder</text>
+            <text x="221" y="30" font-family="JetBrains Mono, monospace" font-size="5.5" fill="#6B7280" text-anchor="middle">masked modeling</text>
+          </g>
+          <path class="flow-arrow" d="M270 22 L285 22" stroke="#38BDF8" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#ah2)" style="animation-delay: .6s"/>
+          <g class="flow-node" id="flow-output">
+            <rect x="288" y="10" width="58" height="24" rx="5" fill="rgba(74,222,128,.08)" stroke="#4ADE80" stroke-width="1" stroke-opacity=".4"/>
+            <text x="317" y="26" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#F0F0F0" text-anchor="middle">OUTPUT</text>
+          </g>
+          <circle cx="72" cy="22" r="2" fill="#4ADE80"><animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/></circle>
+          <circle cx="168" cy="22" r="2" fill="#38BDF8"><animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0.5s"/></circle>
+          <circle cx="282" cy="22" r="2" fill="#38BDF8"><animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="1s"/></circle>
+        </svg>
+      </div>
+    </div>
+
     <div class="features reveal">
-      <div class="features-header">Architecture</div>
       <div class="feature" data-f="0">
         <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
         <div class="feature-content">
           <div class="feature-title">UMM 统一框架</div>
           <div class="feature-desc">All CV tasks as generation</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width:100%"></div></div>
         </div>
         <span class="feature-arrow">→</span>
       </div>
@@ -549,42 +641,43 @@
         <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
         <div class="feature-content">
           <div class="feature-title">MoT 多模态分词器</div>
-          <div class="feature-desc">Multi-modal Tokenizer</div>
+          <div class="feature-desc">Unified visual + text tokens</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width:95%"></div></div>
         </div>
         <span class="feature-arrow">→</span>
       </div>
       <div class="feature" data-f="2">
         <div class="feature-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6"/></svg></div>
         <div class="feature-content">
-          <div class="feature-title">无检测头/分割解码器</div>
-          <div class="feature-desc">Pure generative paradigm</div>
+          <div class="feature-title">纯生成式范式</div>
+          <div class="feature-desc">No task-specific heads</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width:100%"></div></div>
         </div>
         <span class="feature-arrow">→</span>
       </div>
       <div class="feature" data-f="3">
         <div class="feature-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg></div>
         <div class="feature-content">
-          <div class="feature-title">跨任务</div>
-          <div class="feature-desc">Detection / Seg / Depth / OCR / Pose</div>
+          <div class="feature-title">跨任务覆盖</div>
+          <div class="feature-desc">Det / Seg / Depth / OCR / Pose</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width:90%"></div></div>
         </div>
         <span class="feature-arrow">→</span>
       </div>
     </div>
 
-    <!-- Tech Stack -->
     <div class="tech-section reveal">
       <div class="tech-header">Tech Stack</div>
       <div class="tech-pills">
         <span class="tech-pill accent">UMM</span>
         <span class="tech-pill accent">MoT</span>
-        <span class="tech-pill">Transformers</span>
-        <span class="tech-pill blue">ViT</span>
-        <span class="tech-pill">VQGAN</span>
+        <span class="tech-pill">ViT</span>
+        <span class="tech-pill blue">VQGAN</span>
         <span class="tech-pill">7B</span>
+        <span class="tech-pill">Transformers</span>
       </div>
     </div>
 
-    <!-- Bottom Bar -->
     <div class="bottombar reveal">
       <a href="https://github.com/OpenSenseNova/SenseNova-Vision" target="_blank" class="github-link">
         <svg viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
@@ -592,93 +685,19 @@
       </a>
       <a href="https://modelscope.cn/models/SenseNova/SenseNova-Vision-7B-MoT" target="_blank" class="visit-btn">ModelScope →</a>
     </div>
-  </div>
 
-  <!-- Overlay -->
-  <div class="overlay" id="overlay">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-title" id="sheetTitle"></div>
-      <div class="sheet-desc" id="sheetDesc"></div>
-      <div class="sheet-points" id="sheetPoints"></div>
-      <button class="sheet-close" id="sheetClose">CLOSE</button>
+    <div class="overlay" id="overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title" id="sheetTitle"></div>
+        <div class="sheet-desc" id="sheetDesc"></div>
+        <div class="sheet-points" id="sheetPoints"></div>
+        <button class="sheet-close" id="sheetClose">CLOSE</button>
+      </div>
     </div>
+    <div class="toast" id="toast"></div>
   </div>
 
-  <!-- Toast -->
-  <div class="toast" id="toast"></div>
-
-  <script>
-    // Feature data
-    const features = [
-      {
-        title: 'UMM 统一框架',
-        desc: 'SenseNova-Vision 的核心创新——把所有 CV 任务统一成 UMM 框架下的文本+图像生成。不需要专用的检测头、分割解码器、深度分支。一个模型，一个框架，所有任务。',
-        points: ['统一 Masked Modeling 框架，视觉任务 = 图像生成', '物体检测：生成包含边界框的标注图像', '语义分割：生成分割 Mask 图像', '深度/法线/姿态估计：生成对应视觉特征图', 'OCR：生成框+文字的可视化输出']
-      },
-      {
-        title: 'MoT 多模态分词器',
-        desc: 'Multi-modal Tokenizer——统一多模态分词器，将图像和文本映射到共享的 token 空间。Visual tokens 和 text tokens 在同一序列中交错排列，实现真正的跨模态理解。',
-        points: ['图像 → VQGAN tokenizer 编码为 visual tokens', '文本 → BPE tokenizer 编码为 text tokens', '共享 token 序列，支持多模态自回归生成', 'Visual tokens 数量可调节（perceptual / dense 模式）']
-      },
-      {
-        title: '纯生成式范式',
-        desc: '没有检测头、没有分割解码器、没有深度估计头、没有额外的分类器。一切 CV 任务都被重新定义为 UMM 框架下的条件图像生成任务。训练和推理流程高度统一。',
-        points: ['零专用任务头——全部通过生成完成', '训练时：输入图像 + 任务文本 → 生成标注图像', '推理时：输入图像 + 任务提示 → 生成结果图像', '架构极度简洁，扩展性强']
-      },
-      {
-        title: '跨任务能力',
-        desc: '单个模型在多个视觉任务上达到或接近 SOTA。从通用检测（COCO/LVIS）到密集任务（Dense200），从底层视觉（深度/法线）到高层理解（OCR/姿态），全部覆盖。',
-        points: ['检测：COCO mAP 56.6', '分割：语义/实例/全景 Seg 统一处理', '深度/法线：NYUv2 深度 δ1=98.1%，ScanNet 法线 68.9%', 'OCR：ICDAR15 端到端识别 49.5', '姿态：人体关键点估计统一输出']
-      }
-    ];
-
-    // Feature click
-    document.querySelectorAll('.feature').forEach(el => {
-      el.addEventListener('click', function() {
-        const i = parseInt(this.dataset.f);
-        const f = features[i];
-        document.getElementById('sheetTitle').textContent = f.title;
-        document.getElementById('sheetDesc').textContent = f.desc;
-        document.getElementById('sheetPoints').innerHTML = f.points.map(p => '<div class="sheet-point">' + p + '</div>').join('');
-        document.getElementById('overlay').classList.add('open');
-        document.querySelector('.sheet').classList.add('open');
-      });
-    });
-
-    // Close overlay
-    document.getElementById('sheetClose').addEventListener('click', closeSheet);
-    document.getElementById('overlay').addEventListener('click', function(e) {
-      if (e.target === this) closeSheet();
-    });
-
-    function closeSheet() {
-      document.getElementById('overlay').classList.remove('open');
-      document.querySelector('.sheet').classList.remove('open');
-    }
-
-    // Toast
-    function showToast(msg) {
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 2000);
-    }
-
-    // Scroll reveal observer
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(e => {
-        if (e.isIntersecting) e.target.classList.add('visible');
-      });
-    }, { threshold: 0.1 });
-    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-    // Trigger initial visible
-    setTimeout(() => document.querySelectorAll('.reveal').forEach(el => {
-      if (el.getBoundingClientRect().top < window.innerHeight) el.classList.add('visible');
-    }), 100);
-  </script>
-
-  <!-- Three.js -->
   <script type="importmap">
     {
       "imports": {
@@ -687,71 +706,225 @@
       }
     }
   </script>
+
   <script type="module">
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-    const container = document.getElementById('vision-3d');
-    const scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0x0A0A1A, 25, 60);
+    const container = document.getElementById('vision3d');
+    const w = container.clientWidth;
+    const h = container.clientHeight;
 
-    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.set(0, 3, 18);
-    camera.lookAt(0, 0, 0);
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 1000);
+    camera.position.set(0, 0.5, 4.5);
 
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(w, h);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(renderer.domElement);
 
-    // Grid floor
-    const gridHelper = new THREE.GridHelper(30, 16, 0x1A1A30, 0x1A1A30);
-    gridHelper.position.y = -2;
-    scene.add(gridHelper);
+    // Lights
+    scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+    const mLight = new THREE.DirectionalLight(0xffffff, 1);
+    mLight.position.set(5, 5, 5);
+    scene.add(mLight);
+    const aLight = new THREE.PointLight(0x4ADE80, 0.6, 10);
+    aLight.position.set(-3, 2, 3);
+    scene.add(aLight);
+    const bLight = new THREE.PointLight(0x38BDF8, 0.3, 10);
+    bLight.position.set(3, -2, -3);
+    scene.add(bLight);
 
-    // Wireframe camera model
-    const camGeo = new THREE.BoxGeometry(2.2, 1.6, 1.8);
-    const camMat = new THREE.MeshBasicMaterial({ color: 0x4ade80, wireframe: true, transparent: true, opacity: 0.25 });
-    const camMesh = new THREE.Mesh(camGeo, camMat);
-    camMesh.position.set(0, 0.8, 0);
-    scene.add(camMesh);
+    // Camera lens group
+    const camGroup = new THREE.Group();
 
-    const lensGeo = new THREE.SphereGeometry(0.7, 12, 12);
-    const lensMat = new THREE.MeshBasicMaterial({ color: 0x4ade80, wireframe: true, transparent: true, opacity: 0.15 });
-    const lensMesh = new THREE.Mesh(lensGeo, lensMat);
-    lensMesh.position.set(0.6, 0.2, 1);
-    scene.add(lensMesh);
+    // Body
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x1A1A30, roughness: 0.5, metalness: 0.2 });
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.9, 0.9), bodyMat);
+    body.position.y = -0.2;
+    camGroup.add(body);
 
-    // Particles
-    const count = 300;
-    const pos = new Float32Array(count * 3);
-    for (let i = 0; i < count * 3; i++) pos[i] = (Math.random() - 0.5) * 40;
-    const pGeo = new THREE.BufferGeometry();
-    pGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    const pMat = new THREE.PointsMaterial({ color: 0x4ade80, size: 0.06, transparent: true, opacity: 0.25 });
-    scene.add(new THREE.Points(pGeo, pMat));
+    // Lens barrel
+    const barrelMat = new THREE.MeshStandardMaterial({ color: 0x222240, roughness: 0.6, metalness: 0.3 });
+    const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.5, 0.5, 16), barrelMat);
+    barrel.rotation.x = Math.PI / 2;
+    barrel.position.set(0.9, 0, 0);
+    camGroup.add(barrel);
 
-    // Accent particles
-    const aMat = new THREE.PointsMaterial({ color: 0x38bdf8, size: 0.04, transparent: true, opacity: 0.15 });
-    scene.add(new THREE.Points(pGeo.clone(), aMat));
+    // Lens glass
+    const glassMat = new THREE.MeshStandardMaterial({ color: 0x4ADE80, roughness: 0.1, metalness: 0.3, transparent: true, opacity: 0.2 });
+    const glass = new THREE.Mesh(new THREE.CircleGeometry(0.5, 16), glassMat);
+    glass.position.set(1.15, 0, 0);
+    camGroup.add(glass);
+
+    // Lens ring
+    const ringMat = new THREE.MeshStandardMaterial({ color: 0x4ADE80, roughness: 0.3, metalness: 0.2 });
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.52, 0.04, 8, 24), ringMat);
+    ring.rotation.y = Math.PI / 2;
+    ring.position.set(1.15, 0, 0);
+    camGroup.add(ring);
+
+    // Accent rings
+    const aRingMat = new THREE.MeshStandardMaterial({ color: 0x38BDF8, roughness: 0.3, transparent: true, opacity: 0.15 });
+    const aRing = new THREE.Mesh(new THREE.TorusGeometry(0.54, 0.015, 8, 24), aRingMat);
+    aRing.rotation.y = Math.PI / 2;
+    aRing.position.set(1.2, 0, 0);
+    camGroup.add(aRing);
+
+    // Grid overlay (wireframe box around camera)
+    const gridMat = new THREE.MeshBasicMaterial({ color: 0x4ADE80, wireframe: true, transparent: true, opacity: 0.08 });
+    const gridBox = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.4, 1.4), gridMat);
+    camGroup.add(gridBox);
+
+    camGroup.position.set(0.3, 0.5, 0);
+    scene.add(camGroup);
+
+    // Orbit controls
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.enableZoom = false;
+    controls.enablePan = false;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 1.5;
 
     let t = 0;
     function animate() {
       requestAnimationFrame(animate);
-      t += 0.003;
-      camMesh.rotation.y = Math.sin(t * 0.3) * 0.4;
-      camMesh.rotation.x = Math.sin(t * 0.2) * 0.1;
-      lensMesh.rotation.y = Math.sin(t * 0.3 + 0.5) * 0.4;
-      scene.rotation.y = Math.sin(t * 0.08) * 0.15;
+      t += 0.02;
+      camGroup.position.y = 0.5 + Math.sin(t) * 0.08;
+      controls.update();
       renderer.render(scene, camera);
     }
     animate();
 
     window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
+      const nw = container.clientWidth, nh = container.clientHeight;
+      camera.aspect = nw / nh;
       camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setSize(nw, nh);
     });
+  </script>
+
+  <script>
+    const features = [
+      { title: 'UMM 统一框架', desc: 'SenseNova-Vision 的核心创新——把所有 CV 任务统一为 UMM 框架下的文本+图像生成。不需要专用的检测头、分割解码器、深度分支。一个模型，一个框架，覆盖所有任务。', points: ['统一 Masked Modeling 框架，视觉任务 = 图像生成', '物体检测：生成包含边界框的标注图像', '语义分割：生成分割 Mask 图像', '深度/法线：生成对应视觉特征图', 'OCR/姿态：生成框+文字的可视化输出'] },
+      { title: 'MoT 多模态分词器', desc: 'Multi-modal Tokenizer——将图像和文本映射到共享 token 空间。Visual tokens 和 text tokens 在同一序列中交错排列，实现真正的跨模态理解与生成。', points: ['图像 → VQGAN tokenizer 编码为 visual tokens', '文本 → BPE tokenizer 编码为 text tokens', '共享 token 序列，支持多模态自回归生成', 'Visual tokens 数量可调节（perceptual / dense）'] },
+      { title: '纯生成式范式', desc: '零专用任务头——一切 CV 任务重新定义为 UMM 框架下的条件图像生成。没有检测头、没有分割解码器、没有深度估计头、没有额外的分类器。训练和推理流程高度统一。', points: ['零专用任务头——全部通过生成完成', '训练：输入图像 + 任务文本 → 生成标注图像', '推理：输入图像 + 任务提示 → 生成结果图像', '架构极度简洁，扩展性强'] },
+      { title: '跨任务覆盖', desc: '单个模型在多个视觉任务上达到或接近 SOTA。从通用检测（COCO/LVIS）到密集任务（Dense200），从底层视觉（深度/法线）到高层理解（OCR/姿态），全部覆盖。', points: ['检测：COCO mAP 56.6 / LVIS 54.8 / Dense200 66.8', 'OCR：ICDAR15 端到端识别 49.5', '深度：NYUv2 δ1=98.1%', '法线：ScanNet 11.25°↑ 68.9%', '姿态：人体关键点估计统一输出'] }
+    ];
+
+    const statsInfo = {
+      coco: 'COCO 物体检测 benchmark，mAP 56.6。在通用检测任务上达到与专用检测模型相当的水平，纯生成式范式无专用检测头。',
+      lvis: 'LVIS 长尾检测 benchmark，mAP 54.8。在长尾类别上表现优异，体现了生成式框架对罕见类别的泛化能力。',
+      dense: 'Dense200 密集检测 benchmark，mAP 66.8。在高密度场景下仍保持高精度，验证了模型对复杂场景的处理能力。',
+      ocr: 'ICDAR15 端到端 OCR 识别，Score 49.5。无需专用 OCR 模型，直接通过图像生成完成文字检测与识别。',
+      depth: 'NYUv2 深度估计 δ1 指标 98.1%。像素级深度预测，通过生成深度图实现。',
+      normal: 'ScanNet 法线估计（11.25° 阈值内正确率）68.9%。表面法线预测，生成式方案达到了专用法线模型的水平。'
+    };
+
+    const flowInfo = {
+      input: '输入图像 + 任务文本提示（检测/分割/深度/OCR等）',
+      vit: 'ViT Encoder 将图像编码为 visual tokens 序列',
+      umm: 'UMM Decoder 通过 Masked Modeling 生成目标输出',
+      output: '生成的标注图像（边界框/分割Mask/深度图等）'
+    };
+
+    const techInfo = {
+      UMM: 'Unified Masked Modeling，统一框架',
+      MoT: 'Multi-modal Tokenizer，跨模态分词',
+      ViT: 'Vision Transformer 图像编码器',
+      VQGAN: 'Vector Quantized GAN 图像 tokenizer',
+      '7B': '70 亿参数量的 Transformer 模型',
+      Transformers: '基于标准 Transformer 架构'
+    };
+
+    const overlay = document.getElementById('overlay');
+    const sheetTitle = document.getElementById('sheetTitle');
+    const sheetDesc = document.getElementById('sheetDesc');
+    const sheetPoints = document.getElementById('sheetPoints');
+    const toast = document.getElementById('toast');
+    const shareBtn = document.getElementById('shareBtn');
+
+    setTimeout(() => {
+      document.querySelectorAll('.reveal').forEach((el, i) => {
+        setTimeout(() => el.classList.add('visible'), i * 60);
+      });
+    }, 100);
+
+    document.querySelectorAll('.feature').forEach(el => {
+      el.addEventListener('click', () => {
+        const f = features[+el.dataset.f];
+        sheetTitle.textContent = f.title;
+        sheetDesc.textContent = f.desc;
+        sheetPoints.innerHTML = f.points.map(p => `<div class="sheet-point">${p}</div>`).join('');
+        overlay.classList.add('active');
+      });
+    });
+
+    document.querySelectorAll('.stat-card').forEach(el => {
+      el.addEventListener('click', () => {
+        const info = statsInfo[el.dataset.stat];
+        if (info) {
+          sheetTitle.textContent = el.querySelector('.stat-label').textContent;
+          sheetDesc.textContent = info;
+          sheetPoints.innerHTML = '';
+          overlay.classList.add('active');
+        }
+      });
+    });
+
+    document.querySelectorAll('.flow-node').forEach(el => {
+      el.addEventListener('click', () => {
+        const id = el.id.replace('flow-', '');
+        const info = flowInfo[id];
+        if (info) {
+          const titles = { input: 'Input', vit: 'ViT Encoder', umm: 'UMM Decoder', output: 'Output' };
+          sheetTitle.textContent = titles[id] || id;
+          sheetDesc.textContent = info;
+          sheetPoints.innerHTML = '';
+          overlay.classList.add('active');
+        }
+      });
+    });
+
+    document.querySelectorAll('.tech-pill').forEach(el => {
+      el.addEventListener('click', () => {
+        const tech = el.textContent.trim();
+        const info = techInfo[tech];
+        if (info) {
+          sheetTitle.textContent = tech;
+          sheetDesc.textContent = info;
+          sheetPoints.innerHTML = '';
+          overlay.classList.add('active');
+        }
+      });
+    });
+
+    document.getElementById('stamp').addEventListener('click', () => {
+      sheetTitle.textContent = 'SenseNova-Vision 👁️';
+      sheetDesc.innerHTML = '商汤科技提出的<strong>首个纯生成式统一视觉 Foundation Model</strong>。7B 参数，MoT 架构，把检测/分割/深度/OCR/姿态全部统一为图像生成。';
+      sheetPoints.innerHTML = '<div class="sheet-point">统一框架 — UMM + MoT</div><div class="sheet-point">纯生成式 — 无检测头/分割解码器</div><div class="sheet-point">开源 — CC BY-NC 4.0</div><div class="sheet-point">跨任务 — COCO/LVIS/Dense/ICDAR/NYU/ScanNet SOTA</div>';
+      overlay.classList.add('active');
+    });
+
+    document.getElementById('sheetClose').addEventListener('click', () => overlay.classList.remove('active'));
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('active'); });
+
+    shareBtn.addEventListener('click', async () => {
+      const text = 'SenseNova-Vision — 统一多模态视觉生成\n商汤首个纯生成式统一视觉 Foundation Model';
+      const url = 'https://mindresonance.online/youngsinsight/pages/sensenova.html';
+      const full = text + '\n' + url;
+      try { if (navigator.share) { await navigator.share({ title: 'SenseNova-Vision', text, url }); return; } } catch(e) {}
+      try { await navigator.clipboard.writeText(full); showToast('已复制标题与链接'); } catch(e) {
+        const ta = document.createElement('textarea'); ta.value = full;
+        document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+        document.body.removeChild(ta); showToast('已复制标题与链接');
+      }
+    });
+
+    function showToast(msg) { toast.textContent = msg; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 2000); }
   </script>
 </body>
 </html>
