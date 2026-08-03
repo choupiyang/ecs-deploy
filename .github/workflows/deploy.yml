@@ -30,18 +30,18 @@ jobs:
 
       - name: Dump existing card pages
         run: |
-          echo "===BUZZ_HTML_BASE64==="
-          ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} 'base64 /var/www/youngsinsight/pages/buzz.html'
-          echo "===BUZZ_END==="
-          echo "===PAXM_HTML_BASE64==="
-          ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} 'base64 /var/www/youngsinsight/pages/paxm.html' 2>/dev/null || true
-          echo "===PAXM_END==="
-          echo "===TREG_HTML_BASE64==="
-          ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} 'base64 /var/www/youngsinsight/pages/treg.html' 2>/dev/null || true
-          echo "===TREG_END==="
-          echo "===BUZZ_SVG_BASE64==="
-          ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} 'base64 /var/www/youngsinsight/cards/buzz-cover.svg' 2>/dev/null || true
-          echo "===BUZZ_SVG_END==="
+          scp -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:/var/www/youngsinsight/pages/buzz.html /tmp/buzz.html
+          scp -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:/var/www/youngsinsight/pages/paxm.html /tmp/paxm.html || true
+          scp -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:/var/www/youngsinsight/pages/treg.html /tmp/treg.html || true
+          scp -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:/var/www/youngsinsight/cards/buzz-cover.svg /tmp/buzz.svg
+          base64 /tmp/buzz.html
+          echo "===FILE:buzz.html==="
+          base64 /tmp/paxm.html 2>/dev/null
+          echo "===FILE:paxm.html==="
+          base64 /tmp/treg.html 2>/dev/null
+          echo "===FILE:treg.html==="
+          base64 /tmp/buzz.svg 2>/dev/null
+          echo "===FILE:buzz.svg==="
 
 
       - name: Verify
