@@ -640,9 +640,11 @@ def main():
     try:
         from http.server import ThreadingHTTPServer
     except ImportError:
+        # Python < 3.7 兼容
+        from http.server import HTTPServer
         from socketserver import ThreadingMixIn
 
-        class ThreadingHTTPServer(ThreadingMixIn, BaseHTTPServer.HTTPServer):
+        class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
             daemon_threads = True
     server = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
     print("YS API listening on 127.0.0.1:%d (base: %s)" % (PORT, SITE_BASE), flush=True)

@@ -108,6 +108,13 @@ sleep 1
 
 echo "==> [5/5] 验证"
 sleep 1
-curl -s http://127.0.0.1:8080/health || { echo "!! API health failed"; exit 1; }
+if ! curl -s http://127.0.0.1:8080/health; then
+  echo "!! API health failed, diagnostics:"
+  python3 --version
+  systemctl status ys-api --no-pager -n 15 2>&1 || true
+  journalctl -u ys-api --no-pager -n 20 2>&1 | tail -20 || true
+  ls -la $BASE/ys_api.py 2>&1 || true
+  exit 1
+fi
 systemctl is-active ys-api
 echo "SETUP DONE"
