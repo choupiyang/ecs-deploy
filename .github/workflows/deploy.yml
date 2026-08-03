@@ -19,6 +19,7 @@ jobs:
           ssh-keyscan -H ${{ secrets.ECS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
 
           test -d deploy/pages && ls deploy/pages/*.html >/dev/null 2>&1 && scp -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no deploy/pages/*.html ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:/var/www/youngsinsight/pages/ || true
+          test -d deploy/cards && ls deploy/cards/*.svg >/dev/null 2>&1 && scp -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no deploy/cards/*.svg ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:/var/www/youngsinsight/cards/ || true
           ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} "chmod 644 /var/www/youngsinsight/cards/* /var/www/youngsinsight/pages/* 2>/dev/null || true"
 
       - name: Update cards.json
