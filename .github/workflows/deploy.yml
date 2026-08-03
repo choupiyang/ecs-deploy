@@ -30,19 +30,4 @@ jobs:
 
       - name: Verify
         run: |
-          ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} "ls -lh /var/www/youngsinsight/cards/ /var/www/youngsinsight/pages/ 2>/dev/null; echo '---'; python3 -c \"import json;d=json.load(open('/var/www/youngsinsight/cards.json'));print(len(d),'cards');[print(' ',c['title'])for c in d[-3:]]\"      - name: Fetch existing card pages
-        run: |
-          mkdir -p ref_pages
-          ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} 'cat /var/www/youngsinsight/pages/buzz.html' > ref_pages/buzz.html
-          ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} 'cat /var/www/youngsinsight/pages/paxm.html' > ref_pages/paxm.html || true
-          ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} 'cat /var/www/youngsinsight/pages/treg.html' > ref_pages/treg.html || true
-          ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} 'cat /var/www/youngsinsight/cards/buzz-cover.svg' > ref_pages/buzz-cover.svg || true
-          ls -la ref_pages/
-          echo "FETCH_DONE"
-      - name: Upload refs
-        uses: actions/upload-artifact@v4
-        with:
-          name: card-refs
-          path: ref_pages/
-
-"
+          ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} "ls -lh /var/www/youngsinsight/cards/ /var/www/youngsinsight/pages/ 2>/dev/null; echo '---'; python3 -c \"import json;d=json.load(open('/var/www/youngsinsight/cards.json'));print(len(d),'cards');[print(' ',c['title'])for c in d[-3:]]\""
