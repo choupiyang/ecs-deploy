@@ -3,9 +3,6 @@ name: Deploy to ECS
 on:
   push:
     branches: [main]
-    paths:
-      - 'deploy/**'
-      - 'update_cards.json'
   workflow_dispatch:
 
 jobs:
@@ -32,7 +29,6 @@ jobs:
         run: |
           if [ -f "update_cards.json" ]; then
             scp -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no update_cards.json ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:/var/www/youngsinsight/deploy_patch.json
-            ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} "python3 /var/www/youngsinsight/cards_patch.py" 2>/dev/null || \
             ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} 'python3 -c "import json;n=json.load(open(\"/var/www/youngsinsight/deploy_patch.json\"));d=json.load(open(\"/var/www/youngsinsight/cards.json\"));i=next((i for i,c in enumerate(d) if c.get(\"id\")==n[\"id\"]),None);exec(\"d[i]=n\" if i is not None else \"d.append(n)\");json.dump(d,open(\"/var/www/youngsinsight/cards.json\",\"w\"),ensure_ascii=False,indent=2);print(len(d),\"cards\")"'
           fi
 
