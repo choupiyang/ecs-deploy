@@ -18,6 +18,25 @@ jobs:
           chmod 600 ~/.ssh/ecs_key
           ssh-keyscan -H ${{ secrets.ECS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
 
+      - name: Fetch existing card pages for reference
+        run: |
+          ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} 'cat /var/www/youngsinsight/pages/buzz.html' > ref_pages/buzz.html
+          ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} 'cat /var/www/youngsinsight/pages/paxm.html' > ref_pages/paxm.html 2>/dev/null || true
+          ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} 'cat /var/www/youngsinsight/pages/treg.html' > ref_pages/treg.html 2>/dev/null || true
+          ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} 'cat /var/www/youngsinsight/cards/buzz-cover.svg' > ref_pages/buzz-cover.svg 2>/dev/null || true
+          ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} 'cat /var/www/youngsinsight/cards/paxm-cover.svg' > ref_pages/paxm-cover.svg 2>/dev/null || true
+          echo "Fetched existing card pages"
+          
+      - name: Commit reference pages back to repo
+        run: |
+          git config user.name "ecs-deploy-bot"
+          git config user.email "bot@ecs-deploy.local"
+          if [ -d "ref_pages" ] && [ "$(ls -A ref_pages 2>/dev/null)" ]; then
+            git add ref_pages/
+            git commit -m "ref: existing card pages for study" || true
+            git push origin main 2>&1
+          fi
+
       - name: Sync files to ECS
         run: |
           ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} "mkdir -p /var/www/youngsinsight/cards /var/www/youngsinsight/pages"
