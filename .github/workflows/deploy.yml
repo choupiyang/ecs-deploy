@@ -19,33 +19,23 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.ECS_SSH_KEY }}" > ~/.ssh/ecs_key
           chmod 600 ~/.ssh/ecs_key
-          ssh-keyscan -H ${{ secrets.ECS_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ secrets.ECS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
 
       - name: Sync files to ECS
         run: |
-          ssh -i ~/.ssh/ecs_key ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} "mkdir -p /var/www/youngsinsight/cards /var/www/youngsinsight/pages"
-          if [ -d "deploy" ]; then
-            scp -i ~/.ssh/ecs_key -r deploy/cards/* ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:/var/www/youngsinsight/cards/
-            scp -i ~/.ssh/ecs_key -r deploy/pages/* ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:/var/www/youngsinsight/pages/
-            ssh -i ~/.ssh/ecs_key ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} "chmod 644 /var/www/youngsinsight/cards/* /var/www/youngsinsight/pages/*"
-          fi
+          ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} "mkdir -p /var/www/youngsinsight/cards /var/www/youngsinsight/pages"
+          test -d deploy/cards && ls deploy/cards/*.svg >/dev/null 2>&1 && scp -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no deploy/cards/*.svg ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:/var/www/youngsinsight/cards/ || true
+          test -d deploy/pages && ls deploy/pages/*.html >/dev/null 2>&1 && scp -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no deploy/pages/*.html ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:/var/www/youngsinsight/pages/ || true
+          ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} "chmod 644 /var/www/youngsinsight/cards/* /var/www/youngsinsight/pages/* 2>/dev/null || true"
 
       - name: Update cards.json
         run: |
           if [ -f "update_cards.json" ]; then
-            scp -i ~/.ssh/ecs_key update_cards.json ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:/var/www/youngsinsight/deploy_patch.json
-            ssh -i ~/.ssh/ecs_key ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} 'python3 -c "
-import json
-new = json.load(open(\"/var/www/youngsinsight/deploy_patch.json\"))
-data = json.load(open(\"/var/www/youngsinsight/cards.json\"))
-idx = next((i for i,c in enumerate(data) if c.get(\"id\") == new[\"id\"]), None)
-if idx is not None: data[idx] = new
-else: data.append(new)
-json.dump(data, open(\"/var/www/youngsinsight/cards.json\",\"w\"), ensure_ascii=False, indent=2)
-print(f\"Done: {len(data)} cards\")
-"'
+            scp -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no update_cards.json ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:/var/www/youngsinsight/deploy_patch.json
+            ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} "python3 /var/www/youngsinsight/cards_patch.py" 2>/dev/null || \
+            ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} 'python3 -c "import json;n=json.load(open(\"/var/www/youngsinsight/deploy_patch.json\"));d=json.load(open(\"/var/www/youngsinsight/cards.json\"));i=next((i for i,c in enumerate(d) if c.get(\"id\")==n[\"id\"]),None);exec(\"d[i]=n\" if i is not None else \"d.append(n)\");json.dump(d,open(\"/var/www/youngsinsight/cards.json\",\"w\"),ensure_ascii=False,indent=2);print(len(d),\"cards\")"'
           fi
 
       - name: Verify
         run: |
-          ssh -i ~/.ssh/ecs_key ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} "ls -lh /var/www/youngsinsight/cards/ /var/www/youngsinsight/pages/ 2>/dev/null; echo '---'; python3 -c \"import json; d=json.load(open('/var/www/youngsinsight/cards.json')); print(len(d),'cards'); [print(' ',c['title']) for c in d[-3:]]\""
+          ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} "ls -lh /var/www/youngsinsight/cards/ /var/www/youngsinsight/pages/ 2>/dev/null; echo '---'; python3 -c \"import json;d=json.load(open('/var/www/youngsinsight/cards.json'));print(len(d),'cards');[print(' ',c['title'])for c in d[-3:]]\""
