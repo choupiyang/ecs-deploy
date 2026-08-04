@@ -1,10 +1,10 @@
 {
-  "id": "loopx",
-  "title": "LoopX",
-  "subtitle": "Local Control Plane for Long-Running AI Agents",
-  "image": "cards/loopx-cover.svg",
-  "page": "pages/loopx.html",
-  "tags": ["循环工程", "AI Agent", "控制平面", "Codex", "Python"],
+  "id": "marker",
+  "title": "Marker",
+  "subtitle": "PDF → Markdown / JSON 高精度文档转换",
+  "image": "cards/marker-cover.svg",
+  "page": "pages/marker.html",
+  "tags": ["Datalab", "文档智能", "PDF解析", "38K★"],
   "date": "2026-08-04",
   "type": "recommendation"
 }

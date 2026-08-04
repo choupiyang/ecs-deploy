@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#070B14">
+  <title>Marker — PDF → Markdown / JSON 高精度转换</title>
+  <link rel="preconnect" href="https://fonts.googleapis.cn">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.cn/css2?family=Noto+Serif+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #070B14;
+      --bg-2: #0A1220;
+      --accent: #C8FF00;
+      --accent-dim: #9ED800;
+      --cyan: #00E5FF;
+      --text: #F0F0F0;
+      --muted: #6B7280;
+      --success: #22C55E;
+      --surface: #0E1A2B;
+      --serif: 'Noto Serif SC', serif;
+      --cn: 'Noto Sans SC', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; background: #03060C; font-family: 'Noto Sans SC', sans-serif; color: #F0F0F0; -webkit-font-smoothing: antialiased; }
+    body { display: flex; align-items: center; justify-content: center; }
+
+    .stage {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      height: min(100vh, calc(100vw * 16 / 9));
+      width: min(100vw, calc(100vh * 9 / 16));
+      background: #070B14;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,.6);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 16px 10px;
+    }
+    /* 背景光晕 */
+    .stage::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 38% at 78% 4%, rgba(200, 255, 0, .10) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 35% at 10% 45%, rgba(0, 229, 255, .07) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 50% 100%, rgba(14, 26, 43, .9) 0%, transparent 60%);
+    }
+    /* 网格纹理 */
+    .stage::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(rgba(240, 240, 240, .012) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(240, 240, 240, .012) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    /* 顶部转换动画容器 */
+    .convert-3d {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 130px;
+      z-index: 1;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .doc-page {
+      width: 46px; height: 62px;
+      background: linear-gradient(160deg, #101B2E, #0B1422);
+      border: 1px solid rgba(200, 255, 0, .4);
+      border-radius: 4px;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .doc-page::before {
+      content: '';
+      position: absolute; top: 10px; left: 7px; right: 7px;
+      height: 3px; background: rgba(200, 255, 0, .9); border-radius: 1px;
+      box-shadow: 0 8px 0 rgba(127, 130, 112, .55), 0 16px 0 rgba(127, 130, 112, .45), 0 24px 0 rgba(0, 229, 255, .5);
+    }
+    .doc-page .scan {
+      position: absolute; left: -3px; right: -3px; top: 24px; height: 3px;
+      background: rgba(200, 255, 0, .5);
+      animation: scanMove 2.2s ease-in-out infinite;
+    }
+    @keyframes scanMove {
+      0%, 100% { top: 8px; opacity: .15; }
+      50% { top: 56px; opacity: .8; }
+    }
+    .conv-arrow {
+      width: 30px; height: 2px;
+      background: linear-gradient(90deg, #C8FF00, #00E5FF);
+      position: relative; flex-shrink: 0;
+    }
+    .conv-arrow::after {
+      content: '';
+      position: absolute; right: -1px; top: -3px;
+      border: 4px solid transparent;
+      border-left-color: #00E5FF;
+    }
+    .conv-arrow .pulse {
+      position: absolute; left: 0; top: -2px;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #C8FF00;
+      animation: pulseX 1.6s ease-in-out infinite;
+    }
+    @keyframes pulseX { 0% { left: 0; opacity: 1; } 100% { left: 100%; opacity: .2; } }
+    .md-panel {
+      width: 52px; height: 62px;
+      background: #0B1422;
+      border: 1px solid rgba(0, 229, 255, .4);
+      border-radius: 4px;
+      position: relative;
+      flex-shrink: 0;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 8px 6px;
+    }
+    .md-panel .h1 { width: 100%; height: 4px; background: #C8FF00; border-radius: 1px; margin-bottom: 6px; }
+    .md-panel .line { height: 2px; background: rgba(127, 130, 112, .6); border-radius: 1px; margin-bottom: 4px; }
+    .md-panel .line.c { background: rgba(0, 229, 255, .5); }
+    .md-panel .caret {
+      position: absolute; right: 5px; top: 9px; width: 2px; height: 8px;
+      background: #C8FF00;
+      animation: blink 1s steps(1) infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* 顶部条 */
+    .topbar {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .16em;
+      color: #6B7280;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(240, 240, 240, .06);
+    }
+    .brand { display: flex; align-items: center; gap: 6px; color: #F0F0F0; }
+    .brand-dot { width: 5px; height: 5px; background: #C8FF00; border-radius: 50%; box-shadow: 0 0 8px #C8FF00; animation: pulse 2.2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .3; transform: scale(.6); } }
+    .share-btn {
+      background: none;
+      border: 1px solid rgba(240, 240, 240, .2);
+      padding: 4px 8px 3px;
+      font: inherit;
+      color: #F0F0F0;
+      cursor: pointer;
+      letter-spacing: .12em;
+      transition: all .3s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 7.5px;
+    }
+    .share-btn:active { background: #C8FF00; color: #070B14; border-color: #C8FF00; }
+
+    /* Hero */
+    .hero { position: relative; z-index: 5; flex-shrink: 0; margin-top: 8px; }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #6B7280;
+      margin-bottom: 5px;
+    }
+    .vol { color: #00E5FF; }
+    .title-block { display: flex; align-items: flex-start; gap: 10px; }
+    .mk-stamp {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(200, 255, 0, .55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Noto Serif SC', serif;
+      font-size: 19px;
+      font-weight: 700;
+      color: #C8FF00;
+      flex-shrink: 0;
+      position: relative;
+      box-shadow: 0 0 18px rgba(200, 255, 0, .18) inset, 0 0 12px rgba(200, 255, 0, .1);
+    }
+    .mk-stamp::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 1px dashed rgba(0, 229, 255, .35);
+      animation: spin 9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .title-text { min-width: 0; }
+    .mk-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: -.02em;
+      line-height: 1;
+      color: #F0F0F0;
+    }
+    .mk-title .dot { color: #C8FF00; }
+    .superdesign-line { display: flex; align-items: center; gap: 8px; margin-top: 5px; }
+    .superdesign { font-family: 'JetBrains Mono', monospace; font-size: 7px; letter-spacing: .14em; color: #9CA3AF; }
+    .v-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      letter-spacing: .14em;
+      color: #00E5FF;
+      border: 1px solid rgba(0, 229, 255, .3);
+      padding: 1px 5px;
+      border-radius: 2px;
+      background: rgba(0, 229, 255, .06);
+    }
+    .tagline {
+      margin-top: 6px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 11px;
+      color: #D1D5DB;
+      line-height: 1.45;
+    }
+    .tagline em { color: #C8FF00; font-style: normal; font-weight: 500; }
+
+    /* Intro */
+    .intro { position: relative; z-index: 5; margin-top: 8px; flex-shrink: 0; }
+    .intro-inner { display: flex; gap: 9px; align-items: stretch; }
+    .intro-line { width: 2px; background: linear-gradient(180deg, #C8FF00, #00E5FF); border-radius: 1px; flex-shrink: 0; }
+    .intro-text {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 9.5px;
+      line-height: 1.6;
+      color: #9CA3AF;
+    }
+    .intro-text strong { color: #F0F0F0; font-weight: 500; }
+
+    /* Stats */
+    .stats-section { position: relative; z-index: 5; margin-top: 9px; flex-shrink: 0; }
+    .stats-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+    .stats-title { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; }
+    .stats-badge { font-family: 'JetBrains Mono', monospace; font-size: 6px; letter-spacing: .16em; color: #00E5FF; border: 1px solid rgba(0, 229, 255, .3); padding: 1px 5px; border-radius: 2px; }
+    .stats-chart { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .stat-card {
+      background: rgba(240, 240, 240, .02);
+      border: 1px solid rgba(240, 240, 240, .07);
+      border-radius: 7px;
+      padding: 7px 6px 5px;
+      cursor: pointer;
+      transition: all .25s;
+      min-width: 0;
+    }
+    .stat-card:active { background: rgba(200, 255, 0, .06); border-color: rgba(200, 255, 0, .25); transform: scale(.96); }
+    .stat-num { font-family: 'Noto Serif SC', serif; font-size: 16px; font-weight: 700; color: #F0F0F0; line-height: 1; white-space: nowrap; }
+    .stat-num .accent { color: var(--stat-color, #C8FF00); }
+    .stat-label { font-size: 7px; color: #6B7280; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .stat-mini-chart { display: flex; align-items: flex-end; gap: 2px; height: 12px; margin-top: 4px; }
+    .stat-bar { width: 4px; background: var(--stat-color, #C8FF00); opacity: .55; border-radius: 1px; transform-origin: bottom; }
+
+    /* Flow */
+    .flow-section { position: relative; z-index: 5; margin-top: 9px; flex-shrink: 0; }
+    .flow-header { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; margin-bottom: 5px; }
+    .flow-header::after { content: ''; flex: 1; height: 1px; background: rgba(240, 240, 240, .06); }
+    .flow-diagram { position: relative; }
+    .flow-svg { width: 100%; height: auto; display: block; }
+    .flow-node { cursor: pointer; }
+    .flow-node:active { transform: scale(.95); }
+    .flow-arrow { animation: flowPulse 2s ease-in-out infinite; }
+    @keyframes flowPulse { 0%, 100% { stroke-opacity: .4; } 50% { stroke-opacity: 1; } }
+
+    /* Features */
+    .features { position: relative; z-index: 5; margin-top: 8px; display: flex; flex-direction: column; gap: 4.5px; flex-shrink: 0; }
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      background: rgba(240, 240, 240, .02);
+      border: 1px solid rgba(240, 240, 240, .07);
+      border-radius: 7px;
+      padding: 6.5px 9px;
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .feature:active { background: rgba(200, 255, 0, .05); border-color: rgba(200, 255, 0, .2); }
+    .feature-icon {
+      width: 25px;
+      height: 25px;
+      border-radius: 6px;
+      background: rgba(200, 255, 0, .09);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-icon svg { width: 13px; height: 13px; stroke: #C8FF00; fill: none; stroke-width: 1.5; }
+    .feature-icon::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 120%, rgba(0, 229, 255, .25), transparent 60%);
+      opacity: 0;
+      transition: opacity .25s;
+    }
+    .feature:active .feature-icon::after { opacity: 1; }
+    .feature-content { flex: 1; min-width: 0; }
+    .feature-title { font-family: 'Noto Sans SC', sans-serif; font-size: 9.5px; font-weight: 500; color: #F0F0F0; letter-spacing: .02em; }
+    .feature-desc { font-size: 7.5px; color: #6B7280; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .feature-arrow { font-size: 11px; color: #C8FF00; opacity: 0; transform: translateX(-2px); transition: all .25s; flex-shrink: 0; }
+    .feature:active .feature-arrow { opacity: 1; transform: translateX(2px); }
+    .feature-progress { height: 2px; background: rgba(240, 240, 240, .06); border-radius: 1px; margin-top: 4px; overflow: hidden; }
+    .feature-progress-bar { height: 100%; background: linear-gradient(90deg, #C8FF00, #00E5FF); border-radius: 1px; transform-origin: left; animation: progressIn .8s cubic-bezier(.4, 0, .2, 1) forwards; transform: scaleX(0); }
+    @keyframes progressIn { to { transform: scaleX(1); } }
+
+    /* Tech */
+    .tech-section { position: relative; z-index: 5; margin-top: 9px; flex-shrink: 0; }
+    .tech-header { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; margin-bottom: 5px; }
+    .tech-pills { display: flex; flex-wrap: wrap; gap: 4px; }
+    .tech-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6.5px;
+      letter-spacing: .08em;
+      color: #9CA3AF;
+      border: 1px solid rgba(240, 240, 240, .1);
+      padding: 2px 7px;
+      border-radius: 10px;
+      cursor: pointer;
+      background: rgba(240, 240, 240, .02);
+      transition: all .2s;
+    }
+    .tech-pill:active { background: rgba(240, 240, 240, .08); }
+    .tech-pill.accent { border-color: rgba(200, 255, 0, .3); color: #C8FF00; }
+    .tech-pill.cyan { border-color: rgba(0, 229, 255, .25); color: #67E8F9; }
+
+    /* Bottom bar */
+    .bottombar {
+      position: relative;
+      z-index: 5;
+      margin-top: auto;
+      padding-top: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      border-top: 1px solid rgba(240, 240, 240, .06);
+    }
+    .github-link { display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 8px; color: #D1D5DB; text-decoration: none; }
+    .github-link svg { width: 13px; height: 13px; fill: #9CA3AF; transition: fill .25s; }
+    .github-link:active svg { fill: #C8FF00; }
+    .visit-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .14em;
+      color: #070B14;
+      background: linear-gradient(90deg, #C8FF00, #00E5FF);
+      padding: 6px 13px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all .25s;
+    }
+    .visit-btn:active { transform: scale(.95); filter: brightness(1.15); }
+
+    /* Overlay + Sheet */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: flex-end;
+      background: rgba(0, 0, 0, .5);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .35s;
+    }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+    .sheet {
+      width: 100%;
+      max-height: 74%;
+      background: linear-gradient(180deg, #0E1A2B, #0A1220);
+      border: 1px solid rgba(200, 255, 0, .18);
+      border-bottom: none;
+      border-radius: 16px 16px 0 0;
+      padding: 14px 18px 18px;
+      transform: translateY(101%);
+      transition: transform .45s cubic-bezier(.7, 0, .3, 1);
+      overflow-y: auto;
+    }
+    .overlay.active .sheet { transform: translateY(0); }
+    .sheet-handle { width: 32px; height: 3px; background: #3A4A5A; border-radius: 2px; margin: 0 auto 12px; }
+    .sheet-title { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; color: #F0F0F0; margin-bottom: 7px; }
+    .sheet-title em { color: #C8FF00; font-style: normal; }
+    .sheet-desc { font-size: 10.5px; line-height: 1.65; color: #9CA3AF; }
+    .sheet-desc code { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #00E5FF; background: rgba(0, 229, 255, .08); padding: 1px 4px; border-radius: 2px; }
+    .sheet-code {
+      margin-top: 10px;
+      background: #070B14;
+      border: 1px solid rgba(240, 240, 240, .08);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      line-height: 1.7;
+      color: #C8FF00;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .sheet-points { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+    .sheet-point { display: flex; align-items: flex-start; gap: 8px; font-family: 'Noto Sans SC', sans-serif; font-size: 10px; color: #D0D0D8; line-height: 1.55; }
+    .sheet-point::before { content: ''; width: 5px; height: 5px; background: #C8FF00; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .sheet-close {
+      margin-top: 14px;
+      width: 100%;
+      padding: 10px;
+      background: rgba(200, 255, 0, .08);
+      border: 1px solid rgba(200, 255, 0, .25);
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .15em;
+      color: #C8FF00;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .sheet-close:active { background: #C8FF00; color: #070B14; }
+
+    /* Toast */
+    .toast {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #22C55E;
+      color: #070B14;
+      padding: 7px 14px;
+      border-radius: 5px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: all .3s;
+      z-index: 200;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* 入场动画 */
+    .reveal { opacity: 0; transform: translateY(10px); transition: all .45s cubic-bezier(.4, 0, .2, 1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @keyframes chartGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+    .chart-animate { animation: chartGrow .6s cubic-bezier(.4, 0, .2, 1) forwards; }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <!-- 转换动画 -->
+    <div class="convert-3d">
+      <div class="doc-page"><div class="scan"></div></div>
+      <div class="conv-arrow"><div class="pulse"></div></div>
+      <div class="md-panel">
+        <div class="h1"></div>
+        <div class="line" style="width:85%"></div>
+        <div class="line c" style="width:65%"></div>
+        <div class="line" style="width:75%"></div>
+        <div class="line c" style="width:50%"></div>
+        <div class="caret"></div>
+      </div>
+    </div>
+
+    <!-- Topbar -->
+    <div class="topbar reveal">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <span>Young's Insight</span>
+      </div>
+      <button class="share-btn" id="shareBtn">SHARE <span class="arr">↗</span></button>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero reveal">
+      <div class="meta-row">
+        <span class="vol">DOCUMENT INTELLIGENCE</span>
+        <span>2026.08.04</span>
+      </div>
+      <div class="title-block">
+        <div class="mk-stamp" id="stamp">M</div>
+        <div class="title-text">
+          <div class="mk-title">Marker<span class="dot">.</span></div>
+          <div class="superdesign-line">
+            <span class="superdesign">by Datalab</span>
+            <span class="v-tag">APACHE-2.0</span>
+          </div>
+        </div>
+      </div>
+      <div class="tagline">把 PDF / 扫描件 / Office 文档，高精度转成<em> Markdown / JSON</em>，让 LLM 直接读懂任何纸面世界</div>
+    </div>
+
+    <!-- Intro -->
+    <div class="intro reveal">
+      <div class="intro-inner">
+        <div class="intro-line"></div>
+        <div class="intro-text">
+          文档智能转换引擎。PDF、图片、PPTX、DOCX、XLSX、HTML、EPUB → <strong>markdown / JSON / chunks / HTML</strong>；
+          表格、公式、多栏、扫描件全处理；可选的 <strong>LLM 增强</strong>把精度推到 VLM 级别。
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-section reveal">
+      <div class="stats-header">
+        <span class="stats-title">Metrics</span>
+        <span class="stats-badge">OPEN SOURCE</span>
+      </div>
+      <div class="stats-chart">
+        <div class="stat-card" data-stat="stars" style="--stat-color: #C8FF00">
+          <div class="stat-num"><span class="accent">38.3K</span></div>
+          <div class="stat-label">Stars</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 6px; animation-delay: .1s"></div>
+            <div class="stat-bar chart-animate" style="height: 9px; animation-delay: .15s"></div>
+            <div class="stat-bar chart-animate" style="height: 7px; animation-delay: .2s"></div>
+            <div class="stat-bar chart-animate" style="height: 11px; animation-delay: .25s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="bench" style="--stat-color: #00E5FF">
+          <div class="stat-num"><span class="accent">76.0</span>%</div>
+          <div class="stat-label">olmocr-bench</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .3s"></div>
+            <div class="stat-bar chart-animate" style="height: 8px; animation-delay: .35s"></div>
+            <div class="stat-bar chart-animate" style="height: 11px; animation-delay: .4s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="forks" style="--stat-color: #C8FF00">
+          <div class="stat-num"><span class="accent">2.7K</span></div>
+          <div class="stat-label">Forks</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 8px; animation-delay: .45s"></div>
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .5s"></div>
+            <div class="stat-bar chart-animate" style="height: 6px; animation-delay: .55s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="pdfs" style="--stat-color: #22C55E">
+          <div class="stat-num" style="color: #22C55E">1.4K</div>
+          <div class="stat-label">评测 PDF</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 10px; background: #22C55E; animation-delay: .6s"></div>
+            <div class="stat-bar chart-animate" style="height: 10px; background: #22C55E; animation-delay: .65s"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flow -->
+    <div class="flow-section reveal">
+      <div class="flow-header">Conversion Pipeline</div>
+      <div class="flow-diagram">
+        <svg class="flow-svg" viewBox="0 0 350 50" fill="none">
+          <defs>
+            <marker id="arrowh" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L6,3 z" fill="#C8FF00" fill-opacity=".6"/>
+            </marker>
+            <marker id="arrowh2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L6,3 z" fill="#00E5FF" fill-opacity=".6"/>
+            </marker>
+          </defs>
+          <g class="flow-node" id="flow-input">
+            <rect x="3" y="12" width="62" height="26" rx="5" fill="rgba(200,255,0,.07)" stroke="#C8FF00" stroke-width="1" stroke-opacity=".45"/>
+            <text x="34" y="24" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#F0F0F0" text-anchor="middle">ANY DOC</text>
+            <text x="34" y="33" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#6B7280" text-anchor="middle">pdf·img·office</text>
+          </g>
+          <path class="flow-arrow" d="M68 25 L84 25" stroke="#C8FF00" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#arrowh)"/>
+          <g class="flow-node" id="flow-layout">
+            <rect x="87" y="8" width="78" height="34" rx="6" fill="rgba(200,255,0,.11)" stroke="#C8FF00" stroke-width="1.2"/>
+            <text x="126" y="21" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#C8FF00" text-anchor="middle">LAYOUT + OCR</text>
+            <text x="126" y="32" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#6B7280" text-anchor="middle">tables·formulas·scan</text>
+          </g>
+          <path class="flow-arrow" d="M168 25 L184 25" stroke="#00E5FF" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#arrowh2)" style="animation-delay: .3s"/>
+          <g class="flow-node" id="flow-md">
+            <rect x="188" y="12" width="64" height="26" rx="5" fill="rgba(0,229,255,.07)" stroke="#00E5FF" stroke-width="1" stroke-opacity=".45"/>
+            <text x="220" y="24" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#F0F0F0" text-anchor="middle">MARKDOWN</text>
+            <text x="220" y="33" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#6B7280" text-anchor="middle">+json·html·chunks</text>
+          </g>
+          <path class="flow-arrow" d="M255 25 L271 25" stroke="#C8FF00" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#arrowh)" style="animation-delay: .6s"/>
+          <g class="flow-node" id="flow-llm">
+            <rect x="275" y="15" width="72" height="20" rx="4" fill="rgba(200,255,0,.07)" stroke="#C8FF00" stroke-width=".8" stroke-opacity=".45"/>
+            <text x="311" y="25" font-family="JetBrains Mono, monospace" font-size="6" fill="#C8FF00" text-anchor="middle">LLM READY</text>
+            <text x="311" y="33" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#6B7280" text-anchor="middle">RAG·agents·data</text>
+          </g>
+          <circle cx="76" cy="25" r="2" fill="#C8FF00">
+            <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="176" cy="25" r="2" fill="#00E5FF">
+            <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0.5s"/>
+          </circle>
+          <circle cx="263" cy="25" r="2" fill="#C8FF00">
+            <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="1s"/>
+          </circle>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <div class="features reveal">
+      <div class="feature" data-f="0">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">全格式 · 全语言</div>
+          <div class="feature-desc">PDF / 图片 / PPTX / DOCX / XLSX / HTML / EPUB</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 95%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="1">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="12" y1="9" x2="12" y2="21"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">表格 · 公式 · 版式</div>
+          <div class="feature-desc">表格/表单/公式/行内数学/链接/引用/代码块完整保留</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 100%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="2">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2h6c0-.8.4-1.5 1-2A7 7 0 0 0 12 2z"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">LLM 增强（可选）</div>
+          <div class="feature-desc">--use_llm：跨页表格合并 · 公式整理 · 表单取值</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 90%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="3">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">高精度 · 低噪声</div>
+          <div class="feature-desc">olmocr-bench 76.0%，领先 MinerU / docling；去页眉页脚</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 100%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="4">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">三端可跑</div>
+          <div class="feature-desc">GPU / CPU / MPS 全支持，图片自动提取保存</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 85%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+    </div>
+
+    <!-- Tech -->
+    <div class="tech-section reveal">
+      <div class="tech-header">Tech Stack</div>
+      <div class="tech-pills">
+        <span class="tech-pill accent">Python 3.10+</span>
+        <span class="tech-pill">PyTorch</span>
+        <span class="tech-pill cyan">Gemini</span>
+        <span class="tech-pill">Claude</span>
+        <span class="tech-pill cyan">Ollama</span>
+        <span class="tech-pill">GPU·CPU·MPS</span>
+      </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="bottombar reveal">
+      <a href="https://github.com/datalab-to/marker" target="_blank" class="github-link">
+        <svg viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        datalab-to/marker
+      </a>
+      <a href="https://github.com/datalab-to/marker" target="_blank" class="visit-btn">VISIT →</a>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title" id="sheetTitle"></div>
+        <div class="sheet-desc" id="sheetDesc"></div>
+        <div class="sheet-code" id="sheetCode" style="display:none"></div>
+        <div class="sheet-points" id="sheetPoints"></div>
+        <button class="sheet-close" id="sheetClose">CLOSE</button>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script>
+  (function(){
+    var $=function(s){return document.querySelector(s)};
+    var overlay=$('#overlay'), sheetTitle=$('#sheetTitle'), sheetDesc=$('#sheetDesc'),
+        sheetPoints=$('#sheetPoints'), sheetCode=$('#sheetCode'), toast=$('#toast');
+
+    // Sheet 数据
+    var DATA = {
+      stars: {
+        title: '38.3K Stars <em>· 社区共识</em>',
+        desc: 'PDF→Markdown 转换的事实标准。从 2023 年 10 月开源至今，被 RAG 管线、Agent 工作流、知识库产品广泛采用，是文档进 LLM 之前最常用的"入口清洗器"。',
+        points: ['2.7K Forks · Apache-2.0 代码许可 + OpenRAIL-M 模型许可', '2026-07 仍在活跃迭代（Chandra 新一代模型同源）', '官方托管平台 Datalab 已处理 10 亿+ 页/周']
+      },
+      bench: {
+        title: '76.0% <em>olmocr-bench</em>',
+        desc: '第三方基准 olmocr-bench（1403 个 PDF，覆盖数学、表格、多栏、扫描件、硬边案例，8 类目宏平均）得分 76.0%，领先 MinerU 与 docling，逼近大 VLM。',
+        points: ['数字原生 PDF 达 83.5%（born-digital）', 'fast 模式走纯文本层路径，成本更低', '--disable_ocr 可跳过 VLM，更快更省']
+      },
+      forks: {
+        title: '2.7K Forks <em>· 生态衍生</em>',
+        desc: '庞大的派生生态：被 Docker 化部署、被封装成 API 服务、被接入各种 RAG 框架，是文档智能链路里被复用最多的开源组件之一。',
+        points: ['官方 Docker 镜像开箱即用', 'marker_gui 提供图形界面', '支持批量转换与目录输出']
+      },
+      pdfs: {
+        title: '1.4K 评测 PDF <em>· 硬核验证</em>',
+        desc: '在 AllenAI 的 olmocr-bench 上验证：1403 份真实 PDF，覆盖数学公式、复杂表格、多栏排版、扫描件与各种硬边界案例，而非简单样例。',
+        points: ['第三方基准，非自评', '8 个类别宏平均打分', '可与 MinerU / docling 直接对比复现']
+      },
+      input: {
+        title: '输入：<em>任何文档</em>',
+        desc: 'PDF、图片、PPTX、DOCX、XLSX、HTML、EPUB 全部支持，全语言覆盖。扫描件与图片走 OCR/VLM 路径，数字文档走文本层路径。',
+        points: ['marker_single file.pdf 一键转换', '--page_range 指定页范围', '批处理目录自动遍历']
+      },
+      layout: {
+        title: 'LAYOUT + OCR <em>· 版式识别</em>',
+        desc: '先做版面分析（检测标题/正文/表格/图片区域），再对扫描件做 OCR。表格结构、多栏阅读顺序、页眉页脚识别都在这一层完成。',
+        points: ['布局模型 + 文本层双通道', '表格/表单结构还原', '页眉页脚/水印自动剔除']
+      },
+      md: {
+        title: '输出：<em>Markdown / JSON / HTML / Chunks</em>',
+        desc: '输出结构化 markdown，可同时产出 JSON（含位置元数据）、HTML 与分块（chunks），供 RAG 检索直接使用。',
+        points: ['公式转 LaTeX 行内/块级', '图片自动提取并保存', '--paginate_output 按页分块']
+      },
+      llm: {
+        title: 'LLM READY <em>· 下游直接消费</em>',
+        desc: '转换结果干净结构化，可直接进 RAG 向量库、喂给 Agent 或导入知识库，无需二次清洗。',
+        points: ['JSON 含版面坐标元数据', 'chunks 适配检索式切分', 'LLM 增强模式进一步提升精度']
+      },
+      f0: {
+        title: '全格式 · 全语言',
+        desc: '从论文 PDF 到合同扫描件，从 PPT 到 Excel 表格，都能转成统一的 markdown 结构。',
+        points: ['PDF / 图片 / PPTX / DOCX / XLSX / HTML / EPUB', '全语言支持（含中日韩、公式密集文档）', 'pip install marker-pdf[full] 启用全格式']
+      },
+      f1: {
+        title: '表格 · 公式 · 版式',
+        desc: '复杂表格转 markdown 表格、公式转 LaTeX、多栏按阅读顺序重排——这是 marker 的招牌能力。',
+        points: ['表格/表单结构完整还原', '行内数学与块级公式转 LaTeX', '链接、引用、代码块格式保留']
+      },
+      f2: {
+        title: 'LLM 增强（可选）',
+        desc: '加 --use_llm 用 LLM 兜底：跨页表格合并、行内数学纠错、表单值抽取。默认 gemini-3.5-flash，支持 Gemini / Claude / OpenAI 兼容 / Azure / Vertex / OpenRouter / Ollama。',
+        points: ['跨页表格自动合并', '公式与特殊字符整理', '表单字段值抽取', '自带 prompt 可自定义']
+      },
+      f3: {
+        title: '高精度 · 低噪声',
+        desc: '76.0% 整体 / 83.5% 数字原生，领先 MinerU 与 docling，逼近大 VLM；同时自动剔除页眉页脚等噪声。',
+        points: ['olmocr-bench 8 类目宏平均 76.0%', '数字原生 PDF 83.5%', '去页眉页脚/水印/重复页码']
+      },
+      f4: {
+        title: '三端可跑',
+        desc: 'GPU / CPU / MPS 全支持。GPU 默认 balanced 模式，CPU/MPS 默认 fast 模式，无 GPU 也能用。',
+        points: ['GPU（默认 balanced 高精度）', 'CPU / MPS（默认 fast 更快）', '图片自动提取保存', '--disable_ocr 跳过 VLM 极致加速']
+      }
+    };
+
+    function openSheet(key){
+      var d = DATA[key]; if(!d) return;
+      sheetTitle.innerHTML = d.title;
+      sheetDesc.textContent = d.desc;
+      sheetCode.style.display = 'none';
+      sheetPoints.innerHTML = d.points.map(function(p){
+        return '<div class="sheet-point">' + p + '</div>';
+      }).join('');
+      overlay.classList.add('active');
+    }
+    function closeSheet(){ overlay.classList.remove('active'); }
+
+    // 绑定：stats / flow / features
+    document.querySelectorAll('.stat-card').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet(el.dataset.stat); });
+    });
+    document.querySelectorAll('.flow-node').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet(el.id.replace('flow-','')); });
+    });
+    document.querySelectorAll('.feature').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet('f'+el.dataset.f); });
+    });
+    $('#sheetClose').addEventListener('click', closeSheet);
+    overlay.addEventListener('click', function(e){ if(e.target===overlay) closeSheet(); });
+
+    // 分享
+    $('#shareBtn').addEventListener('click', function(){
+      var url = location.href.split('?')[0];
+      if(navigator.share){
+        navigator.share({title:'Marker — PDF→Markdown 高精度转换', url:url}).catch(function(){});
+      }else if(navigator.clipboard){
+        navigator.clipboard.writeText(url).then(function(){
+          showToast('链接已复制');
+        });
+      }
+    });
+    $('#stamp').addEventListener('click', function(){
+      $('#stamp').style.transform = 'rotate(180deg) scale(.9)';
+      setTimeout(function(){ $('#stamp').style.transform=''; }, 400);
+      openSheet('bench');
+    });
+
+    function showToast(msg){
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(function(){ toast.classList.remove('show'); }, 1800);
+    }
+
+    // 入场动画（渐进增强：失败也不影响内容可见）
+    if('IntersectionObserver' in window){
+      document.querySelectorAll('.reveal').forEach(function(x){ x.classList.add('visible'); });
+    }else{
+      document.querySelectorAll('.reveal').forEach(function(x){ x.classList.add('visible'); });
+    }
+  })();
+  </script>
+</body>
+</html>
