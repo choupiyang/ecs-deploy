@@ -20,7 +20,7 @@ jobs:
 
           test -d deploy/pages && ls deploy/pages/*.html >/dev/null 2>&1 && scp -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no deploy/pages/*.html ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:/var/www/youngsinsight/pages/ || true
           test -d deploy/cards && scp -r -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no deploy/cards/* ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:/var/www/youngsinsight/cards/ || true
-          ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} "chmod -R 644 /var/www/youngsinsight/cards/ /var/www/youngsinsight/pages/ 2>/dev/null || true"
+          ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} "find /var/www/youngsinsight/cards/ /var/www/youngsinsight/pages/ -type f -exec chmod 644 {} + 2>/dev/null || true"
 
       - name: Update cards.json
         run: |
