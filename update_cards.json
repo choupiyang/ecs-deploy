@@ -1,10 +1,10 @@
 {
-  "id": "marker",
-  "title": "Marker",
-  "subtitle": "PDF → Markdown / JSON 高精度文档转换",
-  "image": "cards/marker-cover.svg",
-  "page": "pages/marker.html",
-  "tags": ["Datalab", "文档智能", "PDF解析", "38K★"],
-  "date": "2026-08-04",
+  "id": "codex-qq-skin",
+  "title": "Codex QQ Skin",
+  "subtitle": "Codex 桌面端 QQ 复古皮肤生成器",
+  "image": "cards/codex-qq-skin-cover.svg",
+  "page": "pages/codex-qq-skin.html",
+  "tags": ["Codex", "QQ皮肤", "皮肤生成器", "389★"],
+  "date": "2026-08-05",
   "type": "recommendation"
 }

@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#061224">
+  <title>Codex QQ Skin — Codex 桌面端 QQ 复古皮肤生成器</title>
+  <link rel="preconnect" href="https://fonts.googleapis.cn">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.cn/css2?family=Noto+Serif+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #061224;
+      --bg-2: #0A1C38;
+      --accent: #12B7F5;
+      --accent-light: #4DE1FF;
+      --cyan: #4DE1FF;
+      --amber: #FFB020;
+      --text: #F0F0F0;
+      --muted: #6B7280;
+      --success: #28C840;
+      --surface: #0E2A4E;
+      --serif: 'Noto Serif SC', serif;
+      --cn: 'Noto Sans SC', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; background: #030A18; font-family: 'Noto Sans SC', sans-serif; color: #F0F0F0; -webkit-font-smoothing: antialiased; }
+    body { display: flex; align-items: center; justify-content: center; }
+
+    .stage {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      height: min(100vh, calc(100vw * 16 / 9));
+      width: min(100vw, calc(100vh * 9 / 16));
+      background: #061224;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,.6);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 16px 10px;
+    }
+    /* 背景光晕 */
+    .stage::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 38% at 78% 4%, rgba(18, 183, 245, .12) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 35% at 10% 45%, rgba(77, 225, 255, .06) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 50% 100%, rgba(14, 42, 78, .9) 0%, transparent 60%);
+    }
+    .stage::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(rgba(240, 240, 240, .012) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(240, 240, 240, .012) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    /* 顶部条 */
+    .topbar {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .16em;
+      color: #6B7280;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(240, 240, 240, .06);
+    }
+    .brand { display: flex; align-items: center; gap: 6px; color: #F0F0F0; }
+    .brand-dot { width: 5px; height: 5px; background: #12B7F5; border-radius: 50%; box-shadow: 0 0 8px #12B7F5; animation: pulse 2.2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .3; transform: scale(.6); } }
+    .share-btn {
+      background: none;
+      border: 1px solid rgba(240, 240, 240, .2);
+      padding: 4px 8px 3px;
+      font: inherit;
+      color: #F0F0F0;
+      cursor: pointer;
+      letter-spacing: .12em;
+      transition: all .3s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 7.5px;
+    }
+    .share-btn:active { background: #12B7F5; color: #061224; border-color: #12B7F5; }
+
+    /* Hero */
+    .hero { position: relative; z-index: 5; flex-shrink: 0; margin-top: 8px; }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #6B7280;
+      margin-bottom: 5px;
+    }
+    .vol { color: #4DE1FF; }
+    .title-block { display: flex; align-items: flex-start; gap: 10px; }
+    .qq-stamp {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(18, 183, 245, .6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Noto Serif SC', serif;
+      font-size: 19px;
+      font-weight: 900;
+      color: #12B7F5;
+      flex-shrink: 0;
+      position: relative;
+      box-shadow: 0 0 18px rgba(18, 183, 245, .2) inset, 0 0 12px rgba(18, 183, 245, .12);
+    }
+    .qq-stamp::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 1px dashed rgba(77, 225, 255, .35);
+      animation: spin 9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .title-text { min-width: 0; }
+    .qq-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: -.02em;
+      line-height: 1.05;
+      color: #F0F0F0;
+    }
+    .qq-title .dot { color: #12B7F5; }
+    .superdesign-line { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+    .superdesign { font-family: 'JetBrains Mono', monospace; font-size: 7px; letter-spacing: .14em; color: #9CA3AF; }
+    .v-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      letter-spacing: .14em;
+      color: #4DE1FF;
+      border: 1px solid rgba(77, 225, 255, .3);
+      padding: 1px 5px;
+      border-radius: 2px;
+      background: rgba(77, 225, 255, .06);
+    }
+    .tagline {
+      margin-top: 5px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10.5px;
+      color: #D1D5DB;
+      line-height: 1.45;
+    }
+    .tagline em { color: #4DE1FF; font-style: normal; font-weight: 500; }
+
+    /* 实例图区 */
+    .shots { position: relative; z-index: 5; margin-top: 8px; flex-shrink: 0; }
+    .shots-header { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; margin-bottom: 5px; }
+    .shots-header::after { content: ''; flex: 1; height: 1px; background: rgba(240, 240, 240, .06); }
+    .shots-tabs { display: flex; gap: 5px; margin-bottom: 6px; }
+    .shot-tab {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .1em;
+      color: #9CA3AF;
+      border: 1px solid rgba(240, 240, 240, .12);
+      padding: 3px 10px;
+      border-radius: 12px;
+      cursor: pointer;
+      background: rgba(240, 240, 240, .02);
+      transition: all .2s;
+    }
+    .shot-tab.on { border-color: rgba(18, 183, 245, .5); color: #4DE1FF; background: rgba(18, 183, 245, .1); }
+    .shot-frame {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid rgba(18, 183, 245, .25);
+      background: #030A18;
+      cursor: zoom-in;
+    }
+    .shot-frame img { width: 100%; height: auto; display: block; }
+    .shot-frame .zoom-hint {
+      position: absolute;
+      right: 6px; bottom: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6.5px;
+      color: #061224;
+      background: rgba(77, 225, 255, .85);
+      padding: 2px 7px;
+      border-radius: 10px;
+      letter-spacing: .08em;
+    }
+
+    /* Stats */
+    .stats-section { position: relative; z-index: 5; margin-top: 8px; flex-shrink: 0; }
+    .stats-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+    .stats-title { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; }
+    .stats-badge { font-family: 'JetBrains Mono', monospace; font-size: 6px; letter-spacing: .16em; color: #4DE1FF; border: 1px solid rgba(77, 225, 255, .3); padding: 1px 5px; border-radius: 2px; }
+    .stats-chart { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .stat-card {
+      background: rgba(240, 240, 240, .02);
+      border: 1px solid rgba(240, 240, 240, .07);
+      border-radius: 7px;
+      padding: 7px 6px 5px;
+      cursor: pointer;
+      transition: all .25s;
+      min-width: 0;
+    }
+    .stat-card:active { background: rgba(18, 183, 245, .07); border-color: rgba(18, 183, 245, .3); transform: scale(.96); }
+    .stat-num { font-family: 'Noto Serif SC', serif; font-size: 16px; font-weight: 700; color: #F0F0F0; line-height: 1; white-space: nowrap; }
+    .stat-num .accent { color: var(--stat-color, #12B7F5); }
+    .stat-label { font-size: 7px; color: #6B7280; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .stat-mini-chart { display: flex; align-items: flex-end; gap: 2px; height: 12px; margin-top: 4px; }
+    .stat-bar { width: 4px; background: var(--stat-color, #12B7F5); opacity: .55; border-radius: 1px; transform-origin: bottom; }
+
+    /* Features */
+    .features { position: relative; z-index: 5; margin-top: 8px; display: flex; flex-direction: column; gap: 4.5px; flex-shrink: 0; }
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      background: rgba(240, 240, 240, .02);
+      border: 1px solid rgba(240, 240, 240, .07);
+      border-radius: 7px;
+      padding: 6.5px 9px;
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .feature:active { background: rgba(18, 183, 245, .06); border-color: rgba(18, 183, 245, .25); }
+    .feature-icon {
+      width: 25px;
+      height: 25px;
+      border-radius: 6px;
+      background: rgba(18, 183, 245, .1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-icon svg { width: 13px; height: 13px; stroke: #12B7F5; fill: none; stroke-width: 1.5; }
+    .feature-content { flex: 1; min-width: 0; }
+    .feature-title { font-family: 'Noto Sans SC', sans-serif; font-size: 9.5px; font-weight: 500; color: #F0F0F0; letter-spacing: .02em; }
+    .feature-desc { font-size: 7.5px; color: #6B7280; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .feature-arrow { font-size: 11px; color: #12B7F5; opacity: 0; transform: translateX(-2px); transition: all .25s; flex-shrink: 0; }
+    .feature:active .feature-arrow { opacity: 1; transform: translateX(2px); }
+    .feature-progress { height: 2px; background: rgba(240, 240, 240, .06); border-radius: 1px; margin-top: 4px; overflow: hidden; }
+    .feature-progress-bar { height: 100%; background: linear-gradient(90deg, #12B7F5, #4DE1FF); border-radius: 1px; transform-origin: left; animation: progressIn .8s cubic-bezier(.4, 0, .2, 1) forwards; transform: scaleX(0); }
+    @keyframes progressIn { to { transform: scaleX(1); } }
+
+    /* Tech */
+    .tech-section { position: relative; z-index: 5; margin-top: 8px; flex-shrink: 0; }
+    .tech-header { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; margin-bottom: 5px; }
+    .tech-pills { display: flex; flex-wrap: wrap; gap: 4px; }
+    .tech-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6.5px;
+      letter-spacing: .08em;
+      color: #9CA3AF;
+      border: 1px solid rgba(240, 240, 240, .1);
+      padding: 2px 7px;
+      border-radius: 10px;
+      cursor: pointer;
+      background: rgba(240, 240, 240, .02);
+      transition: all .2s;
+    }
+    .tech-pill:active { background: rgba(240, 240, 240, .08); }
+    .tech-pill.accent { border-color: rgba(18, 183, 245, .35); color: #4DE1FF; }
+    .tech-pill.cyan { border-color: rgba(77, 225, 255, .25); color: #7DEBFF; }
+
+    /* Bottom bar */
+    .bottombar {
+      position: relative;
+      z-index: 5;
+      margin-top: 9px;
+      padding-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      border-top: 1px solid rgba(240, 240, 240, .06);
+    }
+    .github-link { display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 8px; color: #D1D5DB; text-decoration: none; }
+    .github-link svg { width: 13px; height: 13px; fill: #9CA3AF; transition: fill .25s; }
+    .github-link:active svg { fill: #12B7F5; }
+    .visit-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .14em;
+      color: #061224;
+      background: linear-gradient(90deg, #12B7F5, #4DE1FF);
+      padding: 6px 13px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all .25s;
+    }
+    .visit-btn:active { transform: scale(.95); filter: brightness(1.15); }
+
+    /* Overlay + Sheet */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: flex-end;
+      background: rgba(0, 0, 0, .5);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .35s;
+    }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+    .sheet {
+      width: 100%;
+      max-height: 74%;
+      background: linear-gradient(180deg, #0E2A4E, #0A1C38);
+      border: 1px solid rgba(18, 183, 245, .2);
+      border-bottom: none;
+      border-radius: 16px 16px 0 0;
+      padding: 14px 18px 18px;
+      transform: translateY(101%);
+      transition: transform .45s cubic-bezier(.7, 0, .3, 1);
+      overflow-y: auto;
+    }
+    .overlay.active .sheet { transform: translateY(0); }
+    .sheet-handle { width: 32px; height: 3px; background: #2E4A72; border-radius: 2px; margin: 0 auto 12px; }
+    .sheet-title { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; color: #F0F0F0; margin-bottom: 7px; }
+    .sheet-title em { color: #12B7F5; font-style: normal; }
+    .sheet-desc { font-size: 10.5px; line-height: 1.65; color: #9CA3AF; }
+    .sheet-desc code { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #4DE1FF; background: rgba(77, 225, 255, .08); padding: 1px 4px; border-radius: 2px; }
+    .sheet-code {
+      margin-top: 10px;
+      background: #061224;
+      border: 1px solid rgba(240, 240, 240, .08);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      line-height: 1.7;
+      color: #4DE1FF;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .sheet-points { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+    .sheet-point { display: flex; align-items: flex-start; gap: 8px; font-family: 'Noto Sans SC', sans-serif; font-size: 10px; color: #D0D0D8; line-height: 1.55; }
+    .sheet-point::before { content: ''; width: 5px; height: 5px; background: #12B7F5; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .sheet-close {
+      margin-top: 14px;
+      width: 100%;
+      padding: 10px;
+      background: rgba(18, 183, 245, .08);
+      border: 1px solid rgba(18, 183, 245, .25);
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .15em;
+      color: #4DE1FF;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .sheet-close:active { background: #12B7F5; color: #061224; }
+
+    /* 图片放大 overlay */
+    .zoom {
+      position: absolute;
+      inset: 0;
+      z-index: 300;
+      background: rgba(2, 6, 14, .92);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s;
+    }
+    .zoom.active { opacity: 1; pointer-events: auto; }
+    .zoom img { max-width: 92%; max-height: 88%; border-radius: 8px; border: 1px solid rgba(77, 225, 255, .3); }
+    .zoom .zoom-close {
+      position: absolute;
+      top: 16px; right: 16px;
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: rgba(240, 240, 240, .1);
+      border: 1px solid rgba(240, 240, 240, .25);
+      color: #F0F0F0;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Toast */
+    .toast {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #28C840;
+      color: #061224;
+      padding: 7px 14px;
+      border-radius: 5px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: all .3s;
+      z-index: 400;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .reveal { opacity: 0; transform: translateY(10px); transition: all .45s cubic-bezier(.4, 0, .2, 1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @keyframes chartGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+    .chart-animate { animation: chartGrow .6s cubic-bezier(.4, 0, .2, 1) forwards; }
+
+    /* 小屏兜底 */
+    @media (max-height: 720px) {
+      .qq-title { font-size: 22px; }
+      .qq-stamp { width: 36px; height: 36px; font-size: 16px; }
+      .tagline { font-size: 9.5px; }
+      .shot-frame { border-radius: 6px; }
+      .feature { padding: 5.5px 9px; }
+      .feature-title { font-size: 9px; }
+      .stat-num { font-size: 14px; }
+      .sheet { max-height: 80%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <!-- Topbar -->
+    <div class="topbar reveal">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <span>Young's Insight</span>
+      </div>
+      <button class="share-btn" id="shareBtn">SHARE <span class="arr">↗</span></button>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero reveal">
+      <div class="meta-row">
+        <span class="vol">CODEX SKIN GENERATOR</span>
+        <span>2026.08.04</span>
+      </div>
+      <div class="title-block">
+        <div class="qq-stamp" id="stamp">Q</div>
+        <div class="title-text">
+          <div class="qq-title">Codex QQ Skin<span class="dot">.</span></div>
+          <div class="superdesign-line">
+            <span class="superdesign">by zhulin025</span>
+            <span class="v-tag">v2.6.3</span>
+            <span class="v-tag" style="color:#FFB020;border-color:rgba(255,176,32,.35)">MIT</span>
+          </div>
+        </div>
+      </div>
+      <div class="tagline">给 Codex / ChatGPT 桌面端换上<em>复古 QQ 皮肤</em>——企鹅头像、经典界面、等级系统，一键注入，不改官方文件</div>
+    </div>
+
+    <!-- 实例图 -->
+    <div class="shots reveal">
+      <div class="shots-header">Real Shots · 实机效果</div>
+      <div class="shots-tabs">
+        <span class="shot-tab on" data-shot="0">任务详情</span>
+        <span class="shot-tab" data-shot="1">新建任务</span>
+      </div>
+      <div class="shot-frame" id="shotFrame">
+        <img id="shotImg" src="../cards/codex-qq-skin/task-detail.png" alt="Codex QQ Skin 任务详情界面">
+        <span class="zoom-hint">点击放大</span>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-section reveal">
+      <div class="stats-header">
+        <span class="stats-title">Metrics</span>
+        <span class="stats-badge">OPEN SOURCE</span>
+      </div>
+      <div class="stats-chart">
+        <div class="stat-card" data-stat="stars" style="--stat-color: #12B7F5">
+          <div class="stat-num"><span class="accent">389</span></div>
+          <div class="stat-label">Stars</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 6px; animation-delay: .1s"></div>
+            <div class="stat-bar chart-animate" style="height: 9px; animation-delay: .15s"></div>
+            <div class="stat-bar chart-animate" style="height: 11px; animation-delay: .2s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="ver" style="--stat-color: #4DE1FF">
+          <div class="stat-num"><span class="accent">2.6.3</span></div>
+          <div class="stat-label">最新版本</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 8px; animation-delay: .25s"></div>
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .3s"></div>
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .35s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="os" style="--stat-color: #12B7F5">
+          <div class="stat-num"><span class="accent">2</span></div>
+          <div class="stat-label">Mac + Win</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .4s"></div>
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .45s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="skin" style="--stat-color: #FFB020">
+          <div class="stat-num" style="color: #FFB020">4+</div>
+          <div class="stat-label">内置皮肤</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 9px; background: #FFB020; animation-delay: .5s"></div>
+            <div class="stat-bar chart-animate" style="height: 7px; background: #FFB020; animation-delay: .55s"></div>
+            <div class="stat-bar chart-animate" style="height: 10px; background: #FFB020; animation-delay: .6s"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <div class="features reveal">
+      <div class="feature" data-f="0">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="9" x2="10" y2="9"/><circle cx="17" cy="11" r="3"/><line x1="6" y1="14" x2="12" y2="14"/><line x1="6" y1="17" x2="9" y2="17"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">复古 QQ 皮肤 · 一键注入</div>
+          <div class="feature-desc">原生/QQ/自定义三模式切换，CDP 注入不碰官方文件</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 100%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="1">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8z"/><path d="M19 15l.9 2.6L22.5 18l-2.6.9L19 21.5l-.9-2.6-2.6-.9 2.6-.9z"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">QQ 等级系统 · token 统计</div>
+          <div class="feature-desc">星星/月亮/太阳/皇冠，成长值全本机计算，不上传数据</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 95%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="2">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">伙伴房间 · 项目盲盒</div>
+          <div class="feature-desc">书架抽 GitHub 热门项目盲盒，连续发现解锁摆件</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 90%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="3">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="4"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">深度皮肤助手 · 任意图片</div>
+          <div class="feature-desc">一句主题词生成完整分层皮肤，或上传图片做背景</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 92%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+    </div>
+
+    <!-- Tech -->
+    <div class="tech-section reveal">
+      <div class="tech-header">Tech Stack</div>
+      <div class="tech-pills">
+        <span class="tech-pill accent">JavaScript</span>
+        <span class="tech-pill">CDP 注入</span>
+        <span class="tech-pill cyan">Electron</span>
+        <span class="tech-pill">macOS</span>
+        <span class="tech-pill cyan">Windows</span>
+        <span class="tech-pill">本地统计</span>
+      </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="bottombar reveal">
+      <a href="https://github.com/zhulin025/Codex-QQ-Skin" target="_blank" class="github-link">
+        <svg viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        zhulin025/Codex-QQ-Skin
+      </a>
+      <a href="https://github.com/zhulin025/Codex-QQ-Skin" target="_blank" class="visit-btn">VISIT →</a>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title" id="sheetTitle"></div>
+        <div class="sheet-desc" id="sheetDesc"></div>
+        <div class="sheet-code" id="sheetCode" style="display:none"></div>
+        <div class="sheet-points" id="sheetPoints"></div>
+        <button class="sheet-close" id="sheetClose">CLOSE</button>
+      </div>
+    </div>
+
+    <!-- 图片放大 -->
+    <div class="zoom" id="zoom">
+      <button class="zoom-close" id="zoomClose">✕</button>
+      <img id="zoomImg" src="" alt="放大预览">
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script>
+  (function(){
+    var $=function(s){return document.querySelector(s)};
+    var overlay=$('#overlay'), sheetTitle=$('#sheetTitle'), sheetDesc=$('#sheetDesc'),
+        sheetPoints=$('#sheetPoints'), sheetCode=$('#sheetCode'), toast=$('#toast');
+
+    var SHOTS = [
+      { src: '../cards/codex-qq-skin/task-detail.png', label: '任务详情' },
+      { src: '../cards/codex-qq-skin/new-task.png', label: '新建任务' }
+    ];
+
+    var DATA = {
+      stars: {
+        title: '389 Stars <em>· 两周破圈</em>',
+        desc: '2026-07-17 开源，两周多拿下 389 星。复古 QQ 情怀 + Codex 深度定制组合击中大量开发者，是"桌面端 AI 工具美化"赛道增长最快的项目之一。',
+        points: ['33 Forks · MIT 协议', '2026-08-04 仍在高速迭代', '官网 codex.liuwa.xyz 提供安装包下载']
+      },
+      ver: {
+        title: 'v2.6.3 <em>· 雨夜主题优化</em>',
+        desc: '最新版聚焦霓虹雨夜皮肤的可用性：用户菜单与设置页修复白底浅字、独立雨声音效开关、更新可取消。2.6.2 新增霓虹雨夜皮肤（idle 疏雨 / 运行中霓虹雨 / 完成时闪电风暴）。',
+        points: ['2.6.1 兼容 Codex 26.721 新版首页', '2.6.0 伙伴房间 + 项目盲盒', 'Windows 原生安装器 + macOS App']
+      },
+      os: {
+        title: 'Mac + Windows <em>· 双平台</em>',
+        desc: 'macOS App 与原生 C# Windows 安装器双端支持。Windows 安装器内置运行引擎与 Node.js，双击一键安装启动，无需另装环境。',
+        points: ['Windows：ChatGPT QQ Skin Setup 2.6.3.exe', '安装器内置大黄蜂 / 霓虹雨夜深度预设', '通过 127.0.0.1 CDP 注入，不碰官方安装目录']
+      },
+      skin: {
+        title: '4+ 内置皮肤 <em>· 可自定义</em>',
+        desc: 'QQ 复古、大黄蜂、霓虹雨夜、经典 Codex 等内置皮肤，另有自定义皮肤库。支持任意图片生成背景皮肤，或用一句主题词让深度皮肤助手生成完整分层皮肤。',
+        points: ['QQ 模式：企鹅头像 + 复古窗口 + 等级系统', '大黄蜂 / 霓虹雨夜深度预设随安装器打包', '上传 PNG/JPEG/WebP 一键生成背景皮肤']
+      },
+      f0: {
+        title: '复古 QQ 皮肤 · 一键注入',
+        desc: '原生 / QQ / 自定义三种模式右上角随时切换。原理是监听本机 127.0.0.1 的 Chromium DevTools Protocol 注入样式，不修改官方 .app、app.asar、代码签名、API Key 或 Base URL。',
+        points: ['三模式即时切换，不留残留', '企鹅头像、复古窗口、QQ 等级全还原', '非官方产品，纯视觉皮肤层']
+      },
+      f1: {
+        title: 'QQ 等级系统 · token 统计',
+        desc: '右侧上方常驻本机 Codex token 统计：今日 / 近 7 天 / 历史累计 / 七日趋势 / 活跃天数。按活跃日与 token 档位计算成长值，用 QQ 经典的星星、月亮、太阳、皇冠显示等级。',
+        points: ['直接读 ~/.codex/sessions 增量缓存', '不上传 prompt / token，无需额外账号', '净用量开关排除缓存输入，子 Agent 去重']
+      },
+      f2: {
+        title: '伙伴房间 · 项目盲盒',
+        desc: '右下角 Codex 伙伴升级为桌面房间：电脑、书架、台灯、盆栽都会随任务状态与互动变化。点机器人从书架抽书，随机开出 GitHub 热门项目盲盒（中文简介、收藏、打开仓库）。',
+        points: ['每连续发现 5 个项目解锁一件摆件', '数据只读 GitHub 公共搜索结果，6 小时缓存', '收藏/偏好/进度全部保存在本机']
+      },
+      f3: {
+        title: '深度皮肤助手 · 任意图片',
+        desc: '内置深度皮肤定制助手 skill：给 Codex 一句主题关键词（如"赛博朋克雨夜"），自动生成包含背景、侧栏角色、水印、品牌徽章的完整分层皮肤；也可直接上传任意图片生成背景皮肤。',
+        points: ['一句主题词 → 完整分层皮肤', 'PNG / JPEG / WebP 图片背景', '皮肤库管理器统一管理']
+      }
+    };
+
+    function openSheet(key){
+      var d = DATA[key]; if(!d) return;
+      sheetTitle.innerHTML = d.title;
+      sheetDesc.textContent = d.desc;
+      sheetCode.style.display = 'none';
+      sheetPoints.innerHTML = d.points.map(function(p){
+        return '<div class="sheet-point">' + p + '</div>';
+      }).join('');
+      overlay.classList.add('active');
+    }
+    function closeSheet(){ overlay.classList.remove('active'); }
+
+    // 实例图切换
+    var shotIdx = 0;
+    function setShot(i){
+      shotIdx = i;
+      $('#shotImg').src = SHOTS[i].src;
+      document.querySelectorAll('.shot-tab').forEach(function(t, ti){
+        t.classList.toggle('on', ti === i);
+      });
+    }
+    document.querySelectorAll('.shot-tab').forEach(function(t){
+      t.addEventListener('click', function(){ setShot(parseInt(t.dataset.shot, 10)); });
+    });
+    // 点击放大
+    var zoom = $('#zoom');
+    $('#shotFrame').addEventListener('click', function(){
+      $('#zoomImg').src = SHOTS[shotIdx].src;
+      zoom.classList.add('active');
+    });
+    $('#zoomClose').addEventListener('click', function(){ zoom.classList.remove('active'); });
+    zoom.addEventListener('click', function(e){ if(e.target === zoom) zoom.classList.remove('active'); });
+
+    // 绑定 stats / features
+    document.querySelectorAll('.stat-card').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet(el.dataset.stat); });
+    });
+    document.querySelectorAll('.feature').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet('f'+el.dataset.f); });
+    });
+    $('#sheetClose').addEventListener('click', closeSheet);
+    overlay.addEventListener('click', function(e){ if(e.target===overlay) closeSheet(); });
+
+    // 分享
+    $('#shareBtn').addEventListener('click', function(){
+      var url = location.href.split('?')[0];
+      if(navigator.share){
+        navigator.share({title:'Codex QQ Skin — Codex 桌面 QQ 复古皮肤', url:url}).catch(function(){});
+      }else if(navigator.clipboard){
+        navigator.clipboard.writeText(url).then(function(){
+          toast.textContent = '链接已复制';
+          toast.classList.add('show');
+          setTimeout(function(){ toast.classList.remove('show'); }, 1800);
+        });
+      }
+    });
+    $('#stamp').addEventListener('click', function(){
+      $('#stamp').style.transform = 'rotate(180deg) scale(.9)';
+      setTimeout(function(){ $('#stamp').style.transform=''; }, 400);
+      openSheet('skin');
+    });
+
+    // 入场
+    document.querySelectorAll('.reveal').forEach(function(x){ x.classList.add('visible'); });
+  })();
+  </script>
+</body>
+</html>
