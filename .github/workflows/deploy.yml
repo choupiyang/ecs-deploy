@@ -20,7 +20,7 @@ jobs:
 
           test -d deploy/pages && ls deploy/pages/*.html >/dev/null 2>&1 && scp -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no deploy/pages/*.html ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:/var/www/youngsinsight/pages/ || true
           test -d deploy/cards && scp -r -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no deploy/cards/* ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:/var/www/youngsinsight/cards/ || true
-          ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} "find /var/www/youngsinsight/cards/ /var/www/youngsinsight/pages/ -type f -exec chmod 644 {} + 2>/dev/null || true"
+          ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} "find /var/www/youngsinsight/cards/ /var/www/youngsinsight/pages/ -type f -exec chmod 644 {} +; find /var/www/youngsinsight/cards/ /var/www/youngsinsight/pages/ -type d -exec chmod 755 {} + 2>/dev/null || true"
 
       - name: Update cards.json
         run: |
@@ -31,4 +31,4 @@ jobs:
 
       - name: Verify
         run: |
-          ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} "curl -sk --resolve mindresonance.online:443:127.0.0.1 -o /dev/null https://mindresonance.online/youngsinsight/cards/marker-cover.svg; sleep 1; echo '== ERROR LOG =='; tail -25 /var/log/nginx/error.log 2>/dev/null || find /var/log/nginx -name '*.log' | head; echo '== ACCESS LOG (last svg) =='; tail -15 /var/log/nginx/access.log 2>/dev/null | grep -i 'svg\|png' | tail -8"
+          ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} "echo '== DIR PERMS =='; ls -ld /var/www/youngsinsight/cards/ /var/www/youngsinsight/pages/ /var/www/youngsinsight/cards/codex-qq-skin/ 2>&1; echo '== FIX DIRS =='; chmod 755 /var/www/youngsinsight/cards/ /var/www/youngsinsight/pages/ /var/www/youngsinsight/cards/codex-qq-skin/ 2>&1; echo '== VERIFY LOCAL =='; curl -sk --resolve mindresonance.online:443:127.0.0.1 -o /dev/null -w 'marker-svg: %{http_code}\n' https://mindresonance.online/youngsinsight/cards/marker-cover.svg; curl -sk --resolve mindresonance.online:443:127.0.0.1 -o /dev/null -w 'codex-svg: %{http_code}\n' https://mindresonance.online/youngsinsight/cards/codex-qq-skin-cover.svg; curl -sk --resolve mindresonance.online:443:127.0.0.1 -o /dev/null -w 'codex-png: %{http_code}\n' https://mindresonance.online/youngsinsight/cards/codex-qq-skin/task-detail.png; curl -sk --resolve mindresonance.online:443:127.0.0.1 -o /dev/null -w 'codex-page: %{http_code}\n' https://mindresonance.online/youngsinsight/pages/codex-qq-skin.html"
