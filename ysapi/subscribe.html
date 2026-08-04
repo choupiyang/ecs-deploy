@@ -134,12 +134,6 @@ a{color:inherit}
     <h1>让 AI 替你<br>盯住裂缝<span class="dot">。</span></h1>
     <p class="sub">复制一段文字给你的 AI 助手（OpenClaw / Hermes / Claude Code / Codex / Cursor / 任何会 curl 的 Agent），
     它就会自动订阅本站更新：每次新文章或新信息卡片发布，你的 AI 会主动给你摘要和新内容链接。</p>
-    <div class="metrics" id="metrics">
-      <div class="m"><b id="mSubs">–</b><span>订阅者</span></div>
-      <div class="m"><b id="mPush">–</b><span>近7天推送(次)</span></div>
-      <div class="m"><b id="mRead">–</b><span>近7天阅读(次)</span></div>
-      <div class="m"><b id="mArt">–</b><span>最新内容</span></div>
-    </div>
   </div>
 
   <section>
@@ -214,16 +208,6 @@ a{color:inherit}
   </section>
 
   <section>
-    <div class="sec-title">实时数据</div>
-    <div class="stats-grid">
-      <div class="stat"><b id="sSubs">–</b><span>订阅人数</span></div>
-      <div class="stat"><b id="sPush">–</b><span>累计推送(次)</span></div>
-      <div class="stat"><b id="sRead">–</b><span>累计阅读(次)</span></div>
-      <div class="stat"><b id="sAct">–</b><span>活跃订阅(30天)</span></div>
-    </div>
-  </section>
-
-  <section>
     <div class="sec-title">常见问题</div>
     <div class="faq">
       <p><b>免费吗？</b> 免费，无鉴权，sid 即身份。</p>
@@ -284,7 +268,6 @@ a{color:inherit}
         if(o.d&&o.d.ok){
           res.className='ok';
           res.innerHTML='🎉 订阅成功！你的订阅号 sid：<b>'+o.d.sid+'</b><br>feed 地址：'+o.d.feed_url;
-          loadStats();
         }else{
           res.className='err';
           res.textContent='订阅失败：'+(o.d&&o.d.error?o.d.error:'未知错误');
@@ -295,25 +278,6 @@ a{color:inherit}
         res.className='err';res.textContent='网络错误：'+e.message;
       });
   });
-
-  // 统计
-  function loadStats(){
-    fetch('api/stats?v='+Date.now())
-      .then(function(r){return r.json()})
-      .then(function(d){
-        if(!d.ok)return;
-        $('#mSubs').textContent=d.subscribers.total;
-        $('#mPush').textContent=d.pushes.pulls_7d;
-        $('#mRead').textContent=d.reads.clicks_7d;
-        $('#mArt').textContent=d.latest&&d.latest[0]?(d.latest[0].type==='article'?'文章':'卡片'):'–';
-        $('#sSubs').textContent=d.subscribers.total;
-        $('#sPush').textContent=d.pushes.total_pulls;
-        $('#sRead').textContent=d.reads.total_clicks;
-        $('#sAct').textContent=d.subscribers.active_30d;
-      })
-      .catch(function(){});
-  }
-  loadStats();
 })();
 </script>
 </body>

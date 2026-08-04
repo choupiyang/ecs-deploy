@@ -24,6 +24,7 @@ jobs:
         run: |
           scp -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ysapi/ys_api.py ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:/var/www/youngsinsight/ys_api.py
           scp -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ysapi/subscribe.html ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:/var/www/youngsinsight/subscribe.html
+          scp -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ysapi/stats.html ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:/var/www/youngsinsight/stats.html
           scp -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ysapi/ys-subscribe.md ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:/var/www/youngsinsight/ys-subscribe.md
           scp -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ysapi/setup_ys_api.sh ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }}:/tmp/setup_ys_api.sh
 

@@ -623,7 +623,7 @@ class Handler(BaseHTTPRequestHandler):
                 return True, "已退订"
         return False, "未找到该订阅"
 
-    # ---- /stats ----
+    # ---- /stats (仅密钥可见, 不公开) ----
     def _stats(self, q):
         key = (q.get("key") or [""])[0].strip()
         key_ok = False
@@ -633,7 +633,9 @@ class Handler(BaseHTTPRequestHandler):
             key_ok = bool(saved) and secrets.compare_digest(saved, key)
         except Exception:
             key_ok = False
-        return self._send(200, compute_stats(key_ok))
+        if not key_ok:
+            return self._send(403, {"ok": False, "error": "需要统计密钥"})
+        return self._send(200, compute_stats(True))
 
 
 def main():

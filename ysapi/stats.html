@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Young's Insight 订阅后台 · 仅站长可见</title>
+<style>
+:root{--bg:#E5E1D6;--text:#111817;--accent:#C8FF00;--func:#7F8270;--card:#F2EFE6}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;line-height:1.6}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:999;opacity:.5;background-image:radial-gradient(rgba(17,24,23,.05) 1px,transparent 1px);background-size:3px 3px}
+.wrap{max-width:980px;margin:0 auto;padding:0 20px 80px}
+header{display:flex;justify-content:space-between;align-items:center;padding:20px 0;border-bottom:2px solid var(--text);font-size:13px;font-weight:800;letter-spacing:.08em}
+header .tag{background:var(--text);color:var(--accent);padding:3px 10px;font-weight:900}
+.hero{padding:48px 0 36px;border-bottom:2px solid var(--text)}
+.hero h1{font-size:clamp(30px,6vw,52px);font-weight:990;letter-spacing:-.05em;line-height:1.05}
+.hero .lock{display:inline-block;margin-top:14px;font-size:12px;font-weight:800;letter-spacing:.1em;color:var(--func)}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:28px}
+@media(max-width:720px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--card);border:2px solid var(--text);padding:16px 12px;text-align:center;box-shadow:6px 6px 0 var(--text)}
+.stat b{display:block;font-size:clamp(24px,3.6vw,36px);font-weight:990;letter-spacing:-.04em}
+.stat span{font-size:11.5px;font-weight:800;letter-spacing:.06em;color:var(--func)}
+section{padding:44px 0;border-bottom:2px solid var(--text)}
+.sec-title{font-size:13px;font-weight:900;letter-spacing:.14em;margin-bottom:22px;display:flex;align-items:center;gap:12px}
+.sec-title::before{content:"";width:34px;height:10px;background:var(--accent);box-shadow:3px 3px 0 var(--text)}
+table{width:100%;border-collapse:collapse;font-size:13px;background:var(--card)}
+th{background:var(--text);color:var(--accent);text-align:left;padding:9px 10px;font-size:12px;letter-spacing:.05em;white-space:nowrap}
+td{border-bottom:1px solid #C9C5B8;padding:9px 10px;vertical-align:top;word-break:break-all}
+td.mono{font-family:ui-monospace,monospace;font-size:12px}
+.badge{display:inline-block;font-size:11px;font-weight:900;padding:1px 8px;border:1.5px solid var(--text)}
+.badge.active{background:#7CFF6B}
+.badge.out{background:#D9D5C8;color:var(--func)}
+.day-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:13px}
+.day-row .bar{height:14px;background:var(--accent);border:1.5px solid var(--text);min-width:2px}
+.empty{font-size:13.5px;color:var(--func);padding:16px;border:2px dashed #B9B5A6}
+.keybox{max-width:560px;margin:40px auto;background:var(--card);border:2px solid var(--text);box-shadow:10px 10px 0 var(--accent);padding:26px}
+.keybox h3{font-size:18px;font-weight:900;margin-bottom:10px}
+.keybox p{font-size:13px;color:#444;margin-bottom:16px}
+.keybox input{width:100%;padding:12px;font-size:15px;border:2px solid var(--text);background:var(--bg);margin-bottom:14px;font-family:ui-monospace,monospace}
+.keybox button{background:var(--text);color:var(--accent);border:none;font-weight:900;padding:12px 30px;cursor:pointer;font-size:15px;box-shadow:5px 5px 0 var(--accent)}
+#err{color:#B3261E;font-weight:800;font-size:13px;margin-top:12px}
+footer{padding:36px 0 0;font-size:12px;color:var(--func);font-weight:700;letter-spacing:.1em;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><span>YOUNG'S INSIGHT · 订阅后台</span><span class="tag">仅站长可见</span></header>
+  <div class="hero">
+    <h1>订阅数据<span style="color:var(--func)">。</span></h1>
+    <span class="lock">🔒 本页数据仅密钥持有者可查看，订阅页不再展示任何公开统计</span>
+    <div class="stats-grid" id="kpis"></div>
+  </div>
+
+  <section>
+    <div class="sec-title">订阅者列表</div>
+    <div id="subs"></div>
+  </section>
+
+  <section>
+    <div class="sec-title">按日推送次数（feed 拉取）</div>
+    <div id="days"></div>
+  </section>
+
+  <section>
+    <div class="sec-title">点击阅读排行</div>
+    <div id="clicks"></div>
+  </section>
+
+  <section>
+    <div class="sec-title">最新内容</div>
+    <div id="latest"></div>
+  </section>
+
+  <footer>YOUNG'S INSIGHT · READ THE CRACKS</footer>
+</div>
+
+<div class="keybox" id="keybox" style="display:none">
+  <h3>输入统计密钥</h3>
+  <p>统计密钥不随链接发送到服务器（仅存于链接 # 片段），浏览器地址栏的链接就是你的专属入口。</p>
+  <input type="password" id="keyInput" placeholder="粘贴统计密钥">
+  <button id="keyBtn">进入后台</button>
+  <div id="err"></div>
+</div>
+
+<script>
+(function(){
+  var $=function(s){return document.querySelector(s)};
+  var key='';
+  var hash=location.hash.replace(/^#/,'');
+  if(hash){key=hash;load()}
+  else{showKeybox()}
+
+  function showKeybox(){
+    $('#keybox').style.display='block';
+  }
+  $('#keyBtn').addEventListener('click',function(){
+    key=$('#keyInput').value.trim();
+    $('#err').textContent='';
+    if(!key){$('#err').textContent='请输入密钥';return}
+    // 写入 hash, 刷新为带密钥的链接（便于收藏）
+    history.replaceState(null,'','#'+key);
+    load();
+  });
+  $('#keyInput').addEventListener('keydown',function(e){
+    if(e.key==='Enter')$('#keyBtn').click();
+  });
+
+  function load(){
+    fetch('api/stats?key='+encodeURIComponent(key)+'&v='+Date.now())
+      .then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d}})})
+      .then(function(o){
+        if(!o.ok||!o.d.ok){
+          $('#err').textContent='密钥无效或服务异常：'+(o.d&&o.d.error?o.d.error:'');
+          $('#keybox').style.display='block';
+          return;
+        }
+        render(o.d);
+      })
+      .catch(function(e){
+        $('#err').textContent='网络错误：'+e.message;
+        $('#keybox').style.display='block';
+      });
+  }
+
+  function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+  function render(d){
+    $('#keybox').style.display='none';
+    var s=d.subscribers||{},p=d.pushes||{},r=d.reads||{};
+    var kpis=[
+      ['订阅人数',s.total||0],['活跃30天',s.active_30d||0],
+      ['累计推送',p.total_pulls||0],['近7天推送',p.pulls_7d||0],
+      ['累计阅读',r.total_clicks||0],['近7天阅读',r.clicks_7d||0],
+      ['最新推送人数',p.latest_push_people||0],['最新阅读',r.latest_article_reads||0]
+    ];
+    $('#kpis').innerHTML=kpis.map(function(k){
+      return '<div class="stat"><b>'+k[1]+'</b><span>'+k[0]+'</span></div>';
+    }).join('');
+
+    var det=d.detail||{};
+    var list=det.subscriber_list||[];
+    $('#subs').innerHTML = list.length
+      ? '<table><tr><th>sid</th><th>Agent</th><th>用户</th><th>联系方式</th><th>订阅时间</th><th>最后活跃</th><th>状态</th></tr>'+
+        list.map(function(x){
+          var st=x.status==='active'?'<span class="badge active">ACTIVE</span>':'<span class="badge out">'+(x.status||'?')+'</span>';
+          return '<tr><td class="mono">'+esc(x.sid)+'</td><td>'+esc(x.agent)+'</td><td>'+esc(x.user)+'</td><td>'+esc(x.contact||'-')+'</td><td>'+esc((x.subscribed_at||'').slice(0,16).replace('T',' '))+'</td><td>'+esc((x.last_seen||'-').slice(0,16).replace('T',' '))+'</td><td>'+st+'</td></tr>';
+        }).join('')+'</table>'
+      : '<div class="empty">暂无订阅者 — 把订阅页分享出去吧。</div>';
+
+    var days=det.pulls_by_day||{};
+    var dayKeys=Object.keys(days).slice(0,14);
+    var maxDay=Math.max.apply(null,dayKeys.map(function(k){return days[k]}).concat([1]));
+    $('#days').innerHTML = dayKeys.length
+      ? dayKeys.map(function(k){
+          return '<div class="day-row"><span style="width:90px;font-weight:800">'+k+'</span><div class="bar" style="width:'+Math.max(3,Math.round(days[k]/maxDay*240))+'px"></div><span>'+days[k]+' 次</span></div>';
+        }).join('')
+      : '<div class="empty">暂无推送记录</div>';
+
+    var cl=det.clicks_by_item||[];
+    $('#clicks').innerHTML = cl.length
+      ? '<table><tr><th>类型</th><th>内容ID</th><th>次数</th></tr>'+
+        cl.map(function(c){
+          return '<tr><td>'+(c.type==='article'?'📄 文章':'🃏 卡片')+'</td><td class="mono">'+esc(c.id)+'</td><td><b>'+c.count+'</b></td></tr>';
+        }).join('')+'</table>'
+      : '<div class="empty">暂无点击记录 — 订阅者点击推送里的链接后会在这里计数。</div>';
+
+    var lt=d.latest||[];
+    $('#latest').innerHTML = lt.length
+      ? '<table><tr><th>类型</th><th>标题</th><th>日期</th></tr>'+
+        lt.map(function(x){
+          return '<tr><td>'+(x.type==='article'?'📄':'🃏')+'</td><td>'+esc(x.title)+'</td><td>'+esc(x.date)+'</td></tr>';
+        }).join('')+'</table>'
+      : '<div class="empty">暂无内容</div>';
+  }
+})();
+</script>
+</body>
+</html>
