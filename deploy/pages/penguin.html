@@ -38,6 +38,51 @@
       display: flex;
       flex-direction: column;
       padding: 12px 16px 10px;
+      perspective: 1000px;
+      transform-style: preserve-3d;
+      transition: transform .12s ease-out;
+    }
+    .tilt-deep { transform: translateZ(-50px) scale(1.08); }
+    .tilt-mid { transform: translateZ(0); }
+    .tilt-front { transform: translateZ(45px); }
+    /* 浮动冰晶（3D 视差前景） */
+    .flakes { position: absolute; inset: 0; pointer-events: none; z-index: 3; overflow: hidden; }
+    .flake {
+      position: absolute;
+      width: 10px; height: 10px;
+      border: 1px solid rgba(79, 195, 247, .5);
+      border-radius: 50%;
+      opacity: .5;
+      animation: floatY 6s ease-in-out infinite;
+    }
+    .flake.f1 { left: 8%; top: 22%; animation-delay: 0s; }
+    .flake.f2 { left: 88%; top: 30%; width: 7px; height: 7px; animation-delay: 1.2s; }
+    .flake.f3 { left: 14%; top: 68%; width: 6px; height: 6px; border-color: rgba(168, 228, 0, .4); animation-delay: 2.1s; }
+    .flake.f4 { left: 84%; top: 72%; width: 9px; height: 9px; animation-delay: .6s; }
+    .flake.f5 { left: 48%; top: 16%; width: 5px; height: 5px; border-color: rgba(214, 237, 255, .5); animation-delay: 1.8s; }
+    @keyframes floatY {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-14px) rotate(120deg); }
+    }
+    /* 探索 hint 角标 */
+    .hint-badge {
+      position: relative;
+      z-index: 5;
+      align-self: flex-start;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      letter-spacing: .18em;
+      color: #7BA7C9;
+      border: 1px dashed rgba(79, 195, 247, .35);
+      border-radius: 10px;
+      padding: 2px 8px;
+      margin-top: 5px;
+      flex-shrink: 0;
+      animation: hintPulse 2.4s ease-in-out infinite;
+    }
+    @keyframes hintPulse {
+      0%, 100% { opacity: .55; }
+      50% { opacity: 1; box-shadow: 0 0 12px rgba(79, 195, 247, .25); }
     }
     .stage::before {
       content: '';
@@ -417,9 +462,15 @@
   </style>
 </head>
 <body>
-  <div class="stage">
+  <div class="stage" id="stage">
+    <!-- 3D 视差前景：浮动冰晶 -->
+    <div class="flakes">
+      <div class="flake f1"></div><div class="flake f2"></div><div class="flake f3"></div>
+      <div class="flake f4"></div><div class="flake f5"></div>
+    </div>
+
     <!-- Topbar -->
-    <div class="topbar reveal">
+    <div class="topbar reveal tilt-mid">
       <div class="brand">
         <div class="brand-dot"></div>
         <span>Young's Insight</span>
@@ -445,6 +496,7 @@
         </div>
       </div>
       <div class="tagline">用 DeepSeek / GPT <em>一键生成自进化 Agent</em>——说一句话，烧 $0.02，拿到完整 Agent 应用</div>
+      <div class="hint-badge">✦ 轻触任何元素探索 · 拖动卡片看 3D 视差</div>
     </div>
 
     <!-- 终端展示 -->
@@ -721,6 +773,27 @@
         title: '全模型兼容',
         desc: 'DeepSeek V4、Kimi K3、GLM 5.2、Hunyuan 3、Qwen 3.8 Max、GPT 5.6、Gemini 3.6 Flash、Claude 5 内置预设；任意 OpenAI 协议端点可接，1000+ 在线与本地模型。',
         points: ['8 家族最新代内置预设', 'OpenRouter / SiliconFlow / 火石 / 通义等多提供商', '任意 OpenAI 协议端点 + 本地模型']
+      },
+      story: {
+        title: '背景故事 <em>· Prism Shadow</em>',
+        desc: 'Prism Shadow 团队从"为什么 Agent 开发还停留在手工拼装框架"出发，用刻意极简的工具集 + 干净低层接口重做 Agent 构建体验。企鹅命名来自 penguin.ooo 域名——"构建者"的可爱化身。项目 2026-07-19 开源，三周 490 星，Product Hunt 上架即推荐，社区（Discord/X/微信群）迅速建立。',
+        points: ['团队：Prism Shadow（X: @code_hiyouga）', '命名：🐧 企鹅 = 勤劳的构建者', '开源 3 周 490★ / 55 forks', 'Product Hunt 推荐："$0.02 让 Agent 构建更好的 Agent"', '官方文档 penguin.ooo/docs + 博客 penguin.ooo/blog']
+      },
+      install: {
+        title: '安装指南 <em>· 一行搞定</em>',
+        desc: '所有安装路径都得到同一个 penguin 命令。Linux/macOS 一行脚本，Windows PowerShell 一行，npm 全局包，或桌面 App（内置服务器免登录）。首次启动 admin 初始密码 penguin-1234，建议立即修改。',
+        points: ['Linux/macOS: curl -fsSL https://penguin.ooo/install.sh | sh', 'Windows: irm https://penguin.ooo/install.ps1 | iex', 'npm: npm install -g @prismshadow/penguin-cli', '启动: penguin web → http://127.0.0.1:7364', '桌面 App 内置服务器，免终端免登录', '数据目录 ~/.penguin/data，升级不丢数据'],
+        code: '# Linux / macOS\ncurl -fsSL https://penguin.ooo/install.sh | sh\npenguin web   # http://127.0.0.1:7364\n\n# Windows (PowerShell)\nirm https://penguin.ooo/install.ps1 | iex\npenguin web\n\n# npm (任意平台, Node>=24)\nnpm install -g @prismshadow/penguin-cli\npenguin web'
+      },
+      tech0: {
+        title: 'TypeScript <em>· 全栈实现</em>',
+        desc: '核心引擎 @prismshadow/penguin-core 与 CLI @prismshadow/penguin-cli 均为 TypeScript 实现，Node ≥ 24 运行。npm 生态分发，在线安装器自带 Node 运行时。',
+        points: ['@prismshadow/penguin-core / penguin-cli', 'Node ≥ 24', '在线安装器捆绑运行时']
+      },
+      tech1: {
+        title: 'Trace 观测 <em>· 全链路可审计</em>',
+        desc: 'Web 端内置 Trace 视图：每个 Agent 请求、每步工具调用全程可观测。自我进化每轮前有快照，进化过程可回滚、可审计。',
+        points: ['多会话聊天 + 用量统计', 'Trace 可观测性', '评测中心']
       }
     };
 
@@ -728,13 +801,68 @@
       var d = DATA[key]; if(!d) return;
       sheetTitle.innerHTML = d.title;
       sheetDesc.textContent = d.desc;
-      sheetCode.style.display = 'none';
+      if(d.code){
+        sheetCode.style.display = 'block';
+        sheetCode.textContent = d.code;
+      }else{
+        sheetCode.style.display = 'none';
+      }
       sheetPoints.innerHTML = d.points.map(function(p){
         return '<div class="sheet-point">' + p + '</div>';
       }).join('');
       overlay.classList.add('active');
+      if(navigator.vibrate) navigator.vibrate(15);
     }
     function closeSheet(){ overlay.classList.remove('active'); }
+
+    // 3D 视差倾斜：跟随手指/鼠标
+    var stage = $('#stage');
+    var tiltRaf = null;
+    function onTilt(x, y){
+      if(tiltRaf) return;
+      tiltRaf = requestAnimationFrame(function(){
+        var w = stage.clientWidth, h = stage.clientHeight;
+        var nx = (x / w) * 2 - 1;   // -1..1
+        var ny = (y / h) * 2 - 1;
+        stage.style.transform = 'rotateX(' + (-ny * 6).toFixed(2) + 'deg) rotateY(' + (nx * 8).toFixed(2) + 'deg)';
+        tiltRaf = null;
+      });
+    }
+    function resetTilt(){ stage.style.transform = ''; }
+    stage.addEventListener('mousemove', function(e){
+      var r = stage.getBoundingClientRect();
+      onTilt(e.clientX - r.left, e.clientY - r.top);
+    });
+    stage.addEventListener('touchmove', function(e){
+      if(e.touches.length !== 1) return;
+      var r = stage.getBoundingClientRect();
+      onTilt(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top);
+    }, {passive: true});
+    stage.addEventListener('mouseleave', resetTilt);
+    stage.addEventListener('touchend', resetTilt);
+
+    // Stamp 连点彩蛋：5 次 → 企鹅旋转特效 + 背景故事
+    var stampHits = 0, stampTimer = null;
+    $('#stamp').addEventListener('click', function(){
+      stampHits++;
+      clearTimeout(stampTimer);
+      stampTimer = setTimeout(function(){ stampHits = 0; }, 1200);
+      if(stampHits >= 5){
+        stampHits = 0;
+        var s = $('#stamp');
+        s.style.transition = 'transform .6s';
+        s.style.transform = 'rotate(720deg) scale(1.3)';
+        setTimeout(function(){ s.style.transform = ''; }, 700);
+        if(navigator.vibrate) navigator.vibrate([30, 40, 30]);
+        toast.textContent = '🐧 企鹅之力 · 解锁背景故事';
+        toast.classList.add('show');
+        setTimeout(function(){ toast.classList.remove('show'); }, 1600);
+        openSheet('story');
+      }else{
+        s.style.transform = 'rotate(30deg) scale(1.1)';
+        setTimeout(function(){ s.style.transform = ''; }, 250);
+      }
+    });
 
     document.querySelectorAll('.stat-card').forEach(function(el){
       el.addEventListener('click', function(){ openSheet(el.dataset.stat); });
@@ -745,9 +873,15 @@
     document.querySelectorAll('.feature').forEach(function(el){
       el.addEventListener('click', function(){ openSheet('f'+el.dataset.f); });
     });
-    $('#termWin').addEventListener('click', function(){ openSheet('build'); });
+    $('#termWin').addEventListener('click', function(){ openSheet('install'); });
     $('#sheetClose').addEventListener('click', closeSheet);
     overlay.addEventListener('click', function(e){ if(e.target===overlay) closeSheet(); });
+
+    // Tech pills 点击 → 技术说明弹窗
+    var techMap = {0:'tech0', 1:'tech1', 2:'models', 3:'story', 4:'tech1', 5:'install'};
+    document.querySelectorAll('.tech-pill').forEach(function(el, i){
+      el.addEventListener('click', function(){ openSheet(techMap[i] || 'story'); });
+    });
 
     $('#shareBtn').addEventListener('click', function(){
       var url = location.href.split('?')[0];
@@ -761,12 +895,6 @@
         });
       }
     });
-    $('#stamp').addEventListener('click', function(){
-      $('#stamp').style.transform = 'rotate(180deg) scale(.9)';
-      setTimeout(function(){ $('#stamp').style.transform=''; }, 400);
-      openSheet('stars');
-    });
-
     document.querySelectorAll('.reveal').forEach(function(x){ x.classList.add('visible'); });
   })();
   </script>
