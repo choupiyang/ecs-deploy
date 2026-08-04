@@ -64,20 +64,24 @@
       background-size: 20px 20px;
     }
 
-    /* 顶部转换动画容器 */
+    /* 顶部转换动画（正常流占位，不覆盖标题） */
     .convert-3d {
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 130px;
-      z-index: 1;
-      pointer-events: none;
+      position: relative;
+      z-index: 5;
+      height: 88px;
+      flex-shrink: 0;
+      margin-top: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
+      background: rgba(240, 240, 240, .015);
+      border: 1px solid rgba(240, 240, 240, .05);
+      border-radius: 8px;
+      overflow: hidden;
     }
     .doc-page {
-      width: 46px; height: 62px;
+      width: 42px; height: 56px;
       background: linear-gradient(160deg, #101B2E, #0B1422);
       border: 1px solid rgba(200, 255, 0, .4);
       border-radius: 4px;
@@ -86,21 +90,21 @@
     }
     .doc-page::before {
       content: '';
-      position: absolute; top: 10px; left: 7px; right: 7px;
+      position: absolute; top: 9px; left: 6px; right: 6px;
       height: 3px; background: rgba(200, 255, 0, .9); border-radius: 1px;
-      box-shadow: 0 8px 0 rgba(127, 130, 112, .55), 0 16px 0 rgba(127, 130, 112, .45), 0 24px 0 rgba(0, 229, 255, .5);
+      box-shadow: 0 7px 0 rgba(127, 130, 112, .55), 0 14px 0 rgba(127, 130, 112, .45), 0 21px 0 rgba(0, 229, 255, .5);
     }
     .doc-page .scan {
-      position: absolute; left: -3px; right: -3px; top: 24px; height: 3px;
+      position: absolute; left: -3px; right: -3px; top: 22px; height: 3px;
       background: rgba(200, 255, 0, .5);
       animation: scanMove 2.2s ease-in-out infinite;
     }
     @keyframes scanMove {
-      0%, 100% { top: 8px; opacity: .15; }
-      50% { top: 56px; opacity: .8; }
+      0%, 100% { top: 7px; opacity: .15; }
+      50% { top: 50px; opacity: .8; }
     }
     .conv-arrow {
-      width: 30px; height: 2px;
+      width: 26px; height: 2px;
       background: linear-gradient(90deg, #C8FF00, #00E5FF);
       position: relative; flex-shrink: 0;
     }
@@ -118,7 +122,7 @@
     }
     @keyframes pulseX { 0% { left: 0; opacity: 1; } 100% { left: 100%; opacity: .2; } }
     .md-panel {
-      width: 52px; height: 62px;
+      width: 46px; height: 56px;
       background: #0B1422;
       border: 1px solid rgba(0, 229, 255, .4);
       border-radius: 4px;
@@ -173,7 +177,7 @@
     .share-btn:active { background: #C8FF00; color: #070B14; border-color: #C8FF00; }
 
     /* Hero */
-    .hero { position: relative; z-index: 5; flex-shrink: 0; margin-top: 8px; }
+    .hero { position: relative; z-index: 5; flex-shrink: 0; margin-top: 6px; }
     .meta-row {
       display: flex;
       justify-content: space-between;
@@ -243,7 +247,7 @@
     .tagline em { color: #C8FF00; font-style: normal; font-weight: 500; }
 
     /* Intro */
-    .intro { position: relative; z-index: 5; margin-top: 8px; flex-shrink: 0; }
+    .intro { position: relative; z-index: 5; margin-top: 6px; flex-shrink: 0; }
     .intro-inner { display: flex; gap: 9px; align-items: stretch; }
     .intro-line { width: 2px; background: linear-gradient(180deg, #C8FF00, #00E5FF); border-radius: 1px; flex-shrink: 0; }
     .intro-text {
@@ -255,7 +259,7 @@
     .intro-text strong { color: #F0F0F0; font-weight: 500; }
 
     /* Stats */
-    .stats-section { position: relative; z-index: 5; margin-top: 9px; flex-shrink: 0; }
+    .stats-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
     .stats-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
     .stats-title { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; }
     .stats-badge { font-family: 'JetBrains Mono', monospace; font-size: 6px; letter-spacing: .16em; color: #00E5FF; border: 1px solid rgba(0, 229, 255, .3); padding: 1px 5px; border-radius: 2px; }
@@ -277,7 +281,7 @@
     .stat-bar { width: 4px; background: var(--stat-color, #C8FF00); opacity: .55; border-radius: 1px; transform-origin: bottom; }
 
     /* Flow */
-    .flow-section { position: relative; z-index: 5; margin-top: 9px; flex-shrink: 0; }
+    .flow-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
     .flow-header { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; margin-bottom: 5px; }
     .flow-header::after { content: ''; flex: 1; height: 1px; background: rgba(240, 240, 240, .06); }
     .flow-diagram { position: relative; }
@@ -288,7 +292,7 @@
     @keyframes flowPulse { 0%, 100% { stroke-opacity: .4; } 50% { stroke-opacity: 1; } }
 
     /* Features */
-    .features { position: relative; z-index: 5; margin-top: 8px; display: flex; flex-direction: column; gap: 4.5px; flex-shrink: 0; }
+    .features { position: relative; z-index: 5; margin-top: 6px; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
     .feature {
       display: flex;
       align-items: center;
@@ -333,7 +337,7 @@
     @keyframes progressIn { to { transform: scaleX(1); } }
 
     /* Tech */
-    .tech-section { position: relative; z-index: 5; margin-top: 9px; flex-shrink: 0; }
+    .tech-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
     .tech-header { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; margin-bottom: 5px; }
     .tech-pills { display: flex; flex-wrap: wrap; gap: 4px; }
     .tech-pill {
@@ -352,11 +356,11 @@
     .tech-pill.accent { border-color: rgba(200, 255, 0, .3); color: #C8FF00; }
     .tech-pill.cyan { border-color: rgba(0, 229, 255, .25); color: #67E8F9; }
 
-    /* Bottom bar */
+    /* Bottom bar（紧跟内容，不贴视口底，消除留白） */
     .bottombar {
       position: relative;
       z-index: 5;
-      margin-top: auto;
+      margin-top: 10px;
       padding-top: 9px;
       display: flex;
       align-items: center;
@@ -472,10 +476,35 @@
 
     @keyframes chartGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
     .chart-animate { animation: chartGrow .6s cubic-bezier(.4, 0, .2, 1) forwards; }
+
+    /* 小屏兜底：进一步压缩，保证 9:16 内容不溢出 */
+    @media (max-height: 700px) {
+      .convert-3d { height: 70px; margin-top: 5px; }
+      .doc-page { width: 36px; height: 48px; }
+      .md-panel { width: 40px; height: 48px; }
+      .mk-title { font-size: 27px; }
+      .mk-stamp { width: 36px; height: 36px; font-size: 16px; }
+      .hero { margin-top: 4px; }
+      .tagline { font-size: 10px; }
+      .intro-text { font-size: 9px; }
+      .feature { padding: 5.5px 9px; }
+      .feature-title { font-size: 9px; }
+      .stat-num { font-size: 14px; }
+      .sheet { max-height: 78%; }
+    }
   </style>
 </head>
 <body>
   <div class="stage">
+    <!-- Topbar -->
+    <div class="topbar reveal">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <span>Young's Insight</span>
+      </div>
+      <button class="share-btn" id="shareBtn">SHARE <span class="arr">↗</span></button>
+    </div>
+
     <!-- 转换动画 -->
     <div class="convert-3d">
       <div class="doc-page"><div class="scan"></div></div>
@@ -488,15 +517,6 @@
         <div class="line c" style="width:50%"></div>
         <div class="caret"></div>
       </div>
-    </div>
-
-    <!-- Topbar -->
-    <div class="topbar reveal">
-      <div class="brand">
-        <div class="brand-dot"></div>
-        <span>Young's Insight</span>
-      </div>
-      <button class="share-btn" id="shareBtn">SHARE <span class="arr">↗</span></button>
     </div>
 
     <!-- Hero -->
