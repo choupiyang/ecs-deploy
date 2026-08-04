@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#050505">
+  <title>NOOA — 智能体即 Python 类（NVIDIA 面向对象智能体框架）</title>
+  <link rel="preconnect" href="https://fonts.googleapis.cn">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.cn/css2?family=Noto+Serif+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #050505;
+      --bg-2: #0A0F0A;
+      --accent: #76B900;
+      --accent-light: #A8E400;
+      --text: #F0F0F0;
+      --muted: #6B7280;
+      --success: #28C840;
+      --surface: #101A10;
+      --serif: 'Noto Serif SC', serif;
+      --cn: 'Noto Sans SC', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; background: #020302; font-family: 'Noto Sans SC', sans-serif; color: #F0F0F0; -webkit-font-smoothing: antialiased; }
+    body { display: flex; align-items: center; justify-content: center; }
+
+    .stage {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      height: min(100vh, calc(100vw * 16 / 9));
+      width: min(100vw, calc(100vh * 9 / 16));
+      background: #050505;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,.6);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 16px 10px;
+    }
+    .stage::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 38% at 78% 2%, rgba(118, 185, 0, .10) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 35% at 8% 45%, rgba(168, 228, 0, .05) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 50% 100%, rgba(16, 26, 16, .95) 0%, transparent 60%);
+    }
+    .stage::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(rgba(240, 240, 240, .012) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(240, 240, 240, .012) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    /* 顶部条 */
+    .topbar {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .16em;
+      color: #6B7280;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(240, 240, 240, .06);
+    }
+    .brand { display: flex; align-items: center; gap: 6px; color: #F0F0F0; }
+    .brand-dot { width: 5px; height: 5px; background: #76B900; border-radius: 50%; box-shadow: 0 0 8px #76B900; animation: pulse 2.2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .3; transform: scale(.6); } }
+    .share-btn {
+      background: none;
+      border: 1px solid rgba(240, 240, 240, .2);
+      padding: 4px 8px 3px;
+      font: inherit;
+      color: #F0F0F0;
+      cursor: pointer;
+      letter-spacing: .12em;
+      transition: all .3s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 7.5px;
+    }
+    .share-btn:active { background: #76B900; color: #050505; border-color: #76B900; }
+
+    /* Hero */
+    .hero { position: relative; z-index: 5; flex-shrink: 0; margin-top: 7px; }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #6B7280;
+      margin-bottom: 4px;
+    }
+    .vol { color: #A8E400; }
+    .title-block { display: flex; align-items: flex-start; gap: 10px; }
+    .nooa-stamp {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(118, 185, 0, .6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Noto Serif SC', serif;
+      font-size: 18px;
+      font-weight: 900;
+      color: #76B900;
+      flex-shrink: 0;
+      position: relative;
+      box-shadow: 0 0 18px rgba(118, 185, 0, .2) inset, 0 0 12px rgba(118, 185, 0, .12);
+    }
+    .nooa-stamp::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 1px dashed rgba(168, 228, 0, .35);
+      animation: spin 9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .title-text { min-width: 0; }
+    .nooa-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 30px;
+      font-weight: 900;
+      letter-spacing: -.02em;
+      line-height: 1;
+      color: #F0F0F0;
+    }
+    .nooa-title .dot { color: #76B900; }
+    .superdesign-line { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+    .superdesign { font-family: 'JetBrains Mono', monospace; font-size: 7px; letter-spacing: .14em; color: #9CA3AF; }
+    .v-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      letter-spacing: .14em;
+      color: #A8E400;
+      border: 1px solid rgba(168, 228, 0, .3);
+      padding: 1px 5px;
+      border-radius: 2px;
+      background: rgba(168, 228, 0, .06);
+    }
+    .tagline {
+      margin-top: 5px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10.5px;
+      color: #D1D5DB;
+      line-height: 1.45;
+    }
+    .tagline em { color: #76B900; font-style: normal; font-weight: 500; }
+
+    /* 代码展示区 */
+    .codebox { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .code-header { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; margin-bottom: 4px; }
+    .code-header::after { content: ''; flex: 1; height: 1px; background: rgba(240, 240, 240, .06); }
+    .code-window {
+      background: #070B07;
+      border: 1px solid rgba(118, 185, 0, .3);
+      border-radius: 8px;
+      overflow: hidden;
+      font-family: 'JetBrains Mono', monospace;
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .code-window:active { border-color: rgba(168, 228, 0, .55); }
+    .code-bar {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 9px;
+      background: rgba(118, 185, 0, .1);
+      border-bottom: 1px solid rgba(118, 185, 0, .15);
+    }
+    .code-bar span { width: 7px; height: 7px; border-radius: 50%; }
+    .code-bar .r { background: #FF5F57; } .code-bar .y { background: #FFB020; } .code-bar .g { background: #28C840; }
+    .code-bar b { margin-left: 6px; font-size: 7px; font-weight: 400; color: #8FA86A; letter-spacing: .06em; }
+    .code-body { padding: 8px 11px 9px; font-size: 8.5px; line-height: 1.75; overflow-x: auto; white-space: pre; color: #A8B88E; }
+    .code-body .kw { color: #76B900; }
+    .code-body .doc { color: #6B8A3E; font-style: italic; }
+    .code-body .dyn { color: #A8E400; }
+    .code-body .cmt { color: #4A5A30; }
+    .caret-blink { display: inline-block; width: 6px; height: 10px; background: #A8E400; vertical-align: -2px; animation: blink 1s steps(1) infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* Stats */
+    .stats-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .stats-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .stats-title { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; }
+    .stats-badge { font-family: 'JetBrains Mono', monospace; font-size: 6px; letter-spacing: .16em; color: #A8E400; border: 1px solid rgba(168, 228, 0, .3); padding: 1px 5px; border-radius: 2px; }
+    .stats-chart { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .stat-card {
+      background: rgba(240, 240, 240, .02);
+      border: 1px solid rgba(240, 240, 240, .07);
+      border-radius: 7px;
+      padding: 7px 6px 5px;
+      cursor: pointer;
+      transition: all .25s;
+      min-width: 0;
+    }
+    .stat-card:active { background: rgba(118, 185, 0, .07); border-color: rgba(118, 185, 0, .3); transform: scale(.96); }
+    .stat-num { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; color: #F0F0F0; line-height: 1; white-space: nowrap; }
+    .stat-num .accent { color: var(--stat-color, #76B900); }
+    .stat-label { font-size: 7px; color: #6B7280; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .stat-mini-chart { display: flex; align-items: flex-end; gap: 2px; height: 12px; margin-top: 4px; }
+    .stat-bar { width: 4px; background: var(--stat-color, #76B900); opacity: .55; border-radius: 1px; transform-origin: bottom; }
+
+    /* Flow */
+    .flow-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .flow-header { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; margin-bottom: 4px; }
+    .flow-header::after { content: ''; flex: 1; height: 1px; background: rgba(240, 240, 240, .06); }
+    .flow-svg { width: 100%; height: auto; display: block; }
+    .flow-node { cursor: pointer; }
+    .flow-node:active { opacity: .7; }
+    .flow-arrow { animation: flowPulse 2s ease-in-out infinite; }
+    @keyframes flowPulse { 0%, 100% { stroke-opacity: .4; } 50% { stroke-opacity: 1; } }
+
+    /* Features */
+    .features { position: relative; z-index: 5; margin-top: 6px; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      background: rgba(240, 240, 240, .02);
+      border: 1px solid rgba(240, 240, 240, .07);
+      border-radius: 7px;
+      padding: 6px 9px;
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .feature:active { background: rgba(118, 185, 0, .05); border-color: rgba(118, 185, 0, .22); }
+    .feature-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: rgba(118, 185, 0, .1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .feature-icon svg { width: 13px; height: 13px; stroke: #76B900; fill: none; stroke-width: 1.5; }
+    .feature-content { flex: 1; min-width: 0; }
+    .feature-title { font-family: 'Noto Sans SC', sans-serif; font-size: 9.5px; font-weight: 500; color: #F0F0F0; letter-spacing: .02em; }
+    .feature-desc { font-size: 7.5px; color: #6B7280; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .feature-arrow { font-size: 11px; color: #76B900; opacity: 0; transform: translateX(-2px); transition: all .25s; flex-shrink: 0; }
+    .feature:active .feature-arrow { opacity: 1; transform: translateX(2px); }
+    .feature-progress { height: 2px; background: rgba(240, 240, 240, .06); border-radius: 1px; margin-top: 4px; overflow: hidden; }
+    .feature-progress-bar { height: 100%; background: linear-gradient(90deg, #76B900, #A8E400); border-radius: 1px; transform-origin: left; animation: progressIn .8s cubic-bezier(.4, 0, .2, 1) forwards; transform: scaleX(0); }
+    @keyframes progressIn { to { transform: scaleX(1); } }
+
+    /* Tech */
+    .tech-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .tech-header { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; margin-bottom: 4px; }
+    .tech-pills { display: flex; flex-wrap: wrap; gap: 4px; }
+    .tech-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6.5px;
+      letter-spacing: .08em;
+      color: #9CA3AF;
+      border: 1px solid rgba(240, 240, 240, .1);
+      padding: 2px 7px;
+      border-radius: 10px;
+      cursor: pointer;
+      background: rgba(240, 240, 240, .02);
+      transition: all .2s;
+    }
+    .tech-pill:active { background: rgba(240, 240, 240, .08); }
+    .tech-pill.accent { border-color: rgba(118, 185, 0, .35); color: #A8E400; }
+    .tech-pill.cyan { border-color: rgba(168, 228, 0, .25); color: #C4F26E; }
+
+    /* Bottom bar */
+    .bottombar {
+      position: relative;
+      z-index: 5;
+      margin-top: 8px;
+      padding-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      border-top: 1px solid rgba(240, 240, 240, .06);
+    }
+    .github-link { display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 8px; color: #D1D5DB; text-decoration: none; }
+    .github-link svg { width: 13px; height: 13px; fill: #9CA3AF; transition: fill .25s; }
+    .github-link:active svg { fill: #76B900; }
+    .visit-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .14em;
+      color: #050505;
+      background: linear-gradient(90deg, #76B900, #A8E400);
+      padding: 6px 13px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all .25s;
+    }
+    .visit-btn:active { transform: scale(.95); filter: brightness(1.15); }
+
+    /* Overlay + Sheet */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: flex-end;
+      background: rgba(0, 0, 0, .5);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .35s;
+    }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+    .sheet {
+      width: 100%;
+      max-height: 76%;
+      background: linear-gradient(180deg, #101A10, #0A0F0A);
+      border: 1px solid rgba(118, 185, 0, .2);
+      border-bottom: none;
+      border-radius: 16px 16px 0 0;
+      padding: 14px 18px 18px;
+      transform: translateY(101%);
+      transition: transform .45s cubic-bezier(.7, 0, .3, 1);
+      overflow-y: auto;
+    }
+    .overlay.active .sheet { transform: translateY(0); }
+    .sheet-handle { width: 32px; height: 3px; background: #2E4A2E; border-radius: 2px; margin: 0 auto 12px; }
+    .sheet-title { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; color: #F0F0F0; margin-bottom: 7px; }
+    .sheet-title em { color: #76B900; font-style: normal; }
+    .sheet-desc { font-size: 10.5px; line-height: 1.65; color: #9CA3AF; }
+    .sheet-desc code { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #A8E400; background: rgba(168, 228, 0, .08); padding: 1px 4px; border-radius: 2px; }
+    .sheet-code {
+      margin-top: 10px;
+      background: #050505;
+      border: 1px solid rgba(240, 240, 240, .08);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      line-height: 1.7;
+      color: #A8E400;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .sheet-points { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+    .sheet-point { display: flex; align-items: flex-start; gap: 8px; font-family: 'Noto Sans SC', sans-serif; font-size: 10px; color: #D0D0D8; line-height: 1.55; }
+    .sheet-point::before { content: ''; width: 5px; height: 5px; background: #76B900; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .sheet-close {
+      margin-top: 14px;
+      width: 100%;
+      padding: 10px;
+      background: rgba(118, 185, 0, .08);
+      border: 1px solid rgba(118, 185, 0, .25);
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .15em;
+      color: #A8E400;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .sheet-close:active { background: #76B900; color: #050505; }
+
+    /* Toast */
+    .toast {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #28C840;
+      color: #050505;
+      padding: 7px 14px;
+      border-radius: 5px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: all .3s;
+      z-index: 200;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .reveal { opacity: 0; transform: translateY(10px); transition: all .45s cubic-bezier(.4, 0, .2, 1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @keyframes chartGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+    .chart-animate { animation: chartGrow .6s cubic-bezier(.4, 0, .2, 1) forwards; }
+
+    /* 小屏兜底 */
+    @media (max-height: 720px) {
+      .nooa-title { font-size: 26px; }
+      .nooa-stamp { width: 36px; height: 36px; font-size: 16px; }
+      .tagline { font-size: 9.5px; }
+      .code-body { font-size: 7.5px; line-height: 1.65; padding: 6px 9px; }
+      .feature { padding: 5px 9px; }
+      .feature-title { font-size: 9px; }
+      .stat-num { font-size: 13.5px; }
+      .sheet { max-height: 80%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <!-- Topbar -->
+    <div class="topbar reveal">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <span>Young's Insight</span>
+      </div>
+      <button class="share-btn" id="shareBtn">SHARE <span class="arr">↗</span></button>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero reveal">
+      <div class="meta-row">
+        <span class="vol">AGENT FRAMEWORK</span>
+        <span>2026.08.05</span>
+      </div>
+      <div class="title-block">
+        <div class="nooa-stamp" id="stamp">N</div>
+        <div class="title-text">
+          <div class="nooa-title">NOOA<span class="dot">.</span></div>
+          <div class="superdesign-line">
+            <span class="superdesign">by NVIDIA NeMo Labs</span>
+            <span class="v-tag">APACHE-2.0</span>
+          </div>
+        </div>
+      </div>
+      <div class="tagline">智能体就是<em>一个 Python 类</em>——状态、能力、提示词、类型合约全收进 class，回归传统软件工程</div>
+    </div>
+
+    <!-- 代码展示 -->
+    <div class="codebox reveal">
+      <div class="code-header">The Core Idea · 核心代码</div>
+      <div class="code-window" id="codeWin">
+        <div class="code-bar">
+          <span class="r"></span><span class="y"></span><span class="g"></span>
+          <b>agent.py — 点击查看完整解释</b>
+        </div>
+        <div class="code-body"><span class="kw">class</span> SupportAgent(Agent):
+  <span class="doc">"""You are a support agent."""</span>
+  order_db: OrderDB
+  history: list[Message]
+  <span class="kw">def</span> is_refund_eligible(...):
+      <span class="cmt"># 确定性校验 + 安全检查</span>
+      <span class="kw">return</span> self.order_db.check(ord)
+  <span class="kw">def</span> handle_ticket(...): <span class="dyn">...</span><span class="caret-blink"></span></div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-section reveal">
+      <div class="stats-header">
+        <span class="stats-title">Benchmarks</span>
+        <span class="stats-badge">OSAA CORE</span>
+      </div>
+      <div class="stats-chart">
+        <div class="stat-card" data-stat="stars" style="--stat-color: #76B900">
+          <div class="stat-num"><span class="accent">825</span></div>
+          <div class="stat-label">Stars · 3周</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 7px; animation-delay: .1s"></div>
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .15s"></div>
+            <div class="stat-bar chart-animate" style="height: 12px; animation-delay: .2s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="swe" style="--stat-color: #A8E400">
+          <div class="stat-num"><span class="accent">82.2</span>%</div>
+          <div class="stat-label">SWE-bench Verified</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .25s"></div>
+            <div class="stat-bar chart-animate" style="height: 11px; animation-delay: .3s"></div>
+            <div class="stat-bar chart-animate" style="height: 12px; animation-delay: .35s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="cyber" style="--stat-color: #76B900">
+          <div class="stat-num"><span class="accent">86.8</span>%</div>
+          <div class="stat-label">CyberGym L1</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 9px; animation-delay: .4s"></div>
+            <div class="stat-bar chart-animate" style="height: 11px; animation-delay: .45s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="tok" style="--stat-color: #28C840">
+          <div class="stat-num" style="color: #28C840">1/2</div>
+          <div class="stat-label">token 消耗</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 12px; background: #28C840; animation-delay: .5s"></div>
+            <div class="stat-bar chart-animate" style="height: 6px; background: #28C840; animation-delay: .55s"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flow -->
+    <div class="flow-section reveal">
+      <div class="flow-header">Runtime Pipeline</div>
+      <svg class="flow-svg" viewBox="0 0 350 44" fill="none">
+        <defs>
+          <marker id="nv-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L6,3 z" fill="#76B900" fill-opacity=".6"/>
+          </marker>
+        </defs>
+        <g class="flow-node" id="flow-class">
+          <rect x="3" y="9" width="66" height="26" rx="5" fill="rgba(118,185,0,.08)" stroke="#76B900" stroke-width="1" stroke-opacity=".5"/>
+          <text x="36" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#F0F0F0" text-anchor="middle">AGENT CLASS</text>
+          <text x="36" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#6B7280" text-anchor="middle">状态·能力·提示词</text>
+        </g>
+        <path class="flow-arrow" d="M72 22 L88 22" stroke="#76B900" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#nv-arrow)"/>
+        <g class="flow-node" id="flow-llm">
+          <rect x="91" y="9" width="70" height="26" rx="5" fill="rgba(168,228,0,.1)" stroke="#A8E400" stroke-width="1.2"/>
+          <text x="126" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#A8E400" text-anchor="middle">LLM 生成 (...)</text>
+          <text x="126" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#6B7280" text-anchor="middle">动态方法体</text>
+        </g>
+        <path class="flow-arrow" d="M164 22 L180 22" stroke="#76B900" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#nv-arrow)" style="animation-delay: .3s"/>
+        <g class="flow-node" id="flow-ast">
+          <rect x="183" y="9" width="70" height="26" rx="5" fill="rgba(118,185,0,.08)" stroke="#76B900" stroke-width="1" stroke-opacity=".5"/>
+          <text x="218" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#F0F0F0" text-anchor="middle">AST 校验+黑名单</text>
+          <text x="218" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#6B7280" text-anchor="middle">确定性安全检查</text>
+        </g>
+        <path class="flow-arrow" d="M256 22 L272 22" stroke="#A8E400" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#nv-arrow)" style="animation-delay: .6s"/>
+        <g class="flow-node" id="flow-sandbox">
+          <rect x="275" y="9" width="72" height="26" rx="5" fill="rgba(118,185,0,.08)" stroke="#76B900" stroke-width="1" stroke-opacity=".5"/>
+          <text x="311" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#F0F0F0" text-anchor="middle">OpenShell 沙箱</text>
+          <text x="311" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#6B7280" text-anchor="middle">隔离执行环境</text>
+        </g>
+        <circle cx="80" cy="22" r="2" fill="#76B900">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="172" cy="22" r="2" fill="#A8E400">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0.5s"/>
+        </circle>
+        <circle cx="264" cy="22" r="2" fill="#76B900">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="1s"/>
+        </circle>
+      </svg>
+    </div>
+
+    <!-- Features -->
+    <div class="features reveal">
+      <div class="feature" data-f="0">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">一个类装下一切</div>
+          <div class="feature-desc">方法即能力 · 字段即状态 · docstring 即提示词 · 类型注解即合约</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 100%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="1">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M4 17l6-6-6-6"/><path d="M12 19h8"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">动态与确定性分离</div>
+          <div class="feature-desc">... 方法由 LLM 运行时生成；普通方法确定性执行，关键操作可控</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 95%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="2">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">效率：引用传递</div>
+          <div class="feature-desc">模型直接操作实时 Python 对象，会话峰值仅 22–72k token（传统 200–400k）</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 90%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="3">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">安全可审计</div>
+          <div class="feature-desc">全链路行为日志 + 长期记忆 + OpenShell 沙箱隔离 + AST 校验</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 92%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="4">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">成本与本地化</div>
+          <div class="feature-desc">开源模型私有部署（GLM-5.2 等），运行成本约为闭源方案 1/2–1/3</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 88%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+    </div>
+
+    <!-- Tech -->
+    <div class="tech-section reveal">
+      <div class="tech-header">Tech Stack</div>
+      <div class="tech-pills">
+        <span class="tech-pill accent">Python</span>
+        <span class="tech-pill">Pydantic</span>
+        <span class="tech-pill cyan">AST</span>
+        <span class="tech-pill">OpenShell</span>
+        <span class="tech-pill cyan">GPT-5.5</span>
+        <span class="tech-pill">GLM-5.2</span>
+      </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="bottombar reveal">
+      <a href="https://github.com/NVIDIA-NeMo/labs-OO-Agents" target="_blank" class="github-link">
+        <svg viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        NVIDIA-NeMo/labs-OO-Agents
+      </a>
+      <a href="https://github.com/NVIDIA-NeMo/labs-OO-Agents" target="_blank" class="visit-btn">VISIT →</a>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title" id="sheetTitle"></div>
+        <div class="sheet-desc" id="sheetDesc"></div>
+        <div class="sheet-code" id="sheetCode" style="display:none"></div>
+        <div class="sheet-points" id="sheetPoints"></div>
+        <button class="sheet-close" id="sheetClose">CLOSE</button>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script>
+  (function(){
+    var $=function(s){return document.querySelector(s)};
+    var overlay=$('#overlay'), sheetTitle=$('#sheetTitle'), sheetDesc=$('#sheetDesc'),
+        sheetPoints=$('#sheetPoints'), sheetCode=$('#sheetCode'), toast=$('#toast');
+
+    var DATA = {
+      stars: {
+        title: '825 Stars <em>· 三周破圈</em>',
+        desc: '2026-07-20 开源，三周拿下 825 星（116 Forks）。作为 OSAA（开放安全 AI 联盟）首个开源项目，NOOA 让"智能体开发回归传统软件工程"的理念迅速获得关注——Git、单元测试、代码审查这些成熟工具直接可用。',
+        points: ['Apache-2.0 · Python · 模型无关（model-agnostic）', 'arXiv 论文 2607.20709 + NVIDIA 官方博客', '作为 OSAA 核心技术贡献开源']
+      },
+      swe: {
+        title: '82.2% <em>SWE-bench Verified</em>',
+        desc: '配合 GPT-5.5 在软件工程基准 SWE-bench Verified 上达到 82.2% 准确率，且 token 消耗仅为对比方案的一半（110 万 vs 220 万）。关键机制是引用传递：模型直接操作实时 Python 对象而非序列化文本，避免重复传输。',
+        points: ['SWE-bench Verified 82.2%（GPT-5.5）', 'token 110万 vs 对比方案 220万', '会话峰值仅 22–72k token（传统方案 200–400k）', '论文含 Terminal-Bench 2.0 结果']
+      },
+      cyber: {
+        title: '86.8% <em>CyberGym L1 漏洞发现率</em>',
+        desc: '在网络安全任务基准 CyberGym L1 上漏洞发现率达 86.8%，超越多数闭源系统。配合本地化开源模型（如 GLM-5.2）可在私有环境完成安全取证，解决闭源 API 安全护栏拒绝分析攻击日志的问题。',
+        points: ['CyberGym L1 漏洞发现率 86.8%', '本地化审计：私有部署开源模型', '成本约为闭源方案 1/2–1/3']
+      },
+      tok: {
+        title: '1/2 <em>token 消耗</em>',
+        desc: '引用传递机制让模型直接操作实时 Python 对象（非序列化文本），无需重复传输数据；配合"无需上下文压缩"设计，中间会话峰值仅 22–72k token，而传统方案需要 200–400k。',
+        points: ['引用传递：直接操作实时对象', '无需上下文压缩', '边际成本趋近于零']
+      },
+      'class': {
+        title: 'AGENT CLASS <em>· 一切从类开始</em>',
+        desc: '智能体就是一个 Python 类：方法即能力（可执行操作）、字段即状态（会话历史/临时变量）、docstring 即提示词（直接作为模型输入）、类型注解即合约（输入输出强制验证）。开发范式根本转变：用 Git、单元测试、代码审查迭代智能体。',
+        points: ['方法即能力 · 字段即状态', 'docstring 即提示词 · 类型注解即合约', '无碎片化框架，回归传统软件工程']
+      },
+      llm: {
+        title: 'LLM 生成 <em>· 动态方法体</em>',
+        desc: '方法体为省略号（...）的方法由 LLM 在运行时动态生成——决策逻辑、工具调用都在这里；普通方法体保持确定性执行——数据验证、安全检查等关键操作全程可控。动态与确定性在同一类内清晰分离。',
+        points: ['... 方法 → LLM 运行时生成', '普通方法 → 确定性执行', '安全关键路径不依赖 LLM 判断']
+      },
+      ast: {
+        title: 'AST 校验 + 黑名单 <em>· 生成代码守门</em>',
+        desc: 'LLM 生成的代码先过 AST 语法校验，再按模块黑名单（deny-list）过滤，最后才执行。这是防御性安全设计的第一道闸门，防止生成代码触碰危险模块。',
+        points: ['AST 静态校验生成代码', '模块 deny-list 过滤', 'OpenShell 沙箱兜底隔离']
+      },
+      sandbox: {
+        title: 'OpenShell 沙箱 <em>· 隔离执行</em>',
+        desc: '生产环境建议搭配 NVIDIA OpenShell 安全运行时：沙箱隔离代码执行权限，与主文件系统隔离，防止恶意操作（删除文件、修改环境、外传私有数据）。',
+        points: ['与主文件系统隔离', '限制代码执行权限', '配合 AST 校验 + 黑名单形成纵深防御']
+      },
+      f0: {
+        title: '一个类装下一切',
+        desc: 'NOOA 把提示词、工具、回调、工作流这些碎片化抽象全部收进一个 Python 类。开发者不用再拼装十几个模块，一个 class 就是完整的智能体。',
+        points: ['方法即能力：类方法定义可执行操作', '字段即状态：运行时状态存对象字段', 'docstring 即提示词：直接进模型上下文', '类型注解即合约：输入输出强制验证']
+      },
+      f1: {
+        title: '动态与确定性分离',
+        desc: '省略号方法体（...）由 LLM 动态生成决策逻辑；普通方法体确定性执行数据验证与安全检查。同一类内两套代码，关键路径永远可控。',
+        points: ['... 方法 = LLM 运行时生成（决策）', '普通方法 = 确定性执行（校验/安全）', 'AI 生成代码有 AST + 黑名单守门']
+      },
+      f2: {
+        title: '效率：引用传递',
+        desc: '模型直接操作实时 Python 对象而非序列化文本，避免重复传输；无需上下文压缩，会话峰值仅 22–72k token。SWE-bench 82.2% 时 token 消耗是对比方案一半。',
+        points: ['SWE-bench Verified 82.2%（GPT-5.5）', 'token 110万 vs 220万，减半', '会话峰值 22–72k vs 传统 200–400k']
+      },
+      f3: {
+        title: '安全可审计',
+        desc: '全链路行为追踪：每一步操作、状态变更生成不可篡改日志；长期记忆子系统结构化存储（类型/重要性/标签）+ 知识图谱关联；生产环境 OpenShell 沙箱隔离。',
+        points: ['全链路不可篡改日志', '长期记忆结构化存储，防敏感泄露', 'OpenShell 沙箱 + AST 校验 + 模块黑名单']
+      },
+      f4: {
+        title: '成本与本地化',
+        desc: '企业可在私有环境部署开源模型（如 GLM-5.2），不依赖闭源 API，安全取证不被"护栏"阻拦；运行成本约为闭源方案 1/2–1/3，边际成本趋近于零。',
+        points: ['私有部署开源模型（GLM-5.2 等）', '取证过程不被闭源安全护栏阻碍', '成本 1/2–1/3，边际成本趋零']
+      }
+    };
+
+    function openSheet(key){
+      var d = DATA[key]; if(!d) return;
+      sheetTitle.innerHTML = d.title;
+      sheetDesc.textContent = d.desc;
+      sheetCode.style.display = 'none';
+      sheetPoints.innerHTML = d.points.map(function(p){
+        return '<div class="sheet-point">' + p + '</div>';
+      }).join('');
+      overlay.classList.add('active');
+    }
+    function closeSheet(){ overlay.classList.remove('active'); }
+
+    document.querySelectorAll('.stat-card').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet(el.dataset.stat); });
+    });
+    document.querySelectorAll('.flow-node').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet(el.id.replace('flow-','')); });
+    });
+    document.querySelectorAll('.feature').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet('f'+el.dataset.f); });
+    });
+    $('#codeWin').addEventListener('click', function(){ openSheet('class'); });
+    $('#sheetClose').addEventListener('click', closeSheet);
+    overlay.addEventListener('click', function(e){ if(e.target===overlay) closeSheet(); });
+
+    $('#shareBtn').addEventListener('click', function(){
+      var url = location.href.split('?')[0];
+      if(navigator.share){
+        navigator.share({title:'NOOA — 智能体即 Python 类（NVIDIA）', url:url}).catch(function(){});
+      }else if(navigator.clipboard){
+        navigator.clipboard.writeText(url).then(function(){
+          toast.textContent = '链接已复制';
+          toast.classList.add('show');
+          setTimeout(function(){ toast.classList.remove('show'); }, 1800);
+        });
+      }
+    });
+    $('#stamp').addEventListener('click', function(){
+      $('#stamp').style.transform = 'rotate(180deg) scale(.9)';
+      setTimeout(function(){ $('#stamp').style.transform=''; }, 400);
+      openSheet('stars');
+    });
+
+    document.querySelectorAll('.reveal').forEach(function(x){ x.classList.add('visible'); });
+  })();
+  </script>
+</body>
+</html>

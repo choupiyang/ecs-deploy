@@ -1,10 +1,10 @@
 {
-  "id": "codex-qq-skin",
-  "title": "Codex QQ Skin",
-  "subtitle": "Codex 桌面端 QQ 复古皮肤生成器",
-  "image": "cards/codex-qq-skin-cover.svg",
-  "page": "pages/codex-qq-skin.html",
-  "tags": ["Codex", "QQ皮肤", "皮肤生成器", "389★"],
+  "id": "nooa",
+  "title": "NOOA",
+  "subtitle": "NVIDIA 面向对象智能体框架 · 智能体即 Python 类",
+  "image": "cards/nooa-cover.svg",
+  "page": "pages/nooa.html",
+  "tags": ["NVIDIA", "Agent框架", "面向对象", "825★"],
   "date": "2026-08-05",
   "type": "recommendation"
 }
