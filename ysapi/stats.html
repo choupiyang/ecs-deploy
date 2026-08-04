@@ -85,10 +85,17 @@ footer{padding:36px 0 0;font-size:12px;color:var(--func);font-weight:700;letter-
 <script>
 (function(){
   var $=function(s){return document.querySelector(s)};
+  var LS_KEY='ys_stats_key';
   var key='';
   var hash=location.hash.replace(/^#/,'');
-  if(hash){key=hash;load()}
-  else{showKeybox()}
+  var qkey=(location.search.match(/[?&]key=([^&]+)/)||[])[1]||'';
+  key = decodeURIComponent(hash||qkey||localStorage.getItem(LS_KEY)||'');
+  if(key){
+    try{localStorage.setItem(LS_KEY,key)}catch(e){}
+    load();
+  }else{
+    showKeybox();
+  }
 
   function showKeybox(){
     $('#keybox').style.display='block';
@@ -97,7 +104,7 @@ footer{padding:36px 0 0;font-size:12px;color:var(--func);font-weight:700;letter-
     key=$('#keyInput').value.trim();
     $('#err').textContent='';
     if(!key){$('#err').textContent='请输入密钥';return}
-    // 写入 hash, 刷新为带密钥的链接（便于收藏）
+    try{localStorage.setItem(LS_KEY,key)}catch(e){}
     history.replaceState(null,'','#'+key);
     load();
   });
