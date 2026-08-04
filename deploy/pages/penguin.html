@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#050D16">
+  <title>PenguinHarness — 一键生成自进化 Agent 的自动构建器</title>
+  <link rel="preconnect" href="https://fonts.googleapis.cn">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.cn/css2?family=Noto+Serif+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #050D16;
+      --bg-2: #0A1826;
+      --accent: #4FC3F7;
+      --accent-deep: #1F6FEB;
+      --ice: #D6EDFF;
+      --text: #F0F0F0;
+      --muted: #6B7280;
+      --success: #28C840;
+      --surface: #0E2236;
+      --serif: 'Noto Serif SC', serif;
+      --cn: 'Noto Sans SC', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; background: #03070D; font-family: 'Noto Sans SC', sans-serif; color: #F0F0F0; -webkit-font-smoothing: antialiased; }
+    body { display: flex; align-items: center; justify-content: center; }
+
+    .stage {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      height: min(100vh, calc(100vw * 16 / 9));
+      width: min(100vw, calc(100vh * 9 / 16));
+      background: #050D16;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,.6);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 16px 10px;
+    }
+    .stage::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 38% at 78% 2%, rgba(79, 195, 247, .10) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 35% at 8% 45%, rgba(31, 111, 235, .06) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 50% 100%, rgba(14, 34, 54, .95) 0%, transparent 60%);
+    }
+    .stage::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(rgba(240, 240, 240, .012) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(240, 240, 240, .012) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    /* 顶部条 */
+    .topbar {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .16em;
+      color: #6B7280;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(240, 240, 240, .06);
+    }
+    .brand { display: flex; align-items: center; gap: 6px; color: #F0F0F0; }
+    .brand-dot { width: 5px; height: 5px; background: #4FC3F7; border-radius: 50%; box-shadow: 0 0 8px #4FC3F7; animation: pulse 2.2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .3; transform: scale(.6); } }
+    .share-btn {
+      background: none;
+      border: 1px solid rgba(240, 240, 240, .2);
+      padding: 4px 8px 3px;
+      font: inherit;
+      color: #F0F0F0;
+      cursor: pointer;
+      letter-spacing: .12em;
+      transition: all .3s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 7.5px;
+    }
+    .share-btn:active { background: #4FC3F7; color: #050D16; border-color: #4FC3F7; }
+
+    /* Hero */
+    .hero { position: relative; z-index: 5; flex-shrink: 0; margin-top: 7px; }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #6B7280;
+      margin-bottom: 4px;
+    }
+    .vol { color: #4FC3F7; }
+    .title-block { display: flex; align-items: flex-start; gap: 10px; }
+    .pg-stamp {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(79, 195, 247, .6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 19px;
+      flex-shrink: 0;
+      position: relative;
+      box-shadow: 0 0 18px rgba(79, 195, 247, .18) inset, 0 0 12px rgba(79, 195, 247, .1);
+    }
+    .pg-stamp::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 1px dashed rgba(79, 195, 247, .35);
+      animation: spin 9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .title-text { min-width: 0; }
+    .pg-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 25px;
+      font-weight: 900;
+      letter-spacing: -.02em;
+      line-height: 1.05;
+      color: #F0F0F0;
+    }
+    .pg-title .dot { color: #4FC3F7; }
+    .superdesign-line { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+    .superdesign { font-family: 'JetBrains Mono', monospace; font-size: 7px; letter-spacing: .14em; color: #9CA3AF; }
+    .v-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      letter-spacing: .14em;
+      color: #4FC3F7;
+      border: 1px solid rgba(79, 195, 247, .3);
+      padding: 1px 5px;
+      border-radius: 2px;
+      background: rgba(79, 195, 247, .06);
+    }
+    .tagline {
+      margin-top: 5px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10.5px;
+      color: #D1D5DB;
+      line-height: 1.45;
+    }
+    .tagline em { color: #4FC3F7; font-style: normal; font-weight: 500; }
+
+    /* 终端展示区 */
+    .termbox { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .term-header { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; margin-bottom: 4px; }
+    .term-header::after { content: ''; flex: 1; height: 1px; background: rgba(240, 240, 240, .06); }
+    .term-window {
+      background: #03070D;
+      border: 1px solid rgba(79, 195, 247, .3);
+      border-radius: 8px;
+      overflow: hidden;
+      font-family: 'JetBrains Mono', monospace;
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .term-window:active { border-color: rgba(79, 195, 247, .6); }
+    .term-bar {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 9px;
+      background: rgba(79, 195, 247, .1);
+      border-bottom: 1px solid rgba(79, 195, 247, .15);
+    }
+    .term-bar span { width: 7px; height: 7px; border-radius: 50%; }
+    .term-bar .r { background: #FF5F57; } .term-bar .y { background: #FFB020; } .term-bar .g { background: #28C840; }
+    .term-bar b { margin-left: 6px; font-size: 7px; font-weight: 400; color: #7BA7C9; letter-spacing: .06em; }
+    .term-body { padding: 8px 11px 9px; font-size: 8.5px; line-height: 1.8; color: #8FB8D8; }
+    .term-body .cmd { color: #4FC3F7; }
+    .term-body .prompt { color: #6B8FAF; }
+    .term-body .out { color: #A9C8DE; }
+    .term-body .dim { color: #4A6A85; }
+    .caret-blink { display: inline-block; width: 7px; height: 10px; background: #4FC3F7; vertical-align: -2px; animation: blink 1s steps(1) infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* Stats */
+    .stats-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .stats-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .stats-title { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; }
+    .stats-badge { font-family: 'JetBrains Mono', monospace; font-size: 6px; letter-spacing: .16em; color: #4FC3F7; border: 1px solid rgba(79, 195, 247, .3); padding: 1px 5px; border-radius: 2px; }
+    .stats-chart { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .stat-card {
+      background: rgba(240, 240, 240, .02);
+      border: 1px solid rgba(240, 240, 240, .07);
+      border-radius: 7px;
+      padding: 7px 6px 5px;
+      cursor: pointer;
+      transition: all .25s;
+      min-width: 0;
+    }
+    .stat-card:active { background: rgba(79, 195, 247, .07); border-color: rgba(79, 195, 247, .3); transform: scale(.96); }
+    .stat-num { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; color: #F0F0F0; line-height: 1; white-space: nowrap; }
+    .stat-num .accent { color: var(--stat-color, #4FC3F7); }
+    .stat-label { font-size: 7px; color: #6B7280; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .stat-mini-chart { display: flex; align-items: flex-end; gap: 2px; height: 12px; margin-top: 4px; }
+    .stat-bar { width: 4px; background: var(--stat-color, #4FC3F7); opacity: .55; border-radius: 1px; transform-origin: bottom; }
+
+    /* Flow */
+    .flow-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .flow-header { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; margin-bottom: 4px; }
+    .flow-header::after { content: ''; flex: 1; height: 1px; background: rgba(240, 240, 240, .06); }
+    .flow-svg { width: 100%; height: auto; display: block; }
+    .flow-node { cursor: pointer; }
+    .flow-node:active { opacity: .7; }
+    .flow-arrow { animation: flowPulse 2s ease-in-out infinite; }
+    @keyframes flowPulse { 0%, 100% { stroke-opacity: .4; } 50% { stroke-opacity: 1; } }
+
+    /* Features */
+    .features { position: relative; z-index: 5; margin-top: 6px; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      background: rgba(240, 240, 240, .02);
+      border: 1px solid rgba(240, 240, 240, .07);
+      border-radius: 7px;
+      padding: 6px 9px;
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .feature:active { background: rgba(79, 195, 247, .05); border-color: rgba(79, 195, 247, .22); }
+    .feature-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: rgba(79, 195, 247, .1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .feature-icon svg { width: 13px; height: 13px; stroke: #4FC3F7; fill: none; stroke-width: 1.5; }
+    .feature-content { flex: 1; min-width: 0; }
+    .feature-title { font-family: 'Noto Sans SC', sans-serif; font-size: 9.5px; font-weight: 500; color: #F0F0F0; letter-spacing: .02em; }
+    .feature-desc { font-size: 7.5px; color: #6B7280; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .feature-arrow { font-size: 11px; color: #4FC3F7; opacity: 0; transform: translateX(-2px); transition: all .25s; flex-shrink: 0; }
+    .feature:active .feature-arrow { opacity: 1; transform: translateX(2px); }
+    .feature-progress { height: 2px; background: rgba(240, 240, 240, .06); border-radius: 1px; margin-top: 4px; overflow: hidden; }
+    .feature-progress-bar { height: 100%; background: linear-gradient(90deg, #4FC3F7, #1F6FEB); border-radius: 1px; transform-origin: left; animation: progressIn .8s cubic-bezier(.4, 0, .2, 1) forwards; transform: scaleX(0); }
+    @keyframes progressIn { to { transform: scaleX(1); } }
+
+    /* Tech */
+    .tech-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .tech-header { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; margin-bottom: 4px; }
+    .tech-pills { display: flex; flex-wrap: wrap; gap: 4px; }
+    .tech-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6.5px;
+      letter-spacing: .08em;
+      color: #9CA3AF;
+      border: 1px solid rgba(240, 240, 240, .1);
+      padding: 2px 7px;
+      border-radius: 10px;
+      cursor: pointer;
+      background: rgba(240, 240, 240, .02);
+      transition: all .2s;
+    }
+    .tech-pill:active { background: rgba(240, 240, 240, .08); }
+    .tech-pill.accent { border-color: rgba(79, 195, 247, .35); color: #4FC3F7; }
+    .tech-pill.cyan { border-color: rgba(31, 111, 235, .3); color: #7DB4F0; }
+
+    /* Bottom bar */
+    .bottombar {
+      position: relative;
+      z-index: 5;
+      margin-top: 8px;
+      padding-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      border-top: 1px solid rgba(240, 240, 240, .06);
+    }
+    .github-link { display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 8px; color: #D1D5DB; text-decoration: none; }
+    .github-link svg { width: 13px; height: 13px; fill: #9CA3AF; transition: fill .25s; }
+    .github-link:active svg { fill: #4FC3F7; }
+    .visit-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .14em;
+      color: #050D16;
+      background: linear-gradient(90deg, #4FC3F7, #1F6FEB);
+      padding: 6px 13px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all .25s;
+    }
+    .visit-btn:active { transform: scale(.95); filter: brightness(1.15); }
+
+    /* Overlay + Sheet */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: flex-end;
+      background: rgba(0, 0, 0, .5);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .35s;
+    }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+    .sheet {
+      width: 100%;
+      max-height: 76%;
+      background: linear-gradient(180deg, #0E2236, #0A1826);
+      border: 1px solid rgba(79, 195, 247, .2);
+      border-bottom: none;
+      border-radius: 16px 16px 0 0;
+      padding: 14px 18px 18px;
+      transform: translateY(101%);
+      transition: transform .45s cubic-bezier(.7, 0, .3, 1);
+      overflow-y: auto;
+    }
+    .overlay.active .sheet { transform: translateY(0); }
+    .sheet-handle { width: 32px; height: 3px; background: #2E4A62; border-radius: 2px; margin: 0 auto 12px; }
+    .sheet-title { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; color: #F0F0F0; margin-bottom: 7px; }
+    .sheet-title em { color: #4FC3F7; font-style: normal; }
+    .sheet-desc { font-size: 10.5px; line-height: 1.65; color: #9CA3AF; }
+    .sheet-desc code { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #4FC3F7; background: rgba(79, 195, 247, .08); padding: 1px 4px; border-radius: 2px; }
+    .sheet-code {
+      margin-top: 10px;
+      background: #03070D;
+      border: 1px solid rgba(240, 240, 240, .08);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      line-height: 1.7;
+      color: #4FC3F7;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .sheet-points { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+    .sheet-point { display: flex; align-items: flex-start; gap: 8px; font-family: 'Noto Sans SC', sans-serif; font-size: 10px; color: #D0D0D8; line-height: 1.55; }
+    .sheet-point::before { content: ''; width: 5px; height: 5px; background: #4FC3F7; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .sheet-close {
+      margin-top: 14px;
+      width: 100%;
+      padding: 10px;
+      background: rgba(79, 195, 247, .08);
+      border: 1px solid rgba(79, 195, 247, .25);
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .15em;
+      color: #4FC3F7;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .sheet-close:active { background: #4FC3F7; color: #050D16; }
+
+    /* Toast */
+    .toast {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #28C840;
+      color: #050D16;
+      padding: 7px 14px;
+      border-radius: 5px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: all .3s;
+      z-index: 200;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .reveal { opacity: 0; transform: translateY(10px); transition: all .45s cubic-bezier(.4, 0, .2, 1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @keyframes chartGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+    .chart-animate { animation: chartGrow .6s cubic-bezier(.4, 0, .2, 1) forwards; }
+
+    /* 小屏兜底 */
+    @media (max-height: 730px) {
+      .pg-title { font-size: 21px; }
+      .pg-stamp { width: 36px; height: 36px; font-size: 16px; }
+      .tagline { font-size: 9.5px; }
+      .term-body { font-size: 7.5px; line-height: 1.7; padding: 6px 9px; }
+      .feature { padding: 5px 9px; }
+      .feature-title { font-size: 9px; }
+      .stat-num { font-size: 13.5px; }
+      .sheet { max-height: 80%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <!-- Topbar -->
+    <div class="topbar reveal">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <span>Young's Insight</span>
+      </div>
+      <button class="share-btn" id="shareBtn">SHARE <span class="arr">↗</span></button>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero reveal">
+      <div class="meta-row">
+        <span class="vol">AUTOMATED AGENT BUILDER</span>
+        <span>2026.08.05</span>
+      </div>
+      <div class="title-block">
+        <div class="pg-stamp" id="stamp">🐧</div>
+        <div class="title-text">
+          <div class="pg-title">PenguinHarness<span class="dot">.</span></div>
+          <div class="superdesign-line">
+            <span class="superdesign">by Prism Shadow</span>
+            <span class="v-tag">APACHE-2.0</span>
+            <span class="v-tag" style="color:#1F6FEB;border-color:rgba(31,111,235,.35)">PH</span>
+          </div>
+        </div>
+      </div>
+      <div class="tagline">用 DeepSeek / GPT <em>一键生成自进化 Agent</em>——说一句话，烧 $0.02，拿到完整 Agent 应用</div>
+    </div>
+
+    <!-- 终端展示 -->
+    <div class="termbox reveal">
+      <div class="term-header">One Sentence → One App · 一句话构建</div>
+      <div class="term-window" id="termWin">
+        <div class="term-bar">
+          <span class="r"></span><span class="y"></span><span class="g"></span>
+          <b>penguin — 点击查看演示</b>
+        </div>
+        <div class="term-body">
+<span class="prompt">$</span> <span class="cmd">curl -fsSL https://penguin.ooo/install.sh | sh</span>
+<span class="prompt">$</span> <span class="cmd">penguin web</span>
+<span class="out">→ 输入一句话：构建一个 Claude Code 配置专家的 RAG 应用</span>
+<span class="dim">Agent 构建中：脚手架 + 代码 + 运行说明…</span>
+<span class="out">✅ 完成 · 耗时 40s · 消耗 $0.02 (DeepSeek V4 Pro)</span>
+<span class="prompt">$</span> <span class="caret-blink"></span></div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-section reveal">
+      <div class="stats-header">
+        <span class="stats-title">Benchmarks</span>
+        <span class="stats-badge">PRODUCT HUNT</span>
+      </div>
+      <div class="stats-chart">
+        <div class="stat-card" data-stat="stars" style="--stat-color: #4FC3F7">
+          <div class="stat-num"><span class="accent">490</span></div>
+          <div class="stat-label">Stars · 3周</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 7px; animation-delay: .1s"></div>
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .15s"></div>
+            <div class="stat-bar chart-animate" style="height: 12px; animation-delay: .2s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="cost" style="--stat-color: #1F6FEB">
+          <div class="stat-num"><span class="accent">1/70</span></div>
+          <div class="stat-label">Claude Code 成本</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 12px; animation-delay: .25s"></div>
+            <div class="stat-bar chart-animate" style="height: 2px; animation-delay: .3s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="price" style="--stat-color: #28C840">
+          <div class="stat-num" style="color: #28C840">$0.02</div>
+          <div class="stat-label">一次构建</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 9px; background: #28C840; animation-delay: .35s"></div>
+            <div class="stat-bar chart-animate" style="height: 10px; background: #28C840; animation-delay: .4s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="models" style="--stat-color: #4FC3F7">
+          <div class="stat-num"><span class="accent">8</span></div>
+          <div class="stat-label">模型家族</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 8px; animation-delay: .45s"></div>
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .5s"></div>
+            <div class="stat-bar chart-animate" style="height: 9px; animation-delay: .55s"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flow -->
+    <div class="flow-section reveal">
+      <div class="flow-header">Build &amp; Evolve Loop</div>
+      <svg class="flow-svg" viewBox="0 0 350 44" fill="none">
+        <defs>
+          <marker id="pg-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L6,3 z" fill="#4FC3F7" fill-opacity=".6"/>
+          </marker>
+        </defs>
+        <g class="flow-node" id="flow-sentence">
+          <rect x="3" y="9" width="66" height="26" rx="5" fill="rgba(79,195,247,.08)" stroke="#4FC3F7" stroke-width="1" stroke-opacity=".5"/>
+          <text x="36" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#F0F0F0" text-anchor="middle">一句话</text>
+          <text x="36" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#6B7280" text-anchor="middle">描述需求</text>
+        </g>
+        <path class="flow-arrow" d="M72 22 L88 22" stroke="#4FC3F7" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#pg-arrow)"/>
+        <g class="flow-node" id="flow-build">
+          <rect x="91" y="9" width="70" height="26" rx="5" fill="rgba(79,195,247,.12)" stroke="#4FC3F7" stroke-width="1.2"/>
+          <text x="126" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#4FC3F7" text-anchor="middle">AGENT BUILDER</text>
+          <text x="126" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#6B7280" text-anchor="middle">脚手架+代码+指令</text>
+        </g>
+        <path class="flow-arrow" d="M164 22 L180 22" stroke="#1F6FEB" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#pg-arrow)" style="animation-delay: .3s"/>
+        <g class="flow-node" id="flow-app">
+          <rect x="183" y="9" width="70" height="26" rx="5" fill="rgba(79,195,247,.08)" stroke="#4FC3F7" stroke-width="1" stroke-opacity=".5"/>
+          <text x="218" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#F0F0F0" text-anchor="middle">FULL APP</text>
+          <text x="218" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#6B7280" text-anchor="middle">可直接运行</text>
+        </g>
+        <path class="flow-arrow" d="M256 22 L272 22" stroke="#4FC3F7" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#pg-arrow)" style="animation-delay: .6s"/>
+        <g class="flow-node" id="flow-evolve">
+          <rect x="275" y="9" width="72" height="26" rx="5" fill="rgba(31,111,235,.12)" stroke="#1F6FEB" stroke-width="1.2"/>
+          <text x="311" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#7DB4F0" text-anchor="middle">SELF-EVOLVE</text>
+          <text x="311" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#6B7280" text-anchor="middle">benchmark→N+1版</text>
+        </g>
+        <circle cx="80" cy="22" r="2" fill="#4FC3F7">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="172" cy="22" r="2" fill="#1F6FEB">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0.5s"/>
+        </circle>
+        <circle cx="264" cy="22" r="2" fill="#4FC3F7">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="1s"/>
+        </circle>
+      </svg>
+    </div>
+
+    <!-- Features -->
+    <div class="features reveal">
+      <div class="feature" data-f="0">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">100× 构建速度</div>
+          <div class="feature-desc">LangChain 手工搭 1×，PenguinHarness 让 Agent 构建 Agent — 100×</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 100%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="1">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">极致成本</div>
+          <div class="feature-desc">数据分析最佳准确率 · 成本仅 Claude Code 的 1/70；一次构建 $0.02</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 96%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="2">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9"/><polyline points="21 3 12 12 15 12 15 21"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">自我进化</div>
+          <div class="feature-desc">Skills 让 Agent 跑 benchmark → 找丢分点 → 自动发布 N+1 版</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 92%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="3">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">内置 4 组 Skills</div>
+          <div class="feature-desc">办公效率 · 软件开发 · AI 应用 · Agent 调优（可自写自优化）</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 90%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="4">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">全模型兼容</div>
+          <div class="feature-desc">DeepSeek/Kimi/GLM/Qwen/GPT/Gemini/Claude + 1000+ 本地模型</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 94%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+    </div>
+
+    <!-- Tech -->
+    <div class="tech-section reveal">
+      <div class="tech-header">Tech Stack</div>
+      <div class="tech-pills">
+        <span class="tech-pill accent">TypeScript</span>
+        <span class="tech-pill">Node 24+</span>
+        <span class="tech-pill cyan">DeepSeek V4</span>
+        <span class="tech-pill">Trace 观测</span>
+        <span class="tech-pill cyan">Mac·Win·Linux</span>
+        <span class="tech-pill">npm</span>
+      </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="bottombar reveal">
+      <a href="https://github.com/Prism-Shadow/penguin-harness" target="_blank" class="github-link">
+        <svg viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        Prism-Shadow/penguin-harness
+      </a>
+      <a href="https://penguin.ooo/" target="_blank" class="visit-btn">PENGUIN.OOO →</a>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title" id="sheetTitle"></div>
+        <div class="sheet-desc" id="sheetDesc"></div>
+        <div class="sheet-code" id="sheetCode" style="display:none"></div>
+        <div class="sheet-points" id="sheetPoints"></div>
+        <button class="sheet-close" id="sheetClose">CLOSE</button>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script>
+  (function(){
+    var $=function(s){return document.querySelector(s)};
+    var overlay=$('#overlay'), sheetTitle=$('#sheetTitle'), sheetDesc=$('#sheetDesc'),
+        sheetPoints=$('#sheetPoints'), sheetCode=$('#sheetCode'), toast=$('#toast');
+
+    var DATA = {
+      stars: {
+        title: '490 Stars <em>· 三周破圈</em>',
+        desc: '2026-07-19 开源，三周 490 星（55 Forks）。Product Hunt 上架即获推荐——"Let Agents Autonomously Build Better Agents for $0.02"。官方 Discord、X（@code_hiyouga）、微信群全开，社区活跃。',
+        points: ['Apache-2.0 · TypeScript · Node ≥ 24', 'Product Hunt 已推荐', 'npm 包 @prismshadow/penguin-core / penguin-cli']
+      },
+      cost: {
+        title: '1/70 <em>Claude Code 成本</em>',
+        desc: '同任务同基准正面对比：PenguinHarness 在数据分析套件拿到最佳准确率，成本仅为 Claude Code 的 1/70；编码任务与 OpenAI Codex 持平，成本只占零头。核心是刻意极简的工具集 + 干净的低层接口——更少的工具调用、更少的 token，深度适配 DeepSeek 等开源模型。',
+        points: ['数据分析基准最佳准确率', '成本 1/70 of Claude Code', '编码与 Codex 持平，成本小几个数量级']
+      },
+      price: {
+        title: '$0.02 <em>一次完整构建</em>',
+        desc: '输入一句话，Agent 构建器端到端生成完整 Agent 应用：脚手架、代码、运行说明。示例：让 AI 抓取 Claude Code 官方文档构建一个配置专家 RAG 应用（带检索、引用来源、示例问题），全程只烧 $0.02（约 ¥0.2），跑在 DeepSeek V4 Pro 上。',
+        points: ['一句话 → 完整应用（脚手架+代码+指令）', '示例 RAG 应用仅 $0.02', '深度调优开源模型（DeepSeek 等）']
+      },
+      models: {
+        title: '8 大模型家族 <em>· 1000+ 全兼容</em>',
+        desc: '内置 DeepSeek V4、Kimi K3、GLM 5.2、Hunyuan 3、Qwen 3.8 Max、GPT 5.6、Gemini 3.6 Flash、Claude 5 八大最新代模型预设；任何 OpenAI 协议端点都能接，1000+ 在线/本地模型任选。',
+        points: ['8 个内置模型家族（最新代）', '多提供商：OpenRouter/SiliconFlow/火石等', '任意 OpenAI 协议端点 + 本地模型']
+      },
+      sentence: {
+        title: '一句话 <em>· 描述需求</em>',
+        desc: '整个流程的起点：用自然语言一句话描述你想要的 Agent。示例：\u201cCollect the docs from github.com/ericbuess/claude-code-docs and build a RAG app that answers Claude Code questions as a configuration expert, citing its sources.\u201d',
+        points: ['自然语言描述 Agent 需求', '无需任何框架知识', '构建器自动拆解为脚手架+代码+指令']
+      },
+      build: {
+        title: 'AGENT BUILDER <em>· 自动构建</em>',
+        desc: 'Agent 构建器是核心引擎：解析一句话需求 → 生成完整项目脚手架 → 编写代码 → 产出运行说明。整个 RAG 示例应用（检索、引用、示例问题）端到端自动完成。',
+        points: ['脚手架 + 代码 + 运行说明 全自动', '示例：RAG 配置专家应用', '构建过程 Trace 可观测']
+      },
+      app: {
+        title: 'FULL APP <em>· 直接运行</em>',
+        desc: '生成的 Agent 应用开箱即用：penguin web 启动完整 Web 体验——多会话聊天、Agent/Skill/模型管理、用量统计、Trace 可观测性、评测中心。首次登录 admin，初始密码 penguin-1234（建议立即修改）。',
+        points: ['多会话聊天 + 管理面板', '用量统计 + Trace 观测 + 评测中心', '桌面 App 内置服务器免登录']
+      },
+      evolve: {
+        title: 'SELF-EVOLVE <em>· 自我进化</em>',
+        desc: 'PenguinHarness Skills 让 Agent 评估并优化自己：运行 benchmark → 找到丢分点 → 发布 N+1 版本。每轮进化前有快照，每个请求在 Trace 视图全程可观测——进化过程可审计、可回滚。',
+        points: ['Agent 调优组：creation/benchmark/evaluation/optimization', '每轮前快照，可回滚', 'Trace 视图全程可观测']
+      },
+      f0: {
+        title: '100× 构建速度',
+        desc: 'LangChain 时代你手工搭建 Agent 是 1× 速度；PenguinHarness 让 Agent 自动构建 Agent，达到 100×。刻意极简的工具集 + 干净低层接口，每次构建只需一句话。',
+        points: ['Agent 构建 Agent，而非手工拼装', '一句话端到端交付', '刻意极简工具集，更少工具调用']
+      },
+      f1: {
+        title: '极致成本',
+        desc: '同任务同基准对比：数据分析套件最佳准确率、成本 1/70 of Claude Code；编码任务与 OpenAI Codex 持平。一次完整应用构建最低 $0.02（DeepSeek V4 Pro）。',
+        points: ['数据分析最佳准确率 @ 1/70 成本', '$0.02 构建完整 RAG 应用', '深度调优 DeepSeek 等开源模型']
+      },
+      f2: {
+        title: '自我进化',
+        desc: '内置 Agent Tuning 组 Skills：agent-creation、benchmark-design、agent-evaluation、agent-optimization。Agent 自己跑基准、找丢分点、发布新版本——越用越强。',
+        points: ['自动跑 benchmark 找丢分点', '自动发布 N+1 版本', '快照回滚 + Trace 可观测']
+      },
+      f3: {
+        title: '内置 4 组 Skills',
+        desc: '开箱即用四组 Skill：办公效率（data-analysis、firecrawl）、软件开发（web-design、software-engineering）、AI 应用开发（penguin-sdk/cli、vllm、ollama、llamafactory）、Agent 调优（creation/benchmark/evaluation/optimization）。Agent 还能自写自优化 Skill。',
+        points: ['Office：data-analysis / firecrawl', 'Dev：web-design / software-engineering', 'AI App：penguin-sdk / vllm / ollama / llamafactory', 'Tuning：creation / benchmark / evaluation / optimization']
+      },
+      f4: {
+        title: '全模型兼容',
+        desc: 'DeepSeek V4、Kimi K3、GLM 5.2、Hunyuan 3、Qwen 3.8 Max、GPT 5.6、Gemini 3.6 Flash、Claude 5 内置预设；任意 OpenAI 协议端点可接，1000+ 在线与本地模型。',
+        points: ['8 家族最新代内置预设', 'OpenRouter / SiliconFlow / 火石 / 通义等多提供商', '任意 OpenAI 协议端点 + 本地模型']
+      }
+    };
+
+    function openSheet(key){
+      var d = DATA[key]; if(!d) return;
+      sheetTitle.innerHTML = d.title;
+      sheetDesc.textContent = d.desc;
+      sheetCode.style.display = 'none';
+      sheetPoints.innerHTML = d.points.map(function(p){
+        return '<div class="sheet-point">' + p + '</div>';
+      }).join('');
+      overlay.classList.add('active');
+    }
+    function closeSheet(){ overlay.classList.remove('active'); }
+
+    document.querySelectorAll('.stat-card').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet(el.dataset.stat); });
+    });
+    document.querySelectorAll('.flow-node').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet(el.id.replace('flow-','')); });
+    });
+    document.querySelectorAll('.feature').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet('f'+el.dataset.f); });
+    });
+    $('#termWin').addEventListener('click', function(){ openSheet('build'); });
+    $('#sheetClose').addEventListener('click', closeSheet);
+    overlay.addEventListener('click', function(e){ if(e.target===overlay) closeSheet(); });
+
+    $('#shareBtn').addEventListener('click', function(){
+      var url = location.href.split('?')[0];
+      if(navigator.share){
+        navigator.share({title:'PenguinHarness — 一键生成自进化 Agent', url:url}).catch(function(){});
+      }else if(navigator.clipboard){
+        navigator.clipboard.writeText(url).then(function(){
+          toast.textContent = '链接已复制';
+          toast.classList.add('show');
+          setTimeout(function(){ toast.classList.remove('show'); }, 1800);
+        });
+      }
+    });
+    $('#stamp').addEventListener('click', function(){
+      $('#stamp').style.transform = 'rotate(180deg) scale(.9)';
+      setTimeout(function(){ $('#stamp').style.transform=''; }, 400);
+      openSheet('stars');
+    });
+
+    document.querySelectorAll('.reveal').forEach(function(x){ x.classList.add('visible'); });
+  })();
+  </script>
+</body>
+</html>

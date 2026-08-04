@@ -1,10 +1,10 @@
 {
-  "id": "nooa",
-  "title": "NOOA",
-  "subtitle": "NVIDIA 面向对象智能体框架 · 智能体即 Python 类",
-  "image": "cards/nooa-cover.svg",
-  "page": "pages/nooa.html",
-  "tags": ["NVIDIA", "Agent框架", "面向对象", "825★"],
+  "id": "penguin-harness",
+  "title": "PenguinHarness",
+  "subtitle": "一键生成自进化 Agent 的自动构建器",
+  "image": "cards/penguin-cover.svg",
+  "page": "pages/penguin.html",
+  "tags": ["Agent构建", "DeepSeek", "自进化", "490★"],
   "date": "2026-08-05",
   "type": "recommendation"
 }
