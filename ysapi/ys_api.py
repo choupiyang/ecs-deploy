@@ -312,7 +312,7 @@ def compute_stats(key_ok):
             continue
         ls = s.get("last_seen", "")
         try:
-            lt = time.mktime(time.strptime(ls.split(".")[0], "%Y-%m-%dT%H:%M:%S"))
+            lt = time.mktime(time.strptime(ls[:19], "%Y-%m-%dT%H:%M:%S"))
         except Exception:
             lt = 0
         if ls and lt >= cutoff30:
