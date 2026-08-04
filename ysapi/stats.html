@@ -129,10 +129,26 @@ footer{padding:36px 0 0;font-size:12px;color:var(--func);font-weight:700;letter-
       });
   }
 
+  // 自动轮询：每 30 秒刷新一次，页面开着也能看到实时变化
+  setInterval(function(){ if(key) load(); }, 30000);
+  // 手动刷新按钮
+  var rb=document.createElement('button');
+  rb.textContent='🔄 手动刷新';
+  rb.style.cssText='margin-top:14px;background:var(--text);color:var(--accent);border:none;font-weight:900;padding:8px 18px;cursor:pointer;font-size:13px;box-shadow:4px 4px 0 var(--accent)';
+  rb.addEventListener('click',function(){ if(key) load(); });
+  document.querySelector('.hero').appendChild(rb);
+  // 最后更新时间
+  var lu=document.createElement('div');
+  lu.id='lastUpdate';
+  lu.style.cssText='margin-top:12px;font-size:12px;font-weight:800;letter-spacing:.06em;color:var(--func)';
+  document.querySelector('.hero').appendChild(lu);
+
   function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
   function render(d){
     $('#keybox').style.display='none';
+    var lu=$('#lastUpdate');
+    if(lu) lu.textContent='最后更新：'+new Date().toLocaleString('zh-CN',{hour12:false})+'（每30秒自动刷新）';
     var s=d.subscribers||{},p=d.pushes||{},r=d.reads||{};
     var kpis=[
       ['订阅人数',s.total||0],['活跃30天',s.active_30d||0],

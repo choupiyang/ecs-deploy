@@ -439,9 +439,18 @@ class Handler(BaseHTTPRequestHandler):
             n = 0
         if n <= 0:
             return {}
-        raw = self.rfile.read(n).decode("utf-8", "replace")
+        raw = self.rfile.read(n)
+        text = None
+        for enc in ("utf-8", "gbk", "gb18030"):
+            try:
+                text = raw.decode(enc)
+                break
+            except Exception:
+                continue
+        if text is None:
+            text = raw.decode("utf-8", "replace")
         try:
-            return json.loads(raw)
+            return json.loads(text)
         except Exception:
             return {}
 
