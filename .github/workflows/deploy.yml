@@ -31,4 +31,4 @@ jobs:
 
       - name: Verify
         run: |
-          ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} "nginx -T 2>/dev/null | sed 's/root/R00T/g' | grep -B3 -A12 'location /youngsinsight' | head -80"
+          ssh -i ~/.ssh/ecs_key -o StrictHostKeyChecking=no ${{ secrets.ECS_USER }}@${{ secrets.ECS_HOST }} "curl -sk --resolve mindresonance.online:443:127.0.0.1 -o /dev/null https://mindresonance.online/youngsinsight/cards/marker-cover.svg; sleep 1; echo '== ERROR LOG =='; tail -25 /var/log/nginx/error.log 2>/dev/null || find /var/log/nginx -name '*.log' | head; echo '== ACCESS LOG (last svg) =='; tail -15 /var/log/nginx/access.log 2>/dev/null | grep -i 'svg\|png' | tail -8"
