@@ -1,10 +1,10 @@
 {
-  "id": "penguin-harness",
-  "title": "PenguinHarness",
-  "subtitle": "一键生成自进化 Agent 的自动构建器",
-  "image": "cards/penguin-cover.svg",
-  "page": "pages/penguin.html",
-  "tags": ["Agent构建", "DeepSeek", "自进化", "490★"],
-  "date": "2026-08-05",
+  "id": "tdb-agent-memory",
+  "title": "TencentDB Agent Memory",
+  "subtitle": "团队级 AI Agent 记忆中枢 · 14.9K★",
+  "image": "cards/tdb-cover.svg",
+  "page": "pages/tdb-agent-memory.html",
+  "tags": ["Agent记忆", "腾讯云", "TypeScript", "14.9K★"],
+  "date": "2026-08-06",
   "type": "recommendation"
 }

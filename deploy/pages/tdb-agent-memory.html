@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#04121F">
+  <title>TencentDB Agent Memory — 团队级 AI Agent 记忆中枢</title>
+  <link rel="preconnect" href="https://fonts.googleapis.cn">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.cn/css2?family=Noto+Serif+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #04121F;
+      --bg-2: #082036;
+      --accent: #00A4FF;
+      --accent-deep: #0D5AA7;
+      --ice: #D8EEFF;
+      --text: #F2F7FB;
+      --muted: #6B86A0;
+      --success: #2EE6A8;
+      --surface: #0A2540;
+      --serif: 'Noto Serif SC', serif;
+      --cn: 'Noto Sans SC', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; background: #030B14; font-family: 'Noto Sans SC', sans-serif; color: #F2F7FB; -webkit-font-smoothing: antialiased; }
+    body { display: flex; align-items: center; justify-content: center; }
+
+    .stage {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      height: min(100vh, calc(100vw * 16 / 9));
+      width: min(100vw, calc(100vh * 9 / 16));
+      background: #04121F;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,.6);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 16px 10px;
+      perspective: 1000px;
+      transform-style: preserve-3d;
+      transition: transform .12s ease-out;
+    }
+    .tilt-deep { transform: translateZ(-50px) scale(1.08); }
+    .tilt-mid { transform: translateZ(0); }
+    .tilt-front { transform: translateZ(45px); }
+    /* 浮动数据粒子（3D 视差前景） */
+    .flakes { position: absolute; inset: 0; pointer-events: none; z-index: 3; overflow: hidden; }
+    .flake {
+      position: absolute;
+      width: 10px; height: 10px;
+      border: 1px solid rgba(0, 164, 255, .5);
+      border-radius: 50%;
+      opacity: .5;
+      animation: floatY 6s ease-in-out infinite;
+    }
+    .flake.f1 { left: 8%; top: 22%; animation-delay: 0s; }
+    .flake.f2 { left: 88%; top: 30%; width: 7px; height: 7px; animation-delay: 1.2s; }
+    .flake.f3 { left: 14%; top: 68%; width: 6px; height: 6px; border-color: rgba(46, 230, 168, .4); animation-delay: 2.1s; }
+    .flake.f4 { left: 84%; top: 72%; width: 9px; height: 9px; animation-delay: .6s; }
+    .flake.f5 { left: 48%; top: 16%; width: 5px; height: 5px; border-color: rgba(216, 238, 255, .5); animation-delay: 1.8s; }
+    @keyframes floatY {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-14px) rotate(120deg); }
+    }
+    /* 探索 hint 角标 */
+    .hint-badge {
+      position: relative;
+      z-index: 5;
+      align-self: flex-start;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      letter-spacing: .18em;
+      color: #7BA7C9;
+      border: 1px dashed rgba(0, 164, 255, .35);
+      border-radius: 10px;
+      padding: 2px 8px;
+      margin-top: 5px;
+      flex-shrink: 0;
+      animation: hintPulse 2.4s ease-in-out infinite;
+    }
+    @keyframes hintPulse {
+      0%, 100% { opacity: .55; }
+      50% { opacity: 1; box-shadow: 0 0 12px rgba(0, 164, 255, .25); }
+    }
+    .stage::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 38% at 78% 2%, rgba(0, 164, 255, .10) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 35% at 8% 45%, rgba(13, 90, 167, .08) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 50% 100%, rgba(10, 37, 64, .95) 0%, transparent 60%);
+    }
+    .stage::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(rgba(242, 247, 251, .012) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(242, 247, 251, .012) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    /* 顶部条 */
+    .topbar {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .16em;
+      color: #6B86A0;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(242, 247, 251, .06);
+    }
+    .brand { display: flex; align-items: center; gap: 6px; color: #F2F7FB; }
+    .brand-dot { width: 5px; height: 5px; background: #00A4FF; border-radius: 50%; box-shadow: 0 0 8px #00A4FF; animation: pulse 2.2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .3; transform: scale(.6); } }
+    .share-btn {
+      background: none;
+      border: 1px solid rgba(242, 247, 251, .2);
+      padding: 4px 8px 3px;
+      font: inherit;
+      color: #F2F7FB;
+      cursor: pointer;
+      letter-spacing: .12em;
+      transition: all .3s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 7.5px;
+    }
+    .share-btn:active { background: #00A4FF; color: #04121F; border-color: #00A4FF; }
+
+    /* Hero */
+    .hero { position: relative; z-index: 5; flex-shrink: 0; margin-top: 7px; }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #6B86A0;
+      margin-bottom: 4px;
+    }
+    .vol { color: #00A4FF; }
+    .title-block { display: flex; align-items: flex-start; gap: 10px; }
+    .pg-stamp {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(0, 164, 255, .6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 19px;
+      flex-shrink: 0;
+      position: relative;
+      box-shadow: 0 0 18px rgba(0, 164, 255, .18) inset, 0 0 12px rgba(0, 164, 255, .1);
+    }
+    .pg-stamp::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 1px dashed rgba(0, 164, 255, .35);
+      animation: spin 9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .title-text { min-width: 0; }
+    .pg-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: -.02em;
+      line-height: 1.05;
+      color: #F2F7FB;
+    }
+    .pg-title .dot { color: #00A4FF; }
+    .superdesign-line { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+    .superdesign { font-family: 'JetBrains Mono', monospace; font-size: 7px; letter-spacing: .14em; color: #9CA3AF; }
+    .v-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      letter-spacing: .14em;
+      color: #00A4FF;
+      border: 1px solid rgba(0, 164, 255, .3);
+      padding: 1px 5px;
+      border-radius: 2px;
+      background: rgba(0, 164, 255, .06);
+    }
+    .v-tag.green { color: #2EE6A8; border-color: rgba(46, 230, 168, .3); background: rgba(46, 230, 168, .06); }
+    .tagline {
+      margin-top: 5px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10.5px;
+      color: #D1D5DB;
+      line-height: 1.45;
+    }
+    .tagline em { color: #00A4FF; font-style: normal; font-weight: 500; }
+
+    /* 终端展示区 */
+    .termbox { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .term-header { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; margin-bottom: 4px; }
+    .term-header::after { content: ''; flex: 1; height: 1px; background: rgba(242, 247, 251, .06); }
+    .term-window {
+      background: #030B14;
+      border: 1px solid rgba(0, 164, 255, .3);
+      border-radius: 8px;
+      overflow: hidden;
+      font-family: 'JetBrains Mono', monospace;
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .term-window:active { border-color: rgba(0, 164, 255, .6); }
+    .term-bar {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 9px;
+      background: rgba(0, 164, 255, .1);
+      border-bottom: 1px solid rgba(0, 164, 255, .15);
+    }
+    .term-bar span { width: 7px; height: 7px; border-radius: 50%; }
+    .term-bar .r { background: #FF5F57; } .term-bar .y { background: #FFB020; } .term-bar .g { background: #28C840; }
+    .term-bar b { margin-left: 6px; font-size: 7px; font-weight: 400; color: #7BA7C9; letter-spacing: .06em; }
+    .term-body { padding: 8px 11px 9px; font-size: 8.5px; line-height: 1.8; color: #8FB8D8; }
+    .term-body .cmd { color: #00A4FF; }
+    .term-body .prompt { color: #6B8FAF; }
+    .term-body .out { color: #A9C8DE; }
+    .term-body .ok { color: #2EE6A8; }
+    .term-body .dim { color: #4A6A85; }
+    .caret-blink { display: inline-block; width: 7px; height: 10px; background: #00A4FF; vertical-align: -2px; animation: blink 1s steps(1) infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* Stats */
+    .stats-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .stats-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .stats-title { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; }
+    .stats-badge { font-family: 'JetBrains Mono', monospace; font-size: 6px; letter-spacing: .16em; color: #2EE6A8; border: 1px solid rgba(46, 230, 168, .3); padding: 1px 5px; border-radius: 2px; }
+    .stats-chart { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .stat-card {
+      background: rgba(242, 247, 251, .02);
+      border: 1px solid rgba(242, 247, 251, .07);
+      border-radius: 7px;
+      padding: 7px 6px 5px;
+      cursor: pointer;
+      transition: all .25s;
+      min-width: 0;
+    }
+    .stat-card:active { background: rgba(0, 164, 255, .07); border-color: rgba(0, 164, 255, .3); transform: scale(.96); }
+    .stat-num { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; color: #F2F7FB; line-height: 1; white-space: nowrap; }
+    .stat-num .accent { color: var(--stat-color, #00A4FF); }
+    .stat-label { font-size: 7px; color: #6B86A0; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .stat-mini-chart { display: flex; align-items: flex-end; gap: 2px; height: 12px; margin-top: 4px; }
+    .stat-bar { width: 4px; background: var(--stat-color, #00A4FF); opacity: .55; border-radius: 1px; transform-origin: bottom; }
+
+    /* Flow */
+    .flow-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .flow-header { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; margin-bottom: 4px; }
+    .flow-header::after { content: ''; flex: 1; height: 1px; background: rgba(242, 247, 251, .06); }
+    .flow-svg { width: 100%; height: auto; display: block; }
+    .flow-node { cursor: pointer; }
+    .flow-node:active { opacity: .7; }
+    .flow-arrow { animation: flowPulse 2s ease-in-out infinite; }
+    @keyframes flowPulse { 0%, 100% { stroke-opacity: .4; } 50% { stroke-opacity: 1; } }
+
+    /* Features */
+    .features { position: relative; z-index: 5; margin-top: 6px; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      background: rgba(242, 247, 251, .02);
+      border: 1px solid rgba(242, 247, 251, .07);
+      border-radius: 7px;
+      padding: 6px 9px;
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .feature:active { background: rgba(0, 164, 255, .05); border-color: rgba(0, 164, 255, .22); }
+    .feature-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: rgba(0, 164, 255, .1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .feature-icon svg { width: 13px; height: 13px; stroke: #00A4FF; fill: none; stroke-width: 1.5; }
+    .feature-icon.green { background: rgba(46, 230, 168, .1); }
+    .feature-icon.green svg { stroke: #2EE6A8; }
+    .feature-content { flex: 1; min-width: 0; }
+    .feature-title { font-family: 'Noto Sans SC', sans-serif; font-size: 9.5px; font-weight: 500; color: #F2F7FB; letter-spacing: .02em; }
+    .feature-desc { font-size: 7.5px; color: #6B86A0; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .feature-arrow { font-size: 11px; color: #00A4FF; opacity: 0; transform: translateX(-2px); transition: all .25s; flex-shrink: 0; }
+    .feature:active .feature-arrow { opacity: 1; transform: translateX(2px); }
+    .feature-progress { height: 2px; background: rgba(242, 247, 251, .06); border-radius: 1px; margin-top: 4px; overflow: hidden; }
+    .feature-progress-bar { height: 100%; background: linear-gradient(90deg, #00A4FF, #2EE6A8); border-radius: 1px; transform-origin: left; animation: progressIn .8s cubic-bezier(.4, 0, .2, 1) forwards; transform: scaleX(0); }
+    @keyframes progressIn { to { transform: scaleX(1); } }
+
+    /* Tech */
+    .tech-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .tech-header { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; margin-bottom: 4px; }
+    .tech-pills { display: flex; flex-wrap: wrap; gap: 4px; }
+    .tech-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6.5px;
+      letter-spacing: .08em;
+      color: #9CA3AF;
+      border: 1px solid rgba(242, 247, 251, .1);
+      padding: 2px 7px;
+      border-radius: 10px;
+      cursor: pointer;
+      background: rgba(242, 247, 251, .02);
+      transition: all .2s;
+    }
+    .tech-pill:active { background: rgba(242, 247, 251, .08); }
+    .tech-pill.accent { border-color: rgba(0, 164, 255, .35); color: #00A4FF; }
+    .tech-pill.green { border-color: rgba(46, 230, 168, .3); color: #7FE8C4; }
+
+    /* Bottom bar */
+    .bottombar {
+      position: relative;
+      z-index: 5;
+      margin-top: 8px;
+      padding-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      border-top: 1px solid rgba(242, 247, 251, .06);
+    }
+    .github-link { display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 8px; color: #D1D5DB; text-decoration: none; }
+    .github-link svg { width: 13px; height: 13px; fill: #9CA3AF; transition: fill .25s; }
+    .github-link:active svg { fill: #00A4FF; }
+    .visit-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .14em;
+      color: #04121F;
+      background: linear-gradient(90deg, #00A4FF, #2EE6A8);
+      padding: 6px 13px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all .25s;
+    }
+    .visit-btn:active { transform: scale(.95); filter: brightness(1.15); }
+
+    /* Overlay + Sheet */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: flex-end;
+      background: rgba(0, 0, 0, .5);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .35s;
+    }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+    .sheet {
+      width: 100%;
+      max-height: 76%;
+      background: linear-gradient(180deg, #0A2540, #082036);
+      border: 1px solid rgba(0, 164, 255, .2);
+      border-bottom: none;
+      border-radius: 16px 16px 0 0;
+      padding: 14px 18px 18px;
+      transform: translateY(101%);
+      transition: transform .45s cubic-bezier(.7, 0, .3, 1);
+      overflow-y: auto;
+    }
+    .overlay.active .sheet { transform: translateY(0); }
+    .sheet-handle { width: 32px; height: 3px; background: #2E4A62; border-radius: 2px; margin: 0 auto 12px; }
+    .sheet-title { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; color: #F2F7FB; margin-bottom: 7px; }
+    .sheet-title em { color: #00A4FF; font-style: normal; }
+    .sheet-desc { font-size: 10.5px; line-height: 1.65; color: #9CA3AF; }
+    .sheet-desc code { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #00A4FF; background: rgba(0, 164, 255, .08); padding: 1px 4px; border-radius: 2px; }
+    .sheet-code {
+      margin-top: 10px;
+      background: #030B14;
+      border: 1px solid rgba(242, 247, 251, .08);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      line-height: 1.7;
+      color: #00A4FF;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .sheet-points { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+    .sheet-point { display: flex; align-items: flex-start; gap: 8px; font-family: 'Noto Sans SC', sans-serif; font-size: 10px; color: #D0D0D8; line-height: 1.55; }
+    .sheet-point::before { content: ''; width: 5px; height: 5px; background: #00A4FF; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .sheet-point.green::before { background: #2EE6A8; }
+    .sheet-close {
+      margin-top: 14px;
+      width: 100%;
+      padding: 10px;
+      background: rgba(0, 164, 255, .08);
+      border: 1px solid rgba(0, 164, 255, .25);
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .15em;
+      color: #00A4FF;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .sheet-close:active { background: #00A4FF; color: #04121F; }
+
+    /* 弹窗图库 */
+    .sheet-gallery { margin-top: 10px; }
+    .g-main { width: 100%; border-radius: 8px; border: 1px solid rgba(0, 164, 255, .25); display: block; }
+    .g-thumbs { display: flex; gap: 6px; margin-top: 6px; overflow-x: auto; padding-bottom: 2px; }
+    .g-thumb { width: 60px; height: 36px; object-fit: cover; border-radius: 4px; opacity: .45; border: 1.5px solid transparent; cursor: pointer; flex-shrink: 0; transition: all .2s; }
+    .g-thumb.active { opacity: 1; border-color: #00A4FF; }
+    .g-tag { font-family: 'JetBrains Mono', monospace; font-size: 7px; letter-spacing: .14em; color: #2EE6A8; margin-bottom: 5px; }
+
+    /* Toast */
+    .toast {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #28C840;
+      color: #04121F;
+      padding: 7px 14px;
+      border-radius: 5px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: all .3s;
+      z-index: 200;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .reveal { opacity: 0; transform: translateY(10px); transition: all .45s cubic-bezier(.4, 0, .2, 1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @keyframes chartGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+    .chart-animate { animation: chartGrow .6s cubic-bezier(.4, 0, .2, 1) forwards; }
+
+    /* 小屏兜底 */
+    @media (max-height: 730px) {
+      .pg-title { font-size: 20px; }
+      .pg-stamp { width: 34px; height: 34px; font-size: 16px; }
+      .tagline { font-size: 9.5px; }
+      .term-body { font-size: 7.5px; line-height: 1.7; padding: 6px 9px; }
+      .feature { padding: 5px 9px; }
+      .feature-title { font-size: 9px; }
+      .stat-num { font-size: 13.5px; }
+      .sheet { max-height: 80%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage" id="stage">
+    <!-- 3D 视差前景：浮动数据粒子 -->
+    <div class="flakes">
+      <div class="flake f1"></div><div class="flake f2"></div><div class="flake f3"></div>
+      <div class="flake f4"></div><div class="flake f5"></div>
+    </div>
+
+    <!-- Topbar -->
+    <div class="topbar reveal tilt-mid">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <span>Young's Insight</span>
+      </div>
+      <button class="share-btn" id="shareBtn">SHARE <span class="arr">↗</span></button>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero reveal">
+      <div class="meta-row">
+        <span class="vol">TEAM MEMORY HUB FOR AGENTS</span>
+        <span>2026.08.06</span>
+      </div>
+      <div class="title-block">
+        <div class="pg-stamp" id="stamp">🧠</div>
+        <div class="title-text">
+          <div class="pg-title">Agent Memory<span class="dot">.</span></div>
+          <div class="superdesign-line">
+            <span class="superdesign">TencentCloud</span>
+            <span class="v-tag">MIT</span>
+            <span class="v-tag green">14.9K★</span>
+          </div>
+        </div>
+      </div>
+      <div class="tagline">让经验<em>积累、流转、传承</em>——对话/文档/代码蒸馏为 4 类记忆资产，跨 Agent、跨框架共享装配</div>
+      <div class="hint-badge">✦ 轻触任何元素探索 · 拖动卡片看 3D 视差</div>
+    </div>
+
+    <!-- 终端展示 -->
+    <div class="termbox reveal">
+      <div class="term-header">Agents Remember · Humans Innovate — 一键启动记忆中枢</div>
+      <div class="term-window" id="termWin">
+        <div class="term-bar">
+          <span class="r"></span><span class="y"></span><span class="g"></span>
+          <b>memory-hub — 点击查看安装指南</b>
+        </div>
+        <div class="term-body">
+<span class="prompt">$</span> <span class="cmd">git clone https://github.com/TencentCloud/TencentDB-Agent-Memory.git</span>
+<span class="prompt">$</span> <span class="cmd">cd deploy/global-images && ./start-all.sh</span>
+<span class="out">→ 启动 memory-core + memory-hub + proxy…</span>
+<span class="ok">✅ 三服务就绪 · 面板 http://localhost:8125</span>
+<span class="prompt">$</span> <span class="cmd">kirocrew spawn run "import our wiki + codegraph"</span>
+<span class="dim">…把团队的存档交给 Agent，一天上手</span>
+<span class="prompt">$</span> <span class="caret-blink"></span></div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-section reveal">
+      <div class="stats-header">
+        <span class="stats-title">Signals</span>
+        <span class="stats-badge">TRENDSHIFT 热榜</span>
+      </div>
+      <div class="stats-chart">
+        <div class="stat-card" data-stat="stars" style="--stat-color: #00A4FF">
+          <div class="stat-num"><span class="accent">14.9K</span></div>
+          <div class="stat-label">Stars · 4 个月</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 5px; animation-delay: .1s"></div>
+            <div class="stat-bar chart-animate" style="height: 8px; animation-delay: .15s"></div>
+            <div class="stat-bar chart-animate" style="height: 11px; animation-delay: .2s"></div>
+            <div class="stat-bar chart-animate" style="height: 14px; animation-delay: .25s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="forks" style="--stat-color: #2EE6A8">
+          <div class="stat-num"><span class="accent">1.4K</span></div>
+          <div class="stat-label">Forks</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 10px; background: #2EE6A8; animation-delay: .3s"></div>
+            <div class="stat-bar chart-animate" style="height: 12px; background: #2EE6A8; animation-delay: .35s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="bench" style="--stat-color: #2EE6A8">
+          <div class="stat-num"><span class="accent">+59%</span></div>
+          <div class="stat-label">PersonaMem</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 6px; background: #2EE6A8; animation-delay: .4s"></div>
+            <div class="stat-bar chart-animate" style="height: 12px; background: #2EE6A8; animation-delay: .45s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="assets" style="--stat-color: #00A4FF">
+          <div class="stat-num"><span class="accent">4</span></div>
+          <div class="stat-label">记忆资产类型</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 8px; animation-delay: .5s"></div>
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .55s"></div>
+            <div class="stat-bar chart-animate" style="height: 9px; animation-delay: .6s"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flow -->
+    <div class="flow-section reveal">
+      <div class="flow-header">Experience Loop · 经验飞轮</div>
+      <svg class="flow-svg" viewBox="0 0 350 44" fill="none">
+        <defs>
+          <marker id="tdb-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L6,3 z" fill="#00A4FF" fill-opacity=".6"/>
+          </marker>
+        </defs>
+        <g class="flow-node" id="flow-source">
+          <rect x="3" y="9" width="60" height="26" rx="5" fill="rgba(0,164,255,.08)" stroke="#00A4FF" stroke-width="1" stroke-opacity=".5"/>
+          <text x="33" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#F2F7FB" text-anchor="middle">对话·文档·代码</text>
+          <text x="33" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#6B86A0" text-anchor="middle">原始经验</text>
+        </g>
+        <path class="flow-arrow" d="M66 22 L80 22" stroke="#00A4FF" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#tdb-arrow)"/>
+        <g class="flow-node" id="flow-extract">
+          <rect x="83" y="9" width="64" height="26" rx="5" fill="rgba(0,164,255,.12)" stroke="#00A4FF" stroke-width="1.2"/>
+          <text x="115" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#00A4FF" text-anchor="middle">自动提取</text>
+          <text x="115" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#6B86A0" text-anchor="middle">异步管道蒸馏</text>
+        </g>
+        <path class="flow-arrow" d="M150 22 L164 22" stroke="#2EE6A8" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#tdb-arrow)" style="animation-delay: .3s"/>
+        <g class="flow-node" id="flow-assets">
+          <rect x="167" y="9" width="64" height="26" rx="5" fill="rgba(0,164,255,.08)" stroke="#00A4FF" stroke-width="1" stroke-opacity=".5"/>
+          <text x="199" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#F2F7FB" text-anchor="middle">4 类记忆资产</text>
+          <text x="199" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#6B86A0" text-anchor="middle">记忆·技能·维基·图谱</text>
+        </g>
+        <path class="flow-arrow" d="M234 22 L248 22" stroke="#00A4FF" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#tdb-arrow)" style="animation-delay: .6s"/>
+        <g class="flow-node" id="flow-hub">
+          <rect x="251" y="9" width="52" height="26" rx="5" fill="rgba(46,230,168,.12)" stroke="#2EE6A8" stroke-width="1.2"/>
+          <text x="277" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#7FE8C4" text-anchor="middle">Memory Hub</text>
+          <text x="277" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#6B86A0" text-anchor="middle">治理·权限·装配</text>
+        </g>
+        <path class="flow-arrow" d="M306 22 L318 22" stroke="#2EE6A8" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#tdb-arrow)" style="animation-delay: .9s"/>
+        <g class="flow-node" id="flow-equip">
+          <rect x="321" y="9" width="27" height="26" rx="5" fill="rgba(0,164,255,.08)" stroke="#00A4FF" stroke-width="1" stroke-opacity=".5"/>
+          <text x="334" y="22" font-family="JetBrains Mono, monospace" font-size="6" fill="#F2F7FB" text-anchor="middle">Agent</text>
+          <text x="334" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#6B86A0" text-anchor="middle">装配</text>
+        </g>
+        <circle cx="73" cy="22" r="2" fill="#00A4FF">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="157" cy="22" r="2" fill="#2EE6A8">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0.5s"/>
+        </circle>
+        <circle cx="241" cy="22" r="2" fill="#00A4FF">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="1s"/>
+        </circle>
+        <circle cx="312" cy="22" r="2" fill="#2EE6A8">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="1.3s"/>
+        </circle>
+      </svg>
+    </div>
+
+    <!-- Features -->
+    <div class="features reveal">
+      <div class="feature" data-f="0">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4.5 3 5.7V17a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2.3c1.8-1.2 3-3.3 3-5.7a7 7 0 0 0-7-7z"/><path d="M9 21h6"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">Chat Memory · 记住人</div>
+          <div class="feature-desc">L0 会话→L1 原子→L2 场景→L3 人格，逐层蒸馏——不用每次重新自我介绍</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 100%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="1">
+        <div class="feature-icon green">
+          <svg viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">Skill 库 · 沉淀经验</div>
+          <div class="feature-desc">复杂工作自动蒸馏为可复用 Skill：版本、触发边界、执行步骤、验证规则</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 96%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="2">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M6.5 7.5 11 15.5M17.5 7.5 13 15.5M7.5 6h9"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">Wiki + CodeGraph · 读懂资料</div>
+          <div class="feature-desc">文档成链接图谱、代码成调用图谱——改这里会影响哪些，Agent 心里有数</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 94%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="3">
+        <div class="feature-icon green">
+          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">团队控制面板 · 人说了算</div>
+          <div class="feature-desc">private / team / restricted(ACL) / agent 四层可见性，共享经验不共享隐私</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 92%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="4">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">冷启动 · 加载存档</div>
+          <div class="feature-desc">导入代码库/文档/历史会话，自动生成资产——新团队一天继承全部经验</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 90%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+    </div>
+
+    <!-- Tech -->
+    <div class="tech-section reveal">
+      <div class="tech-header">Stack &amp; Ecosystem</div>
+      <div class="tech-pills">
+        <span class="tech-pill accent">TypeScript</span>
+        <span class="tech-pill">Node 22.16+</span>
+        <span class="tech-pill green">BM25+向量+RRF</span>
+        <span class="tech-pill accent">OpenClaw</span>
+        <span class="tech-pill">Hermes</span>
+        <span class="tech-pill green">Claude Code</span>
+      </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="bottombar reveal">
+      <a href="https://github.com/TencentCloud/TencentDB-Agent-Memory" target="_blank" class="github-link">
+        <svg viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        TencentCloud/TencentDB-Agent-Memory
+      </a>
+      <a href="https://github.com/TencentCloud/TencentDB-Agent-Memory" target="_blank" class="visit-btn">GITHUB →</a>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title" id="sheetTitle"></div>
+        <div class="sheet-desc" id="sheetDesc"></div>
+        <div class="sheet-gallery" id="sheetGallery" style="display:none"></div>
+        <div class="sheet-code" id="sheetCode" style="display:none"></div>
+        <div class="sheet-points" id="sheetPoints"></div>
+        <button class="sheet-close" id="sheetClose">CLOSE</button>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script>
+  (function(){
+    var $=function(s){return document.querySelector(s)};
+    var overlay=$('#overlay'), sheetTitle=$('#sheetTitle'), sheetDesc=$('#sheetDesc'),
+        sheetPoints=$('#sheetPoints'), sheetCode=$('#sheetCode'), sheetGallery=$('#sheetGallery'),
+        toast=$('#toast');
+    var IMG='../cards/tdb/';
+
+    var DATA = {
+      stars: {
+        title: '14.9K Stars <em>· 4 个月破圈</em>',
+        desc: '2026-04-07 开源，4 个月冲到 14,956 星、1,363 forks、55 订阅者，登上 Trendshift 热榜。腾讯云官方出品，24 小时内响应 issue，Discord 社区活跃。npm 包 @tencentdb-agent-memory/memory-tencentdb 已发布。',
+        points: ['TencentCloud 官方组织 · TypeScript 实现', '14,956 ★ / 1,363 forks / 514 open issues', 'Trendshift 热榜 + Trendshift badge 官方背书', 'Issue 24 小时响应承诺', 'npm: @tencentdb-agent-memory/memory-tencentdb', 'OpenClaw / Hermes / Claude Code / CodeBuddy / SDK 五方适配']
+      },
+      forks: {
+        title: '1.4K Forks <em>· 生态扩散</em>',
+        desc: '1,363 个 fork 意味着大量团队在自建记忆中枢。默认分支 feat/server_team 仍在快速迭代——v2→v3 数据迁移工具随版本提供，说明项目处于活跃演进期。',
+        points: ['1,363 forks · 活跃二次开发', 'v2→v3 迁移工具 MemoryCore/scripts/migrate-v2-to-v3', '默认分支 feat/server_team 持续开发', '讨论区 + Discord 社区开放']
+      },
+      bench: {
+        title: '+59% <em>PersonaMem 相对提升</em>',
+        desc: 'PersonaMem 基准测试 Agent 在长交互后能否正确理解并应用用户信息：未启用时仅 48%，启用 TencentDB Agent Memory 后达 76%——相对提升 59%。团队记忆让 Agent 真正\"记住用户\"。',
+        points: ['PersonaMem：48% → 76%（+59% 相对提升）', '测试长交互后用户画像理解准确率', 'RAG 只回答"能找到什么"，Team Memory 还回答"谁能用、哪个版本、装配给谁"']
+      },
+      assets: {
+        title: '4 类记忆资产 <em>· 不是聊天记录仓库</em>',
+        desc: '对话、文档、代码被蒸馏为四种可复用资产：Chat Memory（记忆）、Skill（技能）、Wiki（知识地图）、CodeGraph（代码图谱）。每个资产都有归属、版本、状态、可见性、使用计数——可治理、可共享、可装配。',
+        points: ['🧠 Chat Memory：偏好/事实/决策/历史', '⚡ Skill：版本化可复用工作流', '📖 Wiki：文档结构化 + 链接图', '🔗 CodeGraph：符号/文件/调用关系/影响路径', '资产元数据：Owner / Version / Status / 使用次数 / Agent 绑定']
+      },
+      source: {
+        title: '对话 · 文档 · 代码 <em>· 原始经验</em>',
+        desc: '一切记忆的起点：日常 Agent 会话、团队文档、现有代码库。TencentDB Agent Memory 的核心理念——任何让下一个 Agent 避免重复造轮子的信息，都值得保存、组织、复用。',
+        points: ['会话历史：与 Agent 的每一轮交互', '产品文档 / 设计规格 / 运维手册', '现有代码仓库（优先公开 HTTPS 仓库）', '"已有信息 → 可复用资产 → 更少轮次 → 更少返工"']
+      },
+      extract: {
+        title: '自动提取 <em>· 异步管道蒸馏</em>',
+        desc: '资产不靠手工整理：会话自动提炼 Chat Memory 与 Skill，文档自动生成 Wiki，代码自动索引 CodeGraph。Wiki 与 CodeGraph 异步构建，处理完成后状态变为 ready。',
+        points: ['对话/任务 → Chat Memory + Skill 自动提取', '文档/文件 → Wiki 结构化页面 + 链接图', '代码库 → CodeGraph 符号与调用关系索引', '异步构建，面板可见处理进度', '私有资产默认，共享是显式动作']
+      },
+      assets_flow: {
+        title: '4 类资产 <em>· 统一注册为 Memory Assets</em>',
+        desc: 'Chat Memory、Skills、Wiki、CodeGraph 全部注册为统一的内存资产模型，由 Memory Hub 用"固定绑定 + ACL"决定每个 Agent 能用哪些资产：先按团队/用户/Agent/可见性收窄权限范围，再按当前查询检索。',
+        points: ['统一资产模型，四种类型同一套管理', 'Fixed Binding + ACL 决定可用范围', '跨框架迁移只换装配、不用重训练', '检索按需：/v3/tools/list 发现、/v3/tools/call 读取']
+      },
+      hub: {
+        title: 'Memory Hub <em>· 控制面板不是展示板</em>',
+        desc: 'Hub 是人类掌控记忆的入口：创建团队和 Agent、审查共享资产、管理归属/版本/状态/可见性/使用计数/绑定关系。全局 System Admin 管用户团队，Team Admin/Member 管团队内资产协作。',
+        points: ['Team Up：建团队、加人加 Agent、定义共享边界', 'Asset Library：浏览/搜索/审查/管理四类资产', 'Agent Loadout：绑定资产、调优先级与使用模式', 'Knowledge Workshop：构建 Wiki/CodeGraph', 'Access Control：private/team/ACL 随时撤销']
+      },
+      equip: {
+        title: 'Agent 装配 <em>· 记忆进入上下文</em>',
+        desc: '知识不是整包注入而是按需调用：Agent 先 /v3/tools/list 发现能力，再 /v3/tools/call 读取相关页面、源码或影响路径。L2/L3 快速引导上下文，需要具体事实时 BM25+向量+RRF 回退到 L1/L0。',
+        points: ['按需调用，不撑爆上下文窗口', '数量/字符预算/超时三重上限', '不同角色不同装配：Scout 配市场 Wiki，Builder 配 CodeGraph', '切换 Agent/框架只需重新装配，无需重训练']
+      },
+      f0: {
+        title: '🧠 Chat Memory <em>· 记住人和上下文</em>',
+        desc: '每个 Agent 创建时自动拥有自己的记忆——偏好、事实、决策、交互历史。L0 原始会话 → L1 原子事实 → L2 场景知识块 → L3 人格长期画像，逐层蒸馏；生成与检索都分层：日常用 L2/L3 快速引导，需要精确事实时混合检索回退到底层。',
+        points: ['L0 Conversation：完整上下文原始会话', 'L1 Atom：事实/偏好/约束/事件', 'L2 Scenario：按项目/场景组织的知识块', 'L3 Persona：长期画像与稳定模式', 'BM25 + 向量检索 + RRF 混合回退', '"别再重构老 auth 模块——移动端还在用"：这种代价不该靠人每次重复'],
+        images: [IMG+'chat_memory.cn.jpg']
+      },
+      f1: {
+        title: '⚡ Skill 库 <em>· 经验沉淀为可复用资产</em>',
+        desc: '完成复杂工作后，Agent 从对话和工具调用中提取可复用 Skill，并在需要时装配进指定 Agent 的上下文。Skill 不只是提示词片段——它带版本、资源文件、触发边界、执行步骤和验证规则。个人 Skill 默认私有，审查后可共享给团队并指派给其他 Agent。',
+        points: ['版本 / 资源文件 / 触发边界 / 执行步骤 / 验证规则', '个人私有默认，审查后团队共享', '故障排查、代码审查、发布清单——学会一次全队可用', 'Skill 资产管理复用 Hermes Agent 代码并优化'],
+        images: [IMG+'skill.cn.jpg']
+      },
+      f2: {
+        title: '📖 Wiki + CodeGraph <em>· 读文档、读代码</em>',
+        desc: 'Wiki 把产品文档、设计规格、运维手册变成带链接图的结构化页面（灵感来自 Karpathy 的 LLM Wiki）；CodeGraph 索引代码符号、文件、调用关系和影响路径。Agent 改代码前能查调用者/被调用者、做影响分析——"改这个会影响那些"。',
+        points: ['Wiki：结构化页面 + 链接图，可钻取', 'CodeGraph：符号 / 文件 / 调用关系 / 影响路径', 'Agent 先发现后按需读取，不整包注入', '"Wiki 让 Agent 不用先把文件列表读一遍"', '"CodeGraph 不止告诉代码在哪——告诉改动会影响谁"'],
+        images: [IMG+'wiki.cn.jpg', IMG+'codegraph.cn.jpg']
+      },
+      f3: {
+        title: '🛡️ 团队控制面板 <em>· 共享经验不共享隐私</em>',
+        desc: '四层可见性：private 仅 Owner 可读（团队管理员也不行）、team 团队成员可读、restricted 通过 User/Role/Agent ACL 精确授权、agent 定向装配给同团队 Agent。新 Chat Memory 与 Skill 默认私有——共享是显式动作，不是默认泄露。',
+        points: ['private：仅 Owner，连团队 Admin 都不可见', 'team：成员可读，Owner/Admin 可管理', 'restricted：User / Role / Agent ACL 精确授权', 'agent：定向装配给团队内指定 Agent', '两层角色：全局 System Admin + 团队 Admin/Member', '资产 Owner 自动拥有管理权限'],
+        images: [IMG+'asset.cn.jpg']
+      },
+      f4: {
+        title: '📥 冷启动 <em>· 加载团队存档，一天上手</em>',
+        desc: '大多数 Agent 的第一份工作是重新学习你的项目——TencentDB Agent Memory 把你已付过的学习成本变成存档：导入现有代码库自动生成 CodeGraph，导入文档自动生成 Wiki，导入历史会话自动提取 Skills 和 Chat Memory。新团队从现有经验起步，而不是从零学起。',
+        points: ['代码库 → CodeGraph 自动索引', '文档/文件 → Wiki 自动生成', '历史会话 → Skills + Chat Memory 自动提取', 'Tiny but Serious Inc.：一人公司五角色小队', '"公司可以很小，经验可以无限复利"'],
+        images: [IMG+'flowchart3.jpg']
+      },
+      gallery: {
+        title: '产品图库 <em>· 8 张官方截图</em>',
+        desc: '从 README 抓取的官方界面截图：四大记忆资产工作台、冷启动流程、经验飞轮与技术架构。左滑切换。',
+        points: ['🧠 Chat Memory 工作台', '⚡ Skill 资产库', '📖 Wiki 知识地图', '🔗 CodeGraph 调用图谱', '🛡️ 资产管理面板', '📥 冷启动导入流程', '🔁 经验飞轮循环', '🏗 技术架构分层图'],
+        images: [IMG+'chat_memory.cn.jpg', IMG+'skill.cn.jpg', IMG+'wiki.cn.jpg', IMG+'codegraph.cn.jpg', IMG+'asset.cn.jpg', IMG+'flowchart3.jpg', IMG+'flowchart4.jpg', IMG+'flowchart5.jpg']
+      },
+      benchmark: {
+        title: 'Benchmark <em>· 数据说话</em>',
+        desc: '官方公开基准：PersonaMem（长交互后用户理解）从 48% 提升到 76%，相对提升 +59%。相比标准 RAG 的"能找到什么"，团队记忆还回答"谁能用、哪个版本有效、该装配给哪个 Agent"。',
+        points: ['PersonaMem：48% → 76%（+59% 相对）', '跨会话用户理解：Chat Memory ✅（RAG △）', '可执行经验蒸馏：Skill ✅（RAG —）', '文档结构与关系：Wiki+Link Graph ✅（RAG △）', '代码调用图与影响范围：CodeGraph ✅（RAG △）', '归属/版本/状态：✅（RAG —）', '团队共享与 Agent 装配：✅（RAG —）', 'Private/Team/ACL：✅（RAG △）']
+      },
+      story: {
+        title: '背景故事 <em>· 让走过的路成为起点</em>',
+        desc: '腾讯云团队从一个实际问题出发：如何减少使用 Agent 时的重复劳动？项目上下文不该在新会话里重讲一遍，文档不该每个 Agent 都从头读，跑通的流程不该下次重新发现。Slogan：Agents remember. Humans innovate.（Agent 负责记住，人类负责创新）。技术上也站在开源肩膀上：Wiki 灵感来自 Karpathy 的 LLM Wiki，Skill 管理复用 Hermes Agent 代码，CodeGraph 基于 colbymchenry/codegraph。',
+        points: ['发起：TencentCloud · 2026-04-07 开源', '理念："已有信息 → 可复用资产 → 更少轮次 → 更高效率"', 'Wiki 灵感：Karpathy \u201cLLM Wiki\u201d gist', 'Skill 管理：复用 Hermes Agent 代码并优化', 'CodeGraph：基于 colbymchenry/codegraph 项目', '愿景："让团队走过的路，成为下一个 Agent 的起跑线"']
+      },
+      install: {
+        title: '安装指南 <em>· 一条命令起三服务</em>',
+        desc: '三服务一键启动：memory-core（核心）+ memory-hub（控制面板）+ proxy（代理）。.env 里填两组 LLM 参数（memory 组 + proxy 组），start-all.sh 结束后会打印一行可直接粘贴给 Claude 的命令。面板在 http://localhost:8125。',
+        points: ['git clone → deploy/global-images → .env 填两组 LLM 参数', './start-all.sh 一键启动三服务', '面板 http://localhost:8125', '支持 OpenClaw / Hermes / Claude Code / CodeBuddy / SDK', 'v1.x/v0.x 用户有 v2→v3 迁移工具', 'Wiki/CodeGraph 异步构建，稍等变 ready'],
+        code: '# 一键启动（memory-core + memory-hub + proxy）\ngit clone https://github.com/TencentCloud/TencentDB-Agent-Memory.git\ncd TencentDB-Agent-Memory/deploy/global-images\ncp .env.example .env\n$EDITOR .env        # 填两组 LLM 参数\n./start-all.sh      # 结束打印一行可直接粘贴给 Claude 的命令\n\n# 打开控制面板\nhttp://localhost:8125'
+      },
+      tech0: {
+        title: 'TypeScript <em>· 全栈实现</em>',
+        desc: '核心实现为 TypeScript，Node ≥ 22.16 运行。npm 包 @tencentdb-agent-memory/memory-tencentdb 提供接入层，面板/核心/代理三服务通过 deploy/global-images 一键部署。',
+        points: ['TypeScript · Node ≥ 22.16', 'npm 包 @tencentdb-agent-memory/memory-tencentdb', '三服务：memory-core / memory-hub / proxy']
+      },
+      tech1: {
+        title: 'BM25 + 向量 + RRF <em>· 混合检索</em>',
+        desc: '记忆检索不是单一向量搜索：日常用 L2/L3 快速引导上下文，需要精确事实时 BM25 关键词 + 向量语义 + RRF 融合排序回退到 L1/L0；结果再按条目数、字符预算、超时上限截断——防止记忆撑爆上下文窗口。',
+        points: ['L2/L3 快速上下文引导', 'BM25 + 向量 + RRF 精确事实回退', '条目数 / 字符预算 / 超时三重上限', 'Embedding 进程内运行，无需外部服务']
+      },
+      tech2: {
+        title: '生态适配 <em>· 5 种接入方式</em>',
+        desc: '当前支持 OpenClaw、Hermes、Claude Code、CodeBuddy 和 SDK 集成，跨框架迁移在路线图上。OpenClaw badge 要求 ≥ 2026.3.13，Hermes 走 Gateway 接入。',
+        points: ['OpenClaw（≥ 2026.3.13）', 'Hermes Gateway', 'Claude Code / CodeBuddy', 'SDK 集成', '更广的跨框架迁移：路线图中']
+      }
+    };
+
+    function openSheet(key){
+      var d = DATA[key]; if(!d) return;
+      sheetTitle.innerHTML = d.title;
+      sheetDesc.textContent = d.desc;
+      if(d.code){
+        sheetCode.style.display = 'block';
+        sheetCode.textContent = d.code;
+      }else{
+        sheetCode.style.display = 'none';
+      }
+      renderGallery(d.images);
+      sheetPoints.innerHTML = d.points.map(function(p){
+        return '<div class="sheet-point' + (p.indexOf('✅')===0 ? ' green' : '') + '">' + p + '</div>';
+      }).join('');
+      overlay.classList.add('active');
+      if(navigator.vibrate) navigator.vibrate(15);
+    }
+    function closeSheet(){ overlay.classList.remove('active'); }
+
+    function renderGallery(images){
+      if(!images || !images.length){ sheetGallery.style.display = 'none'; return; }
+      sheetGallery.style.display = 'block';
+      var html = '<img class="g-main" id="gMain" src="' + images[0] + '" alt="screenshot">';
+      html += '<div class="g-thumbs">';
+      images.forEach(function(src, i){
+        html += '<img class="g-thumb' + (i===0 ? ' active' : '') + '" data-src="' + src + '" src="' + src + '" alt="">';
+      });
+      html += '</div>';
+      sheetGallery.innerHTML = html;
+      sheetGallery.querySelectorAll('.g-thumb').forEach(function(t){
+        t.addEventListener('click', function(){
+          var main = document.getElementById('gMain');
+          if(main) main.src = t.dataset.src;
+          sheetGallery.querySelectorAll('.g-thumb').forEach(function(x){ x.classList.remove('active'); });
+          t.classList.add('active');
+        });
+      });
+    }
+
+    // 3D 视差倾斜：跟随手指/鼠标
+    var stage = $('#stage');
+    var tiltRaf = null;
+    function onTilt(x, y){
+      if(tiltRaf) return;
+      tiltRaf = requestAnimationFrame(function(){
+        var w = stage.clientWidth, h = stage.clientHeight;
+        var nx = (x / w) * 2 - 1;
+        var ny = (y / h) * 2 - 1;
+        stage.style.transform = 'rotateX(' + (-ny * 6).toFixed(2) + 'deg) rotateY(' + (nx * 8).toFixed(2) + 'deg)';
+        tiltRaf = null;
+      });
+    }
+    function resetTilt(){ stage.style.transform = ''; }
+    stage.addEventListener('mousemove', function(e){
+      var r = stage.getBoundingClientRect();
+      onTilt(e.clientX - r.left, e.clientY - r.top);
+    });
+    stage.addEventListener('touchmove', function(e){
+      if(e.touches.length !== 1) return;
+      var r = stage.getBoundingClientRect();
+      onTilt(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top);
+    }, {passive: true});
+    stage.addEventListener('mouseleave', resetTilt);
+    stage.addEventListener('touchend', resetTilt);
+
+    // Stamp 连点彩蛋：5 次 → 大脑旋转 + 背景故事
+    var stampHits = 0, stampTimer = null;
+    $('#stamp').addEventListener('click', function(){
+      stampHits++;
+      clearTimeout(stampTimer);
+      stampTimer = setTimeout(function(){ stampHits = 0; }, 1200);
+      if(stampHits >= 5){
+        stampHits = 0;
+        var s = $('#stamp');
+        s.style.transition = 'transform .6s';
+        s.style.transform = 'rotate(720deg) scale(1.3)';
+        setTimeout(function(){ s.style.transform = ''; }, 700);
+        if(navigator.vibrate) navigator.vibrate([30, 40, 30]);
+        toast.textContent = '🧠 记忆觉醒 · 解锁背景故事';
+        toast.classList.add('show');
+        setTimeout(function(){ toast.classList.remove('show'); }, 1600);
+        openSheet('story');
+      }else{
+        s.style.transform = 'rotate(30deg) scale(1.1)';
+        setTimeout(function(){ s.style.transform = ''; }, 250);
+      }
+    });
+
+    document.querySelectorAll('.stat-card').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet(el.dataset.stat); });
+    });
+    document.querySelectorAll('.flow-node').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet(el.id.replace('flow-','')); });
+    });
+    document.querySelectorAll('.feature').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet('f'+el.dataset.f); });
+    });
+    $('#termWin').addEventListener('click', function(){ openSheet('install'); });
+    $('#sheetClose').addEventListener('click', closeSheet);
+    overlay.addEventListener('click', function(e){ if(e.target===overlay) closeSheet(); });
+
+    // Tech pills 点击 → 技术说明弹窗
+    var techMap = {0:'tech0', 1:'tech1', 2:'tech1', 3:'tech2', 4:'tech2', 5:'tech2'};
+    document.querySelectorAll('.tech-pill').forEach(function(el, i){
+      el.addEventListener('click', function(){ openSheet(techMap[i] || 'story'); });
+    });
+
+    $('#shareBtn').addEventListener('click', function(){
+      var url = location.href.split('?')[0];
+      if(navigator.share){
+        navigator.share({title:'TencentDB Agent Memory — 团队级 AI Agent 记忆中枢', url:url}).catch(function(){});
+      }else if(navigator.clipboard){
+        navigator.clipboard.writeText(url).then(function(){
+          toast.textContent = '链接已复制';
+          toast.classList.add('show');
+          setTimeout(function(){ toast.classList.remove('show'); }, 1800);
+        });
+      }
+    });
+    document.querySelectorAll('.reveal').forEach(function(x){ x.classList.add('visible'); });
+  })();
+  </script>
+</body>
+</html>
