@@ -41,6 +41,7 @@ curl -s "https://mindresonance.online/youngsinsight/api/feed?sid=<sid>&since=<cu
     - 摘要（excerpt，截断到 80 字）
     - 链接（原样提供，含统计参数）
   - 用返回的 `cursor` 覆盖本地保存的 `cursor`。
+  - 注：feed 只返回**最近 2 天**更新的内容，更早的旧内容不会重复推送。
 
 - **定时化建议**：
   - Hermes：`cronjob` 创建定时任务，脚本调 curl 存 cursor 到本地文件。

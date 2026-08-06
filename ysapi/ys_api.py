@@ -24,6 +24,7 @@ import threading
 import time
 import urllib.parse
 import urllib.request
+from datetime import date, timedelta
 from http.server import BaseHTTPRequestHandler
 
 # ---------------- 配置 ----------------
@@ -106,6 +107,21 @@ def read_events():
 # ---------------- Feed 构建 ----------------
 FEED_STATE_FILE = os.path.join(DATA_DIR, "feed_state.json")
 STATE = {"version": 0, "mtimes": {}, "initialized": False}
+
+# 订阅 feed 只推送最近 N 天更新的内容（用户要求：不要过多，只看近期）
+FEED_MAX_DAYS = 2
+
+
+def within_days(item, days=FEED_MAX_DAYS):
+    """feed 时间窗过滤: 只保留 date 在最近 days 天内的条目 (YYYY-MM-DD 字符串比较)。"""
+    d = str(item.get("date", ""))
+    if not d or d.startswith("0000"):
+        return True  # 无日期/异常日期不过滤, 兼容旧数据
+    try:
+        cutoff = (date.today() - timedelta(days=days)).isoformat()
+        return d >= cutoff
+    except Exception:
+        return True
 
 
 def load_feed_state():
@@ -266,9 +282,10 @@ def push_to_callbacks():
         sv, sk = parse_cursor(since)
         if since:
             new_items = [i for i in items
-                         if i["v"] > sv or (i["v"] == sv and i["key"].split(":", 1)[1] > sk)]
+                         if (i["v"] > sv or (i["v"] == sv and i["key"].split(":", 1)[1] > sk))
+                         and within_days(i)]
         else:
-            new_items = items[:10]
+            new_items = [i for i in items if within_days(i)][:10]
         if new_items:
             threading.Thread(target=push_digest, args=(s, new_items), daemon=True).start()
             s["cursor"] = new_items[0]["key"]
@@ -543,9 +560,10 @@ class Handler(BaseHTTPRequestHandler):
         sv, sk = parse_cursor(since)
         if since:
             new_items = [i for i in items
-                         if i["v"] > sv or (i["v"] == sv and i["key"].split(":", 1)[1] > sk)]
+                         if (i["v"] > sv or (i["v"] == sv and i["key"].split(":", 1)[1] > sk))
+                         and within_days(i)]
         else:
-            new_items = items[:limit]
+            new_items = [i for i in items if within_days(i)][:limit]
         new_items = new_items[:limit]
         cursor = new_items[0]["key"] if new_items else (since or (items[0]["key"] if items else ""))
         sub_known = False
