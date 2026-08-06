@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0B0E11">
+  <title>Cloudflare OS — 公司级 AI 操作系统</title>
+  <link rel="preconnect" href="https://fonts.googleapis.cn">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.cn/css2?family=Noto+Serif+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0B0E11;
+      --bg-2: #14181D;
+      --accent: #F6821F;
+      --accent-deep: #B45309;
+      --ice: #FFE8D0;
+      --text: #F5F1EC;
+      --muted: #8A8F98;
+      --success: #2EE6A8;
+      --surface: #171B20;
+      --serif: 'Noto Serif SC', serif;
+      --cn: 'Noto Sans SC', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; background: #07090B; font-family: 'Noto Sans SC', sans-serif; color: #F5F1EC; -webkit-font-smoothing: antialiased; }
+    body { display: flex; align-items: center; justify-content: center; }
+
+    .stage {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      height: min(100vh, calc(100vw * 16 / 9));
+      width: min(100vw, calc(100vh * 9 / 16));
+      background: #0B0E11;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,.6);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 16px 10px;
+      perspective: 1000px;
+      transform-style: preserve-3d;
+      transition: transform .12s ease-out;
+    }
+    .tilt-deep { transform: translateZ(-50px) scale(1.08); }
+    .tilt-mid { transform: translateZ(0); }
+    .tilt-front { transform: translateZ(45px); }
+
+    /* CSS 3D 轨道核心（零依赖，2 秒内可见的 3D） */
+    .orbit3d {
+      position: absolute;
+      top: 52px;
+      left: 50%;
+      width: 190px;
+      height: 190px;
+      margin-left: -95px;
+      z-index: 1;
+      pointer-events: none;
+      transform-style: preserve-3d;
+    }
+    .orbit3d .core {
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 46px; height: 46px;
+      margin: -23px 0 0 -23px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #FFD9A8, #F6821F 55%, #B45309);
+      box-shadow: 0 0 30px rgba(246, 130, 31, .55), 0 0 80px rgba(246, 130, 31, .2);
+      transform-style: preserve-3d;
+      animation: corePulse 3.4s ease-in-out infinite;
+    }
+    @keyframes corePulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+    .orbit3d .ring {
+      position: absolute;
+      top: 50%; left: 50%;
+      border-radius: 50%;
+      border: 1.5px solid rgba(246, 130, 31, .45);
+      transform-style: preserve-3d;
+    }
+    .ring.r1 { width: 120px; height: 120px; margin: -60px 0 0 -60px; animation: spin3d 9s linear infinite; }
+    .ring.r2 { width: 160px; height: 160px; margin: -80px 0 0 -80px; border-color: rgba(246, 130, 31, .28); animation: spin3dRev 14s linear infinite; }
+    .ring.r3 { width: 190px; height: 190px; margin: -95px 0 0 -95px; border-color: rgba(255, 208, 150, .18); animation: spin3d 22s linear infinite; }
+    @keyframes spin3d { from { transform: rotateX(68deg) rotateZ(0); } to { transform: rotateX(68deg) rotateZ(360deg); } }
+    @keyframes spin3dRev { from { transform: rotateX(68deg) rotateZ(360deg); } to { transform: rotateX(68deg) rotateZ(0); } }
+    .orbit3d .sat {
+      position: absolute;
+      width: 9px; height: 9px;
+      border-radius: 2px;
+      background: #F6821F;
+      box-shadow: 0 0 10px rgba(246, 130, 31, .8);
+      top: 50%; left: 50%;
+    }
+    .sat.s1 { margin: -4.5px 0 0 -4.5px; animation: orbit1 9s linear infinite; }
+    .sat.s2 { width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; background: #FFC98F; animation: orbit2 14s linear infinite; }
+    .sat.s3 { width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; background: #FFE0BC; animation: orbit3 22s linear infinite; }
+    @keyframes orbit1 {
+      from { transform: rotateX(68deg) rotateZ(0) translateX(60px); }
+      to   { transform: rotateX(68deg) rotateZ(360deg) translateX(60px); }
+    }
+    @keyframes orbit2 {
+      from { transform: rotateX(68deg) rotateZ(0) translateX(80px); }
+      to   { transform: rotateX(68deg) rotateZ(-360deg) translateX(80px); }
+    }
+    @keyframes orbit3 {
+      from { transform: rotateX(68deg) rotateZ(0) translateX(95px); }
+      to   { transform: rotateX(68deg) rotateZ(360deg) translateX(95px); }
+    }
+
+    /* 浮动数据粒子（3D 视差前景） */
+    .flakes { position: absolute; inset: 0; pointer-events: none; z-index: 3; overflow: hidden; }
+    .flake {
+      position: absolute;
+      width: 10px; height: 10px;
+      border: 1px solid rgba(246, 130, 31, .5);
+      border-radius: 50%;
+      opacity: .5;
+      animation: floatY 6s ease-in-out infinite;
+    }
+    .flake.f1 { left: 8%; top: 22%; animation-delay: 0s; }
+    .flake.f2 { left: 88%; top: 30%; width: 7px; height: 7px; animation-delay: 1.2s; }
+    .flake.f3 { left: 14%; top: 68%; width: 6px; height: 6px; border-color: rgba(46, 230, 168, .4); animation-delay: 2.1s; }
+    .flake.f4 { left: 84%; top: 72%; width: 9px; height: 9px; animation-delay: .6s; }
+    .flake.f5 { left: 48%; top: 16%; width: 5px; height: 5px; border-color: rgba(255, 224, 188, .5); animation-delay: 1.8s; }
+    @keyframes floatY {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-14px) rotate(120deg); }
+    }
+    /* 探索 hint 角标 */
+    .hint-badge {
+      position: relative;
+      z-index: 5;
+      align-self: flex-start;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      letter-spacing: .18em;
+      color: #B48A5E;
+      border: 1px dashed rgba(246, 130, 31, .35);
+      border-radius: 10px;
+      padding: 2px 8px;
+      margin-top: 5px;
+      flex-shrink: 0;
+      animation: hintPulse 2.4s ease-in-out infinite;
+    }
+    @keyframes hintPulse {
+      0%, 100% { opacity: .55; }
+      50% { opacity: 1; box-shadow: 0 0 12px rgba(246, 130, 31, .25); }
+    }
+    .stage::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 38% at 78% 2%, rgba(246, 130, 31, .10) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 35% at 8% 45%, rgba(180, 83, 9, .08) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 50% 100%, rgba(23, 27, 32, .95) 0%, transparent 60%);
+    }
+    .stage::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(rgba(245, 241, 236, .012) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(245, 241, 236, .012) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    /* 顶部条 */
+    .topbar {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .16em;
+      color: #8A8F98;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(245, 241, 236, .06);
+    }
+    .brand { display: flex; align-items: center; gap: 6px; color: #F5F1EC; }
+    .brand-dot { width: 5px; height: 5px; background: #F6821F; border-radius: 50%; box-shadow: 0 0 8px #F6821F; animation: pulse 2.2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .3; transform: scale(.6); } }
+    .share-btn {
+      background: none;
+      border: 1px solid rgba(245, 241, 236, .2);
+      padding: 4px 8px 3px;
+      font: inherit;
+      color: #F5F1EC;
+      cursor: pointer;
+      letter-spacing: .12em;
+      transition: all .3s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 7.5px;
+    }
+    .share-btn:active { background: #F6821F; color: #0B0E11; border-color: #F6821F; }
+
+    /* Hero */
+    .hero { position: relative; z-index: 5; flex-shrink: 0; margin-top: 7px; }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #8A8F98;
+      margin-bottom: 4px;
+    }
+    .vol { color: #F6821F; }
+    .title-block { display: flex; align-items: flex-start; gap: 10px; }
+    .pg-stamp {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(246, 130, 31, .6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 19px;
+      flex-shrink: 0;
+      position: relative;
+      box-shadow: 0 0 18px rgba(246, 130, 31, .18) inset, 0 0 12px rgba(246, 130, 31, .1);
+    }
+    .pg-stamp::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 1px dashed rgba(246, 130, 31, .35);
+      animation: spin 9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .title-text { min-width: 0; }
+    .pg-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: -.02em;
+      line-height: 1.05;
+      color: #F5F1EC;
+    }
+    .pg-title .dot { color: #F6821F; }
+    .superdesign-line { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+    .superdesign { font-family: 'JetBrains Mono', monospace; font-size: 7px; letter-spacing: .14em; color: #9CA3AF; }
+    .v-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      letter-spacing: .14em;
+      color: #F6821F;
+      border: 1px solid rgba(246, 130, 31, .3);
+      padding: 1px 5px;
+      border-radius: 2px;
+      background: rgba(246, 130, 31, .06);
+    }
+    .v-tag.green { color: #2EE6A8; border-color: rgba(46, 230, 168, .3); background: rgba(46, 230, 168, .06); }
+    .tagline {
+      margin-top: 5px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10.5px;
+      color: #D1D5DB;
+      line-height: 1.45;
+    }
+    .tagline em { color: #F6821F; font-style: normal; font-weight: 500; }
+
+    /* 终端展示区 */
+    .termbox { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .term-header { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; margin-bottom: 4px; }
+    .term-header::after { content: ''; flex: 1; height: 1px; background: rgba(245, 241, 236, .06); }
+    .term-window {
+      background: #07090B;
+      border: 1px solid rgba(246, 130, 31, .3);
+      border-radius: 8px;
+      overflow: hidden;
+      font-family: 'JetBrains Mono', monospace;
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .term-window:active { border-color: rgba(246, 130, 31, .6); }
+    .term-bar {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 9px;
+      background: rgba(246, 130, 31, .1);
+      border-bottom: 1px solid rgba(246, 130, 31, .15);
+    }
+    .term-bar span { width: 7px; height: 7px; border-radius: 50%; }
+    .term-bar .r { background: #FF5F57; } .term-bar .y { background: #FFB020; } .term-bar .g { background: #28C840; }
+    .term-bar b { margin-left: 6px; font-size: 7px; font-weight: 400; color: #B48A5E; letter-spacing: .06em; }
+    .term-body { padding: 8px 11px 9px; font-size: 8.5px; line-height: 1.8; color: #C8A98A; }
+    .term-body .cmd { color: #F6821F; }
+    .term-body .prompt { color: #9A7B5E; }
+    .term-body .out { color: #E3C9AB; }
+    .term-body .ok { color: #2EE6A8; }
+    .term-body .dim { color: #6B5A48; }
+    .caret-blink { display: inline-block; width: 7px; height: 10px; background: #F6821F; vertical-align: -2px; animation: blink 1s steps(1) infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* Stats */
+    .stats-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .stats-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .stats-title { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; }
+    .stats-badge { font-family: 'JetBrains Mono', monospace; font-size: 6px; letter-spacing: .16em; color: #2EE6A8; border: 1px solid rgba(46, 230, 168, .3); padding: 1px 5px; border-radius: 2px; }
+    .stats-chart { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .stat-card {
+      background: rgba(245, 241, 236, .02);
+      border: 1px solid rgba(245, 241, 236, .07);
+      border-radius: 7px;
+      padding: 7px 6px 5px;
+      cursor: pointer;
+      transition: all .25s;
+      min-width: 0;
+    }
+    .stat-card:active { background: rgba(246, 130, 31, .07); border-color: rgba(246, 130, 31, .3); transform: scale(.96); }
+    .stat-num { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; color: #F5F1EC; line-height: 1; white-space: nowrap; }
+    .stat-num .accent { color: var(--stat-color, #F6821F); }
+    .stat-label { font-size: 7px; color: #8A8F98; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .stat-mini-chart { display: flex; align-items: flex-end; gap: 2px; height: 12px; margin-top: 4px; }
+    .stat-bar { width: 4px; background: var(--stat-color, #F6821F); opacity: .55; border-radius: 1px; transform-origin: bottom; }
+
+    /* Flow */
+    .flow-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .flow-header { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; margin-bottom: 4px; }
+    .flow-header::after { content: ''; flex: 1; height: 1px; background: rgba(245, 241, 236, .06); }
+    .flow-svg { width: 100%; height: auto; display: block; }
+    .flow-node { cursor: pointer; }
+    .flow-node:active { opacity: .7; }
+    .flow-arrow { animation: flowPulse 2s ease-in-out infinite; }
+    @keyframes flowPulse { 0%, 100% { stroke-opacity: .4; } 50% { stroke-opacity: 1; } }
+
+    /* Features */
+    .features { position: relative; z-index: 5; margin-top: 6px; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      background: rgba(245, 241, 236, .02);
+      border: 1px solid rgba(245, 241, 236, .07);
+      border-radius: 7px;
+      padding: 6px 9px;
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .feature:active { background: rgba(246, 130, 31, .05); border-color: rgba(246, 130, 31, .22); }
+    .feature-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: rgba(246, 130, 31, .1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .feature-icon svg { width: 13px; height: 13px; stroke: #F6821F; fill: none; stroke-width: 1.5; }
+    .feature-icon.green { background: rgba(46, 230, 168, .1); }
+    .feature-icon.green svg { stroke: #2EE6A8; }
+    .feature-content { flex: 1; min-width: 0; }
+    .feature-title { font-family: 'Noto Sans SC', sans-serif; font-size: 9.5px; font-weight: 500; color: #F5F1EC; letter-spacing: .02em; }
+    .feature-desc { font-size: 7.5px; color: #8A8F98; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .feature-arrow { font-size: 11px; color: #F6821F; opacity: 0; transform: translateX(-2px); transition: all .25s; flex-shrink: 0; }
+    .feature:active .feature-arrow { opacity: 1; transform: translateX(2px); }
+    .feature-progress { height: 2px; background: rgba(245, 241, 236, .06); border-radius: 1px; margin-top: 4px; overflow: hidden; }
+    .feature-progress-bar { height: 100%; background: linear-gradient(90deg, #F6821F, #2EE6A8); border-radius: 1px; transform-origin: left; animation: progressIn .8s cubic-bezier(.4, 0, .2, 1) forwards; transform: scaleX(0); }
+    @keyframes progressIn { to { transform: scaleX(1); } }
+
+    /* Tech */
+    .tech-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .tech-header { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; margin-bottom: 4px; }
+    .tech-pills { display: flex; flex-wrap: wrap; gap: 4px; }
+    .tech-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6.5px;
+      letter-spacing: .08em;
+      color: #9CA3AF;
+      border: 1px solid rgba(245, 241, 236, .1);
+      padding: 2px 7px;
+      border-radius: 10px;
+      cursor: pointer;
+      background: rgba(245, 241, 236, .02);
+      transition: all .2s;
+    }
+    .tech-pill:active { background: rgba(245, 241, 236, .08); }
+    .tech-pill.accent { border-color: rgba(246, 130, 31, .35); color: #F6821F; }
+    .tech-pill.green { border-color: rgba(46, 230, 168, .3); color: #7FE8C4; }
+
+    /* Bottom bar */
+    .bottombar {
+      position: relative;
+      z-index: 5;
+      margin-top: 8px;
+      padding-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      border-top: 1px solid rgba(245, 241, 236, .06);
+    }
+    .github-link { display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 8px; color: #D1D5DB; text-decoration: none; }
+    .github-link svg { width: 13px; height: 13px; fill: #9CA3AF; transition: fill .25s; }
+    .github-link:active svg { fill: #F6821F; }
+    .visit-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .14em;
+      color: #0B0E11;
+      background: linear-gradient(90deg, #F6821F, #FFC98F);
+      padding: 6px 13px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all .25s;
+    }
+    .visit-btn:active { transform: scale(.95); filter: brightness(1.15); }
+
+    /* Overlay + Sheet */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: flex-end;
+      background: rgba(0, 0, 0, .5);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .35s;
+    }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+    .sheet {
+      width: 100%;
+      max-height: 76%;
+      background: linear-gradient(180deg, #171B20, #14181D);
+      border: 1px solid rgba(246, 130, 31, .2);
+      border-bottom: none;
+      border-radius: 16px 16px 0 0;
+      padding: 14px 18px 18px;
+      transform: translateY(101%);
+      transition: transform .45s cubic-bezier(.7, 0, .3, 1);
+      overflow-y: auto;
+    }
+    .overlay.active .sheet { transform: translateY(0); }
+    .sheet-handle { width: 32px; height: 3px; background: #3A3F46; border-radius: 2px; margin: 0 auto 12px; }
+    .sheet-title { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; color: #F5F1EC; margin-bottom: 7px; }
+    .sheet-title em { color: #F6821F; font-style: normal; }
+    .sheet-desc { font-size: 10.5px; line-height: 1.65; color: #9CA3AF; }
+    .sheet-desc code { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #F6821F; background: rgba(246, 130, 31, .08); padding: 1px 4px; border-radius: 2px; }
+    .sheet-code {
+      margin-top: 10px;
+      background: #07090B;
+      border: 1px solid rgba(245, 241, 236, .08);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      line-height: 1.7;
+      color: #F6821F;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .sheet-points { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+    .sheet-point { display: flex; align-items: flex-start; gap: 8px; font-family: 'Noto Sans SC', sans-serif; font-size: 10px; color: #D0D0D8; line-height: 1.55; }
+    .sheet-point::before { content: ''; width: 5px; height: 5px; background: #F6821F; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .sheet-point.green::before { background: #2EE6A8; }
+    .sheet-close {
+      margin-top: 14px;
+      width: 100%;
+      padding: 10px;
+      background: rgba(246, 130, 31, .08);
+      border: 1px solid rgba(246, 130, 31, .25);
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .15em;
+      color: #F6821F;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .sheet-close:active { background: #F6821F; color: #0B0E11; }
+
+    /* Toast */
+    .toast {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #28C840;
+      color: #0B0E11;
+      padding: 7px 14px;
+      border-radius: 5px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: all .3s;
+      z-index: 200;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .reveal { opacity: 0; transform: translateY(10px); transition: all .45s cubic-bezier(.4, 0, .2, 1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @keyframes chartGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+    .chart-animate { animation: chartGrow .6s cubic-bezier(.4, 0, .2, 1) forwards; }
+
+    /* 小屏兜底 */
+    @media (max-height: 730px) {
+      .pg-title { font-size: 20px; }
+      .pg-stamp { width: 34px; height: 34px; font-size: 16px; }
+      .tagline { font-size: 9.5px; }
+      .term-body { font-size: 7.5px; line-height: 1.7; padding: 6px 9px; }
+      .feature { padding: 5px 9px; }
+      .feature-title { font-size: 9px; }
+      .stat-num { font-size: 13.5px; }
+      .sheet { max-height: 80%; }
+      .orbit3d { top: 44px; transform: scale(.85); }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage" id="stage">
+    <!-- CSS 3D 轨道核心（零依赖） -->
+    <div class="orbit3d tilt-deep">
+      <div class="ring r1"></div>
+      <div class="ring r2"></div>
+      <div class="ring r3"></div>
+      <div class="core"></div>
+      <div class="sat s1"></div>
+      <div class="sat s2"></div>
+      <div class="sat s3"></div>
+    </div>
+
+    <!-- 3D 视差前景：浮动数据粒子 -->
+    <div class="flakes">
+      <div class="flake f1"></div><div class="flake f2"></div><div class="flake f3"></div>
+      <div class="flake f4"></div><div class="flake f5"></div>
+    </div>
+
+    <!-- Topbar -->
+    <div class="topbar reveal tilt-mid">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <span>Young's Insight</span>
+      </div>
+      <button class="share-btn" id="shareBtn">SHARE <span class="arr">↗</span></button>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero reveal">
+      <div class="meta-row">
+        <span class="vol">COMPANY OS FOR AI WORK</span>
+        <span>2026.08.07</span>
+      </div>
+      <div class="title-block">
+        <div class="pg-stamp" id="stamp">🛰️</div>
+        <div class="title-text">
+          <div class="pg-title">Cloudflare OS<span class="dot">.</span></div>
+          <div class="superdesign-line">
+            <span class="superdesign">cloudflare · open source</span>
+            <span class="v-tag">Apache-2.0</span>
+            <span class="v-tag green">5.1K★</span>
+          </div>
+        </div>
+      </div>
+      <div class="tagline">给公司装一个<em>AI 操作系统</em>——每个人一个 Agent 工作区，Gadget 应用 + Gatekeeper 安全，让非技术用户也能放心"玩出花"</div>
+      <div class="hint-badge">✦ 轻触任何元素探索 · 拖动卡片看 3D 视差</div>
+    </div>
+
+    <!-- 终端展示 -->
+    <div class="termbox reveal">
+      <div class="term-header">Run your company OS · 一键本地启动</div>
+      <div class="term-window" id="termWin">
+        <div class="term-bar">
+          <span class="r"></span><span class="y"></span><span class="g"></span>
+          <b>cloudflare-os — 点击查看快速开始</b>
+        </div>
+        <div class="term-body">
+<span class="prompt">$</span> <span class="cmd">pnpm run-local</span>
+<span class="out">→ 启动全栈（wrangler + workerd）…</span>
+<span class="ok">✅ 打开 http://localhost:8787</span>
+<span class="prompt">$</span> <span class="cmd">"make slides for my customer meeting"</span>
+<span class="dim">→ 用内置 slides blueprint 生成演示文稿…</span>
+<span class="prompt">$</span> <span class="caret-blink"></span></div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-section reveal">
+      <div class="stats-header">
+        <span class="stats-title">Signals</span>
+        <span class="stats-badge">OPEN SOURCE · 2026.08</span>
+      </div>
+      <div class="stats-chart">
+        <div class="stat-card" data-stat="stars" style="--stat-color: #F6821F">
+          <div class="stat-num"><span class="accent">5.1K</span></div>
+          <div class="stat-label">Stars · 4 个月</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 5px; animation-delay: .1s"></div>
+            <div class="stat-bar chart-animate" style="height: 9px; animation-delay: .15s"></div>
+            <div class="stat-bar chart-animate" style="height: 13px; animation-delay: .2s"></div>
+            <div class="stat-bar chart-animate" style="height: 16px; animation-delay: .25s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="forks" style="--stat-color: #2EE6A8">
+          <div class="stat-num"><span class="accent">386</span></div>
+          <div class="stat-label">Forks</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 10px; background: #2EE6A8; animation-delay: .3s"></div>
+            <div class="stat-bar chart-animate" style="height: 12px; background: #2EE6A8; animation-delay: .35s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="gatekeepers" style="--stat-color: #2EE6A8">
+          <div class="stat-num"><span class="accent">11</span></div>
+          <div class="stat-label">内置 Gatekeepers</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 6px; background: #2EE6A8; animation-delay: .4s"></div>
+            <div class="stat-bar chart-animate" style="height: 12px; background: #2EE6A8; animation-delay: .45s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="internal" style="--stat-color: #F6821F">
+          <div class="stat-num"><span class="accent">数千</span></div>
+          <div class="stat-label">内部员工日活</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 8px; animation-delay: .5s"></div>
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .55s"></div>
+            <div class="stat-bar chart-animate" style="height: 9px; animation-delay: .6s"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flow -->
+    <div class="flow-section reveal">
+      <div class="flow-header">Agent Loop · 对话如何变成产品</div>
+      <svg class="flow-svg" viewBox="0 0 350 44" fill="none">
+        <defs>
+          <marker id="cfo-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L6,3 z" fill="#F6821F" fill-opacity=".6"/>
+          </marker>
+        </defs>
+        <g class="flow-node" id="flow-chat">
+          <rect x="3" y="9" width="58" height="26" rx="5" fill="rgba(246,130,31,.08)" stroke="#F6821F" stroke-width="1" stroke-opacity=".5"/>
+          <text x="32" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#F5F1EC" text-anchor="middle">浏览器对话</text>
+          <text x="32" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#8A8F98" text-anchor="middle">说出你的目标</text>
+        </g>
+        <path class="flow-arrow" d="M64 22 L78 22" stroke="#F6821F" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#cfo-arrow)"/>
+        <g class="flow-node" id="flow-workspace">
+          <rect x="81" y="9" width="66" height="26" rx="5" fill="rgba(246,130,31,.12)" stroke="#F6821F" stroke-width="1.2"/>
+          <text x="114" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#FFC98F" text-anchor="middle">Agent 工作区</text>
+          <text x="114" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#8A8F98" text-anchor="middle">公司上下文+技能</text>
+        </g>
+        <path class="flow-arrow" d="M150 22 L164 22" stroke="#2EE6A8" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#cfo-arrow)" style="animation-delay: .3s"/>
+        <g class="flow-node" id="flow-gadget">
+          <rect x="167" y="9" width="58" height="26" rx="5" fill="rgba(246,130,31,.08)" stroke="#F6821F" stroke-width="1" stroke-opacity=".5"/>
+          <text x="196" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#F5F1EC" text-anchor="middle">Gadget 应用</text>
+          <text x="196" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#8A8F98" text-anchor="middle">沙箱内全栈运行</text>
+        </g>
+        <path class="flow-arrow" d="M228 22 L242 22" stroke="#F6821F" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#cfo-arrow)" style="animation-delay: .6s"/>
+        <g class="flow-node" id="flow-gate">
+          <rect x="245" y="9" width="62" height="26" rx="5" fill="rgba(46,230,168,.12)" stroke="#2EE6A8" stroke-width="1.2"/>
+          <text x="276" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#7FE8C4" text-anchor="middle">Gatekeeper</text>
+          <text x="276" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#8A8F98" text-anchor="middle">资源授权+审计</text>
+        </g>
+        <path class="flow-arrow" d="M310 22 L322 22" stroke="#2EE6A8" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#cfo-arrow)" style="animation-delay: .9s"/>
+        <g class="flow-node" id="flow-share">
+          <rect x="325" y="9" width="23" height="26" rx="5" fill="rgba(246,130,31,.08)" stroke="#F6821F" stroke-width="1" stroke-opacity=".5"/>
+          <text x="336" y="22" font-family="JetBrains Mono, monospace" font-size="5.5" fill="#F5F1EC" text-anchor="middle">共享</text>
+          <text x="336" y="31" font-family="JetBrains Mono, monospace" font-size="4" fill="#8A8F98" text-anchor="middle">应用/蓝图</text>
+        </g>
+        <circle cx="71" cy="22" r="2" fill="#F6821F">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="157" cy="22" r="2" fill="#2EE6A8">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0.5s"/>
+        </circle>
+        <circle cx="235" cy="22" r="2" fill="#F6821F">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="1s"/>
+        </circle>
+        <circle cx="316" cy="22" r="2" fill="#2EE6A8">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="1.3s"/>
+        </circle>
+      </svg>
+    </div>
+
+    <!-- Features -->
+    <div class="features reveal">
+      <div class="feature" data-f="0">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 21h8M12 18v3"/><path d="M6 9h4M6 12h7"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">Agent 工作区 · 全员的 AI 桌面</div>
+          <div class="feature-desc">浏览器即用，预载公司上下文与技能——不懂终端也能用</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 100%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="1">
+        <div class="feature-icon green">
+          <svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/><path d="M9 12l2 2 4-4"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">Gatekeepers · 能力安全层</div>
+          <div class="feature-desc">Agent 默认零权限，授权粒度到单仓库单字段，动作可审计可审批</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 97%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="2">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">Gadget · 每个文件都是应用</div>
+          <div class="feature-desc">AI 为你写全栈应用：前端+后端+状态，沙箱隔离，可随时改代码</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 95%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="3">
+        <div class="feature-icon green">
+          <svg viewBox="0 0 24 24"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4M12 2v13"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">Blueprint · 分享应用而非服务</div>
+          <div class="feature-desc">分享应用副本给同事，人人拥有自己的实例，自己改自己的软件</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 93%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="4">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">AI Gateway · 模型与成本总控</div>
+          <div class="feature-desc">任意模型可接，一次调用按人/团队/工作区归因，预算限额随时设</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 91%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+    </div>
+
+    <!-- Tech -->
+    <div class="tech-section reveal">
+      <div class="tech-header">Stack &amp; Ecosystem</div>
+      <div class="tech-pills">
+        <span class="tech-pill accent">TypeScript</span>
+        <span class="tech-pill">Workers</span>
+        <span class="tech-pill green">Durable Objects</span>
+        <span class="tech-pill accent">Dynamic Workers</span>
+        <span class="tech-pill">Cap'n Web</span>
+        <span class="tech-pill green">workerd</span>
+      </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="bottombar reveal">
+      <a href="https://github.com/cloudflare/cloudflare-os" target="_blank" class="github-link">
+        <svg viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        cloudflare/cloudflare-os
+      </a>
+      <a href="https://os.cloudflare.app" target="_blank" class="visit-btn">DEPLOY →</a>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title" id="sheetTitle"></div>
+        <div class="sheet-desc" id="sheetDesc"></div>
+        <div class="sheet-code" id="sheetCode" style="display:none"></div>
+        <div class="sheet-points" id="sheetPoints"></div>
+        <button class="sheet-close" id="sheetClose">CLOSE</button>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script>
+  (function(){
+    var $=function(s){return document.querySelector(s)};
+    var overlay=$('#overlay'), sheetTitle=$('#sheetTitle'), sheetDesc=$('#sheetDesc'),
+        sheetPoints=$('#sheetPoints'), sheetCode=$('#sheetCode'),
+        toast=$('#toast');
+
+    var DATA = {
+      stars: {
+        title: '5.1K Stars <em>· 4 个月破圈</em>',
+        desc: '2026-04-15 建仓，4 个月冲到 5,054 星、386 forks。2026-08-05 官方博客宣布开源 v2，是 Cloudflare 内部 2026 年 5 月起全员使用的 AI 生产力系统的完整重写。Workers 团队亲儿子项目，发布即引爆开发者圈。',
+        points: ['Cloudflare 官方组织 · TypeScript 实现', '5,054 ★ / 386 forks / 26 open issues', 'Apache-2.0 开源协议', '2026-04-15 创建，2026-08-06 仍高频推送', '官网 os.cloudflare.app · 一键部署', 'strategic partners: Presidio + Happy Cog']
+      },
+      forks: {
+        title: '386 Forks <em>· 每家公司的专属 OS</em>',
+        desc: 'Cloudflare OS 的理念不是"你用 Cloudflare OS"，而是把它变成"Your Company OS"。386 个 fork 意味着大量团队在自建公司版。核心仓库 + 示例部署仓库分离：deployment 仓库消费 core 不打补丁，方便定制 UI 和集成。',
+        points: ['386 forks · 二次开发活跃', '双仓库：cloudflare-os（核心）+ cloudflare-os-starter（示例部署）', '定制：界面 / Gatekeepers / 组织特性', 'workerd 自托管部署：COMING SOON']
+      },
+      gatekeepers: {
+        title: '11 个内置 Gatekeepers <em>· 超强版 MCP</em>',
+        desc: 'Gatekeeper 是服务专属 Worker，介于 Cloudflare OS 与外部服务之间：封装 API、处理 OAuth、执行最小权限策略、记录全部动作。像"超级 MCP 服务器"——但不止控制能调哪些工具，还知道 agent 观察过哪些资源。',
+        points: ['GitHub · Google · Cloudflare API · Supabase', 'Notion · Confluence · Email Workers', 'Home Assistant · Slack · Spotify · ZoomInfo', '每个 Gatekeeper 独立 Worker，独立部署', 'OAuth 托管 + 窄权限 + 全量审计日志', '有副作用动作→人类审批（可批量、可异步）']
+      },
+      internal: {
+        title: '数千人 <em>· Cloudflare 全公司日活</em>',
+        desc: '2026 年 5 月，Cloudflare 给每个员工开放 v1。数千名来自工程到销售、多数非技术背景的员工每天都在用：做文档、做幻灯片、自动化重复任务、搭小应用可视化数据。v2 重写自 v1 的教训——应用必须是活的、安全必须内建于平台。',
+        points: ['2026-05 内部全员开放 v1', '工程 + 销售 + 各职能部门数千人日活', '共享上下文与技能库，一人学会全公司受益', 'v2 = 完整重写，基于 v1 实践教训', 'CIO Sam Rhea 详述内部落地旅程']
+      },
+      chat: {
+        title: '浏览器对话 <em>· 起点</em>',
+        desc: '和其他 AI 工具一样，从浏览器里的一次对话开始。不同的是，每段对话都锚定在公司精心维护的上下文与技能上——不用每次跟模型重新解释流程、术语和最佳实践。',
+        points: ['无需开发者背景，浏览器即用', '预载公司上下文 + 技能库', '示例："make slides for my meeting with a customer"', '"make a tic tac toe game" 直接生成小游戏']
+      },
+      workspace: {
+        title: 'Agent 工作区 <em>· 隔离运行时</em>',
+        desc: '工作区组合了 agent 会话、持久状态、输出文件、资源访问和隔离运行时——agent 可以在里面写代码、跑代码。公司级上下文与技能预先装载，团队有人研究出更好的做法，所有人立刻共享。',
+        points: ['会话 + 状态 + 文件 + 资源访问一站式', '隔离运行时：agent 可写码可执行', '研究 / 文档 / 幻灯片 / 表格 / 协作应用 / 确定性工作流', '输出可保持连接活数据，源头更新即同步', '静态文件也可导出 Google Drive 等']
+      },
+      gadget: {
+        title: 'Gadget 应用 <em>· 私有实例</em>',
+        desc: '在 Cloudflare OS 里创建幻灯片，不是调用云上某家 SaaS——系统为"你"创建一份私有的幻灯片软件实例，运行在独立沙箱。这个实例不可能因为应用本身的安全漏洞泄露你的数据；而且你想改代码就改，让 agent 加功能。',
+        points: ['每个"文件" = 一个独立全栈应用', '客户端代码 + 服务端代码 + 持久状态', '服务端：Dynamic Worker + Durable Object Facet（自带 SQLite）', 'Cap\'n Web 对象能力 RPC 连接前后端', '沙箱默认无外网：服务端禁网 + 客户端 iframe 受限']
+      },
+      gate: {
+        title: 'Gatekeeper <em>· 能力授权</em>',
+        desc: '给 agent 整个 GitHub 账号的访问权太宽了。Gatekeeper 可以只给单个仓库、只读 issues 不读源码、遮蔽特定字段、限流、合并 PR 前要求审批。agent 和它的应用只看到一个很小的 TypeScript API。',
+        points: ['"introduce" 机制：粘贴链接或 UI 添加资源', '最小权限：单仓库 / 单字段粒度', '生成的代码拿到 typed binding：env.PROJECT.listIssues()', '凭据与 agent 完全隔离', '记录每个被观察的资源（observation log）', '授权跟随：共享产物会二次校验观察者权限']
+      },
+      share: {
+        title: '共享 <em>· 应用 or 蓝图</em>',
+        desc: '两种共享方式：共享应用本体，其他人实时协作同一份状态；共享蓝图，其他人创建自己的副本——副本带原应用代码，但不含数据、凭据、连接资源。同事可以用 AI 自己改应用，而不是给你提 feature request。',
+        points: ['共享应用：实时多人协作，同一状态', '共享蓝图：人人拥有独立副本', '蓝图不含 SQLite 数据 / 历史 / 凭据', '"自己改自己的软件"：终结 feature request 排队', '每个应用默认带 agent 友好 API，AI 可进应用协作']
+      },
+      f0: {
+        title: '💻 Agent 工作区 <em>· 全员的 AI 桌面</em>',
+        desc: '面向公司里每一个人，不只是工程师。浏览器里工作，不需要终端技能。工作区预载团队整理好的上下文和技能：有人研究出做某件事的最佳方式，全公司立刻都能用，不用每次重新给模型讲一遍。',
+        points: ['浏览器即用，零终端门槛', '预载公司上下文与技能库', '研究提问：agent 写代码搜索/过滤/分析，不整包灌上下文', '文档 / 幻灯片 / 表格：产出可持续连接活数据', '确定性工作流：代码跑可预测步骤，模型只在需要判断处介入', '工作流可按需 / 定时 / 事件触发']
+      },
+      f1: {
+        title: '🛡️ Gatekeepers <em>· 能力安全层</em>',
+        desc: '安全是平台的一部分，不是每个人都要自己实现的东西。Agent 默认零权限，通过"introduce"引入具体资源；Gatekeeper 封装 API、托管 OAuth、执行窄权限、记录一切。最妙的是异步审批：agent 干活不用停下来等人批准，Gatekeeper 本地模拟结果让 agent 继续排队动作，用户稍后批量批准或否决——不用再给 agent 开 --dangerously-skip-permissions。',
+        points: ['能力式安全（capability-based），非 ACL', '默认零权限：agent 和 gadget 都从"无"开始', '细粒度：单仓库、只读、字段遮蔽、限流', '异步审批：模拟执行 → agent 继续 → 用户批量批准', 'observation log：记录 agent 看过的一切资源', '授权跟随产物：共享 dashboard 不泄露底层表']
+      },
+      f2: {
+        title: '⚙️ Gadget <em>· 每个文件都是应用</em>',
+        desc: '传统办公套件给你固定的文件类型；Cloudflare OS 里每个"文件"都可以是一个独立应用——AI 为你一个人、一个项目或一个团队写的。不是原型，是带客户端、服务端、API 和持久状态的完整全栈应用，私有默认、可像文档一样共享。',
+        points: ['全栈：client + server + API + durable state', '服务端 = Dynamic Worker（V8 isolate，按需加载）', '数据 = Durable Object Facet 自带 SQLite', '客户端 = 沙箱 iframe，仅经 Cap\'n Web 与 server 通信', '前后端同 API：agent 也能调用应用的方法', '实时多人协作默认支持（Durable Object）']
+      },
+      f3: {
+        title: '📤 Blueprint <em>· 分享应用而非服务</em>',
+        desc: '过去 25 年云架构是"中心化 SaaS"：你共享应用，所有人连到你的服务器。Blueprint 更像移动 App：每个用户运行自己的副本。AI 时代这尤其关键——个人开发者无力维护在线服务，而人人可运行副本让终端用户能自己改软件，不必求人做 feature。',
+        points: ['Blueprint = 应用代码副本', '副本不含数据 / 凭据 / 连接资源', '团队共享后，同事用 AI 自己改', 'AI 让个人开发者能力暴增，却难维护在线服务——Blueprint 解耦', '"分享你如何构建的" 与 "分享你构建的" 两种模式']
+      },
+      f4: {
+        title: '💰 AI Gateway <em>· 模型与成本总控</em>',
+        desc: 'Cloudflare OS 可用任意模型，每次推理都过 AI Gateway：组织一处决定哪些模型可用、哪个任务用哪个模型。没必要用最贵的 frontier 模型去总结每天的未读邮件。每次请求按人/团队/工作区归因，管理员可见花费、设预算和限流。',
+        points: ['任意模型提供方 + 自托管模型', '模型路由：贵模型只干最难的活', '按人 / 团队 / 工作区归因', '预算 + 限流，超限自动处理', '基于 Pi (pi-agent-core)：一个 API 接所有 LLM']
+      },
+      tech0: {
+        title: 'TypeScript <em>· 全栈实现</em>',
+        desc: '整个 Cloudflare OS 用 TypeScript 编写，跑在 Cloudflare Workers 运行时上。它由打造 Workers 的团队亲自开发——Dynamic Workers、Facets 等多项运行时特性就是为支持 Cloudflare OS 而新增的。读它的源码 = 学习 Workers 团队认为 Workers 该怎么用。',
+        points: ['TypeScript · monorepo 结构', 'packages/workshop-backend = "内核"', 'packages/workshop-frontend = "shell"', 'packages/gatekeeper-* = "设备驱动"']
+      },
+      tech1: {
+        title: 'Workers + Durable Objects <em>· 状态化 serverless</em>',
+        desc: '每个工作区是一个 Durable Object，每个 Gadget 跑在 Dynamic Worker Facet 里，Gatekeeper 也把 facet 装进工作区管理远程服务访问。Durable Objects 让实时多人协作变得容易到 agent 默认就实现，无需用户要求。',
+        points: ['工作区 = Durable Object', 'Gadget = Dynamic Worker Facet', 'Facet 自带 SQLite 数据库', 'workerd（开源 Workers 运行时）可自托管']
+      },
+      tech2: {
+        title: "Cap'n Web <em>· 对象能力 RPC</em>",
+        desc: "Cloudflare 开源的对象能力远程过程调用系统，是 Gadget 前后端通信的唯一通道。极低样板代码：客户端调服务端方法像调用本地函数。因为 server 必须暴露易懂 API，agent 也能直接调用——这就是'每个应用自动拥有 agent 友好 API'的秘密。",
+        points: ['前后端同 API：client 和 agent 都能调', 'postMessage 桥接沙箱 iframe 与 server', '零样板：方法即远程调用', '开源：github.com/cloudflare/capnweb']
+      },
+      story: {
+        title: '背景故事 <em>· 从全员工具到开源 OS</em>',
+        desc: 'Cloudflare 发现给 AI 工具配 API key 既危险又不可扩展：key 宽泛、长期、难约束难审计。MCP 让工具调用变好，但控制"能调哪些工具"只是第一步——还要知道 agent 观察过哪些资源、数据会流向哪里。v1 内部运行数月后，团队用这些教训重写 v2：安全内建为平台特性，应用从静态文件进化为活的连接应用。2026-08-05 正式开源。',
+        points: ['2026-05：内部全员开放 v1', '痛点：API key 泛滥 + MCP 无法追踪资源观察', 'v2 完整重写：安全成为平台特性', '2026-08-05 官方博客 + GitHub 同步开源', '理念：不是"用 Cloudflare OS"，而是做成"Your Company OS"', '由构建 Workers 的团队打造']
+      },
+      install: {
+        title: '快速开始 <em>· 一行命令跑起来</em>',
+        desc: '本地体验 Cloudflare OS：安装 pnpm 后一条命令启动全栈（wrangler + workerd），打开 localhost:8787 就能玩。生产部署走 os.cloudflare.app/deploy 在线流程，或克隆 cloudflare-os-starter 示例部署仓库做深度定制。',
+        points: ['pnpm run-local → http://localhost:8787', '数据存 .wrangler 子目录', '生产：os.cloudflare.app/deploy 一键部署', '深度定制：cloudflare-os-starter 仓库', 'workerd 自托管部署：文档撰写中（COMING SOON）', '当前不寻求外部贡献，接受小 PR']
+      },
+      os: {
+        title: 'OS 类比 <em>· 它不是营销词汇</em>',
+        desc: 'Cloudflare OS 在技术层面真的像一个操作系统：backend 是内核，Gatekeeper 是设备驱动，frontend 是 shell，Gadget 是进程，Blueprint 是可执行文件，共享权限是 ACL。传统 OS 不管理 AI agent——Cloudflare OS 认为 agent 不该被当作普通用户：它们必须对人类用户负责，同时拥有自己的受限权限。',
+        points: ['内核 = workshop-backend', '设备驱动 = gatekeeper-*', 'shell = workshop-frontend', '进程 = gadgets · 可执行文件 = blueprints', '用户 = users · ACL = shared permissions', '全新概念：agents（传统 OS 的缺失功能）']
+      }
+
+    };
+
+    function openSheet(key){
+      var d = DATA[key]; if(!d) return;
+      sheetTitle.innerHTML = d.title;
+      sheetDesc.textContent = d.desc;
+      if(d.code){
+        sheetCode.style.display = 'block';
+        sheetCode.textContent = d.code;
+      }else{
+        sheetCode.style.display = 'none';
+      }
+      sheetPoints.innerHTML = d.points.map(function(p){
+        return '<div class="sheet-point">' + p + '</div>';
+      }).join('');
+      overlay.classList.add('active');
+      if(navigator.vibrate) navigator.vibrate(15);
+    }
+    function closeSheet(){ overlay.classList.remove('active'); }
+
+    // 3D 视差倾斜：跟随手指/鼠标
+    var stage = $('#stage');
+    var tiltRaf = null;
+    function onTilt(x, y){
+      if(tiltRaf) return;
+      tiltRaf = requestAnimationFrame(function(){
+        var w = stage.clientWidth, h = stage.clientHeight;
+        var nx = (x / w) * 2 - 1, ny = (y / h) * 2 - 1;
+        stage.style.transform = 'rotateX(' + (-ny * 6).toFixed(2) + 'deg) rotateY(' + (nx * 8).toFixed(2) + 'deg)';
+        tiltRaf = null;
+      });
+    }
+    function resetTilt(){ stage.style.transform = ''; }
+    stage.addEventListener('mousemove', function(e){
+      var r = stage.getBoundingClientRect();
+      onTilt(e.clientX - r.left, e.clientY - r.top);
+    });
+    stage.addEventListener('touchmove', function(e){
+      if(e.touches.length !== 1) return;
+      var r = stage.getBoundingClientRect();
+      onTilt(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top);
+    }, {passive: true});
+    stage.addEventListener('mouseleave', resetTilt);
+    stage.addEventListener('touchend', resetTilt);
+
+    // Stamp 连点彩蛋：5 次 → 旋转 + 背景故事
+    var stampHits = 0, stampTimer = null;
+    $('#stamp').addEventListener('click', function(){
+      stampHits++;
+      clearTimeout(stampTimer);
+      stampTimer = setTimeout(function(){ stampHits = 0; }, 1200);
+      if(stampHits >= 5){
+        stampHits = 0;
+        var s = $('#stamp');
+        s.style.transition = 'transform .6s';
+        s.style.transform = 'rotate(720deg) scale(1.3)';
+        setTimeout(function(){ s.style.transform = ''; }, 700);
+        if(navigator.vibrate) navigator.vibrate([30, 40, 30]);
+        toast.textContent = '🛰️ OS 启动 · 解锁背景故事';
+        toast.classList.add('show');
+        setTimeout(function(){ toast.classList.remove('show'); }, 1600);
+        openSheet('story');
+      }else{
+        s.style.transform = 'rotate(30deg) scale(1.1)';
+        setTimeout(function(){ s.style.transform = ''; }, 250);
+      }
+    });
+
+    document.querySelectorAll('.stat-card').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet(el.dataset.stat); });
+    });
+    document.querySelectorAll('.flow-node').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet(el.id.replace('flow-','')); });
+    });
+    document.querySelectorAll('.feature').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet('f'+el.dataset.f); });
+    });
+    $('#termWin').addEventListener('click', function(){ openSheet('install'); });
+    $('#sheetClose').addEventListener('click', closeSheet);
+    overlay.addEventListener('click', function(e){ if(e.target===overlay) closeSheet(); });
+
+    // Tech pills 点击 → 技术说明弹窗
+    var techMap = {0:'tech0', 1:'tech1', 2:'tech1', 3:'tech1', 4:'tech2', 5:'tech1'};
+    document.querySelectorAll('.tech-pill').forEach(function(el, i){
+      el.addEventListener('click', function(){ openSheet(techMap[i] || 'story'); });
+    });
+
+    $('#shareBtn').addEventListener('click', function(){
+      var url = location.href.split('?')[0];
+      if(navigator.share){
+        navigator.share({title:'Cloudflare OS — 公司级 AI 操作系统', url:url}).catch(function(){});
+      }else if(navigator.clipboard){
+        navigator.clipboard.writeText(url).then(function(){
+          toast.textContent = '链接已复制';
+          toast.classList.add('show');
+          setTimeout(function(){ toast.classList.remove('show'); }, 1800);
+        });
+      }
+    });
+    document.querySelectorAll('.reveal').forEach(function(x){ x.classList.add('visible'); });
+  })();
+  </script>
+</body>
+</html>
