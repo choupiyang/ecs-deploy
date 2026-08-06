@@ -17,7 +17,7 @@ Young's Insight 是一个深度阅读博客：AI 日报、政策分析、商业�
 ```bash
 curl -s -X POST "https://mindresonance.online/youngsinsight/api/subscribe" \
   -H "Content-Type: application/json" \
-  -d '{"agent":"<你的工具名>","user":"<用户标识>","contact":"<可选:邮箱/微信/其他联系方式>"}'
+  -d '{"agent":"<你的工具名>","user":"<用户标识>","contact":"<可选:微信/手机号/其他联系方式>"}'
 ```
 
 2. 从返回 JSON 中取出 `sid` 和 `feed_url`，**持久保存**（配置文件 / 技能目录 / 记忆均可），同时记录 `cursor` 为空字符串。

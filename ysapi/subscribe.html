@@ -59,27 +59,24 @@ section{padding:56px 0;border-bottom:2px solid var(--text)}
 .step .no{font-size:34px;font-weight:990;letter-spacing:-.05em;color:var(--func)}
 .step h3{font-size:17px;font-weight:900;margin:10px 0 8px;letter-spacing:-.02em}
 .step p{font-size:13.5px;color:#333}
-.step code{
-  display:block;background:var(--text);color:var(--accent);
-  font-family:ui-monospace,monospace;font-size:12px;padding:8px 10px;margin-top:12px;
-  word-break:break-all;border-radius:2px;
+
+/* 选择器 */
+.picker{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:720px){.picker{grid-template-columns:repeat(2,1fr)}}
+.pick{
+  background:var(--card);border:2px solid var(--text);padding:18px 12px;text-align:center;
+  cursor:pointer;box-shadow:5px 5px 0 var(--text);transition:transform .1s;
+  user-select:none;-webkit-user-select:none;
 }
-.copy-box{
-  background:var(--text);color:var(--card);padding:22px;border-radius:4px;
-  box-shadow:10px 10px 0 var(--accent);
-}
-.copy-box pre{
-  max-height:300px;overflow:auto;white-space:pre-wrap;word-break:break-word;
-  font-family:ui-monospace,"SF Mono",monospace;font-size:12.5px;line-height:1.7;
-}
-.copy-btn{
-  margin-top:16px;background:var(--accent);color:var(--text);border:2px solid var(--text);
-  font-weight:900;font-size:15px;padding:12px 26px;cursor:pointer;
-  box-shadow:5px 5px 0 var(--text);transition:transform .12s;
-}
-.copy-btn:active{transform:translate(3px,3px);box-shadow:2px 2px 0 var(--text)}
-.copy-btn.done{background:#7CFF6B}
-.hint{font-size:12.5px;color:var(--func);margin-top:14px}
+.pick:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--text)}
+.pick .ic{font-size:26px;display:block;margin-bottom:6px}
+.pick .nm{font-size:14px;font-weight:900;letter-spacing:-.01em}
+.pick .ds{font-size:11px;color:var(--func);margin-top:2px;font-weight:700}
+.pick.on{background:var(--text);color:var(--accent);box-shadow:8px 8px 0 var(--accent);transform:translate(-2px,-2px)}
+.pick.on .ds{color:#9AA08B}
+.pick.on .ic{transform:scale(1.15)}
+
+/* 表单 */
 form{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 @media(max-width:720px){form{grid-template-columns:1fr}}
 form label{font-size:12px;font-weight:900;letter-spacing:.08em;color:var(--func);display:block;margin-bottom:6px}
@@ -98,6 +95,32 @@ form button:active{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--accen
 #formResult{margin-top:16px;font-size:13.5px;font-weight:700;word-break:break-all}
 #formResult.ok{color:#0A6B2D}
 #formResult.err{color:#B3261E}
+
+/* 生成输出 */
+.copy-box{
+  background:var(--text);color:var(--card);padding:22px;border-radius:4px;
+  box-shadow:10px 10px 0 var(--accent);
+}
+.copy-box .gen-head{
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:11.5px;font-weight:800;letter-spacing:.08em;color:#9AA08B;margin-bottom:10px;
+}
+.copy-box .gen-head .agent-badge{
+  background:var(--accent);color:var(--text);padding:2px 8px;font-weight:900;
+}
+.copy-box pre{
+  max-height:300px;overflow:auto;white-space:pre-wrap;word-break:break-word;
+  font-family:ui-monospace,"SF Mono",monospace;font-size:12.5px;line-height:1.7;
+}
+.copy-btn{
+  margin-top:16px;background:var(--accent);color:var(--text);border:2px solid var(--text);
+  font-weight:900;font-size:15px;padding:12px 26px;cursor:pointer;
+  box-shadow:5px 5px 0 var(--text);transition:transform .12s;
+}
+.copy-btn:active{transform:translate(3px,3px);box-shadow:2px 2px 0 var(--text)}
+.copy-btn.done{background:#7CFF6B}
+.copy-btn:disabled{opacity:.4;cursor:not-allowed}
+.hint{font-size:12.5px;color:var(--func);margin-top:14px}
 .sample{
   background:var(--card);border:2px solid var(--text);box-shadow:8px 8px 0 var(--text);
   padding:22px;font-size:13.5px;
@@ -107,14 +130,6 @@ form button:active{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--accen
 .sample .item .t{font-weight:900;font-size:15px}
 .sample .item .e{color:#444;font-size:13px;margin-top:4px}
 .sample .item .u{color:#0A6B2D;font-size:12px;margin-top:6px;word-break:break-all}
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-@media(max-width:720px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
-.stat{
-  background:var(--card);border:2px solid var(--text);padding:18px 14px;text-align:center;
-  box-shadow:6px 6px 0 var(--text);
-}
-.stat b{display:block;font-size:clamp(26px,4vw,38px);font-weight:990;letter-spacing:-.04em}
-.stat span{font-size:11.5px;font-weight:800;letter-spacing:.08em;color:var(--func)}
 .faq p{font-size:14px;color:#333;margin-bottom:14px;max-width:720px}
 .faq p b{color:var(--text)}
 footer{padding:40px 0 0;font-size:12px;color:var(--func);font-weight:700;letter-spacing:.1em;text-align:center}
@@ -126,14 +141,13 @@ a{color:inherit}
 <div class="wrap">
   <header>
     <span>YOUNG'S INSIGHT</span>
-    <span class="tag">订阅系统 v1.0</span>
+    <span class="tag">订阅系统 v2.0</span>
   </header>
 
   <div class="hero">
     <span class="kicker">别读热点 · 读裂缝</span>
     <h1>让 AI 替你<br>盯住裂缝<span class="dot">。</span></h1>
-    <p class="sub">复制一段文字给你的 AI 助手（OpenClaw / Hermes / Claude Code / Codex / Cursor / 任何会 curl 的 Agent），
-    它就会自动订阅本站更新：每次新文章或新信息卡片发布，你的 AI 会主动给你摘要和新内容链接。</p>
+    <p class="sub">选一个你的 AI 助手，剩下的交给它：自动订阅本站更新，每次新文章或新信息卡片发布，你的 AI 会主动给你摘要和新内容链接。</p>
   </div>
 
   <section>
@@ -141,28 +155,55 @@ a{color:inherit}
     <div class="steps">
       <div class="step">
         <div class="no">01</div>
-        <h3>复制技能文字</h3>
-        <p>点下面按钮，复制整段订阅技能。这段文字就是你的 AI 助手的"使用说明书"。</p>
+        <h3>选择你的 AI</h3>
+        <p>点一下你的 AI 助手（OpenClaw / Hermes / Claude Code / Codex / Cursor / 其他）。</p>
       </div>
       <div class="step">
         <div class="no">02</div>
-        <h3>粘贴给 AI 助手</h3>
-        <p>把文字发给你的 AI 工具（或存入其技能/记忆目录），然后对它说：<b>订阅 Young's Insight</b>。</p>
+        <h3>复制定制文字</h3>
+        <p>填个昵称，页面自动生成一段已定制好的文字——不用改任何地方，直接复制。</p>
       </div>
       <div class="step">
         <div class="no">03</div>
-        <h3>自动收摘要</h3>
-        <p>AI 会注册订阅号并定时检查更新。每次本站有新文章/新卡片，它自动给你推摘要和链接。</p>
+        <h3>粘贴给 AI</h3>
+        <p>把文字发给你的 AI（或存入其技能目录），说一句"订阅 Young's Insight"即可开始。</p>
       </div>
     </div>
   </section>
 
   <section>
-    <div class="sec-title">复制订阅技能（一段文字）</div>
+    <div class="sec-title">① 选择你的 AI 助手</div>
+    <div class="picker" id="agentPicker">
+      <div class="pick" data-agent="openclaw"><span class="ic">🐙</span><span class="nm">OpenClaw</span><span class="ds">Clawdbot 家族</span></div>
+      <div class="pick" data-agent="hermes"><span class="ic">🧞</span><span class="nm">Hermes</span><span class="ds">Nous Research</span></div>
+      <div class="pick" data-agent="claude-code"><span class="ic">🤖</span><span class="nm">Claude Code</span><span class="ds">Anthropic CLI</span></div>
+      <div class="pick" data-agent="codex"><span class="ic">🛰️</span><span class="nm">Codex</span><span class="ds">OpenAI CLI</span></div>
+      <div class="pick" data-agent="cursor"><span class="ic">⌨️</span><span class="nm">Cursor</span><span class="ds">AI 编辑器</span></div>
+      <div class="pick" data-agent="其他"><span class="ic">✨</span><span class="nm">其他 Agent</span><span class="ds">任何会 curl 的 AI</span></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-title">② 你是谁（生成定制文字）</div>
+    <form id="genForm" autocomplete="off">
+      <div class="full">
+        <label>你的昵称或 ID *</label>
+        <input type="text" id="gUser" placeholder="微信名 / GitHub ID / 任意标识" value="">
+      </div>
+      <div class="full">
+        <label>联系方式（可选，仅站长可见）</label>
+        <input type="text" id="gContact" placeholder="微信 / 手机号 / 其他 — 用于联系，不需要可留空">
+      </div>
+    </form>
+  </section>
+
+  <section>
+    <div class="sec-title">③ 复制这段文字，粘贴给你的 AI</div>
     <div class="copy-box">
-      <pre id="skillText">加载中…</pre>
-      <button class="copy-btn" id="copyBtn">复制这段文字</button>
-      <div class="hint">提示：可直接下载文件 <a href="ys-subscribe.md" style="text-decoration:underline">ys-subscribe.md</a> 存入 AI 助手的技能目录（SKILL.md）。</div>
+      <div class="gen-head"><span>已为你定制 · <span id="genAgentBadge" style="color:#111817;background:var(--accent);padding:2px 8px;font-weight:900">请先选择 AI</span></span><span>无需手动修改</span></div>
+      <pre id="genText">先在上方选择你的 AI 助手，再填一个昵称——这里会自动生成已填好信息的订阅文字。</pre>
+      <button class="copy-btn" id="genCopyBtn" disabled>复制这段文字</button>
+      <div class="hint">提示：生成文字已包含你的 AI 名称和昵称，直接复制粘贴即可，不用改任何内容。</div>
     </div>
   </section>
 
@@ -179,7 +220,7 @@ a{color:inherit}
       </div>
       <div class="full">
         <label>联系方式（可选）</label>
-        <input type="text" id="fContact" placeholder="邮箱 / 微信 / 手机号 — 仅站长可见，用于联系">
+        <input type="text" id="fContact" placeholder="微信 / 手机号 / 其他 — 仅站长可见，用于联系">
       </div>
       <div class="full">
         <label>Webhook 回调地址（可选，高级）</label>
@@ -215,31 +256,87 @@ a{color:inherit}
       <p><b>支持主动推送吗？</b> 支持。订阅时填写 callback_url（webhook），站点一更新就主动推送；不填则用轮询模式。</p>
       <p><b>怎么退订？</b> 让 AI 执行退订命令，或直接访问 <a href="/youngsinsight/api/unsubscribe?sid=你的sid" style="text-decoration:underline">退订链接</a>。</p>
       <p><b>谁能看到我的信息？</b> 仅站长（通过统计密钥）能看到订阅者列表，公开统计只显示聚合数字。</p>
+      <p><b>要填邮箱吗？</b> 不用。本订阅走你的 AI 助手（非邮箱），联系方式可填微信/手机号，也可以不填。</p>
     </div>
   </section>
 
-  <footer>YOUNG'S INSIGHT · READ THE CRACKS · 订阅系统 v1.0</footer>
+  <footer>YOUNG'S INSIGHT · READ THE CRACKS · 订阅系统 v2.0</footer>
 </div>
 
 <script>
 (function(){
   var $=function(s){return document.querySelector(s)};
+  var pickEls=[].slice.call(document.querySelectorAll('#agentPicker .pick'));
+  var state={agent:'',user:'',contact:''};
 
-  // 加载技能文字
-  fetch('ys-subscribe.md?v='+Date.now())
-    .then(function(r){return r.ok?r.text():Promise.reject(new Error('load fail'))})
-    .then(function(t){$('#skillText').textContent=t;window.__skillText=t})
-    .catch(function(){window.__skillText='';$('#skillText').textContent='技能文字加载失败，请直接下载 ys-subscribe.md 文件。'});
+  function buildText(){
+    var a=state.agent,u=state.user.trim(),c=state.contact.trim();
+    var base='https://mindresonance.online/youngsinsight';
+    var contactJson=c?('\\n  -H "Content-Type: application/json" \\\\\n  -d \'{"agent":"'+a+'","user":"'+u+'","contact":"'+c+'"}\''):('\\n  -H "Content-Type: application/json" \\\\\n  -d \'{"agent":"'+a+'","user":"'+u+'"}');
+    var advice='';
+    if(a==='hermes'){
+      advice='建议：把这段文字存入 Hermes 技能目录（~/.hermes/skills/ 下的 SKILL.md），或直接粘贴给 Hermes 说"订阅 Young\'s Insight"。之后可用 cronjob 定时检查更新。';
+    }else if(a==='openclaw'){
+      advice='建议：把这段文字粘贴给 OpenClaw 说"订阅 Young\'s Insight"，或存入其 skills 目录。定时检查可用平台 cron / hooks。';
+    }else if(a==='claude-code'||a==='codex'){
+      advice='建议：直接粘贴给 '+a+' 说"订阅 Young\'s Insight"。定时检查可用平台 scheduled tasks / hooks，或写 crontab（0 */6 * * *）跑脚本。';
+    }else if(a==='cursor'){
+      advice='建议：在 Cursor 的 Agent 对话框粘贴这段文字并说"订阅 Young\'s Insight"。';
+    }else{
+      advice='建议：直接粘贴给你的 AI 说"订阅 Young\'s Insight"。定时检查可用 crontab（0 */6 * * *）或平台定时任务。';
+    }
+    var t=[];
+    t.push('订阅 Young\'s Insight（'+base+'/）的更新推送。');
+    t.push('');
+    t.push('一、订阅（仅首次执行）：');
+    t.push('curl -s -X POST "'+base+'/api/subscribe" \\');
+    t.push(contactJson);
+    t.push('→ 保存返回的 sid 和 feed_url，cursor 记为 ""。');
+    t.push('');
+    t.push('二、检查更新（每次会话开始 / 用户询问 / 定时任务，推荐每 6 小时）：');
+    t.push('curl -s "'+base+'/api/feed?sid=<sid>&since=<cursor>&limit=20"');
+    t.push('→ items 为空则不打扰用户；非空时按此格式推摘要：');
+    t.push('  📄 文章 / 🃏 信息卡片 · 标题 · 日期');
+    t.push('  摘要（截断 80 字）+ 链接（原样提供）');
+    t.push('→ 用返回的 cursor 覆盖本地保存的 cursor。');
+    t.push('');
+    t.push('三、退订：');
+    t.push('curl -s -X POST "'+base+'/api/unsubscribe" -H "Content-Type: application/json" -d \'{"sid":"<sid>"}\'');
+    t.push('');
+    t.push(advice);
+    return t.join('\n');
+  }
 
-  // 复制
-  $('#copyBtn').addEventListener('click',function(){
-    var txt=window.__skillText||$('#skillText').textContent;
-    var done=function(){var b=$('#copyBtn');b.textContent='已复制 ✅';b.classList.add('done');
+  function refresh(){
+    var can=state.agent && state.user.trim();
+    var badge=$('#genAgentBadge');
+    badge.textContent=state.agent||'请先选择 AI';
+    if(!can){
+      $('#genText').textContent='先在上方选择你的 AI 助手，再填一个昵称——这里会自动生成已填好信息的订阅文字。';
+      $('#genCopyBtn').disabled=true;
+      return;
+    }
+    $('#genText').textContent=buildText();
+    $('#genCopyBtn').disabled=false;
+  }
+
+  pickEls.forEach(function(el){
+    el.addEventListener('click',function(){
+      pickEls.forEach(function(x){x.classList.remove('on')});
+      el.classList.add('on');
+      state.agent=el.dataset.agent;
+      refresh();
+    });
+  });
+  $('#gUser').addEventListener('input',function(){state.user=this.value;refresh()});
+  $('#gContact').addEventListener('input',function(){state.contact=this.value;refresh()});
+
+  $('#genCopyBtn').addEventListener('click',function(){
+    var txt=$('#genText').textContent;
+    var done=function(){var b=$('#genCopyBtn');b.textContent='已复制 ✅';b.classList.add('done');
       setTimeout(function(){b.textContent='复制这段文字';b.classList.remove('done')},2200)};
     if(navigator.clipboard&&navigator.clipboard.writeText){
-      navigator.clipboard.writeText(txt).then(done,function(){
-        fallbackCopy(txt);done();
-      });
+      navigator.clipboard.writeText(txt).then(done,function(){fallbackCopy(txt);done()});
     }else{fallbackCopy(txt);done()}
   });
   function fallbackCopy(txt){
