@@ -234,18 +234,10 @@ a{color:inherit}
   <section>
     <div class="sec-title">你会收到什么</div>
     <div class="sample">
-      <div class="head"><span>YOUNG'S INSIGHT · 更新摘要</span><span>2026-08-04</span></div>
-      <div class="item">
-        <div class="t">📄 AI新发现日报 | EU监管地震·中美AI博弈·投资泡沫</div>
-        <div class="e">EU《AI法案》正式执行，AI生成内容强制标注。中国军方蒸馏美国AI模型引争议……</div>
-        <div class="u">https://mindresonance.online/youngsinsight/ai-daily-20260803.html</div>
-      </div>
-      <div class="item">
-        <div class="t">🃏 LoopX — AI 浏览器 Agent</div>
-        <div class="e">让 Agent 像人一样操作浏览器，多步任务自动执行。</div>
-        <div class="u">https://mindresonance.online/youngsinsight/pages/loopx.html</div>
-      </div>
+      <div class="head"><span>YOUNG'S INSIGHT · 最新 3 条更新</span><span id="latestDate">实时拉取中…</span></div>
+      <div id="latestItems"><div class="item"><div class="e">加载最新内容…</div></div></div>
     </div>
+    <div class="hint" style="margin-top:14px">以上为本站最新 3 条内容（实时），订阅后你的 AI 会按这个格式给你推摘要和链接。</div>
   </section>
 
   <section>
@@ -346,6 +338,39 @@ a{color:inherit}
     try{document.execCommand('copy')}catch(e){}
     document.body.removeChild(ta);
   }
+
+  // 你会收到什么 —— 自动拉取最新 3 条（文章 + 卡片合并按日期排序）
+  function loadLatest(){
+    var itemsEl=$('#latestItems');
+    if(!itemsEl) return;
+    var ts=Date.now();
+    Promise.all([
+      fetch('articles.json?v='+ts).then(function(r){return r.ok?r.json():[]}).catch(function(){return []}),
+      fetch('cards.json?v='+ts).then(function(r){return r.ok?r.json():[]}).catch(function(){return []})
+    ]).then(function(arr){
+      var all=[];
+      (arr[0]||[]).forEach(function(a){
+        if(!a||!a.title||!a.date||!a.file) return;
+        all.push({t:'📄 文章',title:a.title,exc:(a.excerpt||a.description||'').slice(0,80),
+          url:'/youngsinsight/'+a.file,date:a.date});
+      });
+      (arr[1]||[]).forEach(function(c){
+        if(!c||!c.title||!c.date||!c.page) return;
+        all.push({t:'🃏 信息卡片',title:c.title,exc:(c.subtitle||'').slice(0,80),
+          url:'/youngsinsight/'+c.page,date:c.date});
+      });
+      all.sort(function(x,y){return x.date<y.date?1:x.date>y.date?-1:0});
+      var top=all.slice(0,3);
+      if(!top.length) return;
+      var d=$('#latestDate'); if(d) d.textContent=top[0].date;
+      itemsEl.innerHTML=top.map(function(it){
+        return '<div class="item"><div class="t">'+it.t+' · '+it.title+'</div>'+
+          '<div class="e">'+it.exc+'</div>'+
+          '<div class="u">https://mindresonance.online'+it.url+'</div></div>';
+      }).join('');
+    });
+  }
+  loadLatest();
 
   // 手动注册
   $('#subForm').addEventListener('submit',function(ev){
