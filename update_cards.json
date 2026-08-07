@@ -1,10 +1,10 @@
 {
-  "id": "pi",
-  "title": "Pi",
-  "subtitle": "AI Agent 工具包 · 生态中心 · 85.2K★",
-  "image": "cards/pi-cover.svg",
-  "page": "pages/pi.html",
-  "tags": ["AI Agent", "LLM API", "TUI", "开源", "85.2K★"],
-  "date": "2026-08-07",
+  "id": "agent-plugins",
+  "title": "Agent Plugins",
+  "subtitle": "Skills + MCP 打包标准 · 大厂联合 · 546★",
+  "image": "cards/agent-plugins-cover.svg",
+  "page": "pages/agent-plugins.html",
+  "tags": ["Agent Plugins", "MCP", "Agent Skills", "开源规范", "打包标准", "546★"],
+  "date": "2026-08-08",
   "type": "recommendation"
 }

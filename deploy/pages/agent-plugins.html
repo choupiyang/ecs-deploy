@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0D1117">
+  <title>Agent Plugins — AI 组件打包标准</title>
+  <link rel="preconnect" href="https://fonts.googleapis.cn">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.cn/css2?family=Noto+Serif+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0D1117;
+      --bg-2: #161B22;
+      --accent: #58A6FF;
+      --accent-deep: #1F6FEB;
+      --ice: #D6E7FF;
+      --text: #F0F6FC;
+      --muted: #8B949E;
+      --success: #3FB950;
+      --surface: #161B22;
+      --serif: 'Noto Serif SC', serif;
+      --cn: 'Noto Sans SC', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; background: #060A0F; font-family: 'Noto Sans SC', sans-serif; color: #F0F6FC; -webkit-font-smoothing: antialiased; }
+    body { display: flex; align-items: center; justify-content: center; }
+
+    .stage {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      height: min(100vh, calc(100vw * 16 / 9));
+      width: min(100vw, calc(100vh * 9 / 16));
+      background: #0D1117;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,.6);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 16px 10px;
+      perspective: 1000px;
+      transform-style: preserve-3d;
+      transition: transform .12s ease-out;
+    }
+    .tilt-deep { transform: translateZ(-50px) scale(1.08); }
+    .tilt-mid { transform: translateZ(0); }
+    .tilt-front { transform: translateZ(45px); }
+
+    /* CSS 3D 打包立方体（零依赖）——六个面 = 插件组件，装箱意象
+       ⚠️ 左右两栏：特效方块放 Hero 左侧 ~118px，禁全宽占位/absolute 覆盖文字 */
+    .pkg3d {
+      position: relative;
+      flex-shrink: 0;
+      width: 118px;
+      height: 118px;
+      margin: 0;
+      z-index: 1;
+      pointer-events: none;
+      transform-style: preserve-3d;
+      perspective: 420px;
+    }
+    /* 立方体容器：整体绕 Y 轴缓转 */
+    .pkg-cube {
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 56px; height: 56px;
+      margin: -28px 0 0 -28px;
+      transform-style: preserve-3d;
+      animation: cubeSpin 16s linear infinite;
+    }
+    @keyframes cubeSpin {
+      from { transform: rotateX(-18deg) rotateY(0deg); }
+      to   { transform: rotateX(-18deg) rotateY(360deg); }
+    }
+    .pkg-cube .face {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 5.5px;
+      letter-spacing: .04em;
+      color: #B3D4FF;
+      background: rgba(88, 166, 255, .10);
+      border: 1px solid rgba(88, 166, 255, .45);
+      box-shadow: 0 0 12px rgba(88, 166, 255, .08) inset;
+      text-align: center;
+      line-height: 1.3;
+    }
+    .face.f-front  { transform: translateZ(28px); }
+    .face.f-back   { transform: rotateY(180deg) translateZ(28px); }
+    .face.f-right  { transform: rotateY(90deg) translateZ(28px); }
+    .face.f-left   { transform: rotateY(-90deg) translateZ(28px); }
+    .face.f-top    { transform: rotateX(90deg) translateZ(28px); }
+    .face.f-bottom { transform: rotateX(-90deg) translateZ(28px); }
+    /* 六个面的标签 */
+    .face.f-front::after { content: 'plugin.json'; }
+    .face.f-back::after  { content: 'skills/'; }
+    .face.f-right::after { content: 'mcp.json'; }
+    .face.f-left::after  { content: 'SKILL.md'; }
+    .face.f-top::after   { content: '📦'; font-size: 16px; }
+    .face.f-bottom::after{ content: '1.0.0'; color: #3FB950; }
+    /* 立方体辉光 */
+    .pkg-cube::before {
+      content: '';
+      position: absolute;
+      inset: -14px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(88,166,255,.22), transparent 70%);
+      animation: corePulse 3.4s ease-in-out infinite;
+    }
+    @keyframes corePulse { 0%, 100% { opacity: .6; } 50% { opacity: 1; } }
+
+    /* 组件块：从外围飞入盒子的"装箱"粒子 */
+    .pkg3d .box-fly {
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 10px; height: 10px;
+      border-radius: 2px;
+      background: rgba(88, 166, 255, .75);
+      box-shadow: 0 0 8px rgba(88, 166, 255, .7);
+      transform-style: preserve-3d;
+    }
+    .box-fly.b1 { animation: flyIn 5.2s ease-in-out infinite; }
+    .box-fly.b2 { width: 8px; height: 8px; background: rgba(63, 185, 80, .8); box-shadow: 0 0 8px rgba(63,185,80,.6); animation: flyIn 6.4s ease-in-out infinite .8s; }
+    .box-fly.b3 { width: 6px; height: 6px; background: rgba(210, 153, 34, .85); box-shadow: 0 0 8px rgba(210,153,34,.6); animation: flyIn 7.6s ease-in-out infinite 1.6s; }
+    @keyframes flyIn {
+      0%   { transform: translateX(52px) translateY(-8px) rotateZ(0deg); opacity: 0; }
+      15%  { opacity: 1; }
+      55%  { transform: translateX(0) translateY(0) rotateZ(180deg); opacity: 1; }
+      70%  { opacity: 0; transform: translateX(0) translateY(0) rotateZ(180deg) scale(1.6); }
+      100% { opacity: 0; transform: translateX(0) translateY(0) rotateZ(180deg); }
+    }
+    /* 外围轨道虚线环（打包带的意象） */
+    .pkg3d .strap {
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 108px; height: 108px;
+      margin: -54px 0 0 -54px;
+      border: 1px dashed rgba(88, 166, 255, .22);
+      border-radius: 50%;
+      animation: strapSpin 22s linear infinite;
+      transform-style: preserve-3d;
+    }
+    @keyframes strapSpin { from { transform: rotateX(70deg) rotateZ(0); } to { transform: rotateX(70deg) rotateZ(360deg); } }
+    .pkg3d .strap2 {
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 76px; height: 76px;
+      margin: -38px 0 0 -38px;
+      border: 1px dashed rgba(63, 185, 80, .16);
+      border-radius: 50%;
+      animation: strapSpinRev 14s linear infinite;
+      transform-style: preserve-3d;
+    }
+    @keyframes strapSpinRev { from { transform: rotateX(70deg) rotateZ(360deg); } to { transform: rotateX(70deg) rotateZ(0); } }
+
+    /* 浮动数据粒子（3D 视差前景） */
+    .flakes { position: absolute; inset: 0; pointer-events: none; z-index: 3; overflow: hidden; }
+    .flake {
+      position: absolute;
+      width: 8px; height: 8px;
+      border: 1px solid rgba(88, 166, 255, .4);
+      border-radius: 2px;
+      opacity: .5;
+      animation: floatY 6s ease-in-out infinite;
+    }
+    .flake.f1 { left: 6%; top: 20%; animation-delay: 0s; }
+    .flake.f2 { left: 90%; top: 28%; width: 6px; height: 6px; animation-delay: 1.2s; }
+    .flake.f3 { left: 12%; top: 70%; width: 5px; height: 5px; border-color: rgba(63, 185, 80, .4); animation-delay: 2.1s; }
+    .flake.f4 { left: 86%; top: 74%; width: 7px; height: 7px; animation-delay: .6s; }
+    .flake.f5 { left: 50%; top: 14%; width: 5px; height: 5px; border-color: rgba(210, 153, 34, .5); animation-delay: 1.8s; }
+    @keyframes floatY {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-14px) rotate(90deg); }
+    }
+    /* 探索 hint 角标 */
+    .hint-badge {
+      position: relative;
+      z-index: 5;
+      align-self: flex-start;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      letter-spacing: .18em;
+      color: #7DA6D9;
+      border: 1px dashed rgba(88, 166, 255, .35);
+      border-radius: 10px;
+      padding: 2px 8px;
+      margin-top: 5px;
+      flex-shrink: 0;
+      animation: hintPulse 2.4s ease-in-out infinite;
+    }
+    @keyframes hintPulse {
+      0%, 100% { opacity: .55; }
+      50% { opacity: 1; box-shadow: 0 0 12px rgba(88, 166, 255, .25); }
+    }
+    .stage::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 38% at 78% 2%, rgba(88, 166, 255, .10) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 35% at 8% 45%, rgba(31, 111, 235, .08) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 50% 100%, rgba(13, 17, 23, .95) 0%, transparent 60%);
+    }
+    .stage::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(rgba(240, 246, 252, .012) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(240, 246, 252, .012) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    /* 顶部条 */
+    .topbar {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .16em;
+      color: #8B949E;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(240, 246, 252, .06);
+    }
+    .brand { display: flex; align-items: center; gap: 6px; color: #F0F6FC; }
+    .brand-dot { width: 5px; height: 5px; background: #58A6FF; border-radius: 50%; box-shadow: 0 0 8px #58A6FF; animation: pulse 2.2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .3; transform: scale(.6); } }
+    .share-btn {
+      background: none;
+      border: 1px solid rgba(240, 246, 252, .2);
+      padding: 4px 8px 3px;
+      font: inherit;
+      color: #F0F6FC;
+      cursor: pointer;
+      letter-spacing: .12em;
+      transition: all .3s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 7.5px;
+    }
+    .share-btn:active { background: #58A6FF; color: #0D1117; border-color: #58A6FF; }
+
+    /* Hero —— 左右两栏：左 3D 特效方块 + 右文字 */
+    .hero { position: relative; z-index: 5; flex-shrink: 0; margin-top: 6px; display: flex; align-items: flex-start; gap: 12px; }
+    .hero-side { flex: 1; min-width: 0; }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #8B949E;
+      margin-bottom: 4px;
+    }
+    .vol { color: #58A6FF; }
+    .title-block { display: flex; align-items: flex-start; gap: 10px; }
+    .pg-stamp {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(88, 166, 255, .6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 19px;
+      flex-shrink: 0;
+      position: relative;
+      box-shadow: 0 0 18px rgba(88, 166, 255, .18) inset, 0 0 12px rgba(88, 166, 255, .1);
+    }
+    .pg-stamp::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 1px dashed rgba(88, 166, 255, .35);
+      animation: spin 9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .title-text { min-width: 0; }
+    .pg-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: -.02em;
+      line-height: 1.05;
+      color: #F0F6FC;
+    }
+    .pg-title .dot { color: #58A6FF; }
+    .superdesign-line { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+    .superdesign { font-family: 'JetBrains Mono', monospace; font-size: 7px; letter-spacing: .14em; color: #9CA3AF; }
+    .v-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      letter-spacing: .14em;
+      color: #58A6FF;
+      border: 1px solid rgba(88, 166, 255, .3);
+      padding: 1px 5px;
+      border-radius: 2px;
+      background: rgba(88, 166, 255, .06);
+    }
+    .v-tag.green { color: #3FB950; border-color: rgba(63, 185, 80, .3); background: rgba(63, 185, 80, .06); }
+    .tagline {
+      margin-top: 5px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10.5px;
+      color: #C9D1D9;
+      line-height: 1.45;
+    }
+    .tagline em { color: #58A6FF; font-style: normal; font-weight: 500; }
+
+    /* 终端展示区 */
+    .termbox { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .term-header { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #C9D1D9; margin-bottom: 4px; }
+    .term-header::after { content: ''; flex: 1; height: 1px; background: rgba(240, 246, 252, .06); }
+    .term-window {
+      background: #060A0F;
+      border: 1px solid rgba(88, 166, 255, .3);
+      border-radius: 8px;
+      overflow: hidden;
+      font-family: 'JetBrains Mono', monospace;
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .term-window:active { border-color: rgba(88, 166, 255, .6); }
+    .term-bar {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 9px;
+      background: rgba(88, 166, 255, .1);
+      border-bottom: 1px solid rgba(88, 166, 255, .15);
+    }
+    .term-bar span { width: 7px; height: 7px; border-radius: 50%; }
+    .term-bar .r { background: #FF5F57; } .term-bar .y { background: #FFB020; } .term-bar .g { background: #28C840; }
+    .term-bar b { margin-left: 6px; font-size: 7px; font-weight: 400; color: #7DA6D9; letter-spacing: .06em; }
+    .term-body { padding: 8px 11px 9px; font-size: 8.5px; line-height: 1.8; color: #8FB7E8; }
+    .term-body .cmd { color: #58A6FF; }
+    .term-body .prompt { color: #6E85A8; }
+    .term-body .out { color: #C5D9F0; }
+    .term-body .ok { color: #3FB950; }
+    .term-body .dim { color: #4E6177; }
+    .caret-blink { display: inline-block; width: 7px; height: 10px; background: #58A6FF; vertical-align: -2px; animation: blink 1s steps(1) infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* Stats */
+    .stats-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .stats-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .stats-title { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #C9D1D9; }
+    .stats-badge { font-family: 'JetBrains Mono', monospace; font-size: 6px; letter-spacing: .16em; color: #3FB950; border: 1px solid rgba(63, 185, 80, .3); padding: 1px 5px; border-radius: 2px; }
+    .stats-chart { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .stat-card {
+      background: rgba(240, 246, 252, .02);
+      border: 1px solid rgba(240, 246, 252, .07);
+      border-radius: 7px;
+      padding: 7px 6px 5px;
+      cursor: pointer;
+      transition: all .25s;
+      min-width: 0;
+    }
+    .stat-card:active { background: rgba(88, 166, 255, .07); border-color: rgba(88, 166, 255, .3); transform: scale(.96); }
+    .stat-num { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; color: #F0F6FC; line-height: 1; white-space: nowrap; }
+    .stat-num .accent { color: var(--stat-color, #58A6FF); }
+    .stat-label { font-size: 7px; color: #8B949E; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .stat-mini-chart { display: flex; align-items: flex-end; gap: 2px; height: 12px; margin-top: 4px; }
+    .stat-bar { width: 4px; background: var(--stat-color, #58A6FF); opacity: .55; border-radius: 1px; transform-origin: bottom; }
+
+    /* Flow */
+    .flow-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .flow-header { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #C9D1D9; margin-bottom: 4px; }
+    .flow-header::after { content: ''; flex: 1; height: 1px; background: rgba(240, 246, 252, .06); }
+    .flow-svg { width: 100%; height: auto; display: block; }
+    .flow-node { cursor: pointer; }
+    .flow-node:active { opacity: .7; }
+    .flow-arrow { animation: flowPulse 2s ease-in-out infinite; }
+    @keyframes flowPulse { 0%, 100% { stroke-opacity: .4; } 50% { stroke-opacity: 1; } }
+
+    /* Features */
+    .features { position: relative; z-index: 5; margin-top: 6px; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      background: rgba(240, 246, 252, .02);
+      border: 1px solid rgba(240, 246, 252, .07);
+      border-radius: 7px;
+      padding: 6px 9px;
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .feature:active { background: rgba(88, 166, 255, .05); border-color: rgba(88, 166, 255, .22); }
+    .feature-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: rgba(88, 166, 255, .1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .feature-icon svg { width: 13px; height: 13px; stroke: #58A6FF; fill: none; stroke-width: 1.5; }
+    .feature-icon.green { background: rgba(63, 185, 80, .1); }
+    .feature-icon.green svg { stroke: #3FB950; }
+    .feature-content { flex: 1; min-width: 0; }
+    .feature-title { font-family: 'Noto Sans SC', sans-serif; font-size: 9.5px; font-weight: 500; color: #F0F6FC; letter-spacing: .02em; }
+    .feature-desc { font-size: 7.5px; color: #8B949E; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .feature-arrow { font-size: 11px; color: #58A6FF; opacity: 0; transform: translateX(-2px); transition: all .25s; flex-shrink: 0; }
+    .feature:active .feature-arrow { opacity: 1; transform: translateX(2px); }
+    .feature-progress { height: 2px; background: rgba(240, 246, 252, .06); border-radius: 1px; margin-top: 4px; overflow: hidden; }
+    .feature-progress-bar { height: 100%; background: linear-gradient(90deg, #58A6FF, #3FB950); border-radius: 1px; transform-origin: left; animation: progressIn .8s cubic-bezier(.4, 0, .2, 1) forwards; transform: scaleX(0); }
+    @keyframes progressIn { to { transform: scaleX(1); } }
+
+    /* Tech */
+    .tech-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .tech-header { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #C9D1D9; margin-bottom: 4px; }
+    .tech-pills { display: flex; flex-wrap: wrap; gap: 4px; }
+    .tech-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6.5px;
+      letter-spacing: .08em;
+      color: #9CA3AF;
+      border: 1px solid rgba(240, 246, 252, .1);
+      padding: 2px 7px;
+      border-radius: 10px;
+      cursor: pointer;
+      background: rgba(240, 246, 252, .02);
+      transition: all .2s;
+    }
+    .tech-pill:active { background: rgba(240, 246, 252, .08); }
+    .tech-pill.accent { border-color: rgba(88, 166, 255, .35); color: #58A6FF; }
+    .tech-pill.green { border-color: rgba(63, 185, 80, .3); color: #7EE2A8; }
+
+    /* Bottom bar */
+    .bottombar {
+      position: relative;
+      z-index: 5;
+      margin-top: 8px;
+      padding-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      border-top: 1px solid rgba(240, 246, 252, .06);
+    }
+    .github-link { display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 8px; color: #C9D1D9; text-decoration: none; }
+    .github-link svg { width: 13px; height: 13px; fill: #8B949E; transition: fill .25s; }
+    .github-link:active svg { fill: #58A6FF; }
+    .visit-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .14em;
+      color: #0D1117;
+      background: linear-gradient(90deg, #58A6FF, #9ECBFF);
+      padding: 6px 13px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all .25s;
+    }
+    .visit-btn:active { transform: scale(.95); filter: brightness(1.15); }
+
+    /* Overlay + Sheet */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: flex-end;
+      background: rgba(0, 0, 0, .5);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .35s;
+    }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+    .sheet {
+      width: 100%;
+      max-height: 76%;
+      background: linear-gradient(180deg, #161B22, #0D1117);
+      border: 1px solid rgba(88, 166, 255, .2);
+      border-bottom: none;
+      border-radius: 16px 16px 0 0;
+      padding: 14px 18px 18px;
+      transform: translateY(101%);
+      transition: transform .45s cubic-bezier(.7, 0, .3, 1);
+      overflow-y: auto;
+    }
+    .overlay.active .sheet { transform: translateY(0); }
+    .sheet-handle { width: 32px; height: 3px; background: #30363D; border-radius: 2px; margin: 0 auto 12px; }
+    .sheet-title { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; color: #F0F6FC; margin-bottom: 7px; }
+    .sheet-title em { color: #58A6FF; font-style: normal; }
+    .sheet-desc { font-size: 10.5px; line-height: 1.65; color: #9CA3AF; }
+    .sheet-desc code { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #58A6FF; background: rgba(88, 166, 255, .08); padding: 1px 4px; border-radius: 2px; }
+    .sheet-code {
+      margin-top: 10px;
+      background: #060A0F;
+      border: 1px solid rgba(240, 246, 252, .08);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      line-height: 1.7;
+      color: #58A6FF;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .sheet-points { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+    .sheet-point { display: flex; align-items: flex-start; gap: 8px; font-family: 'Noto Sans SC', sans-serif; font-size: 10px; color: #D0D0D8; line-height: 1.55; }
+    .sheet-point::before { content: ''; width: 5px; height: 5px; background: #58A6FF; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .sheet-point.green::before { background: #3FB950; }
+    .sheet-close {
+      margin-top: 14px;
+      width: 100%;
+      padding: 10px;
+      background: rgba(88, 166, 255, .08);
+      border: 1px solid rgba(88, 166, 255, .25);
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .15em;
+      color: #58A6FF;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .sheet-close:active { background: #58A6FF; color: #0D1117; }
+
+    /* Toast */
+    .toast {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #3FB950;
+      color: #0D1117;
+      padding: 7px 14px;
+      border-radius: 5px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: all .3s;
+      z-index: 200;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .reveal { opacity: 0; transform: translateY(10px); transition: all .45s cubic-bezier(.4, 0, .2, 1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @keyframes chartGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+    .chart-animate { animation: chartGrow .6s cubic-bezier(.4, 0, .2, 1) forwards; }
+
+    /* 小屏兜底 */
+    @media (max-height: 730px) {
+      .pg-title { font-size: 20px; }
+      .pg-stamp { width: 34px; height: 34px; font-size: 16px; }
+      .tagline { font-size: 9.5px; }
+      .term-body { font-size: 7.5px; line-height: 1.7; padding: 6px 9px; }
+      .feature { padding: 5px 9px; }
+      .feature-title { font-size: 9px; }
+      .stat-num { font-size: 13.5px; }
+      .sheet { max-height: 80%; }
+      .pkg3d { width: 92px; height: 92px; }
+      .pkg-cube { width: 44px; height: 44px; margin: -22px 0 0 -22px; }
+      .pkg-cube .face { font-size: 4.5px; }
+      .face.f-front  { transform: translateZ(22px); }
+      .face.f-back   { transform: rotateY(180deg) translateZ(22px); }
+      .face.f-right  { transform: rotateY(90deg) translateZ(22px); }
+      .face.f-left   { transform: rotateY(-90deg) translateZ(22px); }
+      .face.f-top    { transform: rotateX(90deg) translateZ(22px); }
+      .face.f-bottom { transform: rotateX(-90deg) translateZ(22px); }
+      .pkg3d .strap { width: 84px; height: 84px; margin: -42px 0 0 -42px; }
+      .pkg3d .strap2 { width: 60px; height: 60px; margin: -30px 0 0 -30px; }
+      .hero { gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage" id="stage">
+    <!-- 3D 视差前景：浮动数据粒子 -->
+    <div class="flakes">
+      <div class="flake f1"></div><div class="flake f2"></div><div class="flake f3"></div>
+      <div class="flake f4"></div><div class="flake f5"></div>
+    </div>
+
+    <!-- Topbar -->
+    <div class="topbar reveal tilt-mid">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <span>Young's Insight</span>
+      </div>
+      <button class="share-btn" id="shareBtn">SHARE <span class="arr">↗</span></button>
+    </div>
+
+    <!-- Hero —— 左右两栏：左文字 + 右 3D 打包立方体 -->
+    <div class="hero reveal">
+      <div class="hero-side">
+        <div class="meta-row">
+          <span class="vol">OPEN AGENT PACKAGE FORMAT</span>
+          <span>2026.08.08</span>
+        </div>
+        <div class="title-block">
+          <div class="pg-stamp" id="stamp">📦</div>
+          <div class="title-text">
+            <div class="pg-title">Agent Plugins<span class="dot">.</span></div>
+            <div class="superdesign-line">
+              <span class="superdesign">agent-plugins.org · spec 1.0.0</span>
+              <span class="v-tag">CC-BY-4.0</span>
+              <span class="v-tag green">546★</span>
+            </div>
+          </div>
+        </div>
+        <div class="tagline">把 <em>Skills + MCP</em> 装进同一个盒子——一个目录就是插件，Amazon / OpenAI / Google 一起定的打包标准</div>
+        <div class="hint-badge">✦ 轻触任何元素探索 · 拖动卡片看 3D 视差</div>
+      </div>
+      <div class="pkg3d tilt-deep">
+        <div class="strap"></div>
+        <div class="strap2"></div>
+        <div class="pkg-cube">
+          <div class="face f-front"></div>
+          <div class="face f-back"></div>
+          <div class="face f-right"></div>
+          <div class="face f-left"></div>
+          <div class="face f-top"></div>
+          <div class="face f-bottom"></div>
+        </div>
+        <div class="box-fly b1"></div>
+        <div class="box-fly b2"></div>
+        <div class="box-fly b3"></div>
+      </div>
+    </div>
+
+    <!-- 终端展示 -->
+    <div class="termbox reveal">
+      <div class="term-header">Ship a plugin in 1 minute · 一分钟打包上线</div>
+      <div class="term-window" id="termWin">
+        <div class="term-bar">
+          <span class="r"></span><span class="y"></span><span class="g"></span>
+          <b>reports-plugin — 点击查看完整安装指南</b>
+        </div>
+        <div class="term-body">
+<span class="prompt">$</span> <span class="cmd">mkdir reports-plugin && cd reports-plugin</span>
+<span class="prompt">$</span> <span class="cmd">echo '{"$schema":"https://agent-plugins.org/schemas/1.0.0/plugin.schema.json","name":"reports-plugin"}' &gt; plugin.json</span>
+<span class="out">→ 插件就绪：plugin.json + skills/ + mcp.json</span>
+<span class="ok">✅ 任意兼容客户端直接加载，零重写</span>
+<span class="prompt">$</span> <span class="caret-blink"></span></div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-section reveal">
+      <div class="stats-header">
+        <span class="stats-title">Signals</span>
+        <span class="stats-badge">SPEC v1.0.0 · WORKING DRAFT</span>
+      </div>
+      <div class="stats-chart">
+        <div class="stat-card" data-stat="version" style="--stat-color: #58A6FF">
+          <div class="stat-num"><span class="accent">1.0.0</span></div>
+          <div class="stat-label">规范版本 · 2026 发布</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 5px; animation-delay: .1s"></div>
+            <div class="stat-bar chart-animate" style="height: 9px; animation-delay: .15s"></div>
+            <div class="stat-bar chart-animate" style="height: 13px; animation-delay: .2s"></div>
+            <div class="stat-bar chart-animate" style="height: 16px; animation-delay: .25s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="stars" style="--stat-color: #3FB950">
+          <div class="stat-num"><span class="accent">546</span></div>
+          <div class="stat-label">GitHub Stars</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 10px; background: #3FB950; animation-delay: .3s"></div>
+            <div class="stat-bar chart-animate" style="height: 12px; background: #3FB950; animation-delay: .35s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="maint" style="--stat-color: #3FB950">
+          <div class="stat-num"><span class="accent">5+1</span></div>
+          <div class="stat-label">核心维护者 · 大厂</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 6px; background: #3FB950; animation-delay: .4s"></div>
+            <div class="stat-bar chart-animate" style="height: 12px; background: #3FB950; animation-delay: .45s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="types" style="--stat-color: #58A6FF">
+          <div class="stat-num"><span class="accent">2</span></div>
+          <div class="stat-label">组件类型 · Skills+MCP</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 8px; animation-delay: .5s"></div>
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .55s"></div>
+            <div class="stat-bar chart-animate" style="height: 9px; animation-delay: .6s"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flow -->
+    <div class="flow-section reveal">
+      <div class="flow-header">Ecosystem · 生态四层各司其职</div>
+      <svg class="flow-svg" viewBox="0 0 350 44" fill="none">
+        <defs>
+          <marker id="ap-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L6,3 z" fill="#58A6FF" fill-opacity=".6"/>
+          </marker>
+        </defs>
+        <g class="flow-node" id="flow-find">
+          <rect x="3" y="9" width="58" height="26" rx="5" fill="rgba(88,166,255,.08)" stroke="#58A6FF" stroke-width="1" stroke-opacity=".5"/>
+          <text x="32" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#F0F6FC" text-anchor="middle">Find it</text>
+          <text x="32" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#8B949E" text-anchor="middle">ARD 资源发现</text>
+        </g>
+        <path class="flow-arrow" d="M64 22 L78 22" stroke="#58A6FF" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#ap-arrow)"/>
+        <g class="flow-node" id="flow-describe">
+          <rect x="81" y="9" width="66" height="26" rx="5" fill="rgba(88,166,255,.12)" stroke="#58A6FF" stroke-width="1.2"/>
+          <text x="114" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#9ECBFF" text-anchor="middle">Describe it</text>
+          <text x="114" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#8B949E" text-anchor="middle">AI Catalog 索引</text>
+        </g>
+        <path class="flow-arrow" d="M150 22 L164 22" stroke="#3FB950" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#ap-arrow)" style="animation-delay: .3s"/>
+        <g class="flow-node" id="flow-package">
+          <rect x="167" y="9" width="58" height="26" rx="5" fill="rgba(63,185,80,.12)" stroke="#3FB950" stroke-width="1.2"/>
+          <text x="196" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#7EE2A8" text-anchor="middle">Package it</text>
+          <text x="196" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#8B949E" text-anchor="middle">Agent Plugins</text>
+        </g>
+        <path class="flow-arrow" d="M228 22 L242 22" stroke="#58A6FF" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#ap-arrow)" style="animation-delay: .6s"/>
+        <g class="flow-node" id="flow-run">
+          <rect x="245" y="9" width="62" height="26" rx="5" fill="rgba(88,166,255,.08)" stroke="#58A6FF" stroke-width="1" stroke-opacity=".5"/>
+          <text x="276" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#F0F6FC" text-anchor="middle">Run it</text>
+          <text x="276" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#8B949E" text-anchor="middle">MCP + Skills</text>
+        </g>
+        <path class="flow-arrow" d="M310 22 L322 22" stroke="#3FB950" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#ap-arrow)" style="animation-delay: .9s"/>
+        <g class="flow-node" id="flow-user">
+          <rect x="325" y="9" width="23" height="26" rx="5" fill="rgba(63,185,80,.08)" stroke="#3FB950" stroke-width="1" stroke-opacity=".5"/>
+          <text x="336" y="22" font-family="JetBrains Mono, monospace" font-size="5.5" fill="#F0F6FC" text-anchor="middle">用户</text>
+          <text x="336" y="31" font-family="JetBrains Mono, monospace" font-size="4" fill="#8B949E" text-anchor="middle">任意客户端</text>
+        </g>
+        <circle cx="71" cy="22" r="2" fill="#58A6FF">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="157" cy="22" r="2" fill="#3FB950">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0.5s"/>
+        </circle>
+        <circle cx="235" cy="22" r="2" fill="#58A6FF">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="1s"/>
+        </circle>
+        <circle cx="316" cy="22" r="2" fill="#3FB950">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="1.3s"/>
+        </circle>
+      </svg>
+    </div>
+
+    <!-- Features -->
+    <div class="features reveal">
+      <div class="feature" data-f="0">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">一个目录就是插件 · 克制是重点</div>
+          <div class="feature-desc">plugin.json 只有两行实质：$schema + name，其余全在固定位置</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 100%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="1">
+        <div class="feature-icon green">
+          <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M4 9h16M9 4v16"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">固定位置发现 · 零配置零猜测</div>
+          <div class="feature-desc">skills/ 每子目录一个 SKILL.md；mcp.json 显式声明 type，客户端从不猜传输方式</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 97%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="2">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 3v18M5 8l7-5 7 5M5 16l7 5 7-5"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">独立组件独立失败 · 一个挂了不影响别的</div>
+          <div class="feature-desc">MCP 服务器起不来，skills 照常加载；跳过、报告、继续</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 95%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="3">
+        <div class="feature-icon green">
+          <svg viewBox="0 0 24 24"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4M12 2v13"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">反向域名逃生舱 · 客户端专属扩展</div>
+          <div class="feature-desc">com.example.client/ 目录归某个客户端所有，不认识的客户端自动忽略</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 93%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="4">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">刻意留白 · 只做打包一件事</div>
+          <div class="feature-desc">无安装机制/无权限模型/无沙箱要求/无分发协议——留给生态各层</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 91%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+    </div>
+
+    <!-- Tech -->
+    <div class="tech-section reveal">
+      <div class="tech-header">Spec &amp; Stack</div>
+      <div class="tech-pills">
+        <span class="tech-pill accent">plugin.json</span>
+        <span class="tech-pill">SKILL.md</span>
+        <span class="tech-pill green">mcp.json</span>
+        <span class="tech-pill accent">stdio</span>
+        <span class="tech-pill">streamable-http</span>
+        <span class="tech-pill green">${PLUGIN_ROOT}</span>
+      </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="bottombar reveal">
+      <a href="https://github.com/agentplugins/agent-plugins-spec" target="_blank" class="github-link">
+        <svg viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        agentplugins/agent-plugins-spec
+      </a>
+      <a href="https://agent-plugins.org" target="_blank" class="visit-btn">SPEC →</a>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title" id="sheetTitle"></div>
+        <div class="sheet-desc" id="sheetDesc"></div>
+        <div class="sheet-code" id="sheetCode" style="display:none"></div>
+        <div class="sheet-points" id="sheetPoints"></div>
+        <button class="sheet-close" id="sheetClose">CLOSE</button>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script>
+  (function(){
+    var $=function(s){return document.querySelector(s)};
+    var overlay=$('#overlay'), sheetTitle=$('#sheetTitle'), sheetDesc=$('#sheetDesc'),
+        sheetPoints=$('#sheetPoints'), sheetCode=$('#sheetCode'),
+        toast=$('#toast');
+
+    var DATA = {
+      version: {
+        title: 'Spec 1.0.0 <em>· 一个可移植格式版本</em>',
+        desc: 'Agent Plugins v1.0.0 是 Working Draft 状态的开放规范。核心设计：plugin.json 和 mcp.json 的 schema 共用规范版本号——作者和客户端只需理解一个版本，$schema 字段直接选定完整的校验与解释契约。规范文本与 schema 冲突时，以规范文本为准。',
+        points: ['2026 年发布 · agent-plugins.org/specification', '状态：Working Draft（工作草案）', '$schema = https://agent-plugins.org/schemas/1.0.0/plugin.schema.json', 'schema 与规范同版本发布，禁止重复赋值', '客户端加载插件时禁止联网取 schema（离线校验）', '遵守 RFC 2119：MUST / SHOULD / MAY 精确语义']
+      },
+      stars: {
+        title: '546 Stars <em>· 大厂背书的公共基建</em>',
+        desc: '规格仓库 agentplugins/agent-plugins-spec 2026-04-03 创建，4 个月积累 546 stars、32 forks。这是 GitHub 组织 agentplugins 下的规格本体；配套站点 agent-plugins-site 承载文档。真正的信号不是 star 数，而是站在它背后的 6 家厂商——规范冲突时，重量级玩家的采纳比热度重要。',
+        points: ['546 ★ / 32 forks / 2026-08-06 仍高频推送', '组织：github.com/agentplugins', '官方站点 agent-plugins.org（GitHub Primer 风格）', '主题：agent-plugins · agent-skills · mcp · specification', '采纳者 > 星标数：Amazon/Cursor/MS/OpenAI/Vercel/Google']
+      },
+      maint: {
+        title: '5+1 家核心维护者 <em>· TSC 联合治理</em>',
+        desc: 'Agent Plugins 由 TSC（技术指导委员会）的 Core Maintainers 发布：Amazon、Cursor、Microsoft、OpenAI、Vercel。2026-08-06 Google 以 Kevin Hou（Google DeepMind 高级工程师）为代表加入，成为第 6 家。治理模型独立定义在 Technical Charter 中——包装格式与项目治理分开。',
+        points: ['发起：Amazon · Cursor · Microsoft · OpenAI · Vercel', '2026-08-06 Google 加入（代表 Kevin Hou）', 'Google 落地产品：Agents CLI + Data Agent Kit', '目标是消除各家自造插件格式的碎片化', 'Governance 独立于格式规范（Technical Charter）']
+      },
+      types: {
+        title: '2 种组件类型 <em>· v1 只做成熟的两件</em>',
+        desc: 'v1 精确定义两种组件：Skills 和 MCP servers——因为两者都有外部既有规范（Agent Skills spec、Model Context Protocol）且跨客户端采纳度高。其他候选（commands、hooks、agents、rules、LSP servers）在格式收敛前都太客户端特定，留在 v1 之外。',
+        points: ['Skills：遵循 Agent Skills 规范（SKILL.md + frontmatter）', 'MCP servers：mcp.json 声明，三种传输类型', '不支持的组件类型：客户端必须静默忽略', '客户端只需支持一种组件类型即可声称符合', '增量采纳：skills-only 客户端也是合规客户端']
+      },
+      find: {
+        title: 'Find it <em>· 任务匹配资源</em>',
+        desc: 'Agentic Resource Discovery（ARD）是开放发现协议：客户端问\"这个任务有什么可用资源？\"，得到匹配的 agentic 资源列表。ARD 把 Plugin 当作一等资源类型——与 agents、MCP servers、Skills 平级。它完全位于调用之前：发现与执行解耦。',
+        points: ['ARD = Agentic Resource Discovery 开放协议', 'Plugin 是 ARD 的一等资源类型', '问\"what is available for this task?\" → 匹配资源', '完全在 invocation（调用）之前', '每个生态层可独立采用']
+      },
+      describe: {
+        title: 'Describe it <em>· 目录条目格式</em>',
+        desc: 'AI Catalog 是 ARD 索引的条目格式。提案注册 application/agent-plugins+json 为已知媒体类型，让目录条目能像指向 agent card 或 mcp.json 一样指向 plugin.json。发布插件可以没有目录条目，目录条目也可以指向非插件资源——两者独立。',
+        points: ['AI Catalog = ARD 索引的 entry 格式', '注册 MIME 类型 application/agent-plugins+json', 'catalog 条目可指向 plugin.json', '无目录条目也能发布插件', '独立采纳：描述 ≠ 打包 ≠ 运行']
+      },
+      package: {
+        title: 'Package it <em>· 一个目录，固定位置</em>',
+        desc: 'Agent Plugins 的职责边界：一个目录 + 固定位置 + 跨客户端可移植。skills/ 和 mcp.json 是固定位置，plugin.json 不能重定位组件、不能内联声明组件。没有发现路径可配置、没有优先级顺序要学——缺了 skills/ 就加载剩下的并继续。',
+        points: ['reports-plugin/ 目录 = 完整插件包', 'plugin.json：$schema + name 两行实质', 'skills/：每子目录一个 SKILL.md（不递归）', 'mcp.json：显式 type（stdio / streamable-http / sse）', '固定位置缺失不是错误——加载存在的部分']
+      },
+      run: {
+        title: 'Run it <em>· 早已可移植的执行契约</em>',
+        desc: 'MCP 和 Agent Skills 本身已经是可移植的执行契约：MCP 定义 wire 行为与生命周期，Agent Skills 定义指令与资源格式。Agent Plugins 只解决\"盒子\"——让组件们能一起旅行，运行层保持原样。',
+        points: ['MCP：wire 协议 + 生命周期语义（已有规范）', 'Agent Skills：SKILL.md 格式 + 目录布局（已有规范）', 'Agent Plugins 不重定义执行，只定义打包', '客户端把可移植格式映射到原生配置', '传输声明：type 字段决定首次连接方式，无 fallback']
+      },
+      user: {
+        title: '用户 <em>· 任意兼容客户端</em>',
+        desc: '兼容客户端包括 IDE、CLI、托管企业平台等。规范刻意不给安装、权限、沙箱、信任、UX 下定义——因为这些在不同客户端里责任截然不同。Agents CLI 等 Google 产品今天已支持该格式。',
+        points: ['Clients：IDE / CLI / 企业托管平台', '安装与权限由客户端各自实现', 'Google Agents CLI 已打包专家 skills', 'Data Agent Kit 连接 BigQuery / Spanner / Cloud SQL', 'Compatible Clients 列表在官网持续扩充']
+      },
+      f0: {
+        title: '📦 一个目录就是插件 <em>· 克制是重点</em>',
+        desc: 'reports-plugin/ 就是一个插件：plugin.json 只有 $schema + name 两行实质，其余组件全部在固定位置被找到。规范刻意让 manifest 不能重定位组件、不能内联声明组件——没有发现路径可配置、没有优先级顺序要学。目录可以用标准工具检查（ls/cat/git），可原地编辑，天然兼容版本控制。',
+        points: ['manifest 两行实质：$schema + name', '组件在固定位置被发现（skills/ + mcp.json）', 'plugin.json 不能重定位/内联组件', '选目录而非 zip/tar：可 inspectable、可 git', '最小 manifest 一分钟可写']
+      },
+      f1: {
+        title: '🧭 固定位置发现 <em>· 零配置零猜测</em>',
+        desc: 'skills/ 下每个含 SKILL.md 的直接子目录 = 一个 skill（不递归搜索更深层）。mcp.json 里每个服务器条目必须显式声明 type：stdio、streamable-http（当前 MCP 传输）或 sse（MCP 2024-11-05 遗留传输）——客户端永远不用从配置对象形状猜传输方式。',
+        points: ['skills/summarize/SKILL.md → skill "summarize"', 'mcp.json：$schema + mcpServers 两个顶层字段', 'type：stdio / streamable-http / sse 闭式联合', 'stdio 的 command 是单个可执行 token，非 shell 字符串', '非 loopback 端点强制 HTTPS']
+      },
+      f2: {
+        title: '🛡️ 独立组件独立失败 <em>· 弹性加载</em>',
+        desc: 'mcp.json 里某个服务器起不来？客户端跳过它、报告失败、继续加载其他服务器和 skills。一个服务器连接失败不会拖垮插件的技能部分。规范把\"组件失败非致命\"与\"必须报告诊断\"配对——失败可见，而不是静默。',
+        points: ['服务器启动/连接/握手失败 → 跳过并继续', '非法服务器条目 → 只跳该条，其他照常', '位置类型错误 → 该组件类型无效，继续其他类型', '非 fatal：未知字段仅报告并忽略', '诊断必须，兼容性不必——支持部分也算合规']
+      },
+      f3: {
+        title: '📤 反向域名逃生舱 <em>· 客户端专属扩展</em>',
+        desc: 'com.example.client/ 是一个完全归客户端所有的扩展命名空间：hooks、agents、commands 或任何该客户端想加的东西。不认识的客户端直接忽略它。可移植核心保持小而稳定，因为不可移植的部分有合法去处。manifest 的 extensions 字段同样用反向域名 key。',
+        points: ['顶层目录名 = 反向域名（com.example.client/）', '内容完全由该客户端定义', '可只用于 manifest 数据或只用于文件目录', '客户端应基于自己控制的域名并保持稳定', 'Agent Plugins 不为其分配可移植语义']
+      },
+      f4: {
+        title: '⏳ 刻意留白 <em>· 只做打包一件事</em>',
+        desc: 'v1 明确不做：安装机制、分发协议、权限模型、沙箱要求、信任/来源验证、用户体验。这些被公开列在 future considerations，不是悄悄遗漏。理由：IDE、CLI、企业平台对安装策略和审批 UX 的责任截然不同——把非可移植的部分留在盒外，盒内才可能可移植。',
+        points: ['无安装机制 / 无分发协议', '无权限模型 / 无沙箱要求', '无信任验证 / 无 UX 定义', 'future considerations 公开列出', '客户端各自承担安装/策略/企业控制责任']
+      },
+      tech0: {
+        title: 'plugin.json <em>· 封闭式 manifest</em>',
+        desc: '根目录唯一的 manifest。schema 是封闭的：只允许 $schema、name、version、description、author、homepage、repository、license、keywords、extensions 十个顶层字段。未知字段 → 报告并忽略（非致命）；除未知字段和 extensions 非对象外，任何 schema 违规都是致命的——拒绝整个插件。',
+        points: ['十个允许字段，闭式 schema', '$schema + name 必填', 'name：1-64 字符，小写字母数字- .，禁 -- 与 ..', '未知顶层字段：报告并忽略，不赋语义', '客户端专属数据只能进 extensions']
+      },
+      tech1: {
+        title: 'SKILL.md <em>· Agent Skills 格式</em>',
+        desc: 'Agent Skills 规范是 SKILL.md 格式的真相来源：frontmatter 字段、scripts/、references/、assets/ 目录布局。Agent Plugins 只定义 skills 如何在插件内被发现——不重定义技能格式本身，也不规定客户端如何把技能暴露给用户或模型。',
+        points: ['Agent Skills 规范 = SKILL.md 格式源头', '每个直接子目录含 SKILL.md 即一个 skill', '不递归搜索深层子目录', '不合规的 skill：跳过 + 继续加载其他', 'scripts/ references/ assets/ 布局遵循原规范']
+      },
+      tech2: {
+        title: 'mcp.json <em>· 显式传输声明</em>',
+        desc: 'MCP 配置路径固定在插件根目录的 mcp.json，禁止内联进 plugin.json。每个服务器条目是闭式变体：stdio（command/args/env/cwd）、streamable-http（url/headers）、sse（遗留）。command 必须单个可执行 token——裸名走平台搜索，./ 开头解析到插件根；占位符展开只作用于 args/env/cwd，不作用于 command。',
+        points: ['mcpServers 对象 + 闭式变体', 'stdio：command 单 token，禁 shell 命令字符串', 'streamable-http：绝对 HTTPS URL，禁用户信息', 'headers/env 是可见包数据，禁放凭据', '客户端至少支持 stdio 或 streamable-http 之一']
+      },
+      tech3: {
+        title: 'stdio <em>· 本地进程传输</em>',
+        desc: 'stdio 把 MCP 服务器作为本地子进程启动。command 必须是单个可执行 token（裸名或 ./ 相对路径），不能是 "npx -y foo" 这类 shell 命令串。Windows 上可用 .bat/.cmd 解释器，但必须保持 command 为单 token、args 分开传。cwd 省略时默认插件根目录。',
+        points: ['command：单个可执行 token', '裸名：平台可执行搜索规则', './ 开头：相对插件根解析', 'args/env/cwd 支持 ${PLUGIN_ROOT} 展开', 'cwd 省略 → 默认插件根']
+      },
+      tech4: {
+        title: 'streamable-http <em>· 远程传输</em>',
+        desc: 'streamable-http 选择当前 MCP Streamable HTTP 传输；sse 指 MCP 2024-11-05 定义的遗留 HTTP+SSE（不是 Streamable HTTP 内的 SSE 流）。url 必须是绝对 HTTP/HTTPS URL，禁用户信息和 fragment；非 loopback 端点强制 HTTPS。客户端对传输的支持：stdio 或 streamable-http 至少其一，建议两者；sse 可选。',
+        points: ['url：绝对 HTTP/HTTPS，禁用户信息/fragment', '非 loopback 必须 HTTPS（localhost/IP 字面量可用 HTTP）', 'headers：大小写不敏感去重，禁凭据', '客户端重定向转发配置 headers 需显式授权', 'v1 无 OAuth 配置——授权发现归客户端']
+      },
+      tech5: {
+        title: '${PLUGIN_ROOT} <em>· 环境变量与占位符</em>',
+        desc: '启动插件子进程时，客户端必须提供 PLUGIN_ROOT（插件根绝对路径）和 PLUGIN_DATA（客户端托管的持久数据目录）。${PLUGIN_ROOT}/${PLUGIN_DATA} 在 args/env/cwd 中做单次非递归文本替换。PLUGIN_DATA 放依赖（node_modules、venv）、生成代码和缓存——更新时保留，卸载时可删。',
+        points: ['PLUGIN_ROOT：插件根绝对路径', 'PLUGIN_DATA：客户端托管可写持久目录', '展开：单次非递归，仅 args/env/cwd', 'command 不展开占位符', 'env 中禁止声明 PLUGIN_ROOT/PLUGIN_DATA（保留变量）']
+      },
+      story: {
+        title: '背景故事 <em>· 从各家自造格式到联合标准</em>',
+        desc: '你写了一个 skill、一个配套 MCP 服务器，一起做一件事。想交付给第二个客户端时——目录布局不同、manifest 元数据不同、MCP 配置形状不同、传输推断方式不同。于是 fork、维护两份、看着它们漂移。核心问题不是组件，是 manifest。Agent Plugins 的答案是：组件可移植，盒子也应该可移植——不可移植的部分，交给反向域名逃生舱。2026-08-06 Google 博客官宣加入核心维护者。',
+        points: ['痛点：各家自造插件格式，组件重复维护', 'Agent Skills 与 MCP 各自可移植，缺的是\"盒子\"', 'Google 加入核心维护者（Kevin Hou / DeepMind）', 'Google 落地：Agents CLI + Data Agent Kit', '理念：非优雅基础设施，值得共享而非重复发明', '插件作者不应被迫在\"触达所有客户端\"与\"用好每个客户端\"之间二选一']
+      },
+      install: {
+        title: '快速开始 <em>· 一分钟打包上线</em>',
+        desc: '写一个 hello world 插件只需一分钟：建目录、写两行 plugin.json、加一个 greet skill。兼容客户端（如 Google Agents CLI、Cursor 等）直接发现并加载。完整规范在 agent-plugins.org/specification，JSON Schemas 在 /schemas。',
+        code: 'mkdir reports-plugin && cd reports-plugin\n# 1. manifest：两行实质\necho \'{"$schema":"https://agent-plugins.org/schemas/1.0.0/plugin.schema.json","name":"reports-plugin"}\' > plugin.json\n\n# 2. 一个 skill\nmkdir -p skills/greet\ncat > skills/greet/SKILL.md <<EOF\n---\nname: greet\ndescription: 打个招呼\n---\nSay hello to the user.\nEOF\n\n# 3. （可选）MCP 服务器\ncat > mcp.json <<EOF\n{"$schema":"https://agent-plugins.org/schemas/1.0.0/mcp.schema.json","mcpServers":{}}\nEOF\n\n# ✅ 完成：任意兼容客户端直接加载',
+        points: ['plugin.json 两行实质：$schema + name', 'skills/greet/SKILL.md = 一个合法 skill', 'mcp.json 可留空（空 mcpServers 合法）', '文档：agent-plugins.org/specification', 'Schemas：agent-plugins.org/schemas']
+      }
+    };
+
+    function openSheet(key){
+      var d = DATA[key]; if(!d) return;
+      sheetTitle.innerHTML = d.title;
+      sheetDesc.textContent = d.desc;
+      if(d.code){
+        sheetCode.style.display = 'block';
+        sheetCode.textContent = d.code;
+      }else{
+        sheetCode.style.display = 'none';
+      }
+      sheetPoints.innerHTML = d.points.map(function(p){
+        return '<div class="sheet-point">' + p + '</div>';
+      }).join('');
+      overlay.classList.add('active');
+      if(navigator.vibrate) navigator.vibrate(15);
+    }
+    function closeSheet(){ overlay.classList.remove('active'); }
+
+    // 3D 视差倾斜：跟随手指/鼠标
+    var stage = $('#stage');
+    var tiltRaf = null;
+    function onTilt(x, y){
+      if(tiltRaf) return;
+      tiltRaf = requestAnimationFrame(function(){
+        var w = stage.clientWidth, h = stage.clientHeight;
+        var nx = (x / w) * 2 - 1, ny = (y / h) * 2 - 1;
+        stage.style.transform = 'rotateX(' + (-ny * 6).toFixed(2) + 'deg) rotateY(' + (nx * 8).toFixed(2) + 'deg)';
+        tiltRaf = null;
+      });
+    }
+    function resetTilt(){ stage.style.transform = ''; }
+    stage.addEventListener('mousemove', function(e){
+      var r = stage.getBoundingClientRect();
+      onTilt(e.clientX - r.left, e.clientY - r.top);
+    });
+    stage.addEventListener('touchmove', function(e){
+      if(e.touches.length !== 1) return;
+      var r = stage.getBoundingClientRect();
+      onTilt(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top);
+    }, {passive: true});
+    stage.addEventListener('mouseleave', resetTilt);
+    stage.addEventListener('touchend', resetTilt);
+
+    // Stamp 连点彩蛋：5 次 → 旋转 + 背景故事
+    var stampHits = 0, stampTimer = null;
+    $('#stamp').addEventListener('click', function(){
+      stampHits++;
+      clearTimeout(stampTimer);
+      stampTimer = setTimeout(function(){ stampHits = 0; }, 1200);
+      if(stampHits >= 5){
+        stampHits = 0;
+        var s = $('#stamp');
+        s.style.transition = 'transform .6s';
+        s.style.transform = 'rotate(720deg) scale(1.3)';
+        setTimeout(function(){ s.style.transform = ''; }, 700);
+        if(navigator.vibrate) navigator.vibrate([30, 40, 30]);
+        toast.textContent = '📦 打包完成 · 解锁背景故事';
+        toast.classList.add('show');
+        setTimeout(function(){ toast.classList.remove('show'); }, 1600);
+        openSheet('story');
+      }else{
+        s.style.transform = 'rotate(30deg) scale(1.1)';
+        setTimeout(function(){ s.style.transform = ''; }, 250);
+      }
+    });
+
+    document.querySelectorAll('.stat-card').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet(el.dataset.stat); });
+    });
+    document.querySelectorAll('.flow-node').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet(el.id.replace('flow-','')); });
+    });
+    document.querySelectorAll('.feature').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet('f'+el.dataset.f); });
+    });
+    $('#termWin').addEventListener('click', function(){ openSheet('install'); });
+    $('#sheetClose').addEventListener('click', closeSheet);
+    overlay.addEventListener('click', function(e){ if(e.target===overlay) closeSheet(); });
+
+    // Tech pills 点击 → 技术说明弹窗
+    var techMap = {0:'tech0', 1:'tech1', 2:'tech2', 3:'tech3', 4:'tech4', 5:'tech5'};
+    document.querySelectorAll('.tech-pill').forEach(function(el, i){
+      el.addEventListener('click', function(){ openSheet(techMap[i] || 'story'); });
+    });
+
+    $('#shareBtn').addEventListener('click', function(){
+      var url = location.href.split('?')[0];
+      if(navigator.share){
+        navigator.share({title:'Agent Plugins — AI 组件打包标准', url:url}).catch(function(){});
+      }else if(navigator.clipboard){
+        navigator.clipboard.writeText(url).then(function(){
+          toast.textContent = '链接已复制';
+          toast.classList.add('show');
+          setTimeout(function(){ toast.classList.remove('show'); }, 1800);
+        });
+      }
+    });
+    document.querySelectorAll('.reveal').forEach(function(x){ x.classList.add('visible'); });
+  })();
+  </script>
+</body>
+</html>
