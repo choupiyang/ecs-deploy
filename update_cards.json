@@ -1,10 +1,10 @@
 {
-  "id": "cloudflare-os",
-  "title": "Cloudflare OS",
-  "subtitle": "公司级 AI 操作系统 · 5.1K★",
-  "image": "cards/cloudflare-os-cover.svg",
-  "page": "pages/cloudflare-os.html",
-  "tags": ["AI Agent", "Cloudflare", "Workers", "开源", "5.1K★"],
+  "id": "deepseek-reasonix",
+  "title": "DeepSeek-Reasonix",
+  "subtitle": "可以一直开着跑的编码 Agent · 32.8K★",
+  "image": "cards/reasonix-cover.svg",
+  "page": "pages/reasonix.html",
+  "tags": ["AI Agent", "DeepSeek", "Go", "编码", "32.8K★"],
   "date": "2026-08-07",
   "type": "recommendation"
 }

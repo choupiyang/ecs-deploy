@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0B0F1A">
+  <title>DeepSeek-Reasonix — 可以一直开着跑的编码 Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.cn">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.cn/css2?family=Noto+Serif+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0B0F1A;
+      --bg-2: #121827;
+      --accent: #67E8F9;
+      --accent-2: #A5B4FC;
+      --accent-3: #F0ABFC;
+      --ice: #E8F6FF;
+      --text: #F2F4F8;
+      --muted: #7C8AA5;
+      --success: #5EEAD4;
+      --surface: #151C2E;
+      --serif: 'Noto Serif SC', serif;
+      --cn: 'Noto Sans SC', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; background: #070A12; font-family: 'Noto Sans SC', sans-serif; color: #F2F4F8; -webkit-font-smoothing: antialiased; }
+    body { display: flex; align-items: center; justify-content: center; }
+
+    .stage {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      height: min(100vh, calc(100vw * 16 / 9));
+      width: min(100vw, calc(100vh * 9 / 16));
+      background: #0B0F1A;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,.6);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 16px 10px;
+      perspective: 1000px;
+      transform-style: preserve-3d;
+      transition: transform .12s ease-out;
+    }
+    .tilt-deep { transform: translateZ(-50px) scale(1.08); }
+    .tilt-mid { transform: translateZ(0); }
+    .tilt-front { transform: translateZ(45px); }
+
+    /* 终端会话 3D 特效（贴合 coding-agent 主题）：
+       3D 倾斜的终端窗口 + 代码行流 + 闪烁光标 + 会话状态栏 */
+    .term3d {
+      position: relative;
+      flex-shrink: 0;
+      width: 128px;
+      height: 128px;
+      margin: 0;
+      z-index: 1;
+      pointer-events: none;
+      transform-style: preserve-3d;
+    }
+    .term3d .twin {
+      position: absolute;
+      top: 8px; left: 6px;
+      width: 116px; height: 100px;
+      border-radius: 10px;
+      background: #0A0F1C;
+      border: 1px solid rgba(103, 232, 249, .35);
+      box-shadow: 0 0 24px rgba(103, 232, 249, .12), 0 12px 30px rgba(0,0,0,.5);
+      transform: rotateY(24deg) rotateX(8deg) translateZ(12px);
+      animation: twinFloat 5s ease-in-out infinite;
+    }
+    .term3d .twin2 {
+      top: 14px; left: 20px;
+      background: #0C1322;
+      border-color: rgba(165, 180, 252, .3);
+      transform: rotateY(-18deg) rotateX(6deg) translateZ(-8px);
+      animation: twinFloat2 6.5s ease-in-out infinite;
+      opacity: .65;
+    }
+    @keyframes twinFloat { 0%, 100% { transform: rotateY(24deg) rotateX(8deg) translateZ(12px); } 50% { transform: rotateY(26deg) rotateX(10deg) translateZ(16px); } }
+    @keyframes twinFloat2 { 0%, 100% { transform: rotateY(-18deg) rotateX(6deg) translateZ(-8px); } 50% { transform: rotateY(-20deg) rotateX(8deg) translateZ(-12px); } }
+    .term3d .twin::before {  /* 窗口顶栏三点 */
+      content: '';
+      position: absolute;
+      top: 7px; left: 9px;
+      width: 22px; height: 5px;
+      background:
+        radial-gradient(circle at 3px 2.5px, #FF5F57 0 2.2px, transparent 2.6px),
+        radial-gradient(circle at 11px 2.5px, #FFB020 0 2.2px, transparent 2.6px),
+        radial-gradient(circle at 19px 2.5px, #28C840 0 2.2px, transparent 2.6px);
+    }
+    .term3d .twin2::before { opacity: .5; }
+    .term3d .tline {
+      position: absolute;
+      left: 9px; right: 9px;
+      height: 4px;
+      border-radius: 2px;
+      background: linear-gradient(90deg, #67E8F9, #A5B4FC, #F0ABFC);
+      opacity: 0;
+    }
+    .tl1 { top: 22px; animation: lineIn 4s ease-in-out infinite; }
+    .tl2 { top: 32px; width: 70% !important; animation: lineIn 4s ease-in-out 1.1s infinite; }
+    .tl3 { top: 42px; width: 85% !important; animation: lineIn 4s ease-in-out 2.2s infinite; }
+    .tl4 { top: 52px; width: 55% !important; animation: lineIn 4s ease-in-out 3.3s infinite; }
+    @keyframes lineIn { 0% { opacity: 0; transform: translateX(-8px); } 25% { opacity: .55; } 60% { opacity: .55; } 100% { opacity: 0; transform: translateX(6px); } }
+    .term3d .tcaret {
+      position: absolute;
+      left: 9px; top: 66px;
+      width: 7px; height: 12px;
+      background: #67E8F9;
+      box-shadow: 0 0 8px #67E8F9;
+      animation: blink 1s steps(1) infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+    .term3d .tstatus {
+      position: absolute;
+      left: 8px; right: 8px; bottom: -2px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 5.5px;
+      letter-spacing: .08em;
+      color: #7C8AA5;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: center;
+    }
+    .term3d .tstatus em { color: #5EEAD4; font-style: normal; }
+    .term3d .tsat {
+      position: absolute;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #F0ABFC;
+      box-shadow: 0 0 8px rgba(240, 171, 252, .8);
+      top: 50%; left: 50%;
+      animation: satOrbit 7s linear infinite;
+    }
+    @keyframes satOrbit {
+      from { transform: rotate(0deg) translateX(56px) rotate(0deg); }
+      to   { transform: rotate(360deg) translateX(56px) rotate(-360deg); }
+    }
+    .term3d .tchip {
+      position: absolute;
+      top: 88px; left: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 5.5px;
+      color: #5EEAD4;
+      border: 1px solid rgba(94, 234, 212, .35);
+      border-radius: 3px;
+      padding: 1px 4px;
+      background: rgba(94, 234, 212, .06);
+      animation: chipPulse 2.6s ease-in-out infinite;
+    }
+    @keyframes chipPulse { 0%, 100% { opacity: .5; } 50% { opacity: 1; box-shadow: 0 0 10px rgba(94, 234, 212, .3); } }
+
+    /* 浮动数据粒子（3D 视差前景） */
+    .flakes { position: absolute; inset: 0; pointer-events: none; z-index: 3; overflow: hidden; }
+    .flake {
+      position: absolute;
+      width: 10px; height: 10px;
+      border: 1px solid rgba(103, 232, 249, .5);
+      border-radius: 50%;
+      opacity: .5;
+      animation: floatY 6s ease-in-out infinite;
+    }
+    .flake.f1 { left: 8%; top: 22%; animation-delay: 0s; }
+    .flake.f2 { left: 88%; top: 30%; width: 7px; height: 7px; animation-delay: 1.2s; }
+    .flake.f3 { left: 14%; top: 68%; width: 6px; height: 6px; border-color: rgba(240, 171, 252, .4); animation-delay: 2.1s; }
+    .flake.f4 { left: 84%; top: 72%; width: 9px; height: 9px; animation-delay: .6s; }
+    .flake.f5 { left: 48%; top: 16%; width: 5px; height: 5px; border-color: rgba(94, 234, 212, .5); animation-delay: 1.8s; }
+    @keyframes floatY {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-14px) rotate(120deg); }
+    }
+    /* 探索 hint 角标 */
+    .hint-badge {
+      position: relative;
+      z-index: 5;
+      align-self: flex-start;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      letter-spacing: .18em;
+      color: #8FA8C9;
+      border: 1px dashed rgba(103, 232, 249, .35);
+      border-radius: 10px;
+      padding: 2px 8px;
+      margin-top: 5px;
+      flex-shrink: 0;
+      animation: hintPulse 2.4s ease-in-out infinite;
+    }
+    @keyframes hintPulse {
+      0%, 100% { opacity: .55; }
+      50% { opacity: 1; box-shadow: 0 0 12px rgba(103, 232, 249, .25); }
+    }
+    .stage::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 38% at 78% 2%, rgba(103, 232, 249, .09) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 35% at 8% 45%, rgba(165, 180, 252, .08) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 50% 100%, rgba(21, 28, 46, .95) 0%, transparent 60%);
+    }
+    .stage::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(rgba(242, 244, 248, .012) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(242, 244, 248, .012) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    /* 顶部条 */
+    .topbar {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .16em;
+      color: #7C8AA5;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(242, 244, 248, .06);
+    }
+    .brand { display: flex; align-items: center; gap: 6px; color: #F2F4F8; }
+    .brand-dot { width: 5px; height: 5px; background: #67E8F9; border-radius: 50%; box-shadow: 0 0 8px #67E8F9; animation: pulse 2.2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .3; transform: scale(.6); } }
+    .share-btn {
+      background: none;
+      border: 1px solid rgba(242, 244, 248, .2);
+      padding: 4px 8px 3px;
+      font: inherit;
+      color: #F2F4F8;
+      cursor: pointer;
+      letter-spacing: .12em;
+      transition: all .3s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 7.5px;
+    }
+    .share-btn:active { background: #67E8F9; color: #0B0F1A; border-color: #67E8F9; }
+
+    /* Hero —— 左右两栏：左文字 + 右 3D 终端特效 */
+    .hero { position: relative; z-index: 5; flex-shrink: 0; margin-top: 6px; display: flex; align-items: flex-start; gap: 12px; }
+    .hero-side { flex: 1; min-width: 0; }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #7C8AA5;
+      margin-bottom: 4px;
+    }
+    .vol { color: #67E8F9; }
+    .title-block { display: flex; align-items: flex-start; gap: 10px; }
+    .pg-stamp {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(103, 232, 249, .6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 19px;
+      flex-shrink: 0;
+      position: relative;
+      box-shadow: 0 0 18px rgba(103, 232, 249, .18) inset, 0 0 12px rgba(103, 232, 249, .1);
+    }
+    .pg-stamp::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 1px dashed rgba(103, 232, 249, .35);
+      animation: spin 9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .title-text { min-width: 0; }
+    .pg-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 23px;
+      font-weight: 900;
+      letter-spacing: -.02em;
+      line-height: 1.05;
+      color: #F2F4F8;
+    }
+    .pg-title .dot { color: #67E8F9; }
+    .superdesign-line { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+    .superdesign { font-family: 'JetBrains Mono', monospace; font-size: 7px; letter-spacing: .14em; color: #9CA3AF; }
+    .v-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      letter-spacing: .14em;
+      color: #67E8F9;
+      border: 1px solid rgba(103, 232, 249, .3);
+      padding: 1px 5px;
+      border-radius: 2px;
+      background: rgba(103, 232, 249, .06);
+    }
+    .v-tag.green { color: #5EEAD4; border-color: rgba(94, 234, 212, .3); background: rgba(94, 234, 212, .06); }
+    .tagline {
+      margin-top: 5px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10.5px;
+      color: #D1D5DB;
+      line-height: 1.45;
+    }
+    .tagline em { color: #67E8F9; font-style: normal; font-weight: 500; }
+
+    /* 终端展示区（真实会话示例） */
+    .termbox { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .term-header { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; margin-bottom: 4px; }
+    .term-header::after { content: ''; flex: 1; height: 1px; background: rgba(242, 244, 248, .06); }
+    .term-window {
+      background: #070A12;
+      border: 1px solid rgba(103, 232, 249, .3);
+      border-radius: 8px;
+      overflow: hidden;
+      font-family: 'JetBrains Mono', monospace;
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .term-window:active { border-color: rgba(103, 232, 249, .6); }
+    .term-bar {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 9px;
+      background: rgba(103, 232, 249, .1);
+      border-bottom: 1px solid rgba(103, 232, 249, .15);
+    }
+    .term-bar span { width: 7px; height: 7px; border-radius: 50%; }
+    .term-bar .r { background: #FF5F57; } .term-bar .y { background: #FFB020; } .term-bar .g { background: #28C840; }
+    .term-bar b { margin-left: 6px; font-size: 7px; font-weight: 400; color: #8FA8C9; letter-spacing: .06em; }
+    .term-body { padding: 8px 11px 9px; font-size: 8.5px; line-height: 1.8; color: #9FB8D8; }
+    .term-body .cmd { color: #67E8F9; }
+    .term-body .prompt { color: #7C8AA5; }
+    .term-body .out { color: #B9CCE8; }
+    .term-body .ok { color: #5EEAD4; }
+    .term-body .dim { color: #5A6B8C; }
+    .term-body .plan { color: #F0ABFC; }
+    .caret-blink { display: inline-block; width: 7px; height: 10px; background: #67E8F9; vertical-align: -2px; animation: blink 1s steps(1) infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* Stats */
+    .stats-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .stats-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .stats-title { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; }
+    .stats-badge { font-family: 'JetBrains Mono', monospace; font-size: 6px; letter-spacing: .16em; color: #5EEAD4; border: 1px solid rgba(94, 234, 212, .3); padding: 1px 5px; border-radius: 2px; }
+    .stats-chart { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .stat-card {
+      background: rgba(242, 244, 248, .02);
+      border: 1px solid rgba(242, 244, 248, .07);
+      border-radius: 7px;
+      padding: 7px 6px 5px;
+      cursor: pointer;
+      transition: all .25s;
+      min-width: 0;
+    }
+    .stat-card:active { background: rgba(103, 232, 249, .07); border-color: rgba(103, 232, 249, .3); transform: scale(.96); }
+    .stat-num { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; color: #F2F4F8; line-height: 1; white-space: nowrap; }
+    .stat-num .accent { color: var(--stat-color, #67E8F9); }
+    .stat-label { font-size: 7px; color: #7C8AA5; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .stat-mini-chart { display: flex; align-items: flex-end; gap: 2px; height: 12px; margin-top: 4px; }
+    .stat-bar { width: 4px; background: var(--stat-color, #67E8F9); opacity: .55; border-radius: 1px; transform-origin: bottom; }
+
+    /* Flow */
+    .flow-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .flow-header { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; margin-bottom: 4px; }
+    .flow-header::after { content: ''; flex: 1; height: 1px; background: rgba(242, 244, 248, .06); }
+    .flow-svg { width: 100%; height: auto; display: block; }
+    .flow-node { cursor: pointer; }
+    .flow-node:active { opacity: .7; }
+    .flow-arrow { animation: flowPulse 2s ease-in-out infinite; }
+    @keyframes flowPulse { 0%, 100% { stroke-opacity: .4; } 50% { stroke-opacity: 1; } }
+
+    /* Features */
+    .features { position: relative; z-index: 5; margin-top: 6px; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      background: rgba(242, 244, 248, .02);
+      border: 1px solid rgba(242, 244, 248, .07);
+      border-radius: 7px;
+      padding: 6px 9px;
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .feature:active { background: rgba(103, 232, 249, .05); border-color: rgba(103, 232, 249, .22); }
+    .feature-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: rgba(103, 232, 249, .1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .feature-icon svg { width: 13px; height: 13px; stroke: #67E8F9; fill: none; stroke-width: 1.5; }
+    .feature-icon.green { background: rgba(165, 180, 252, .1); }
+    .feature-icon.green svg { stroke: #A5B4FC; }
+    .feature-icon.pink { background: rgba(240, 171, 252, .1); }
+    .feature-icon.pink svg { stroke: #F0ABFC; }
+    .feature-content { flex: 1; min-width: 0; }
+    .feature-title { font-family: 'Noto Sans SC', sans-serif; font-size: 9.5px; font-weight: 500; color: #F2F4F8; letter-spacing: .02em; }
+    .feature-desc { font-size: 7.5px; color: #7C8AA5; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .feature-arrow { font-size: 11px; color: #67E8F9; opacity: 0; transform: translateX(-2px); transition: all .25s; flex-shrink: 0; }
+    .feature:active .feature-arrow { opacity: 1; transform: translateX(2px); }
+    .feature-progress { height: 2px; background: rgba(242, 244, 248, .06); border-radius: 1px; margin-top: 4px; overflow: hidden; }
+    .feature-progress-bar { height: 100%; background: linear-gradient(90deg, #67E8F9, #A5B4FC, #F0ABFC); border-radius: 1px; transform-origin: left; animation: progressIn .8s cubic-bezier(.4, 0, .2, 1) forwards; transform: scaleX(0); }
+    @keyframes progressIn { to { transform: scaleX(1); } }
+
+    /* Tech */
+    .tech-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .tech-header { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; margin-bottom: 4px; }
+    .tech-pills { display: flex; flex-wrap: wrap; gap: 4px; }
+    .tech-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6.5px;
+      letter-spacing: .08em;
+      color: #9CA3AF;
+      border: 1px solid rgba(242, 244, 248, .1);
+      padding: 2px 7px;
+      border-radius: 10px;
+      cursor: pointer;
+      background: rgba(242, 244, 248, .02);
+      transition: all .2s;
+    }
+    .tech-pill:active { background: rgba(242, 244, 248, .08); }
+    .tech-pill.accent { border-color: rgba(103, 232, 249, .35); color: #67E8F9; }
+    .tech-pill.violet { border-color: rgba(165, 180, 252, .35); color: #A5B4FC; }
+    .tech-pill.pink { border-color: rgba(240, 171, 252, .35); color: #F0ABFC; }
+    .tech-pill.green { border-color: rgba(94, 234, 212, .3); color: #5EEAD4; }
+
+    /* Bottom bar */
+    .bottombar {
+      position: relative;
+      z-index: 5;
+      margin-top: 8px;
+      padding-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      border-top: 1px solid rgba(242, 244, 248, .06);
+    }
+    .github-link { display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 8px; color: #D1D5DB; text-decoration: none; }
+    .github-link svg { width: 13px; height: 13px; fill: #9CA3AF; transition: fill .25s; }
+    .github-link:active svg { fill: #67E8F9; }
+    .visit-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .14em;
+      color: #0B0F1A;
+      background: linear-gradient(90deg, #67E8F9, #A5B4FC, #F0ABFC);
+      padding: 6px 13px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all .25s;
+    }
+    .visit-btn:active { transform: scale(.95); filter: brightness(1.15); }
+
+    /* Overlay + Sheet */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: flex-end;
+      background: rgba(0, 0, 0, .5);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .35s;
+    }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+    .sheet {
+      width: 100%;
+      max-height: 76%;
+      background: linear-gradient(180deg, #151C2E, #121827);
+      border: 1px solid rgba(103, 232, 249, .2);
+      border-bottom: none;
+      border-radius: 16px 16px 0 0;
+      padding: 14px 18px 18px;
+      transform: translateY(101%);
+      transition: transform .45s cubic-bezier(.7, 0, .3, 1);
+      overflow-y: auto;
+    }
+    .overlay.active .sheet { transform: translateY(0); }
+    .sheet-handle { width: 32px; height: 3px; background: #3A4A66; border-radius: 2px; margin: 0 auto 12px; }
+    .sheet-title { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; color: #F2F4F8; margin-bottom: 7px; }
+    .sheet-title em { color: #67E8F9; font-style: normal; }
+    .sheet-desc { font-size: 10.5px; line-height: 1.65; color: #9CA3AF; }
+    .sheet-desc code { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #67E8F9; background: rgba(103, 232, 249, .08); padding: 1px 4px; border-radius: 2px; }
+    .sheet-code {
+      margin-top: 10px;
+      background: #070A12;
+      border: 1px solid rgba(242, 244, 248, .08);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      line-height: 1.7;
+      color: #67E8F9;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .sheet-points { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+    .sheet-point { display: flex; align-items: flex-start; gap: 8px; font-family: 'Noto Sans SC', sans-serif; font-size: 10px; color: #D0D0D8; line-height: 1.55; }
+    .sheet-point::before { content: ''; width: 5px; height: 5px; background: #67E8F9; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .sheet-point.green::before { background: #5EEAD4; }
+    .sheet-point.pink::before { background: #F0ABFC; }
+
+    /* 弹窗图库 */
+    .sheet-gallery { margin-top: 10px; }
+    .g-main { width: 100%; border-radius: 8px; border: 1px solid rgba(103, 232, 249, .25); display: block; }
+    .g-thumbs { display: flex; gap: 6px; margin-top: 6px; overflow-x: auto; padding-bottom: 2px; }
+    .g-thumb { width: 60px; height: 36px; object-fit: cover; border-radius: 4px; opacity: .45; border: 1.5px solid transparent; cursor: pointer; flex-shrink: 0; transition: all .2s; }
+    .g-thumb.active { opacity: 1; border-color: #67E8F9; }
+
+    /* Toast */
+    .toast {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #28C840;
+      color: #0B0F1A;
+      padding: 7px 14px;
+      border-radius: 5px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: all .3s;
+      z-index: 200;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .reveal { opacity: 0; transform: translateY(10px); transition: all .45s cubic-bezier(.4, 0, .2, 1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @keyframes chartGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+    .chart-animate { animation: chartGrow .6s cubic-bezier(.4, 0, .2, 1) forwards; }
+
+    /* 小屏兜底 */
+    @media (max-height: 730px) {
+      .pg-title { font-size: 20px; }
+      .pg-stamp { width: 34px; height: 34px; font-size: 16px; }
+      .tagline { font-size: 9.5px; }
+      .term-body { font-size: 7.5px; line-height: 1.7; padding: 6px 9px; }
+      .feature { padding: 5px 9px; }
+      .feature-title { font-size: 9px; }
+      .stat-num { font-size: 13.5px; }
+      .sheet { max-height: 80%; }
+      .term3d { width: 96px; height: 96px; }
+      .term3d .twin { width: 88px; height: 74px; }
+      .hero { gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage" id="stage">
+    <!-- 3D 视差前景：浮动数据粒子 -->
+    <div class="flakes">
+      <div class="flake f1"></div><div class="flake f2"></div><div class="flake f3"></div>
+      <div class="flake f4"></div><div class="flake f5"></div>
+    </div>
+
+    <!-- Topbar -->
+    <div class="topbar reveal tilt-mid">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <span>Young's Insight</span>
+      </div>
+      <button class="share-btn" id="shareBtn">SHARE <span class="arr">↗</span></button>
+    </div>
+
+    <!-- Hero —— 左右两栏：左文字 + 右 3D 终端特效 -->
+    <div class="hero reveal">
+      <div class="hero-side">
+        <div class="meta-row">
+          <span class="vol">DEEPSEEK-NATIVE CODING AGENT</span>
+          <span>2026.08.07</span>
+        </div>
+        <div class="title-block">
+          <div class="pg-stamp" id="stamp">⌨️</div>
+          <div class="title-text">
+            <div class="pg-title">DeepSeek-Reasonix<span class="dot">.</span></div>
+            <div class="superdesign-line">
+              <span class="superdesign">esengine · Go · MIT</span>
+              <span class="v-tag">32.8K★</span>
+              <span class="v-tag green">Trendshift</span>
+            </div>
+          </div>
+        </div>
+        <div class="tagline">可以<em>一直开着跑</em>的编码 Agent——终端原生、前缀缓存稳定、逐轮 checkpoint 可回退，6 小时会话只花 4 分钱</div>
+        <div class="hint-badge">✦ 轻触任何元素探索 · 拖动卡片看 3D 视差</div>
+      </div>
+      <div class="term3d tilt-deep">
+        <div class="twin twin2"></div>
+        <div class="twin">
+          <div class="tline tl1"></div>
+          <div class="tline tl2"></div>
+          <div class="tline tl3"></div>
+          <div class="tline tl4"></div>
+          <div class="tcaret"></div>
+        </div>
+        <div class="tchip">● checkpoint #14</div>
+        <div class="tsat"></div>
+        <div class="tstatus">9 calls · <em>18m</em> · $0.043</div>
+      </div>
+    </div>
+
+    <!-- 终端展示 -->
+    <div class="termbox reveal">
+      <div class="term-header">One task, start to finish · 真实会话</div>
+      <div class="term-window" id="termWin">
+        <div class="term-bar">
+          <span class="r"></span><span class="y"></span><span class="g"></span>
+          <b>~/app — reasonix · deepseek · 点击查看安装</b>
+        </div>
+        <div class="term-body">
+<span class="prompt">›</span> <span class="cmd">add retry with backoff to the http client</span>
+<span class="plan">◇ plan · 3 steps · 2 files · 1 test run</span>
+<span class="dim">● allow edit internal/net/client.go? [y/n/always]</span>
+<span class="ok">✓ edit client.go +24 −3</span>
+<span class="ok">✓ edit client_test.go +41 −0</span>
+<span class="ok">✓ go test ./internal/net/ · ok (0.21s)</span>
+<span class="dim">◆ checkpoint #14 — revert this turn anytime</span>
+<span class="out">9 calls · session 18m · cost <b class="ok">$0.043</b></span>
+<span class="prompt">›</span> <span class="caret-blink"></span></div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-section reveal">
+      <div class="stats-header">
+        <span class="stats-title">Signals</span>
+        <span class="stats-badge">OPEN SOURCE · MIT</span>
+      </div>
+      <div class="stats-chart">
+        <div class="stat-card" data-stat="stars" style="--stat-color: #67E8F9">
+          <div class="stat-num"><span class="accent">32.8K</span></div>
+          <div class="stat-label">Stars · 4 个月</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 5px; animation-delay: .1s"></div>
+            <div class="stat-bar chart-animate" style="height: 9px; animation-delay: .15s"></div>
+            <div class="stat-bar chart-animate" style="height: 13px; animation-delay: .2s"></div>
+            <div class="stat-bar chart-animate" style="height: 16px; animation-delay: .25s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="forks" style="--stat-color: #A5B4FC">
+          <div class="stat-num"><span class="accent">2.1K</span></div>
+          <div class="stat-label">Forks</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 10px; background: #A5B4FC; animation-delay: .3s"></div>
+            <div class="stat-bar chart-animate" style="height: 12px; background: #A5B4FC; animation-delay: .35s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="binary" style="--stat-color: #5EEAD4">
+          <div class="stat-num"><span class="accent">1</span></div>
+          <div class="stat-label">静态二进制</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 6px; background: #5EEAD4; animation-delay: .4s"></div>
+            <div class="stat-bar chart-animate" style="height: 12px; background: #5EEAD4; animation-delay: .45s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="cost" style="--stat-color: #F0ABFC">
+          <div class="stat-num"><span class="accent">$0.043</span></div>
+          <div class="stat-label">18min 会话成本</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 8px; animation-delay: .5s"></div>
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .55s"></div>
+            <div class="stat-bar chart-animate" style="height: 9px; animation-delay: .6s"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flow -->
+    <div class="flow-section reveal">
+      <div class="flow-header">Session Loop · 可审阅的自治</div>
+      <svg class="flow-svg" viewBox="0 0 350 44" fill="none">
+        <defs>
+          <marker id="rx-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L6,3 z" fill="#67E8F9" fill-opacity=".6"/>
+          </marker>
+        </defs>
+        <g class="flow-node" id="flow-plan">
+          <rect x="3" y="9" width="56" height="26" rx="5" fill="rgba(240,171,252,.08)" stroke="#F0ABFC" stroke-width="1" stroke-opacity=".5"/>
+          <text x="31" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#F2F4F8" text-anchor="middle">/plan 规划</text>
+          <text x="31" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#7C8AA5" text-anchor="middle">批准前不写入</text>
+        </g>
+        <path class="flow-arrow" d="M62 22 L76 22" stroke="#F0ABFC" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#rx-arrow)"/>
+        <g class="flow-node" id="flow-perm">
+          <rect x="79" y="9" width="64" height="26" rx="5" fill="rgba(103,232,249,.12)" stroke="#67E8F9" stroke-width="1.2"/>
+          <text x="111" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#7FE8F9" text-anchor="middle">权限门控</text>
+          <text x="111" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#7C8AA5" text-anchor="middle">读/写/shell 分别问</text>
+        </g>
+        <path class="flow-arrow" d="M146 22 L160 22" stroke="#67E8F9" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#rx-arrow)" style="animation-delay: .3s"/>
+        <g class="flow-node" id="flow-exec">
+          <rect x="163" y="9" width="62" height="26" rx="5" fill="rgba(94,234,212,.12)" stroke="#5EEAD4" stroke-width="1.2"/>
+          <text x="194" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#7FE8C4" text-anchor="middle">执行 + 沙箱</text>
+          <text x="194" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#7C8AA5" text-anchor="middle">工作区边界内</text>
+        </g>
+        <path class="flow-arrow" d="M228 22 L242 22" stroke="#5EEAD4" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#rx-arrow)" style="animation-delay: .6s"/>
+        <g class="flow-node" id="flow-ckpt">
+          <rect x="245" y="9" width="62" height="26" rx="5" fill="rgba(165,180,252,.12)" stroke="#A5B4FC" stroke-width="1.2"/>
+          <text x="276" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#B9C8FC" text-anchor="middle">checkpoint</text>
+          <text x="276" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#7C8AA5" text-anchor="middle">git 外逐轮记录</text>
+        </g>
+        <path class="flow-arrow" d="M310 22 L322 22" stroke="#A5B4FC" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#rx-arrow)" style="animation-delay: .9s"/>
+        <g class="flow-node" id="flow-undo">
+          <rect x="325" y="9" width="23" height="26" rx="5" fill="rgba(240,171,252,.08)" stroke="#F0ABFC" stroke-width="1" stroke-opacity=".5"/>
+          <text x="336" y="22" font-family="JetBrains Mono, monospace" font-size="5.5" fill="#F2F4F8" text-anchor="middle">回退</text>
+          <text x="336" y="31" font-family="JetBrains Mono, monospace" font-size="4" fill="#7C8AA5" text-anchor="middle">任意轮</text>
+        </g>
+        <circle cx="69" cy="22" r="2" fill="#F0ABFC">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="153" cy="22" r="2" fill="#67E8F9">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0.5s"/>
+        </circle>
+        <circle cx="235" cy="22" r="2" fill="#5EEAD4">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="1s"/>
+        </circle>
+        <circle cx="316" cy="22" r="2" fill="#A5B4FC">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="1.3s"/>
+        </circle>
+      </svg>
+    </div>
+
+    <!-- Features -->
+    <div class="features reveal">
+      <div class="feature" data-f="0">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">前缀缓存稳定 · 长期会话低成本</div>
+          <div class="feature-desc">围绕 DeepSeek prefix cache 调优，跑几小时也不烧 token</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 100%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="1">
+        <div class="feature-icon green">
+          <svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/><path d="M9 12l2 2 4-4"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">逐轮 Checkpoint · 可撤销自治</div>
+          <div class="feature-desc">每轮 git 外 checkpoint，6 小时运行回退任意点，不污染提交历史</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 97%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="2">
+        <div class="feature-icon pink">
+          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">权限门控 + 沙箱 · 放行仍受限</div>
+          <div class="feature-desc">读/写/shell 分别询问，同意后命令仍被工作区沙箱约束</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 95%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="3">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 21h8M12 18v3"/><path d="M6 9h4M6 12h7"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">一引擎四入口 · 会话不冷</div>
+          <div class="feature-desc">终端 / 桌面端 / 浏览器 / 编辑器（ACP）共享同一本地引擎</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 93%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="4">
+        <div class="feature-icon green">
+          <svg viewBox="0 0 24 24"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4M12 2v13"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">单文件零依赖 · 本地优先</div>
+          <div class="feature-desc">CGO-free Go 静态二进制，自带 DeepSeek key，代码不出机器</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 91%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+    </div>
+
+    <!-- Tech -->
+    <div class="tech-section reveal">
+      <div class="tech-header">Stack &amp; Ecosystem</div>
+      <div class="tech-pills">
+        <span class="tech-pill accent">Go</span>
+        <span class="tech-pill violet">DeepSeek</span>
+        <span class="tech-pill pink">MCP</span>
+        <span class="tech-pill accent">ACP</span>
+        <span class="tech-pill green">prefix cache</span>
+        <span class="tech-pill violet">TUI</span>
+      </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="bottombar reveal">
+      <a href="https://github.com/esengine/DeepSeek-Reasonix" target="_blank" class="github-link">
+        <svg viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        esengine/DeepSeek-Reasonix
+      </a>
+      <a href="https://reasonix.io" target="_blank" class="visit-btn">reasonix.io →</a>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title" id="sheetTitle"></div>
+        <div class="sheet-desc" id="sheetDesc"></div>
+        <div class="sheet-gallery" id="sheetGallery" style="display:none"></div>
+        <div class="sheet-code" id="sheetCode" style="display:none"></div>
+        <div class="sheet-points" id="sheetPoints"></div>
+        <button class="sheet-close" id="sheetClose">CLOSE</button>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script>
+  (function(){
+    var $=function(s){return document.querySelector(s)};
+    var overlay=$('#overlay'), sheetTitle=$('#sheetTitle'), sheetDesc=$('#sheetDesc'),
+        sheetPoints=$('#sheetPoints'), sheetCode=$('#sheetCode'), sheetGallery=$('#sheetGallery'),
+        toast=$('#toast');
+    var IMG='../cards/reasonix/';
+
+    var DATA = {
+      stars: {
+        title: '32.8K Stars <em>· 4 个月爆发</em>',
+        desc: '2026-04-21 创建，4 个月冲到 32,765 星、2,114 forks、922 open issues。登 Trendshift 热榜（Go 榜），3,005 个已合并 PR。DeepSeek 生态现象级开源项目——围绕 prefix-cache 稳定性设计，npm 每周下载量持续攀升。',
+        points: ['esengine 组织 · Go 实现 · MIT 协议', '32,765 ★ / 2,114 forks / 922 issues', 'Trendshift 热榜 + 3,005 merged PRs', '2026-04-21 创建，2026-08-07 仍高频推送', 'npm: reasonix · Homebrew: esengine/reasonix', '98 位真实贡献者（社区共建）']
+      },
+      forks: {
+        title: '2.1K Forks <em>· 生态扩散</em>',
+        desc: '2,114 个 fork 说明大量团队在自建 Reasonix 工作流。默认分支 main-v2 快速迭代；配置驱动架构（reasonix.toml）让 fork 后定制 provider/agent/插件零成本，无需改内核代码。',
+        points: ['2,114 forks · 活跃二次开发', '默认分支 main-v2 持续演进', '配置驱动：fork 后改 toml 即可定制', 'AtomGit 镜像同步（国内可访问）']
+      },
+      binary: {
+        title: '1 个静态二进制 <em>· 零依赖分发</em>',
+        desc: 'CGO_ENABLED=0 编译的 Go 单文件，交叉编译覆盖 darwin/linux/windows × amd64/arm64 共 6 个目标。目标机器除了二进制本身什么都不用装——这是"零摩擦分发"的核心承诺。',
+        points: ['CGO-free · 完全自包含', '6 平台：darwin/linux/windows × amd64/arm64', 'npm i -g reasonix 自动拉预编译二进制', '每个 release 附 SHA256SUMS 校验', 'Windows 安装器经 SignPath.io 代码签名']
+      },
+      cost: {
+        title: '$0.043 <em>· 18 分钟会话成本</em>',
+        desc: '官网展示的真实会话：9 次工具调用、18 分钟、全程成本 $0.043（约 3 毛钱人民币）。核心秘密是 prefix-cache 稳定——启动注入稳定环境摘要，旧工具输出先 snip/prune 再 compaction，让 DeepSeek 的前缀缓存长期命中，token 成本压到最低。',
+        points: ['9 calls · session 18m · $0.043', 'prefix-cache 稳定 = 缓存长期命中', '旧工具输出 snip/prune 后再压缩', '工具 schema 合约有文档 + 回归测试', '缓存友好上下文维护是架构核心']
+      },
+      plan: {
+        title: '/plan 规划模式 <em>· 批准前不写入</em>',
+        desc: '任务开始前先给出计划：步骤、涉及文件、测试计划。在人类读过并批准前，所有写入都被 hold 住。官网示例：plan 3 steps · 2 files · 1 test run。',
+        points: ['动手前先出计划', '批准前不写入任何文件', '示例：3 steps · 2 files · 1 test run', '让长时间自治运行始终可读']
+      },
+      perm: {
+        title: '权限门控 <em>· 每次工具调用受控</em>',
+        desc: '读取、写入、shell 命令分别询问（y/n/always）。即便你放行，工作区沙箱仍限定命令能触碰的范围——"同意"不等于"无限权限"。',
+        points: ['读 / 写 / shell 分别授权', 'y/n/always 三态应答', 'workspace sandbox 二次约束', '工具调用审批在桌面端/编辑器同样可用']
+      },
+      exec: {
+        title: '执行 + 沙箱 <em>· 边界内自治</em>',
+        desc: 'Agent 写代码、跑测试、改文件都在工作区沙箱内进行。测试通过才进入 checkpoint；沙箱保证即使放行了危险命令，也触碰不到工作区之外。',
+        points: ['代码生成 + 即时执行', 'go test 等验证流程内置', '沙箱限定触碰范围', '失败自动调试重试']
+      },
+      ckpt: {
+        title: '逐轮 Checkpoint <em>· git 外安全网</em>',
+        desc: '每一轮都写入一个 checkpoint（存在 git 之外），所以 6 小时的运行可以回退到任意一轮，且不污染你的提交历史。官网原话："a six-hour run rewinds to any point without touching your commit history"。',
+        points: ['每轮自动 checkpoint', '存在 git 之外，不污染历史', '6 小时运行可回退任意点', 'checkpoint #14 — revert this turn anytime']
+      },
+      undo: {
+        title: '回退 <em>· 任意一轮可撤销</em>',
+        desc: '不满意某一步？回到那个 checkpoint，从那里重新开始。这让"把 agent 扔那儿跑几小时"从可怕变成可控——错了就回退，成本可忽略。',
+        points: ['任意 checkpoint 恢复', '撤销单轮操作', '长运行 + 可回退 = 真正可审阅的自治']
+      },
+      f0: {
+        title: '⚡ 前缀缓存稳定 <em>· 长期会话的低成本秘密</em>',
+        desc: 'Reasonix 围绕 DeepSeek 的 prefix cache 设计：启动时注入一段稳定的环境摘要，旧工具输出在进入摘要压缩前先 snip/prune，工具 schema 合约有文档和回归测试保护。缓存长期命中 = 同样的 token 不必重复计费，几小时的会话成本可以低到 4 分钱。',
+        points: ['DeepSeek prefix-cache 深度调优', '启动注入稳定环境摘要', '旧工具输出 snip/prune 后再 compaction', '工具 schema 合约文档化 + 回归测试', '官网示例：18 分钟会话仅 $0.043']
+      },
+      f1: {
+        title: '🛡️ 逐轮 Checkpoint <em>· 可撤销的自治</em>',
+        desc: '让 agent 跑几小时的前提是：看得见它做了什么、能撤销不想要的部分。每轮在 git 之外写 checkpoint，6 小时运行可回退到任意一轮，完全不碰你的提交历史。这是"可以一直开着跑"的安全底座。',
+        points: ['每轮自动 checkpoint（git 外）', '回退任意轮不污染提交历史', 'plan → gate → execute → checkpoint 全链路', '长运行也可读、可撤销']
+      },
+      f2: {
+        title: '🔐 权限门控 + 沙箱 <em>· 放行 ≠ 无限</em>',
+        desc: '每次工具调用都受控：读、写、shell 分别询问 y/n/always。即使你放行，工作区沙箱仍限定命令能触碰的范围——两层防线，让自治运行的破坏半径被压缩到工作区之内。',
+        points: ['读 / 写 / shell 分别授权', 'y/n/always 三态，支持"总是允许"', 'workspace sandbox 二次约束', '桌面端 / 编辑器审批界面一致']
+      },
+      f3: {
+        title: '💻 一引擎四入口 <em>· 会话永不冷</em>',
+        desc: '不是四个产品，而是一个本地引擎配四个前端：全屏 TUI（diff 审阅/审批/斜杠命令）、桌面端（多会话并列/自动更新）、浏览器（reasonix serve 本地 Web UI）、编辑器（VS Code 扩展 + ACP 协议）。会话、权限、技能、MCP 服务器全部共享——终端起的任务，桌面端接着干。',
+        points: ['终端 TUI：diff 审阅 · 审批 · 斜杠命令', '桌面端：多会话 · 设置 · 自动更新', '浏览器：reasonix serve 本地 Web UI', '编辑器：VS Code / VSCodium / 任意 ACP 编辑器', '共享会话与权限，跨端无缝切换']
+      },
+      f4: {
+        title: '📦 单文件零依赖 <em>· 本地优先</em>',
+        desc: 'CGO-free Go 静态二进制，交叉编译覆盖 darwin/linux/windows × amd64/arm64。自带 DeepSeek API key，引擎完全本地运行——代码只发往你配置的模型，不去别处。MIT 许可，公开开发，98 位贡献者共建。',
+        points: ['CGO_ENABLED=0 单静态二进制', '6 平台交叉编译，一条命令', 'BYOK：自带 DeepSeek key', '代码不出机器，本地优先', 'MIT · 98 贡献者 · 3,005 merged PRs']
+      },
+      tech0: {
+        title: 'Go <em>· 单二进制语言</em>',
+        desc: '整个引擎用 Go 编写，CGO_ENABLED=0 编译出完全自包含的静态二进制。Go 的交叉编译能力让一条命令覆盖 6 个平台目标；npm/Homebrew 只是分发外壳，核心永远是一个零依赖文件。',
+        points: ['Go · CGO-free 静态编译', 'make build → bin/reasonix', 'make cross → 6 平台归档', '零运行时依赖']
+      },
+      tech1: {
+        title: 'DeepSeek <em>· 原生预设</em>',
+        desc: 'DeepSeek 作为内置预设（preset），围绕其 prefix cache 深度调优。任何 OpenAI 兼容端点都只是一条配置——reasonix.toml 里声明 provider 和 model，内核无硬编码模型。可选双模型协同：executor + planner 各自独立缓存稳定的 session。',
+        points: ['DeepSeek 预设内置 + prefix-cache 调优', 'OpenAI 兼容端点 = 一条配置', '双模型：executor + planner 分 session', 'reasonix.toml 全配置，无硬编码']
+      },
+      tech2: {
+        title: 'MCP + 扩展协议 <em>· 不 fork 就扩展</em>',
+        desc: 'MCP over stdio/SSE/streamable HTTP 把外部工具合并进同一 registry；Markdown 技能与子智能体（explore/research/review/security-review）各自持有隔离的工具集。Extension Protocol v1 sidecar 还能拦截运行时事件、提供 Provider 和结构化 UI。',
+        points: ['MCP：stdio / SSE / streamable HTTP', 'Markdown skills + 子智能体 profile', '子智能体独立工具集隔离', 'Extension Protocol v1 sidecar', 'reasonix mcp add · ~/.reasonix/skills/']
+      },
+      tech3: {
+        title: 'ACP <em>· 编辑器接入协议</em>',
+        desc: 'reasonix acp 启动本地后端，任何支持 ACP（Agent Client Protocol）的编辑器都能接入。VS Code/VSCodium 官方扩展（SivanLiu.reasonix-agent）提供原生聊天、编辑器上下文、工具调用审批、模型选择和工作区会话。',
+        points: ['VS Code: SivanLiu.reasonix-agent', 'Open VSX: VSCodium / Eclipse Theia', '任意 ACP 编辑器可用', '编辑器内工具调用审批']
+      },
+      story: {
+        title: '背景故事 <em>· 4 个月从零到 3 万星</em>',
+        desc: 'DeepSeek-Reasonix 由 esengine 组织发起，SivanCola、ttmouse、lifu963 等核心贡献者共建。设计哲学直接回应 DeepSeek 模型的特点：prefix cache 便宜、上下文窗口深——那就做一个"围绕缓存稳定性设计"的 agent，让长会话成本趋近于零。2026-04-21 创建，4 个月冲到 32.8K stars，登 Trendshift 热榜。logo 由 Bernardxu123 设计，国内通过 AIGC Link 在小红书传播，AtomGit 镜像同步。',
+        points: ['2026-04-21 创建 · 4 个月 32.8K★', '理念：围绕 prefix-cache 稳定性设计', '口号：A coding agent you can leave running', '98 位贡献者 · 3,005 merged PRs', '中文文档完善（README.zh-CN + docs 双语）', '社区：Discord 双语 #help/#求助 + AtomGit 镜像']
+      },
+      install: {
+        title: '安装 <em>· 四条路径，一条命令</em>',
+        desc: 'CLI/TUI 通过 npm 一条命令装好（自动拉预编译二进制）；桌面端官网下载安装器；VS Code 扩展先装 CLI 再装扩展；源码构建用 make。所有入口共享同一本地引擎。',
+        points: ['npm i -g reasonix（任意系统）', 'brew install esengine/reasonix/reasonix（macOS）', '桌面端：reasonix.io 下载页', 'VS Code：SivanLiu.reasonix-agent', '源码：make build / make cross', 'reasonix setup 配置 provider → reasonix 开跑'],
+        code: '# 安装（任选其一）\nnpm i -g reasonix            # 任意系统，自动拉预编译二进制\nbrew install esengine/reasonix/reasonix   # macOS\n\n# 快速开始\nreasonix setup                # 配置 provider 和模型\nreasonix                      # 启动交互式会话\nreasonix run "implement the TODOs in main.go"\n\n# 会话内\n/init                         # 生成项目指令\n/plan                         # 先规划后执行'
+      },
+      surfaces: {
+        title: '四入口 <em>· 一引擎四处用</em>',
+        desc: '同一个本地 Reasonix 引擎，四个前端形态。会话、权限、技能与 MCP 服务器全部共享——终端里起的任务，打开桌面端就在那儿等着，会话永不冷。',
+        points: ['终端 TUI：全屏 diff 审阅、审批、斜杠命令', '桌面端：多会话并列、设置、自动更新', '浏览器：reasonix serve 本地 Web UI（可加 token 认证）', '编辑器：VS Code 扩展 / 任意 ACP 编辑器', '共享状态：终端起任务 → 桌面端继续']
+      },
+      gallery: {
+        title: '产品图库 <em>· 官方界面</em>',
+        desc: '从 README/docs 抓取的官方界面截图：桌面端深色主题、布局预览、技能面板、项目话题页。左滑切换。',
+        points: ['🖥️ 桌面端深色主题', '📐 布局预览', '🧩 Skills 技能面板', '📑 项目话题页'],
+        images: [IMG+'desktop-dark.jpg', IMG+'layout-preview.jpg', IMG+'skills-preview.jpg', IMG+'tabs-context.jpg']
+      }
+    };
+
+    function openSheet(key){
+      var d = DATA[key]; if(!d) return;
+      sheetTitle.innerHTML = d.title;
+      sheetDesc.textContent = d.desc;
+      if(d.code){
+        sheetCode.style.display = 'block';
+        sheetCode.textContent = d.code;
+      }else{
+        sheetCode.style.display = 'none';
+      }
+      renderGallery(d.images);
+      sheetPoints.innerHTML = d.points.map(function(p){
+        return '<div class="sheet-point' + (p.indexOf('✓')===0 ? ' green' : '') + '">' + p + '</div>';
+      }).join('');
+      overlay.classList.add('active');
+      if(navigator.vibrate) navigator.vibrate(15);
+    }
+    function closeSheet(){ overlay.classList.remove('active'); }
+
+    function renderGallery(images){
+      if(!images || !images.length){ sheetGallery.style.display = 'none'; return; }
+      sheetGallery.style.display = 'block';
+      var html = '<img class="g-main" id="gMain" src="' + images[0] + '" alt="screenshot">';
+      html += '<div class="g-thumbs">';
+      images.forEach(function(src, i){
+        html += '<img class="g-thumb' + (i===0 ? ' active' : '') + '" data-src="' + src + '" src="' + src + '" alt="">';
+      });
+      html += '</div>';
+      sheetGallery.innerHTML = html;
+      sheetGallery.querySelectorAll('.g-thumb').forEach(function(t){
+        t.addEventListener('click', function(){
+          var main = document.getElementById('gMain');
+          if(main) main.src = t.dataset.src;
+          sheetGallery.querySelectorAll('.g-thumb').forEach(function(x){ x.classList.remove('active'); });
+          t.classList.add('active');
+        });
+      });
+    }
+
+    // 3D 视差倾斜：跟随手指/鼠标
+    var stage = $('#stage');
+    var tiltRaf = null;
+    function onTilt(x, y){
+      if(tiltRaf) return;
+      tiltRaf = requestAnimationFrame(function(){
+        var w = stage.clientWidth, h = stage.clientHeight;
+        var nx = (x / w) * 2 - 1, ny = (y / h) * 2 - 1;
+        stage.style.transform = 'rotateX(' + (-ny * 6).toFixed(2) + 'deg) rotateY(' + (nx * 8).toFixed(2) + 'deg)';
+        tiltRaf = null;
+      });
+    }
+    function resetTilt(){ stage.style.transform = ''; }
+    stage.addEventListener('mousemove', function(e){
+      var r = stage.getBoundingClientRect();
+      onTilt(e.clientX - r.left, e.clientY - r.top);
+    });
+    stage.addEventListener('touchmove', function(e){
+      if(e.touches.length !== 1) return;
+      var r = stage.getBoundingClientRect();
+      onTilt(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top);
+    }, {passive: true});
+    stage.addEventListener('mouseleave', resetTilt);
+    stage.addEventListener('touchend', resetTilt);
+
+    // Stamp 连点彩蛋：5 次 → 旋转 + 背景故事
+    var stampHits = 0, stampTimer = null;
+    $('#stamp').addEventListener('click', function(){
+      stampHits++;
+      clearTimeout(stampTimer);
+      stampTimer = setTimeout(function(){ stampHits = 0; }, 1200);
+      if(stampHits >= 5){
+        stampHits = 0;
+        var s = $('#stamp');
+        s.style.transition = 'transform .6s';
+        s.style.transform = 'rotate(720deg) scale(1.3)';
+        setTimeout(function(){ s.style.transform = ''; }, 700);
+        if(navigator.vibrate) navigator.vibrate([30, 40, 30]);
+        toast.textContent = '⌨️ 会话觉醒 · 解锁背景故事';
+        toast.classList.add('show');
+        setTimeout(function(){ toast.classList.remove('show'); }, 1600);
+        openSheet('story');
+      }else{
+        s.style.transform = 'rotate(30deg) scale(1.1)';
+        setTimeout(function(){ s.style.transform = ''; }, 250);
+      }
+    });
+
+    document.querySelectorAll('.stat-card').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet(el.dataset.stat); });
+    });
+    document.querySelectorAll('.flow-node').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet(el.id.replace('flow-','')); });
+    });
+    document.querySelectorAll('.feature').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet('f'+el.dataset.f); });
+    });
+    $('#termWin').addEventListener('click', function(){ openSheet('install'); });
+    $('#sheetClose').addEventListener('click', closeSheet);
+    overlay.addEventListener('click', function(e){ if(e.target===overlay) closeSheet(); });
+
+    // Tech pills 点击 → 技术说明弹窗
+    var techMap = {0:'tech0', 1:'tech1', 2:'tech2', 3:'tech3', 4:'tech1', 5:'surfaces'};
+    document.querySelectorAll('.tech-pill').forEach(function(el, i){
+      el.addEventListener('click', function(){ openSheet(techMap[i] || 'story'); });
+    });
+
+    $('#shareBtn').addEventListener('click', function(){
+      var url = location.href.split('?')[0];
+      if(navigator.share){
+        navigator.share({title:'DeepSeek-Reasonix — 可以一直开着跑的编码 Agent', url:url}).catch(function(){});
+      }else if(navigator.clipboard){
+        navigator.clipboard.writeText(url).then(function(){
+          toast.textContent = '链接已复制';
+          toast.classList.add('show');
+          setTimeout(function(){ toast.classList.remove('show'); }, 1800);
+        });
+      }
+    });
+    document.querySelectorAll('.reveal').forEach(function(x){ x.classList.add('visible'); });
+  })();
+  </script>
+</body>
+</html>
