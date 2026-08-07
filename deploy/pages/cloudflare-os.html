@@ -46,14 +46,14 @@
     .tilt-mid { transform: translateZ(0); }
     .tilt-front { transform: translateZ(45px); }
 
-    /* CSS 3D 轨道核心（零依赖，2 秒内可见的 3D） */
+    /* CSS 3D 轨道核心（零依赖，2 秒内可见的 3D）
+       ⚠️ 正常流占位块（flex 子项），禁用 absolute 定位——否则覆盖 hero 文字 */
     .orbit3d {
-      position: absolute;
-      top: 52px;
-      left: 50%;
-      width: 190px;
-      height: 190px;
-      margin-left: -95px;
+      position: relative;
+      flex-shrink: 0;
+      width: 100%;
+      height: 112px;
+      margin: 2px 0 0;
       z-index: 1;
       pointer-events: none;
       transform-style: preserve-3d;
@@ -61,8 +61,8 @@
     .orbit3d .core {
       position: absolute;
       top: 50%; left: 50%;
-      width: 46px; height: 46px;
-      margin: -23px 0 0 -23px;
+      width: 40px; height: 40px;
+      margin: -20px 0 0 -20px;
       border-radius: 50%;
       background: radial-gradient(circle at 35% 30%, #FFD9A8, #F6821F 55%, #B45309);
       box-shadow: 0 0 30px rgba(246, 130, 31, .55), 0 0 80px rgba(246, 130, 31, .2);
@@ -77,9 +77,9 @@
       border: 1.5px solid rgba(246, 130, 31, .45);
       transform-style: preserve-3d;
     }
-    .ring.r1 { width: 120px; height: 120px; margin: -60px 0 0 -60px; animation: spin3d 9s linear infinite; }
-    .ring.r2 { width: 160px; height: 160px; margin: -80px 0 0 -80px; border-color: rgba(246, 130, 31, .28); animation: spin3dRev 14s linear infinite; }
-    .ring.r3 { width: 190px; height: 190px; margin: -95px 0 0 -95px; border-color: rgba(255, 208, 150, .18); animation: spin3d 22s linear infinite; }
+    .ring.r1 { width: 96px; height: 96px; margin: -48px 0 0 -48px; animation: spin3d 9s linear infinite; }
+    .ring.r2 { width: 130px; height: 130px; margin: -65px 0 0 -65px; border-color: rgba(246, 130, 31, .28); animation: spin3dRev 14s linear infinite; }
+    .ring.r3 { width: 158px; height: 158px; margin: -79px 0 0 -79px; border-color: rgba(255, 208, 150, .18); animation: spin3d 22s linear infinite; }
     @keyframes spin3d { from { transform: rotateX(68deg) rotateZ(0); } to { transform: rotateX(68deg) rotateZ(360deg); } }
     @keyframes spin3dRev { from { transform: rotateX(68deg) rotateZ(360deg); } to { transform: rotateX(68deg) rotateZ(0); } }
     .orbit3d .sat {
@@ -94,16 +94,16 @@
     .sat.s2 { width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; background: #FFC98F; animation: orbit2 14s linear infinite; }
     .sat.s3 { width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; background: #FFE0BC; animation: orbit3 22s linear infinite; }
     @keyframes orbit1 {
-      from { transform: rotateX(68deg) rotateZ(0) translateX(60px); }
-      to   { transform: rotateX(68deg) rotateZ(360deg) translateX(60px); }
+      from { transform: rotateX(68deg) rotateZ(0) translateX(48px); }
+      to   { transform: rotateX(68deg) rotateZ(360deg) translateX(48px); }
     }
     @keyframes orbit2 {
-      from { transform: rotateX(68deg) rotateZ(0) translateX(80px); }
-      to   { transform: rotateX(68deg) rotateZ(-360deg) translateX(80px); }
+      from { transform: rotateX(68deg) rotateZ(0) translateX(65px); }
+      to   { transform: rotateX(68deg) rotateZ(-360deg) translateX(65px); }
     }
     @keyframes orbit3 {
-      from { transform: rotateX(68deg) rotateZ(0) translateX(95px); }
-      to   { transform: rotateX(68deg) rotateZ(360deg) translateX(95px); }
+      from { transform: rotateX(68deg) rotateZ(0) translateX(79px); }
+      to   { transform: rotateX(68deg) rotateZ(360deg) translateX(79px); }
     }
 
     /* 浮动数据粒子（3D 视差前景） */
@@ -524,23 +524,17 @@
       .feature-title { font-size: 9px; }
       .stat-num { font-size: 13.5px; }
       .sheet { max-height: 80%; }
-      .orbit3d { top: 44px; transform: scale(.85); }
+      .orbit3d { height: 84px; }
+      .orbit3d .core { width: 32px; height: 32px; margin: -16px 0 0 -16px; }
+      .ring.r1 { width: 72px; height: 72px; margin: -36px 0 0 -36px; }
+      .ring.r2 { width: 98px; height: 98px; margin: -49px 0 0 -49px; }
+      .ring.r3, .sat.s3 { display: none; }
+      .sat.s1 { animation-duration: 9s; }
     }
   </style>
 </head>
 <body>
   <div class="stage" id="stage">
-    <!-- CSS 3D 轨道核心（零依赖） -->
-    <div class="orbit3d tilt-deep">
-      <div class="ring r1"></div>
-      <div class="ring r2"></div>
-      <div class="ring r3"></div>
-      <div class="core"></div>
-      <div class="sat s1"></div>
-      <div class="sat s2"></div>
-      <div class="sat s3"></div>
-    </div>
-
     <!-- 3D 视差前景：浮动数据粒子 -->
     <div class="flakes">
       <div class="flake f1"></div><div class="flake f2"></div><div class="flake f3"></div>
@@ -554,6 +548,17 @@
         <span>Young's Insight</span>
       </div>
       <button class="share-btn" id="shareBtn">SHARE <span class="arr">↗</span></button>
+    </div>
+
+    <!-- CSS 3D 轨道核心（正常流占位，不覆盖文字） -->
+    <div class="orbit3d tilt-deep">
+      <div class="ring r1"></div>
+      <div class="ring r2"></div>
+      <div class="ring r3"></div>
+      <div class="core"></div>
+      <div class="sat s1"></div>
+      <div class="sat s2"></div>
+      <div class="sat s3"></div>
     </div>
 
     <!-- Hero -->
