@@ -47,13 +47,13 @@
     .tilt-front { transform: translateZ(45px); }
 
     /* CSS 3D 轨道核心（零依赖，2 秒内可见的 3D）
-       ⚠️ 正常流占位块（flex 子项），禁用 absolute 定位——否则覆盖 hero 文字 */
+       ⚠️ 左右两栏布局：作为 hero 左侧方块（~118px），禁全宽占位/absolute 覆盖文字 */
     .orbit3d {
       position: relative;
       flex-shrink: 0;
-      width: 100%;
-      height: 112px;
-      margin: 2px 0 0;
+      width: 118px;
+      height: 118px;
+      margin: 0;
       z-index: 1;
       pointer-events: none;
       transform-style: preserve-3d;
@@ -77,9 +77,9 @@
       border: 1.5px solid rgba(246, 130, 31, .45);
       transform-style: preserve-3d;
     }
-    .ring.r1 { width: 96px; height: 96px; margin: -48px 0 0 -48px; animation: spin3d 9s linear infinite; }
-    .ring.r2 { width: 130px; height: 130px; margin: -65px 0 0 -65px; border-color: rgba(246, 130, 31, .28); animation: spin3dRev 14s linear infinite; }
-    .ring.r3 { width: 158px; height: 158px; margin: -79px 0 0 -79px; border-color: rgba(255, 208, 150, .18); animation: spin3d 22s linear infinite; }
+    .ring.r1 { width: 74px; height: 74px; margin: -37px 0 0 -37px; animation: spin3d 9s linear infinite; }
+    .ring.r2 { width: 98px; height: 98px; margin: -49px 0 0 -49px; border-color: rgba(246, 130, 31, .28); animation: spin3dRev 14s linear infinite; }
+    .ring.r3 { width: 116px; height: 116px; margin: -58px 0 0 -58px; border-color: rgba(255, 208, 150, .18); animation: spin3d 22s linear infinite; }
     @keyframes spin3d { from { transform: rotateX(68deg) rotateZ(0); } to { transform: rotateX(68deg) rotateZ(360deg); } }
     @keyframes spin3dRev { from { transform: rotateX(68deg) rotateZ(360deg); } to { transform: rotateX(68deg) rotateZ(0); } }
     .orbit3d .sat {
@@ -94,16 +94,16 @@
     .sat.s2 { width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; background: #FFC98F; animation: orbit2 14s linear infinite; }
     .sat.s3 { width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; background: #FFE0BC; animation: orbit3 22s linear infinite; }
     @keyframes orbit1 {
-      from { transform: rotateX(68deg) rotateZ(0) translateX(48px); }
-      to   { transform: rotateX(68deg) rotateZ(360deg) translateX(48px); }
+      from { transform: rotateX(68deg) rotateZ(0) translateX(37px); }
+      to   { transform: rotateX(68deg) rotateZ(360deg) translateX(37px); }
     }
     @keyframes orbit2 {
-      from { transform: rotateX(68deg) rotateZ(0) translateX(65px); }
-      to   { transform: rotateX(68deg) rotateZ(-360deg) translateX(65px); }
+      from { transform: rotateX(68deg) rotateZ(0) translateX(49px); }
+      to   { transform: rotateX(68deg) rotateZ(-360deg) translateX(49px); }
     }
     @keyframes orbit3 {
-      from { transform: rotateX(68deg) rotateZ(0) translateX(79px); }
-      to   { transform: rotateX(68deg) rotateZ(360deg) translateX(79px); }
+      from { transform: rotateX(68deg) rotateZ(0) translateX(58px); }
+      to   { transform: rotateX(68deg) rotateZ(360deg) translateX(58px); }
     }
 
     /* 浮动数据粒子（3D 视差前景） */
@@ -203,8 +203,9 @@
     }
     .share-btn:active { background: #F6821F; color: #0B0E11; border-color: #F6821F; }
 
-    /* Hero */
-    .hero { position: relative; z-index: 5; flex-shrink: 0; margin-top: 7px; }
+    /* Hero —— 左右两栏：左 3D 特效方块 + 右文字 */
+    .hero { position: relative; z-index: 5; flex-shrink: 0; margin-top: 6px; display: flex; align-items: flex-start; gap: 12px; }
+    .hero-side { flex: 1; min-width: 0; }
     .meta-row {
       display: flex;
       justify-content: space-between;
@@ -524,12 +525,12 @@
       .feature-title { font-size: 9px; }
       .stat-num { font-size: 13.5px; }
       .sheet { max-height: 80%; }
-      .orbit3d { height: 84px; }
-      .orbit3d .core { width: 32px; height: 32px; margin: -16px 0 0 -16px; }
-      .ring.r1 { width: 72px; height: 72px; margin: -36px 0 0 -36px; }
-      .ring.r2 { width: 98px; height: 98px; margin: -49px 0 0 -49px; }
+      .orbit3d { width: 92px; height: 92px; }
+      .orbit3d .core { width: 30px; height: 30px; margin: -15px 0 0 -15px; }
+      .ring.r1 { width: 58px; height: 58px; margin: -29px 0 0 -29px; }
+      .ring.r2 { width: 76px; height: 76px; margin: -38px 0 0 -38px; }
       .ring.r3, .sat.s3 { display: none; }
-      .sat.s1 { animation-duration: 9s; }
+      .hero { gap: 8px; }
     }
   </style>
 </head>
@@ -550,36 +551,36 @@
       <button class="share-btn" id="shareBtn">SHARE <span class="arr">↗</span></button>
     </div>
 
-    <!-- CSS 3D 轨道核心（正常流占位，不覆盖文字） -->
-    <div class="orbit3d tilt-deep">
-      <div class="ring r1"></div>
-      <div class="ring r2"></div>
-      <div class="ring r3"></div>
-      <div class="core"></div>
-      <div class="sat s1"></div>
-      <div class="sat s2"></div>
-      <div class="sat s3"></div>
-    </div>
-
-    <!-- Hero -->
+    <!-- Hero —— 左右两栏：左 3D 轨道特效 + 右文字 -->
     <div class="hero reveal">
-      <div class="meta-row">
-        <span class="vol">COMPANY OS FOR AI WORK</span>
-        <span>2026.08.07</span>
+      <div class="orbit3d tilt-deep">
+        <div class="ring r1"></div>
+        <div class="ring r2"></div>
+        <div class="ring r3"></div>
+        <div class="core"></div>
+        <div class="sat s1"></div>
+        <div class="sat s2"></div>
+        <div class="sat s3"></div>
       </div>
-      <div class="title-block">
-        <div class="pg-stamp" id="stamp">🛰️</div>
-        <div class="title-text">
-          <div class="pg-title">Cloudflare OS<span class="dot">.</span></div>
-          <div class="superdesign-line">
-            <span class="superdesign">cloudflare · open source</span>
-            <span class="v-tag">Apache-2.0</span>
-            <span class="v-tag green">5.1K★</span>
+      <div class="hero-side">
+        <div class="meta-row">
+          <span class="vol">COMPANY OS FOR AI WORK</span>
+          <span>2026.08.07</span>
+        </div>
+        <div class="title-block">
+          <div class="pg-stamp" id="stamp">🛰️</div>
+          <div class="title-text">
+            <div class="pg-title">Cloudflare OS<span class="dot">.</span></div>
+            <div class="superdesign-line">
+              <span class="superdesign">cloudflare · open source</span>
+              <span class="v-tag">Apache-2.0</span>
+              <span class="v-tag green">5.1K★</span>
+            </div>
           </div>
         </div>
+        <div class="tagline">给公司装一个<em>AI 操作系统</em>——每个人一个 Agent 工作区，Gadget 应用 + Gatekeeper 安全，让非技术用户也能放心"玩出花"</div>
+        <div class="hint-badge">✦ 轻触任何元素探索 · 拖动卡片看 3D 视差</div>
       </div>
-      <div class="tagline">给公司装一个<em>AI 操作系统</em>——每个人一个 Agent 工作区，Gadget 应用 + Gatekeeper 安全，让非技术用户也能放心"玩出花"</div>
-      <div class="hint-badge">✦ 轻触任何元素探索 · 拖动卡片看 3D 视差</div>
     </div>
 
     <!-- 终端展示 -->
