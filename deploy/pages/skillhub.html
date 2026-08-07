@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0B1220">
+  <title>SkillHub v0.2.16 — 企业级 Agent 技能注册中心</title>
+  <link rel="preconnect" href="https://fonts.googleapis.cn">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.cn/css2?family=Noto+Serif+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0B1220;
+      --bg-2: #101B2E;
+      --accent: #3B82F6;
+      --accent-2: #2563EB;
+      --accent-3: #93C5FD;
+      --accent-4: #60A5FA;
+      --ice: #E8F1FF;
+      --text: #F2F4F8;
+      --muted: #7C8AA5;
+      --success: #34D399;
+      --surface: #131F36;
+      --serif: 'Noto Serif SC', serif;
+      --cn: 'Noto Sans SC', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; background: #060A12; font-family: 'Noto Sans SC', sans-serif; color: #F2F4F8; -webkit-font-smoothing: antialiased; }
+    body { display: flex; align-items: center; justify-content: center; }
+
+    .stage {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      height: min(100vh, calc(100vw * 16 / 9));
+      width: min(100vw, calc(100vh * 9 / 16));
+      background: #0B1220;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,.6);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 16px 10px;
+      perspective: 1000px;
+      transform-style: preserve-3d;
+      transition: transform .12s ease-out;
+    }
+    .tilt-deep { transform: translateZ(-50px) scale(1.08); }
+    .tilt-mid { transform: translateZ(0); }
+    .tilt-front { transform: translateZ(45px); }
+
+    /* 3D 技能包立方体（贴合 SkillHub 品牌 logo 意象）：
+       isometric 立方体 + 版本标签 + 飘浮技能芯片 */
+    .cube3d {
+      position: relative;
+      flex-shrink: 0;
+      width: 128px;
+      height: 128px;
+      margin: 0;
+      z-index: 1;
+      pointer-events: none;
+      transform-style: preserve-3d;
+    }
+    .cube3d .box {
+      position: absolute;
+      top: 22px; left: 24px;
+      width: 80px; height: 80px;
+      transform-style: preserve-3d;
+      animation: boxSpin 10s ease-in-out infinite;
+    }
+    @keyframes boxSpin {
+      0%, 100% { transform: rotateX(-18deg) rotateY(32deg); }
+      50% { transform: rotateX(-14deg) rotateY(52deg); }
+    }
+    .cube3d .face {
+      position: absolute;
+      border: 1px solid rgba(147, 197, 253, .55);
+      background: rgba(59, 130, 246, .14);
+      box-shadow: inset 0 0 20px rgba(59, 130, 246, .12);
+    }
+    .face.top {
+      width: 80px; height: 80px;
+      transform: rotateX(90deg) translateZ(40px);
+      background: rgba(147, 197, 253, .22);
+      border-color: rgba(147, 197, 253, .7);
+    }
+    .face.front {
+      width: 80px; height: 80px;
+      transform: translateZ(40px);
+      background: rgba(37, 99, 235, .2);
+    }
+    .face.right {
+      width: 80px; height: 80px;
+      transform: rotateY(90deg) translateZ(40px);
+      background: rgba(37, 99, 235, .1);
+    }
+    .face.top::after {  /* 顶面技能图标 */
+      content: '⚡';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) rotate(-90deg);
+      font-size: 22px;
+      opacity: .8;
+    }
+    .face.front::after {  /* 前面版本标签 */
+      content: 'v0.2.16';
+      position: absolute;
+      bottom: 8px; left: 50%;
+      transform: translateX(-50%);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7.5px;
+      color: #BFDBFE;
+      letter-spacing: .08em;
+      white-space: nowrap;
+    }
+    .cube3d .glow {
+      position: absolute;
+      top: 18px; left: 20px;
+      width: 88px; height: 88px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(59, 130, 246, .35) 0%, transparent 70%);
+      animation: glowPulse 3.5s ease-in-out infinite;
+    }
+    @keyframes glowPulse { 0%, 100% { opacity: .5; } 50% { opacity: 1; } }
+    .cube3d .vchip {
+      position: absolute;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      padding: 2px 6px;
+      border-radius: 8px;
+      letter-spacing: .06em;
+      animation: chipFloat 4.5s ease-in-out infinite;
+    }
+    .vchip.c1 { top: 0; left: 6px; color: #93C5FD; border: 1px solid rgba(147, 197, 253, .45); background: rgba(147, 197, 253, .08); animation-delay: 0s; }
+    .vchip.c2 { top: 30px; right: -2px; color: #34D399; border: 1px solid rgba(52, 211, 153, .4); background: rgba(52, 211, 153, .07); animation-delay: 1.2s; }
+    .vchip.c3 { bottom: 6px; left: 0; color: #F0ABFC; border: 1px solid rgba(240, 171, 252, .4); background: rgba(240, 171, 252, .07); animation-delay: 2.3s; }
+    @keyframes chipFloat {
+      0%, 100% { transform: translateY(0); opacity: .7; }
+      50% { transform: translateY(-7px); opacity: 1; }
+    }
+    .cube3d .tstatus {
+      position: absolute;
+      left: 0; right: 0; bottom: -4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 5.5px;
+      letter-spacing: .1em;
+      color: #7C8AA5;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .cube3d .tstatus em { color: #60A5FA; font-style: normal; }
+
+    /* 浮动数据粒子（3D 视差前景） */
+    .flakes { position: absolute; inset: 0; pointer-events: none; z-index: 3; overflow: hidden; }
+    .flake {
+      position: absolute;
+      width: 10px; height: 10px;
+      border: 1px solid rgba(59, 130, 246, .5);
+      border-radius: 50%;
+      opacity: .5;
+      animation: floatY 6s ease-in-out infinite;
+    }
+    .flake.f1 { left: 8%; top: 22%; animation-delay: 0s; }
+    .flake.f2 { left: 88%; top: 30%; width: 7px; height: 7px; animation-delay: 1.2s; }
+    .flake.f3 { left: 14%; top: 68%; width: 6px; height: 6px; border-color: rgba(147, 197, 253, .4); animation-delay: 2.1s; }
+    .flake.f4 { left: 84%; top: 72%; width: 9px; height: 9px; animation-delay: .6s; }
+    .flake.f5 { left: 48%; top: 16%; width: 5px; height: 5px; border-color: rgba(52, 211, 153, .5); animation-delay: 1.8s; }
+    @keyframes floatY {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-14px) rotate(120deg); }
+    }
+    .hint-badge {
+      position: relative;
+      z-index: 5;
+      align-self: flex-start;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      letter-spacing: .18em;
+      color: #8FA8C9;
+      border: 1px dashed rgba(59, 130, 246, .35);
+      border-radius: 10px;
+      padding: 2px 8px;
+      margin-top: 5px;
+      flex-shrink: 0;
+      animation: hintPulse 2.4s ease-in-out infinite;
+    }
+    @keyframes hintPulse {
+      0%, 100% { opacity: .55; }
+      50% { opacity: 1; box-shadow: 0 0 12px rgba(59, 130, 246, .25); }
+    }
+    .stage::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 38% at 78% 2%, rgba(59, 130, 246, .1) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 35% at 8% 45%, rgba(147, 197, 253, .08) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 50% 100%, rgba(16, 27, 46, .95) 0%, transparent 60%);
+    }
+    .stage::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(rgba(242, 244, 248, .012) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(242, 244, 248, .012) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    /* 顶部条 */
+    .topbar {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .16em;
+      color: #7C8AA5;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(242, 244, 248, .06);
+    }
+    .brand { display: flex; align-items: center; gap: 6px; color: #F2F4F8; }
+    .brand-dot { width: 5px; height: 5px; background: #3B82F6; border-radius: 50%; box-shadow: 0 0 8px #3B82F6; animation: pulse 2.2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .3; transform: scale(.6); } }
+    .share-btn {
+      background: none;
+      border: 1px solid rgba(242, 244, 248, .2);
+      padding: 4px 8px 3px;
+      font: inherit;
+      color: #F2F4F8;
+      cursor: pointer;
+      letter-spacing: .12em;
+      transition: all .3s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 7.5px;
+    }
+    .share-btn:active { background: #3B82F6; color: #0B1220; border-color: #3B82F6; }
+
+    /* Hero —— 左右两栏：左文字 + 右 3D 技能包 */
+    .hero { position: relative; z-index: 5; flex-shrink: 0; margin-top: 6px; display: flex; align-items: flex-start; gap: 12px; }
+    .hero-side { flex: 1; min-width: 0; }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #7C8AA5;
+      margin-bottom: 4px;
+    }
+    .vol { color: #3B82F6; }
+    .title-block { display: flex; align-items: flex-start; gap: 10px; }
+    .pg-stamp {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(59, 130, 246, .6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 19px;
+      flex-shrink: 0;
+      position: relative;
+      box-shadow: 0 0 18px rgba(59, 130, 246, .18) inset, 0 0 12px rgba(59, 130, 246, .1);
+    }
+    .pg-stamp::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 1px dashed rgba(59, 130, 246, .35);
+      animation: spin 9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .title-text { min-width: 0; }
+    .pg-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 23px;
+      font-weight: 900;
+      letter-spacing: -.02em;
+      line-height: 1.05;
+      color: #F2F4F8;
+    }
+    .pg-title .dot { color: #3B82F6; }
+    .superdesign-line { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+    .superdesign { font-family: 'JetBrains Mono', monospace; font-size: 7px; letter-spacing: .14em; color: #9CA3AF; }
+    .v-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      letter-spacing: .14em;
+      color: #60A5FA;
+      border: 1px solid rgba(96, 165, 250, .3);
+      padding: 1px 5px;
+      border-radius: 2px;
+      background: rgba(96, 165, 250, .06);
+    }
+    .v-tag.green { color: #34D399; border-color: rgba(52, 211, 153, .3); background: rgba(52, 211, 153, .06); }
+    .tagline {
+      margin-top: 5px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10.5px;
+      color: #D1D5DB;
+      line-height: 1.45;
+    }
+    .tagline em { color: #60A5FA; font-style: normal; font-weight: 500; }
+
+    /* 终端展示区（v0.2.16 亮点终端模拟） */
+    .termbox { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .term-header { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; margin-bottom: 4px; }
+    .term-header::after { content: ''; flex: 1; height: 1px; background: rgba(242, 244, 248, .06); }
+    .term-window {
+      background: #060A12;
+      border: 1px solid rgba(59, 130, 246, .3);
+      border-radius: 8px;
+      overflow: hidden;
+      font-family: 'JetBrains Mono', monospace;
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .term-window:active { border-color: rgba(59, 130, 246, .6); }
+    .term-bar {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 9px;
+      background: rgba(59, 130, 246, .1);
+      border-bottom: 1px solid rgba(59, 130, 246, .15);
+    }
+    .term-bar span { width: 7px; height: 7px; border-radius: 50%; }
+    .term-bar .r { background: #FF5F57; } .term-bar .y { background: #FFB020; } .term-bar .g { background: #28C840; }
+    .term-bar b { margin-left: 6px; font-size: 7px; font-weight: 400; color: #8FA8C9; letter-spacing: .06em; }
+    .term-body { padding: 8px 11px 9px; font-size: 8.5px; line-height: 1.8; color: #9FB8D8; }
+    .term-body .cmd { color: #60A5FA; }
+    .term-body .prompt { color: #7C8AA5; }
+    .term-body .out { color: #B9CCE8; }
+    .term-body .ok { color: #34D399; }
+    .term-body .dim { color: #5A6B8C; }
+    .term-body .plan { color: #93C5FD; }
+    .caret-blink { display: inline-block; width: 7px; height: 10px; background: #60A5FA; vertical-align: -2px; animation: blink 1s steps(1) infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* Stats */
+    .stats-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .stats-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .stats-title { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; }
+    .stats-badge { font-family: 'JetBrains Mono', monospace; font-size: 6px; letter-spacing: .16em; color: #34D399; border: 1px solid rgba(52, 211, 153, .3); padding: 1px 5px; border-radius: 2px; }
+    .stats-chart { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .stat-card {
+      background: rgba(242, 244, 248, .02);
+      border: 1px solid rgba(242, 244, 248, .07);
+      border-radius: 7px;
+      padding: 7px 6px 5px;
+      cursor: pointer;
+      transition: all .25s;
+      min-width: 0;
+    }
+    .stat-card:active { background: rgba(59, 130, 246, .07); border-color: rgba(59, 130, 246, .3); transform: scale(.96); }
+    .stat-num { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; color: #F2F4F8; line-height: 1; white-space: nowrap; }
+    .stat-num .accent { color: var(--stat-color, #3B82F6); }
+    .stat-label { font-size: 7px; color: #7C8AA5; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .stat-mini-chart { display: flex; align-items: flex-end; gap: 2px; height: 12px; margin-top: 4px; }
+    .stat-bar { width: 4px; background: var(--stat-color, #3B82F6); opacity: .55; border-radius: 1px; transform-origin: bottom; }
+
+    /* Flow */
+    .flow-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .flow-header { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; margin-bottom: 4px; }
+    .flow-header::after { content: ''; flex: 1; height: 1px; background: rgba(242, 244, 248, .06); }
+    .flow-svg { width: 100%; height: auto; display: block; }
+    .flow-node { cursor: pointer; }
+    .flow-node:active { opacity: .7; }
+    .flow-arrow { animation: flowPulse 2s ease-in-out infinite; }
+    @keyframes flowPulse { 0%, 100% { stroke-opacity: .4; } 50% { stroke-opacity: 1; } }
+
+    /* Features */
+    .features { position: relative; z-index: 5; margin-top: 6px; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      background: rgba(242, 244, 248, .02);
+      border: 1px solid rgba(242, 244, 248, .07);
+      border-radius: 7px;
+      padding: 6px 9px;
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .feature:active { background: rgba(59, 130, 246, .05); border-color: rgba(59, 130, 246, .22); }
+    .feature-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: rgba(59, 130, 246, .1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .feature-icon svg { width: 13px; height: 13px; stroke: #60A5FA; fill: none; stroke-width: 1.5; }
+    .feature-icon.green { background: rgba(52, 211, 153, .1); }
+    .feature-icon.green svg { stroke: #34D399; }
+    .feature-icon.pink { background: rgba(240, 171, 252, .1); }
+    .feature-icon.pink svg { stroke: #F0ABFC; }
+    .feature-icon.violet { background: rgba(147, 197, 253, .1); }
+    .feature-icon.violet svg { stroke: #93C5FD; }
+    .feature-content { flex: 1; min-width: 0; }
+    .feature-title { font-family: 'Noto Sans SC', sans-serif; font-size: 9.5px; font-weight: 500; color: #F2F4F8; letter-spacing: .02em; }
+    .feature-desc { font-size: 7.5px; color: #7C8AA5; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .feature-arrow { font-size: 11px; color: #60A5FA; opacity: 0; transform: translateX(-2px); transition: all .25s; flex-shrink: 0; }
+    .feature:active .feature-arrow { opacity: 1; transform: translateX(2px); }
+    .feature-progress { height: 2px; background: rgba(242, 244, 248, .06); border-radius: 1px; margin-top: 4px; overflow: hidden; }
+    .feature-progress-bar { height: 100%; background: linear-gradient(90deg, #3B82F6, #60A5FA, #93C5FD); border-radius: 1px; transform-origin: left; animation: progressIn .8s cubic-bezier(.4, 0, .2, 1) forwards; transform: scaleX(0); }
+    @keyframes progressIn { to { transform: scaleX(1); } }
+
+    /* Tech */
+    .tech-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .tech-header { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; margin-bottom: 4px; }
+    .tech-pills { display: flex; flex-wrap: wrap; gap: 4px; }
+    .tech-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6.5px;
+      letter-spacing: .08em;
+      color: #9CA3AF;
+      border: 1px solid rgba(242, 244, 248, .1);
+      padding: 2px 7px;
+      border-radius: 10px;
+      cursor: pointer;
+      background: rgba(242, 244, 248, .02);
+      transition: all .2s;
+    }
+    .tech-pill:active { background: rgba(242, 244, 248, .08); }
+    .tech-pill.accent { border-color: rgba(59, 130, 246, .35); color: #60A5FA; }
+    .tech-pill.violet { border-color: rgba(147, 197, 253, .35); color: #93C5FD; }
+    .tech-pill.pink { border-color: rgba(240, 171, 252, .35); color: #F0ABFC; }
+    .tech-pill.green { border-color: rgba(52, 211, 153, .3); color: #34D399; }
+
+    /* Bottom bar */
+    .bottombar {
+      position: relative;
+      z-index: 5;
+      margin-top: 8px;
+      padding-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      border-top: 1px solid rgba(242, 244, 248, .06);
+    }
+    .github-link { display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 8px; color: #D1D5DB; text-decoration: none; }
+    .github-link svg { width: 13px; height: 13px; fill: #9CA3AF; transition: fill .25s; }
+    .github-link:active svg { fill: #60A5FA; }
+    .visit-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .14em;
+      color: #0B1220;
+      background: linear-gradient(90deg, #3B82F6, #60A5FA, #93C5FD);
+      padding: 6px 13px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all .25s;
+    }
+    .visit-btn:active { transform: scale(.95); filter: brightness(1.15); }
+
+    /* Overlay + Sheet */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: flex-end;
+      background: rgba(0, 0, 0, .5);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .35s;
+    }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+    .sheet {
+      width: 100%;
+      max-height: 76%;
+      background: linear-gradient(180deg, #131F36, #101B2E);
+      border: 1px solid rgba(59, 130, 246, .2);
+      border-bottom: none;
+      border-radius: 16px 16px 0 0;
+      padding: 14px 18px 18px;
+      transform: translateY(101%);
+      transition: transform .45s cubic-bezier(.7, 0, .3, 1);
+      overflow-y: auto;
+    }
+    .overlay.active .sheet { transform: translateY(0); }
+    .sheet-handle { width: 32px; height: 3px; background: #3A4A66; border-radius: 2px; margin: 0 auto 12px; }
+    .sheet-title { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; color: #F2F4F8; margin-bottom: 7px; }
+    .sheet-title em { color: #60A5FA; font-style: normal; }
+    .sheet-desc { font-size: 10.5px; line-height: 1.65; color: #9CA3AF; }
+    .sheet-desc code { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #60A5FA; background: rgba(59, 130, 246, .08); padding: 1px 4px; border-radius: 2px; }
+    .sheet-code {
+      margin-top: 10px;
+      background: #060A12;
+      border: 1px solid rgba(242, 244, 248, .08);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      line-height: 1.7;
+      color: #60A5FA;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .sheet-points { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+    .sheet-point { display: flex; align-items: flex-start; gap: 8px; font-family: 'Noto Sans SC', sans-serif; font-size: 10px; color: #D0D0D8; line-height: 1.55; }
+    .sheet-point::before { content: ''; width: 5px; height: 5px; background: #60A5FA; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .sheet-point.green::before { background: #34D399; }
+    .sheet-point.pink::before { background: #F0ABFC; }
+
+    /* Toast */
+    .toast {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #28C840;
+      color: #0B1220;
+      padding: 7px 14px;
+      border-radius: 5px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: all .3s;
+      z-index: 200;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .reveal { opacity: 0; transform: translateY(10px); transition: all .45s cubic-bezier(.4, 0, .2, 1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @keyframes chartGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+    .chart-animate { animation: chartGrow .6s cubic-bezier(.4, 0, .2, 1) forwards; }
+
+    /* 小屏兜底 */
+    @media (max-height: 730px) {
+      .pg-title { font-size: 20px; }
+      .pg-stamp { width: 34px; height: 34px; font-size: 16px; }
+      .tagline { font-size: 9.5px; }
+      .term-body { font-size: 7.5px; line-height: 1.7; padding: 6px 9px; }
+      .feature { padding: 5px 9px; }
+      .feature-title { font-size: 9px; }
+      .stat-num { font-size: 13.5px; }
+      .sheet { max-height: 80%; }
+      .cube3d { width: 96px; height: 96px; }
+      .hero { gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage" id="stage">
+    <!-- 3D 视差前景：浮动数据粒子 -->
+    <div class="flakes">
+      <div class="flake f1"></div><div class="flake f2"></div><div class="flake f3"></div>
+      <div class="flake f4"></div><div class="flake f5"></div>
+    </div>
+
+    <!-- Topbar -->
+    <div class="topbar reveal tilt-mid">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <span>Young's Insight</span>
+      </div>
+      <button class="share-btn" id="shareBtn">SHARE <span class="arr">↗</span></button>
+    </div>
+
+    <!-- Hero —— 左右两栏：左文字 + 右 3D 技能包 -->
+    <div class="hero reveal">
+      <div class="hero-side">
+        <div class="meta-row">
+          <span class="vol">ENTERPRISE SKILL REGISTRY</span>
+          <span>2026.08.07</span>
+        </div>
+        <div class="title-block">
+          <div class="pg-stamp" id="stamp">📦</div>
+          <div class="title-text">
+            <div class="pg-title">SkillHub<span class="dot">.</span></div>
+            <div class="superdesign-line">
+              <span class="superdesign">iflytek · Java · Apache-2.0</span>
+              <span class="v-tag">v0.2.16</span>
+              <span class="v-tag green">4.9K★</span>
+            </div>
+          </div>
+        </div>
+        <div class="tagline">企业级 Agent 技能注册中心——私有部署、语义版本治理、RBAC 审核 + 审计日志，把组织里的<em>技能资产</em>管起来</div>
+        <div class="hint-badge">✦ 轻触任何元素探索 · 拖动卡片看 3D 视差</div>
+      </div>
+      <div class="cube3d tilt-deep">
+        <div class="glow"></div>
+        <div class="box">
+          <div class="face top"></div>
+          <div class="face front"></div>
+          <div class="face right"></div>
+        </div>
+        <div class="vchip c1">v0.2.16</div>
+        <div class="vchip c2">beta</div>
+        <div class="vchip c3">latest</div>
+        <div class="tstatus"><em>registry</em> · skill.xfyun.cn</div>
+      </div>
+    </div>
+
+    <!-- 终端展示（v0.2.16 发布亮点模拟） -->
+    <div class="termbox reveal">
+      <div class="term-header">v0.2.16 · 发布亮点</div>
+      <div class="term-window" id="termWin">
+        <div class="term-bar">
+          <span class="r"></span><span class="y"></span><span class="g"></span>
+          <b>skillhub · release v0.2.16 · 点击查看快速开始</b>
+        </div>
+        <div class="term-body">
+<span class="plan">◆ SKILLHUB_WEB_BASE_PATH=/skillhub/</span>
+<span class="ok">✓ 子路径部署 · 深层链接 / 静态资源 / API / 认证重定向</span>
+<span class="ok">✓ 内置精选 Starter Skills · 包校验 + Bootstrap 检查</span>
+<span class="ok">✓ 请求/消息关联 · 可选追溯 · 索引重建失败可视化</span>
+<span class="out">✓ React 19 修复 · 标签导航 · CJK 重定向 · 安全删版</span>
+<span class="prompt">$</span> <span class="cmd">curl -fsSL .../runtime.sh | sh -s -- up</span>
+<span class="prompt">$</span> <span class="caret-blink"></span></div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-section reveal">
+      <div class="stats-header">
+        <span class="stats-title">Signals</span>
+        <span class="stats-badge">OPEN SOURCE · APACHE-2.0</span>
+      </div>
+      <div class="stats-chart">
+        <div class="stat-card" data-stat="stars" style="--stat-color: #3B82F6">
+          <div class="stat-num"><span class="accent">4.9K</span></div>
+          <div class="stat-label">Stars · 5 个月</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 5px; animation-delay: .1s"></div>
+            <div class="stat-bar chart-animate" style="height: 9px; animation-delay: .15s"></div>
+            <div class="stat-bar chart-animate" style="height: 13px; animation-delay: .2s"></div>
+            <div class="stat-bar chart-animate" style="height: 16px; animation-delay: .25s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="forks" style="--stat-color: #93C5FD">
+          <div class="stat-num"><span class="accent">778</span></div>
+          <div class="stat-label">Forks</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 10px; background: #93C5FD; animation-delay: .3s"></div>
+            <div class="stat-bar chart-animate" style="height: 12px; background: #93C5FD; animation-delay: .35s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="version" style="--stat-color: #34D399">
+          <div class="stat-num"><span class="accent">v0.2.16</span></div>
+          <div class="stat-label">最新 Release</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 6px; background: #34D399; animation-delay: .4s"></div>
+            <div class="stat-bar chart-animate" style="height: 12px; background: #34D399; animation-delay: .45s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="govern" style="--stat-color: #F0ABFC">
+          <div class="stat-num"><span class="accent">RBAC</span></div>
+          <div class="stat-label">治理 + 审计日志</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 8px; animation-delay: .5s"></div>
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .55s"></div>
+            <div class="stat-bar chart-animate" style="height: 9px; animation-delay: .6s"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flow -->
+    <div class="flow-section reveal">
+      <div class="flow-header">Skill 生命周期 · 从发布到治理</div>
+      <svg class="flow-svg" viewBox="0 0 350 44" fill="none">
+        <defs>
+          <marker id="sh-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L6,3 z" fill="#3B82F6" fill-opacity=".6"/>
+          </marker>
+        </defs>
+        <g class="flow-node" id="flow-publish">
+          <rect x="3" y="9" width="56" height="26" rx="5" fill="rgba(147,197,253,.08)" stroke="#93C5FD" stroke-width="1" stroke-opacity=".5"/>
+          <text x="31" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#F2F4F8" text-anchor="middle">发布</text>
+          <text x="31" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#7C8AA5" text-anchor="middle">语义版本 + 标签</text>
+        </g>
+        <path class="flow-arrow" d="M62 22 L76 22" stroke="#93C5FD" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#sh-arrow)"/>
+        <g class="flow-node" id="flow-ns">
+          <rect x="79" y="9" width="60" height="26" rx="5" fill="rgba(59,130,246,.12)" stroke="#3B82F6" stroke-width="1.2"/>
+          <text x="109" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#60A5FA" text-anchor="middle">命名空间</text>
+          <text x="109" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#7C8AA5" text-anchor="middle">团队 / 全局作用域</text>
+        </g>
+        <path class="flow-arrow" d="M142 22 L156 22" stroke="#3B82F6" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#sh-arrow)" style="animation-delay: .3s"/>
+        <g class="flow-node" id="flow-review">
+          <rect x="159" y="9" width="60" height="26" rx="5" fill="rgba(52,211,153,.12)" stroke="#34D399" stroke-width="1.2"/>
+          <text x="189" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#34D399" text-anchor="middle">审核 + 治理</text>
+          <text x="189" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#7C8AA5" text-anchor="middle">RBAC · 审计日志</text>
+        </g>
+        <path class="flow-arrow" d="M222 22 L236 22" stroke="#34D399" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#sh-arrow)" style="animation-delay: .6s"/>
+        <g class="flow-node" id="flow-discover">
+          <rect x="239" y="9" width="60" height="26" rx="5" fill="rgba(240,171,252,.12)" stroke="#F0ABFC" stroke-width="1.2"/>
+          <text x="269" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#F0ABFC" text-anchor="middle">搜索发现</text>
+          <text x="269" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#7C8AA5" text-anchor="middle">全文检索 + 过滤</text>
+        </g>
+        <path class="flow-arrow" d="M302 22 L314 22" stroke="#F0ABFC" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#sh-arrow)" style="animation-delay: .9s"/>
+        <g class="flow-node" id="flow-install">
+          <rect x="317" y="9" width="30" height="26" rx="5" fill="rgba(147,197,253,.08)" stroke="#93C5FD" stroke-width="1" stroke-opacity=".5"/>
+          <text x="332" y="22" font-family="JetBrains Mono, monospace" font-size="5.5" fill="#F2F4F8" text-anchor="middle">安装</text>
+          <text x="332" y="31" font-family="JetBrains Mono, monospace" font-size="4" fill="#7C8AA5" text-anchor="middle">CLI</text>
+        </g>
+        <circle cx="69" cy="22" r="2" fill="#93C5FD">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="149" cy="22" r="2" fill="#3B82F6">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0.5s"/>
+        </circle>
+        <circle cx="229" cy="22" r="2" fill="#34D399">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="1s"/>
+        </circle>
+        <circle cx="308" cy="22" r="2" fill="#F0ABFC">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="1.3s"/>
+        </circle>
+      </svg>
+    </div>
+
+    <!-- Features -->
+    <div class="features reveal">
+      <div class="feature" data-f="0">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 12l9 4 9-4M3 17l9 4 9-4"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">子路径部署 · /skillhub/ 下安全运行</div>
+          <div class="feature-desc">反向代理子路径部署，深层链接/静态资源/API/认证重定向全兼容</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 100%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="1">
+        <div class="feature-icon green">
+          <svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/><path d="M9 12l2 2 4-4"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">内置精选 Skills · 开箱即用</div>
+          <div class="feature-desc">评审过的 Starter Skill 集合，确定性包校验 + 运行时 Bootstrap 检查</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 97%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="2">
+        <div class="feature-icon violet">
+          <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">可观测性 · 请求关联 + 索引重建监控</div>
+          <div class="feature-desc">请求/消息关联、可选追溯、安全操作日志、索引重建失败可视化</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 95%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="3">
+        <div class="feature-icon pink">
+          <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">稳定性修复 · React 19 / CJK / 安全删版</div>
+          <div class="feature-desc">React 19 覆盖层崩溃、标签搜索联动、CJK ClawHub 重定向编码、版本删除加固</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 93%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+    </div>
+
+    <!-- Tech -->
+    <div class="tech-section reveal">
+      <div class="tech-header">Stack &amp; Ecosystem</div>
+      <div class="tech-pills">
+        <span class="tech-pill accent">Spring Boot 3.2</span>
+        <span class="tech-pill violet">Java 21</span>
+        <span class="tech-pill pink">React 19</span>
+        <span class="tech-pill accent">PostgreSQL 16</span>
+        <span class="tech-pill green">Redis</span>
+        <span class="tech-pill violet">S3/MinIO</span>
+        <span class="tech-pill pink">Helm</span>
+      </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="bottombar reveal">
+      <a href="https://github.com/iflytek/skillhub" target="_blank" class="github-link">
+        <svg viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        iflytek/skillhub
+      </a>
+      <a href="https://skill.xfyun.cn" target="_blank" class="visit-btn">skill.xfyun.cn →</a>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title" id="sheetTitle"></div>
+        <div class="sheet-desc" id="sheetDesc"></div>
+        <div class="sheet-code" id="sheetCode" style="display:none"></div>
+        <div class="sheet-points" id="sheetPoints"></div>
+        <button class="sheet-close" id="sheetClose">CLOSE</button>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script>
+  (function(){
+    var $=function(s){return document.querySelector(s)};
+    var overlay=$('#overlay'), sheetTitle=$('#sheetTitle'), sheetDesc=$('#sheetDesc'),
+        sheetPoints=$('#sheetPoints'), sheetCode=$('#sheetCode'), toast=$('#toast');
+
+    var DATA = {
+      stars: {
+        title: '4.9K Stars <em>· 5 个月企业级爆发</em>',
+        desc: '2026-03-11 创建，5 个月冲到 4,852 星、778 forks。讯飞 Astron 开源生态的核心基建之一，Trendshift 热榜常客。企业级技能注册中心赛道里增长最快的开源项目——Java/Spring Boot 技术栈 + 完整治理模型，直接对标企业私有部署需求。',
+        points: ['iflytek 组织 · Java · Apache-2.0', '4,852 ★ / 778 forks / 42 issues', '2026-03-11 创建，2026-08-07 高频推送', 'homepage: skill.xfyun.cn（讯飞云）', 'Docs: iflytek.github.io/skillhub', 'DeepWiki / zread.ai / Discord 社区']
+      },
+      forks: {
+        title: '778 Forks <em>· 企业二次开发</em>',
+        desc: '企业级软件 fork 意味着私有化改造：命名空间策略、SSO 接入、存储替换（S3/MinIO/本地）、RBAC 定制。配置驱动 + 模块化 Maven 架构让 fork 成本可控。',
+        points: ['778 forks · 私有化部署改造', '多模块 Maven：app/domain/auth/search/storage/infra', '存储可插拔：本地 / S3 / MinIO', 'Spring Boot 3.2.3 + Java 21']
+      },
+      version: {
+        title: 'v0.2.16 <em>· 2026-08-07 发布</em>',
+        desc: '最新 Release 聚焦企业落地三件事：子路径部署（#576）、内置精选 Skills（#635/#636）、可观测性（#664/#684）。还有一批体验修复：React 19 覆盖层崩溃、标签搜索联动、CJK ClawHub 下载重定向编码、安全版本删除。',
+        points: ['发布：2026-08-07', '子路径部署支持 #576', 'Starter Skills + 包校验 #635/#636', '请求关联 + 追溯 #664/#684', 'React 19 / CJK / 删版修复 #624/#641/#674', '新贡献者：@Phil-OSophy-42 @michael-xiii @wowo-zZ']
+      },
+      govern: {
+        title: 'RBAC 治理 <em>· 审核 + 审计日志</em>',
+        desc: '命名空间自带成员与角色（Owner/Admin/Member）；团队管理员审 namespace 内发布，平台管理员 gate 全局晋升。治理动作全部审计日志化，满足企业合规要求。',
+        points: ['命名空间成员：Owner / Admin / Member', '团队审 namespace · 平台 gate 全局', '治理动作全部 audit-logged', '合规导向的企业治理模型']
+      },
+      publish: {
+        title: '发布 <em>· 语义版本 + 标签</em>',
+        desc: '上传 Agent skill 包：语义化版本管理、自定义标签（beta/stable）、自动 latest 追踪。内置 skill 包格式校验（扩展名白名单）+ v0.2.16 新增确定性包校验与运行时 Bootstrap 检查。',
+        points: ['语义化版本 + beta/stable 标签', '自动 latest 追踪', '扩展名白名单校验（可覆盖）', 'v0.2.16：确定性包校验 + Bootstrap 检查']
+      },
+      ns: {
+        title: '命名空间 <em>· 团队作用域</em>',
+        desc: '技能按团队或全局作用域组织，每个命名空间独立成员、角色与发布策略。CLI 兼容 slug：my-space--my-skill 解析为 namespace my-space + skill my-skill。',
+        points: ['团队 / 全局作用域', '独立成员 + 角色 + 发布策略', '兼容 slug: my-space--my-skill', '可见性规则：只显示授权内容']
+      },
+      review: {
+        title: '审核治理 <em>· 晋升 gate</em>',
+        desc: '两段式治理：团队管理员审 namespace 内发布，平台管理员 gate 晋升到全局。全链路审计日志，v0.2.16 还强化了安全操作日志与可追溯行为。',
+        points: ['团队审 namespace 内', '平台 gate 全局晋升', '全链路 audit-logged', 'v0.2.16：安全操作日志 + 可选追溯']
+      },
+      discover: {
+        title: '搜索发现 <em>· 全文检索 + 过滤</em>',
+        desc: '全文搜索 + 按命名空间/下载量/评分/新旧过滤。标签点击直达搜索（v0.2.16 修复标签导航联动），搜索过滤行支持换行。索引重建失败通过 metrics + logs 可视化（#684）。',
+        points: ['全文搜索 + 多维过滤', 'v0.2.16：标签 → 搜索联动', 'v0.2.16：过滤行可换行', 'v0.2.16：索引重建失败可视化监控']
+      },
+      install: {
+        title: '安装 <em>· CLI 一条命令</em>',
+        desc: 'CLI-First 设计：原生 REST API + ClawHub 兼容层。npm 安装 @astron-team/skillhub，登录后搜索/安装/发布一气呵成。v0.2.16 修复了 CJK ClawHub 下载重定向编码问题。',
+        points: ['npm i -g @astron-team/skillhub', 'skillhub login --token sk_xxx --registry ...', 'skillhub search pdf / install pdf-parser --agent codex', '兼容层：ClawHub 协议客户端可用', 'v0.2.16：CJK 下载重定向 percent-encode'],
+        code: '# 安装 CLI\nnpm install -g @astron-team/skillhub\n\n# 登录\nskillhub login --token sk_xxx --registry https://skill.xfyun.cn\n\n# 搜索与安装\nskillhub search pdf\nskillhub install pdf-parser --agent codex\nskillhub list\n\n# 发布到命名空间\nnpx clawhub publish ./my-skill --slug my-space--my-skill --version 1.0.0'
+      },
+      f0: {
+        title: '🌐 子路径部署 <em>· /skillhub/ 下安全运行</em>',
+        desc: 'v0.2.16 核心特性（#576）：支持在反向代理子路径（如 /skillhub/）下安全部署 Web 应用，全面兼容深层链接、静态资源、API 调用及认证重定向。配置三个变量即可：SKILLHUB_PUBLIC_BASE_URL、SKILLHUB_WEB_BASE_PATH=/skillhub/、SKILLHUB_WEB_API_BASE_URL=/skillhub。',
+        points: ['Docker / Compose / K8s 全支持', '深层链接 · 静态资源 · API · 认证重定向全兼容', 'SKILLHUB_WEB_BASE_PATH=/skillhub/ 配置', 'public URL 与运行时 base path 对齐', '企业网关 / 共享域名下的标准需求'],
+        code: '# .env.release\nSKILLHUB_PUBLIC_BASE_URL=https://skill.example.com/skillhub\nSKILLHUB_WEB_BASE_PATH=/skillhub/\nSKILLHUB_WEB_API_BASE_URL=/skillhub'
+      },
+      f1: {
+        title: '📦 内置精选 Skills <em>· 开箱即用</em>',
+        desc: '内置经过评审的 Starter Skill 集合（#635/#636）——新部署的 SkillHub 从第一天就有可用技能。引入确切的包校验与运行时 Bootstrap 检查，杜绝坏包入库。',
+        points: ['评审过的 Starter Skill 集合', '新部署开箱即用', '确定性包校验（deterministic validation）', '运行时 Bootstrap 检查', '高质量社区贡献可加入 curated 集合']
+      },
+      f2: {
+        title: '📈 可观测性 <em>· 请求关联 + 追溯</em>',
+        desc: 'v0.2.16 新增请求/消息关联与可选追溯行为（#664），优化安全操作日志（#684），并让索引重建失败通过 metrics + logs 可视化——搜索挂了不再靠猜。',
+        points: ['请求/消息关联（correlation）', '可选 tracing 行为', '安全操作日志优化', '索引重建失败可视化监控', 'Prometheus + Grafana 监控栈内置']
+      },
+      f3: {
+        title: '🛠️ 稳定性与体验修复 <em>· 一批硬骨头</em>',
+        desc: '修复 React 19 覆盖层崩溃（#624）、标签搜索导航联动（#625）、CJK ClawHub 下载重定向编码优化（#674），以及更安全的版本删除机制（#641）——删除前保留 last-version 不变量并移除终态 review 任务。',
+        points: ['React 19 portal/overlay teardown 崩溃修复 #624', '标签 → 搜索导航联动 #625', 'CJK ClawHub 下载重定向 percent-encode #674', '安全版本删除：保留 last-version 不变量 #641', 'Spring MVC 错误 → 可操作 4xx #685']
+      },
+      tech0: {
+        title: 'Spring Boot 3.2 <em>· 后端骨架</em>',
+        desc: 'Spring Boot 3.2.3 + Java 21，多模块 Maven 项目（app/domain/auth/search/storage/infra），PostgreSQL 16 + Flyway 迁移，Redis 会话管理，S3/MinIO 技能包存储。',
+        points: ['Spring Boot 3.2.3 · Java 21', '模块：app/domain/auth/search/storage/infra', 'PostgreSQL 16 + Flyway migrations', 'Redis 会话管理', 'Actuator Prometheus 端点']
+      },
+      tech1: {
+        title: 'React 19 <em>· 前端</em>',
+        desc: 'React 19 + TypeScript + Vite，TanStack Router + Query，Tailwind + Radix UI，OpenAPI TypeScript 类型安全 API 客户端，i18next 国际化（多语言）。',
+        points: ['React 19 · TypeScript · Vite', 'TanStack Router / Query', 'Tailwind CSS + Radix UI', 'OpenAPI TS 客户端', 'i18next 多语言']
+      },
+      tech2: {
+        title: 'PostgreSQL 16 <em>· 数据层</em>',
+        desc: '核心数据 PostgreSQL 16 + Flyway 迁移管理。搜索索引独立维护，v0.2.16 让索引重建失败可视化。',
+        points: ['PostgreSQL 16 + Flyway', 'Redis 7 会话/缓存', 'S3 / MinIO 技能包存储', '存储可插拔：本地 → 生产切换']
+      },
+      tech3: {
+        title: 'Helm + K8s <em>· 云原生部署</em>',
+        desc: 'Kubernetes 基础 manifests（configmap/secret/deployment/service/ingress）+ 完整 Helm chart（自带 PostgreSQL/Redis 依赖）。Docker Compose 一条命令起全套。',
+        points: ['deploy/k8s/ manifests', 'charts/skillhub Helm chart', '内置 PostgreSQL + Redis 依赖', 'docker compose -f compose.release.yml up -d']
+      },
+      story: {
+        title: '背景故事 <em>· 讯飞 Astron 生态基建</em>',
+        desc: 'SkillHub 是讯飞 Astron 开源生态的核心基建：企业级、自托管、开源的 Agent 技能注册中心。定位清晰——不是技能集合，而是"托管 + 版本化 + 治理 + 分发"的平台层。与 anthropics/skills（内容层）互补：前者提供 SKILL.md 格式与示例，SkillHub 让组织私有托管这些技能并做 RBAC 治理。生态位清晰，2026-03-11 开源后 5 个月冲到 4.9K stars。',
+        points: ['讯飞 Astron 生态：astron-agent / astron-rpa / SkillHub', '定位：注册中心 + 治理平台（非技能集合）', '与 anthropics/skills 互补：内容 vs 基础设施', '同一 SKILL.md 格式，一键发布', 'OpenClaw / Hermes / HarnessClaw / Loomy 全接入', '2026-03-11 开源 · 5 个月 4.9K★']
+      },
+      deploy: {
+        title: '部署 <em>· 一条命令起全套</em>',
+        desc: 'runtime.sh 一条命令拉镜像启动（GHCR 或阿里云镜像）；生产推荐 docker compose + Helm chart。支持 amd64/arm64 双架构。v0.2.16 起支持子路径部署。',
+        points: ['curl .../runtime.sh | sh -s -- up', '--aliyun 阿里云镜像（国内）', '--public-url 配置公开地址', 'Docker Compose / Helm / K8s manifests', 'Prometheus + Grafana 监控栈', 'amd64 + arm64 双架构镜像'],
+        code: '# 快速开始（默认 latest 稳定版）\ncurl -fsSL https://imageless.oss-cn-beijing.aliyuncs.com/runtime.sh | sh -s -- up\n\n# 国内阿里云镜像\ncurl -fsSL https://imageless.oss-cn-beijing.aliyuncs.com/runtime.sh | sh -s -- up --aliyun --public-url https://skillhub.your-company.com\n\n# 本地开发\nmake dev-all   # Web UI: localhost:3000 · API: localhost:8080\n\n# 监控\ncd monitoring && docker compose -f docker-compose.monitoring.yml up -d'
+      }
+    };
+
+    function openSheet(key){
+      var d = DATA[key]; if(!d) return;
+      sheetTitle.innerHTML = d.title;
+      sheetDesc.textContent = d.desc;
+      if(d.code){
+        sheetCode.style.display = 'block';
+        sheetCode.textContent = d.code;
+      }else{
+        sheetCode.style.display = 'none';
+      }
+      sheetPoints.innerHTML = d.points.map(function(p){
+        return '<div class="sheet-point' + (p.indexOf('✓')===0 ? ' green' : '') + '">' + p + '</div>';
+      }).join('');
+      overlay.classList.add('active');
+      if(navigator.vibrate) navigator.vibrate(15);
+    }
+    function closeSheet(){ overlay.classList.remove('active'); }
+
+    // 3D 视差倾斜：跟随手指/鼠标
+    var stage = $('#stage');
+    var tiltRaf = null;
+    function onTilt(x, y){
+      if(tiltRaf) return;
+      tiltRaf = requestAnimationFrame(function(){
+        var w = stage.clientWidth, h = stage.clientHeight;
+        var nx = (x / w) * 2 - 1, ny = (y / h) * 2 - 1;
+        stage.style.transform = 'rotateX(' + (-ny * 6).toFixed(2) + 'deg) rotateY(' + (nx * 8).toFixed(2) + 'deg)';
+        tiltRaf = null;
+      });
+    }
+    function resetTilt(){ stage.style.transform = ''; }
+    stage.addEventListener('mousemove', function(e){
+      var r = stage.getBoundingClientRect();
+      onTilt(e.clientX - r.left, e.clientY - r.top);
+    });
+    stage.addEventListener('touchmove', function(e){
+      if(e.touches.length !== 1) return;
+      var r = stage.getBoundingClientRect();
+      onTilt(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top);
+    }, {passive: true});
+    stage.addEventListener('mouseleave', resetTilt);
+    stage.addEventListener('touchend', resetTilt);
+
+    // Stamp 连点彩蛋：5 次 → 旋转 + 背景故事
+    var stampHits = 0, stampTimer = null;
+    $('#stamp').addEventListener('click', function(){
+      stampHits++;
+      clearTimeout(stampTimer);
+      stampTimer = setTimeout(function(){ stampHits = 0; }, 1200);
+      if(stampHits >= 5){
+        stampHits = 0;
+        var s = $('#stamp');
+        s.style.transition = 'transform .6s';
+        s.style.transform = 'rotate(720deg) scale(1.3)';
+        setTimeout(function(){ s.style.transform = ''; }, 700);
+        if(navigator.vibrate) navigator.vibrate([30, 40, 30]);
+        toast.textContent = '📦 技能包解锁 · 打开背景故事';
+        toast.classList.add('show');
+        setTimeout(function(){ toast.classList.remove('show'); }, 1600);
+        openSheet('story');
+      }else{
+        s.style.transform = 'rotate(30deg) scale(1.1)';
+        setTimeout(function(){ s.style.transform = ''; }, 250);
+      }
+    });
+
+    document.querySelectorAll('.stat-card').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet(el.dataset.stat); });
+    });
+    document.querySelectorAll('.flow-node').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet(el.id.replace('flow-','')); });
+    });
+    document.querySelectorAll('.feature').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet('f'+el.dataset.f); });
+    });
+    $('#termWin').addEventListener('click', function(){ openSheet('deploy'); });
+    $('#sheetClose').addEventListener('click', closeSheet);
+    overlay.addEventListener('click', function(e){ if(e.target===overlay) closeSheet(); });
+
+    // Tech pills 点击 → 技术说明弹窗
+    var techMap = {0:'tech0', 1:'tech1', 2:'tech2', 3:'tech3', 4:'tech2', 5:'tech2', 6:'tech3'};
+    document.querySelectorAll('.tech-pill').forEach(function(el, i){
+      el.addEventListener('click', function(){ openSheet(techMap[i] || 'story'); });
+    });
+
+    $('#shareBtn').addEventListener('click', function(){
+      var url = location.href.split('?')[0];
+      if(navigator.share){
+        navigator.share({title:'SkillHub — 企业级 Agent 技能注册中心', url:url}).catch(function(){});
+      }else if(navigator.clipboard){
+        navigator.clipboard.writeText(url).then(function(){
+          toast.textContent = '链接已复制';
+          toast.classList.add('show');
+          setTimeout(function(){ toast.classList.remove('show'); }, 1800);
+        });
+      }
+    });
+    document.querySelectorAll('.reveal').forEach(function(x){ x.classList.add('visible'); });
+  })();
+  </script>
+</body>
+</html>

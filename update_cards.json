@@ -1,10 +1,10 @@
 {
-  "id": "deepseek-reasonix",
-  "title": "DeepSeek-Reasonix",
-  "subtitle": "可以一直开着跑的编码 Agent · 32.8K★",
-  "image": "cards/reasonix-cover.svg",
-  "page": "pages/reasonix.html",
-  "tags": ["AI Agent", "DeepSeek", "Go", "编码", "32.8K★"],
+  "id": "skillhub",
+  "title": "SkillHub",
+  "subtitle": "企业级 Agent 技能注册中心 · v0.2.16 · 4.9K★",
+  "image": "cards/skillhub-cover.svg",
+  "page": "pages/skillhub.html",
+  "tags": ["AI Agent", "iflytek", "Skill Registry", "开源", "4.9K★"],
   "date": "2026-08-07",
   "type": "recommendation"
 }
