@@ -1,10 +1,10 @@
 {
-  "id": "skillhub",
-  "title": "SkillHub",
-  "subtitle": "企业级 Agent 技能注册中心 · v0.2.16 · 4.9K★",
-  "image": "cards/skillhub-cover.svg",
-  "page": "pages/skillhub.html",
-  "tags": ["AI Agent", "iflytek", "Skill Registry", "开源", "4.9K★"],
+  "id": "pi",
+  "title": "Pi",
+  "subtitle": "AI Agent 工具包 · 生态中心 · 85.2K★",
+  "image": "cards/pi-cover.svg",
+  "page": "pages/pi.html",
+  "tags": ["AI Agent", "LLM API", "TUI", "开源", "85.2K★"],
   "date": "2026-08-07",
   "type": "recommendation"
 }

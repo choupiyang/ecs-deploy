@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#09090B">
+  <title>Pi — 85K★ 的 AI Agent 工具包 · 生态中心</title>
+  <link rel="preconnect" href="https://fonts.googleapis.cn">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.cn/css2?family=Noto+Serif+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09090B;
+      --bg-2: #111113;
+      --accent: #E8B63E;
+      --accent-2: #F2D38A;
+      --accent-3: #9CA3AF;
+      --ice: #F5F5F4;
+      --text: #FAFAF9;
+      --muted: #6B7280;
+      --success: #34D399;
+      --surface: #161619;
+      --serif: 'Noto Serif SC', serif;
+      --cn: 'Noto Sans SC', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; background: #050506; font-family: 'Noto Sans SC', sans-serif; color: #FAFAF9; -webkit-font-smoothing: antialiased; }
+    body { display: flex; align-items: center; justify-content: center; }
+
+    .stage {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      height: min(100vh, calc(100vw * 16 / 9));
+      width: min(100vw, calc(100vh * 9 / 16));
+      background: #09090B;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,.6);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 16px 10px;
+      perspective: 1000px;
+      transform-style: preserve-3d;
+      transition: transform .12s ease-out;
+    }
+    .tilt-deep { transform: translateZ(-50px) scale(1.08); }
+    .tilt-mid { transform: translateZ(0); }
+    .tilt-front { transform: translateZ(45px); }
+
+    /* 3D P 徽标 + 生态辐射轨道（贴合"agent harness 生态中心"主题）：
+       中心白色 P 徽章呼吸，外围生态节点绕轨道旋转 */
+    .ecohub {
+      position: relative;
+      flex-shrink: 0;
+      width: 128px;
+      height: 128px;
+      margin: 0;
+      z-index: 1;
+      pointer-events: none;
+      transform-style: preserve-3d;
+    }
+    .ecohub .pmark {
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 46px; height: 46px;
+      margin: -23px 0 0 -23px;
+      border-radius: 8px;
+      background: #FAFAF9;
+      box-shadow: 0 0 30px rgba(250, 250, 249, .25), 0 0 60px rgba(232, 182, 62, .12);
+      transform: rotateY(18deg) rotateX(10deg) translateZ(10px);
+      animation: pFloat 4.5s ease-in-out infinite;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 24px;
+      color: #09090B;
+    }
+    @keyframes pFloat {
+      0%, 100% { transform: rotateY(18deg) rotateX(10deg) translateZ(10px); }
+      50% { transform: rotateY(22deg) rotateX(14deg) translateZ(16px); }
+    }
+    .ecohub .ring {
+      position: absolute;
+      top: 50%; left: 50%;
+      border-radius: 50%;
+      border: 1px solid rgba(232, 182, 62, .4);
+      transform-style: preserve-3d;
+    }
+    .ecohub .ring.er1 { width: 96px; height: 96px; margin: -48px 0 0 -48px; animation: spin3d 14s linear infinite; }
+    .ecohub .ring.er2 { width: 122px; height: 122px; margin: -61px 0 0 -61px; border-color: rgba(156, 163, 175, .25); animation: spin3dRev 22s linear infinite; }
+    @keyframes spin3d { from { transform: rotateX(66deg) rotateZ(0); } to { transform: rotateX(66deg) rotateZ(360deg); } }
+    @keyframes spin3dRev { from { transform: rotateX(66deg) rotateZ(360deg); } to { transform: rotateX(66deg) rotateZ(0); } }
+    .ecohub .enode {
+      position: absolute;
+      top: 50%; left: 50%;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 4.8px;
+      color: #D1D5DB;
+      background: rgba(22, 22, 25, .92);
+      border: 1px solid rgba(156, 163, 175, .4);
+      border-radius: 3px;
+      padding: 1px 3px;
+      white-space: nowrap;
+      box-shadow: 0 0 6px rgba(0,0,0,.4);
+    }
+    .enode.n1 { margin: -7px 0 0 -7px; animation: orbit1 14s linear infinite; border-color: rgba(232, 182, 62, .6); color: #E8B63E; }
+    .enode.n2 { margin: -7px 0 0 -7px; animation: orbit2 22s linear infinite; }
+    .enode.n3 { margin: -7px 0 0 -7px; animation: orbit3 14s linear infinite; border-color: rgba(52, 211, 153, .5); color: #34D399; }
+    .enode.n4 { margin: -7px 0 0 -7px; animation: orbit4 22s linear infinite; }
+    @keyframes orbit1 {
+      from { transform: rotateX(66deg) rotateZ(0) translateX(48px) rotateZ(0); }
+      to   { transform: rotateX(66deg) rotateZ(360deg) translateX(48px) rotateZ(-360deg); }
+    }
+    @keyframes orbit2 {
+      from { transform: rotateX(66deg) rotateZ(0) translateX(61px) rotateZ(0); }
+      to   { transform: rotateX(66deg) rotateZ(-360deg) translateX(61px) rotateZ(360deg); }
+    }
+    @keyframes orbit3 {
+      from { transform: rotateX(66deg) rotateZ(0) translateX(48px) rotateZ(0); }
+      to   { transform: rotateX(66deg) rotateZ(360deg) translateX(48px) rotateZ(-360deg); }
+    }
+    @keyframes orbit4 {
+      from { transform: rotateX(66deg) rotateZ(0) translateX(61px) rotateZ(0); }
+      to   { transform: rotateX(66deg) rotateZ(-360deg) translateX(61px) rotateZ(360deg); }
+    }
+    .ecohub .tstatus {
+      position: absolute;
+      left: 0; right: 0; bottom: -4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 5.5px;
+      letter-spacing: .1em;
+      color: #6B7280;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ecohub .tstatus em { color: #E8B63E; font-style: normal; }
+
+    /* 浮动数据粒子（3D 视差前景） */
+    .flakes { position: absolute; inset: 0; pointer-events: none; z-index: 3; overflow: hidden; }
+    .flake {
+      position: absolute;
+      width: 10px; height: 10px;
+      border: 1px solid rgba(232, 182, 62, .4);
+      border-radius: 50%;
+      opacity: .5;
+      animation: floatY 6s ease-in-out infinite;
+    }
+    .flake.f1 { left: 8%; top: 22%; animation-delay: 0s; }
+    .flake.f2 { left: 88%; top: 30%; width: 7px; height: 7px; animation-delay: 1.2s; }
+    .flake.f3 { left: 14%; top: 68%; width: 6px; height: 6px; border-color: rgba(156, 163, 175, .4); animation-delay: 2.1s; }
+    .flake.f4 { left: 84%; top: 72%; width: 9px; height: 9px; animation-delay: .6s; }
+    .flake.f5 { left: 48%; top: 16%; width: 5px; height: 5px; border-color: rgba(52, 211, 153, .4); animation-delay: 1.8s; }
+    @keyframes floatY {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-14px) rotate(120deg); }
+    }
+    .hint-badge {
+      position: relative;
+      z-index: 5;
+      align-self: flex-start;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      letter-spacing: .18em;
+      color: #8FA8C9;
+      border: 1px dashed rgba(232, 182, 62, .35);
+      border-radius: 10px;
+      padding: 2px 8px;
+      margin-top: 5px;
+      flex-shrink: 0;
+      animation: hintPulse 2.4s ease-in-out infinite;
+    }
+    @keyframes hintPulse {
+      0%, 100% { opacity: .55; }
+      50% { opacity: 1; box-shadow: 0 0 12px rgba(232, 182, 62, .25); }
+    }
+    .stage::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 38% at 78% 2%, rgba(232, 182, 62, .07) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 35% at 8% 45%, rgba(156, 163, 175, .06) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 50% 100%, rgba(17, 17, 19, .95) 0%, transparent 60%);
+    }
+    .stage::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(rgba(250, 250, 249, .012) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(250, 250, 249, .012) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    /* 顶部条 */
+    .topbar {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .16em;
+      color: #6B7280;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(250, 250, 249, .06);
+    }
+    .brand { display: flex; align-items: center; gap: 6px; color: #FAFAF9; }
+    .brand-dot { width: 5px; height: 5px; background: #E8B63E; border-radius: 50%; box-shadow: 0 0 8px #E8B63E; animation: pulse 2.2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .3; transform: scale(.6); } }
+    .share-btn {
+      background: none;
+      border: 1px solid rgba(250, 250, 249, .2);
+      padding: 4px 8px 3px;
+      font: inherit;
+      color: #FAFAF9;
+      cursor: pointer;
+      letter-spacing: .12em;
+      transition: all .3s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 7.5px;
+    }
+    .share-btn:active { background: #E8B63E; color: #09090B; border-color: #E8B63E; }
+
+    /* Hero —— 左右两栏：左文字 + 右 3D 生态徽标 */
+    .hero { position: relative; z-index: 5; flex-shrink: 0; margin-top: 6px; display: flex; align-items: flex-start; gap: 12px; }
+    .hero-side { flex: 1; min-width: 0; }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #6B7280;
+      margin-bottom: 4px;
+    }
+    .vol { color: #E8B63E; }
+    .title-block { display: flex; align-items: flex-start; gap: 10px; }
+    .pg-stamp {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(232, 182, 62, .6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 19px;
+      flex-shrink: 0;
+      position: relative;
+      box-shadow: 0 0 18px rgba(232, 182, 62, .18) inset, 0 0 12px rgba(232, 182, 62, .1);
+    }
+    .pg-stamp::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 1px dashed rgba(232, 182, 62, .35);
+      animation: spin 9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .title-text { min-width: 0; }
+    .pg-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 23px;
+      font-weight: 900;
+      letter-spacing: -.02em;
+      line-height: 1.05;
+      color: #FAFAF9;
+    }
+    .pg-title .dot { color: #E8B63E; }
+    .superdesign-line { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+    .superdesign { font-family: 'JetBrains Mono', monospace; font-size: 7px; letter-spacing: .14em; color: #9CA3AF; }
+    .v-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      letter-spacing: .14em;
+      color: #E8B63E;
+      border: 1px solid rgba(232, 182, 62, .3);
+      padding: 1px 5px;
+      border-radius: 2px;
+      background: rgba(232, 182, 62, .06);
+    }
+    .v-tag.green { color: #34D399; border-color: rgba(52, 211, 153, .3); background: rgba(52, 211, 153, .06); }
+    .tagline {
+      margin-top: 5px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10.5px;
+      color: #D1D5DB;
+      line-height: 1.45;
+    }
+    .tagline em { color: #E8B63E; font-style: normal; font-weight: 500; }
+
+    /* 终端展示区（生态证据终端模拟） */
+    .termbox { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .term-header { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; margin-bottom: 4px; }
+    .term-header::after { content: ''; flex: 1; height: 1px; background: rgba(250, 250, 249, .06); }
+    .term-window {
+      background: #050506;
+      border: 1px solid rgba(232, 182, 62, .3);
+      border-radius: 8px;
+      overflow: hidden;
+      font-family: 'JetBrains Mono', monospace;
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .term-window:active { border-color: rgba(232, 182, 62, .6); }
+    .term-bar {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 9px;
+      background: rgba(232, 182, 62, .1);
+      border-bottom: 1px solid rgba(232, 182, 62, .15);
+    }
+    .term-bar span { width: 7px; height: 7px; border-radius: 50%; }
+    .term-bar .r { background: #FF5F57; } .term-bar .y { background: #FFB020; } .term-bar .g { background: #28C840; }
+    .term-bar b { margin-left: 6px; font-size: 7px; font-weight: 400; color: #8FA8C9; letter-spacing: .06em; }
+    .term-body { padding: 8px 11px 9px; font-size: 8.5px; line-height: 1.8; color: #9FB8D8; }
+    .term-body .cmd { color: #E8B63E; }
+    .term-body .prompt { color: #6B7280; }
+    .term-body .out { color: #B9CCE8; }
+    .term-body .ok { color: #34D399; }
+    .term-body .dim { color: #5A6B8C; }
+    .term-body .plan { color: #D1D5DB; }
+    .caret-blink { display: inline-block; width: 7px; height: 10px; background: #E8B63E; vertical-align: -2px; animation: blink 1s steps(1) infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* Stats */
+    .stats-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .stats-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .stats-title { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; }
+    .stats-badge { font-family: 'JetBrains Mono', monospace; font-size: 6px; letter-spacing: .16em; color: #34D399; border: 1px solid rgba(52, 211, 153, .3); padding: 1px 5px; border-radius: 2px; }
+    .stats-chart { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .stat-card {
+      background: rgba(250, 250, 249, .02);
+      border: 1px solid rgba(250, 250, 249, .07);
+      border-radius: 7px;
+      padding: 7px 6px 5px;
+      cursor: pointer;
+      transition: all .25s;
+      min-width: 0;
+    }
+    .stat-card:active { background: rgba(232, 182, 62, .07); border-color: rgba(232, 182, 62, .3); transform: scale(.96); }
+    .stat-num { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; color: #FAFAF9; line-height: 1; white-space: nowrap; }
+    .stat-num .accent { color: var(--stat-color, #E8B63E); }
+    .stat-label { font-size: 7px; color: #6B7280; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .stat-mini-chart { display: flex; align-items: flex-end; gap: 2px; height: 12px; margin-top: 4px; }
+    .stat-bar { width: 4px; background: var(--stat-color, #E8B63E); opacity: .55; border-radius: 1px; transform-origin: bottom; }
+
+    /* Flow */
+    .flow-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .flow-header { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; margin-bottom: 4px; }
+    .flow-header::after { content: ''; flex: 1; height: 1px; background: rgba(250, 250, 249, .06); }
+    .flow-svg { width: 100%; height: auto; display: block; }
+    .flow-node { cursor: pointer; }
+    .flow-node:active { opacity: .7; }
+    .flow-arrow { animation: flowPulse 2s ease-in-out infinite; }
+    @keyframes flowPulse { 0%, 100% { stroke-opacity: .4; } 50% { stroke-opacity: 1; } }
+
+    /* Features */
+    .features { position: relative; z-index: 5; margin-top: 6px; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      background: rgba(250, 250, 249, .02);
+      border: 1px solid rgba(250, 250, 249, .07);
+      border-radius: 7px;
+      padding: 6px 9px;
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .feature:active { background: rgba(232, 182, 62, .05); border-color: rgba(232, 182, 62, .22); }
+    .feature-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: rgba(232, 182, 62, .1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .feature-icon svg { width: 13px; height: 13px; stroke: #E8B63E; fill: none; stroke-width: 1.5; }
+    .feature-icon.green { background: rgba(52, 211, 153, .1); }
+    .feature-icon.green svg { stroke: #34D399; }
+    .feature-icon.pink { background: rgba(240, 171, 252, .1); }
+    .feature-icon.pink svg { stroke: #F0ABFC; }
+    .feature-icon.violet { background: rgba(147, 197, 253, .1); }
+    .feature-icon.violet svg { stroke: #93C5FD; }
+    .feature-content { flex: 1; min-width: 0; }
+    .feature-title { font-family: 'Noto Sans SC', sans-serif; font-size: 9.5px; font-weight: 500; color: #FAFAF9; letter-spacing: .02em; }
+    .feature-desc { font-size: 7.5px; color: #6B7280; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .feature-arrow { font-size: 11px; color: #E8B63E; opacity: 0; transform: translateX(-2px); transition: all .25s; flex-shrink: 0; }
+    .feature:active .feature-arrow { opacity: 1; transform: translateX(2px); }
+    .feature-progress { height: 2px; background: rgba(250, 250, 249, .06); border-radius: 1px; margin-top: 4px; overflow: hidden; }
+    .feature-progress-bar { height: 100%; background: linear-gradient(90deg, #E8B63E, #F2D38A, #9CA3AF); border-radius: 1px; transform-origin: left; animation: progressIn .8s cubic-bezier(.4, 0, .2, 1) forwards; transform: scaleX(0); }
+    @keyframes progressIn { to { transform: scaleX(1); } }
+
+    /* Tech */
+    .tech-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .tech-header { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D1D5DB; margin-bottom: 4px; }
+    .tech-pills { display: flex; flex-wrap: wrap; gap: 4px; }
+    .tech-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6.5px;
+      letter-spacing: .08em;
+      color: #9CA3AF;
+      border: 1px solid rgba(250, 250, 249, .1);
+      padding: 2px 7px;
+      border-radius: 10px;
+      cursor: pointer;
+      background: rgba(250, 250, 249, .02);
+      transition: all .2s;
+    }
+    .tech-pill:active { background: rgba(250, 250, 249, .08); }
+    .tech-pill.accent { border-color: rgba(232, 182, 62, .35); color: #E8B63E; }
+    .tech-pill.violet { border-color: rgba(147, 197, 253, .35); color: #93C5FD; }
+    .tech-pill.pink { border-color: rgba(240, 171, 252, .35); color: #F0ABFC; }
+    .tech-pill.green { border-color: rgba(52, 211, 153, .3); color: #34D399; }
+
+    /* Bottom bar */
+    .bottombar {
+      position: relative;
+      z-index: 5;
+      margin-top: 8px;
+      padding-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      border-top: 1px solid rgba(250, 250, 249, .06);
+    }
+    .github-link { display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 8px; color: #D1D5DB; text-decoration: none; }
+    .github-link svg { width: 13px; height: 13px; fill: #9CA3AF; transition: fill .25s; }
+    .github-link:active svg { fill: #E8B63E; }
+    .visit-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .14em;
+      color: #09090B;
+      background: linear-gradient(90deg, #E8B63E, #F2D38A);
+      padding: 6px 13px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all .25s;
+    }
+    .visit-btn:active { transform: scale(.95); filter: brightness(1.15); }
+
+    /* Overlay + Sheet */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: flex-end;
+      background: rgba(0, 0, 0, .5);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .35s;
+    }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+    .sheet {
+      width: 100%;
+      max-height: 76%;
+      background: linear-gradient(180deg, #161619, #111113);
+      border: 1px solid rgba(232, 182, 62, .2);
+      border-bottom: none;
+      border-radius: 16px 16px 0 0;
+      padding: 14px 18px 18px;
+      transform: translateY(101%);
+      transition: transform .45s cubic-bezier(.7, 0, .3, 1);
+      overflow-y: auto;
+    }
+    .overlay.active .sheet { transform: translateY(0); }
+    .sheet-handle { width: 32px; height: 3px; background: #3A4A66; border-radius: 2px; margin: 0 auto 12px; }
+    .sheet-title { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; color: #FAFAF9; margin-bottom: 7px; }
+    .sheet-title em { color: #E8B63E; font-style: normal; }
+    .sheet-desc { font-size: 10.5px; line-height: 1.65; color: #9CA3AF; }
+    .sheet-desc code { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #E8B63E; background: rgba(232, 182, 62, .08); padding: 1px 4px; border-radius: 2px; }
+    .sheet-code {
+      margin-top: 10px;
+      background: #050506;
+      border: 1px solid rgba(250, 250, 249, .08);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      line-height: 1.7;
+      color: #E8B63E;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .sheet-points { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+    .sheet-point { display: flex; align-items: flex-start; gap: 8px; font-family: 'Noto Sans SC', sans-serif; font-size: 10px; color: #D0D0D8; line-height: 1.55; }
+    .sheet-point::before { content: ''; width: 5px; height: 5px; background: #E8B63E; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .sheet-point.green::before { background: #34D399; }
+    .sheet-point.pink::before { background: #F0ABFC; }
+
+    /* Toast */
+    .toast {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #28C840;
+      color: #09090B;
+      padding: 7px 14px;
+      border-radius: 5px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: all .3s;
+      z-index: 200;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .reveal { opacity: 0; transform: translateY(10px); transition: all .45s cubic-bezier(.4, 0, .2, 1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @keyframes chartGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+    .chart-animate { animation: chartGrow .6s cubic-bezier(.4, 0, .2, 1) forwards; }
+
+    /* 小屏兜底 */
+    @media (max-height: 730px) {
+      .pg-title { font-size: 20px; }
+      .pg-stamp { width: 34px; height: 34px; font-size: 16px; }
+      .tagline { font-size: 9.5px; }
+      .term-body { font-size: 7.5px; line-height: 1.7; padding: 6px 9px; }
+      .feature { padding: 5px 9px; }
+      .feature-title { font-size: 9px; }
+      .stat-num { font-size: 13.5px; }
+      .sheet { max-height: 80%; }
+      .ecohub { width: 96px; height: 96px; }
+      .hero { gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage" id="stage">
+    <!-- 3D 视差前景：浮动数据粒子 -->
+    <div class="flakes">
+      <div class="flake f1"></div><div class="flake f2"></div><div class="flake f3"></div>
+      <div class="flake f4"></div><div class="flake f5"></div>
+    </div>
+
+    <!-- Topbar -->
+    <div class="topbar reveal tilt-mid">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <span>Young's Insight</span>
+      </div>
+      <button class="share-btn" id="shareBtn">SHARE <span class="arr">↗</span></button>
+    </div>
+
+    <!-- Hero —— 左右两栏：左文字 + 右 3D 生态徽标 -->
+    <div class="hero reveal">
+      <div class="hero-side">
+        <div class="meta-row">
+          <span class="vol">AI AGENT TOOLKIT · ECOSYSTEM CORE</span>
+          <span>2026.08.07</span>
+        </div>
+        <div class="title-block">
+          <div class="pg-stamp" id="stamp">π</div>
+          <div class="title-text">
+            <div class="pg-title">Pi<span class="dot">.</span></div>
+            <div class="superdesign-line">
+              <span class="superdesign">earendil-works · TypeScript · MIT</span>
+              <span class="v-tag">85.2K★</span>
+              <span class="v-tag green">1 周年</span>
+            </div>
+          </div>
+        </div>
+        <div class="tagline">极简 Agent 工具包——统一 LLM API + agent 循环 + TUI。一年 85K★，OpenClaw（385K★）、Prime Agent、Cloudflare OS 都<em>构建在它之上</em></div>
+        <div class="hint-badge">✦ 轻触任何元素探索 · 拖动卡片看 3D 视差</div>
+      </div>
+      <div class="ecohub tilt-deep">
+        <div class="ring er1"></div>
+        <div class="ring er2"></div>
+        <div class="pmark">π</div>
+        <div class="enode n1">OpenClaw</div>
+        <div class="enode n2">Prime Agent</div>
+        <div class="enode n3">CF OS</div>
+        <div class="enode n4">Go·Rust</div>
+        <div class="tstatus"><em>85.2K★</em> · 10.5K forks</div>
+      </div>
+    </div>
+
+    <!-- 终端展示（生态证据模拟） -->
+    <div class="termbox reveal">
+      <div class="term-header">Built on Pi · 谁站在它的肩膀上</div>
+      <div class="term-window" id="termWin">
+        <div class="term-bar">
+          <span class="r"></span><span class="y"></span><span class="g"></span>
+          <b>pi · ecosystem · 点击查看安装</b>
+        </div>
+        <div class="term-body">
+<span class="plan">◆ npm ls @earendil-works/*</span>
+<span class="ok">✓ openclaw@385K★ → pi-tui 0.82.1</span>
+<span class="ok">✓ prime-agent@5.4K★ → pi-coding-agent + pi-ai + pi-tui</span>
+<span class="ok">✓ cloudflare-os → pi-agent-core（AI Gateway）</span>
+<span class="out">✓ pi-chat（官方 Slack 自动化）· pi-mono · PI-Desktop</span>
+<span class="dim">→ 移植：Go / Rust / Zig 三语言重实现</span>
+<span class="prompt">$</span> <span class="cmd">curl -fsSL https://pi.dev/install.sh | sh</span>
+<span class="prompt">$</span> <span class="caret-blink"></span></div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-section reveal">
+      <div class="stats-header">
+        <span class="stats-title">Signals</span>
+        <span class="stats-badge">OPEN SOURCE · MIT</span>
+      </div>
+      <div class="stats-chart">
+        <div class="stat-card" data-stat="stars" style="--stat-color: #E8B63E">
+          <div class="stat-num"><span class="accent">85.2K</span></div>
+          <div class="stat-label">Stars · 1 周年</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 5px; animation-delay: .1s"></div>
+            <div class="stat-bar chart-animate" style="height: 9px; animation-delay: .15s"></div>
+            <div class="stat-bar chart-animate" style="height: 13px; animation-delay: .2s"></div>
+            <div class="stat-bar chart-animate" style="height: 16px; animation-delay: .25s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="forks" style="--stat-color: #93C5FD">
+          <div class="stat-num"><span class="accent">10.5K</span></div>
+          <div class="stat-label">Forks</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 10px; background: #93C5FD; animation-delay: .3s"></div>
+            <div class="stat-bar chart-animate" style="height: 12px; background: #93C5FD; animation-delay: .35s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="packages" style="--stat-color: #34D399">
+          <div class="stat-num"><span class="accent">5</span></div>
+          <div class="stat-label">npm 包</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 6px; background: #34D399; animation-delay: .4s"></div>
+            <div class="stat-bar chart-animate" style="height: 12px; background: #34D399; animation-delay: .45s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="eco" style="--stat-color: #F0ABFC">
+          <div class="stat-num"><span class="accent">385K★</span></div>
+          <div class="stat-label">OpenClaw 基于它</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 8px; animation-delay: .5s"></div>
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .55s"></div>
+            <div class="stat-bar chart-animate" style="height: 9px; animation-delay: .6s"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flow: 生态辐射 -->
+    <div class="flow-section reveal">
+      <div class="flow-header">生态辐射 · 谁构建在 Pi 之上</div>
+      <svg class="flow-svg" viewBox="0 0 350 44" fill="none">
+        <defs>
+          <marker id="pi-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L6,3 z" fill="#E8B63E" fill-opacity=".6"/>
+          </marker>
+        </defs>
+        <g class="flow-node" id="flow-pi">
+          <rect x="3" y="9" width="56" height="26" rx="5" fill="rgba(232,182,62,.12)" stroke="#E8B63E" stroke-width="1.2"/>
+          <text x="31" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#E8B63E" text-anchor="middle">Pi core</text>
+          <text x="31" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#6B7280" text-anchor="middle">ai + agent + tui</text>
+        </g>
+        <path class="flow-arrow" d="M62 22 L76 22" stroke="#E8B63E" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#pi-arrow)"/>
+        <g class="flow-node" id="flow-openclaw">
+          <rect x="79" y="9" width="66" height="26" rx="5" fill="rgba(52,211,153,.12)" stroke="#34D399" stroke-width="1.2"/>
+          <text x="112" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#34D399" text-anchor="middle">OpenClaw</text>
+          <text x="112" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#6B7280" text-anchor="middle">385K★ · pi-tui</text>
+        </g>
+        <path class="flow-arrow" d="M148 22 L160 22" stroke="#34D399" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#pi-arrow)" style="animation-delay: .3s"/>
+        <g class="flow-node" id="flow-prime">
+          <rect x="163" y="9" width="66" height="26" rx="5" fill="rgba(147,197,253,.12)" stroke="#93C5FD" stroke-width="1.2"/>
+          <text x="196" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#93C5FD" text-anchor="middle">Prime Agent</text>
+          <text x="196" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#6B7280" text-anchor="middle">5.4K★ · 4 个包</text>
+        </g>
+        <path class="flow-arrow" d="M232 22 L244 22" stroke="#93C5FD" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#pi-arrow)" style="animation-delay: .6s"/>
+        <g class="flow-node" id="flow-cfos">
+          <rect x="247" y="9" width="62" height="26" rx="5" fill="rgba(240,171,252,.12)" stroke="#F0ABFC" stroke-width="1.2"/>
+          <text x="278" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#F0ABFC" text-anchor="middle">Cloudflare OS</text>
+          <text x="278" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#6B7280" text-anchor="middle">AI Gateway</text>
+        </g>
+        <path class="flow-arrow" d="M312 22 L322 22" stroke="#F0ABFC" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#pi-arrow)" style="animation-delay: .9s"/>
+        <g class="flow-node" id="flow-ports">
+          <rect x="325" y="9" width="23" height="26" rx="5" fill="rgba(250,250,249,.06)" stroke="#9CA3AF" stroke-width="1" stroke-opacity=".4"/>
+          <text x="336" y="22" font-family="JetBrains Mono, monospace" font-size="5.5" fill="#D1D5DB" text-anchor="middle">移植</text>
+          <text x="336" y="31" font-family="JetBrains Mono, monospace" font-size="4" fill="#6B7280" text-anchor="middle">Go·Rust</text>
+        </g>
+        <circle cx="69" cy="22" r="2" fill="#E8B63E">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="155" cy="22" r="2" fill="#34D399">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0.5s"/>
+        </circle>
+        <circle cx="239" cy="22" r="2" fill="#93C5FD">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="1s"/>
+        </circle>
+        <circle cx="307" cy="22" r="2" fill="#F0ABFC">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="1.3s"/>
+        </circle>
+      </svg>
+    </div>
+
+    <!-- Features -->
+    <div class="features reveal">
+      <div class="feature" data-f="0">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">生态核心 · 385K★ 的 OpenClaw 站在它肩上</div>
+          <div class="feature-desc">openclaw 依赖 pi-tui 0.82.1；Prime Agent 用 4 个包；Cloudflare OS AI Gateway 用 pi-agent-core</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 100%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="1">
+        <div class="feature-icon green">
+          <svg viewBox="0 0 24 24"><path d="M4 17l6-6-6-6"/><path d="M12 19h8"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">pi-ai · 统一多 Provider LLM API</div>
+          <div class="feature-desc">OpenAI / Anthropic / Google 一个 API 全接——Cloudflare OS 就靠它实现"一个 API 接所有 LLM"</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 97%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="2">
+        <div class="feature-icon violet">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">pi-agent-core · Agent 运行时</div>
+          <div class="feature-desc">工具调用 + 状态管理 + 最小系统提示，token 高效——"极简 harness，适配你的工作流"</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 95%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="3">
+        <div class="feature-icon pink">
+          <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 21h8M12 18v3"/><path d="M6 9h4M6 12h7"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">pi-tui + coding-agent CLI · 终端形态</div>
+          <div class="feature-desc">差分渲染 TUI 库 + 交互式编码 agent CLI，可扩展（扩展/skills/主题/包）</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 93%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="4">
+        <div class="feature-icon green">
+          <svg viewBox="0 0 24 24"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4M12 2v13"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">跨语言移植 · Go / Rust / Zig</div>
+          <div class="feature-desc">sky-valley/pi（Go）、OdradekAI/opi（Rust）、pi-zig——架构被三个语言社区重新实现</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 91%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+    </div>
+
+    <!-- Tech -->
+    <div class="tech-section reveal">
+      <div class="tech-header">Stack &amp; Ecosystem</div>
+      <div class="tech-pills">
+        <span class="tech-pill accent">TypeScript</span>
+        <span class="tech-pill violet">pi-ai</span>
+        <span class="tech-pill pink">pi-agent-core</span>
+        <span class="tech-pill accent">pi-tui</span>
+        <span class="tech-pill green">pi-coding-agent</span>
+        <span class="tech-pill violet">pi-telemetry</span>
+        <span class="tech-pill pink">pi-chat</span>
+      </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="bottombar reveal">
+      <a href="https://github.com/earendil-works/pi" target="_blank" class="github-link">
+        <svg viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        earendil-works/pi
+      </a>
+      <a href="https://pi.dev" target="_blank" class="visit-btn">pi.dev →</a>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title" id="sheetTitle"></div>
+        <div class="sheet-desc" id="sheetDesc"></div>
+        <div class="sheet-code" id="sheetCode" style="display:none"></div>
+        <div class="sheet-points" id="sheetPoints"></div>
+        <button class="sheet-close" id="sheetClose">CLOSE</button>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script>
+  (function(){
+    var $=function(s){return document.querySelector(s)};
+    var overlay=$('#overlay'), sheetTitle=$('#sheetTitle'), sheetDesc=$('#sheetDesc'),
+        sheetPoints=$('#sheetPoints'), sheetCode=$('#sheetCode'), toast=$('#toast');
+
+    var DATA = {
+      stars: {
+        title: '85.2K Stars <em>· 一年登顶 AI Agent 工具包</em>',
+        desc: '2025-08-09 创建，一年整冲到 85,169 星、10,560 forks。Earendil Inc. 出品。GitHub 上 AI agent 基础设施赛道最火的项目之一——但它更大的价值在生态：OpenClaw（385K★）、Prime Agent、Cloudflare OS 都构建在它之上。',
+        points: ['earendil-works · Earendil Inc.', '85,169 ★ / 10,560 forks', '2025-08-09 创建 · 一周年', 'TypeScript · MIT 协议', 'openclaw@385K★ 依赖 pi-tui', 'Cloudflare OS AI Gateway 用 pi-agent-core']
+      },
+      forks: {
+        title: '10.5K Forks <em>· 生态扩散的证明</em>',
+        desc: '一万个 fork 意味着大量团队在 pi 之上做二次开发：改 TUI、换模型路由、定制 agent 循环。更有 Go（sky-valley/pi）、Rust（OdradekAI/opi）、Zig（pi-zig）三语言重实现——架构被三个语言社区验证。',
+        points: ['10,560 forks · 生态级二次开发', 'Go 移植：sky-valley/pi', 'Rust 重实现：OdradekAI/opi', 'Zig 移植：kiroguzitto/pi-zig', 'PI-Desktop · pi-workbench 桌面形态']
+      },
+      packages: {
+        title: '5 个 npm 包 <em>· 可组合的模块化</em>',
+        desc: 'pi 不是单体，而是可独立引用的包族：pi-ai（统一 LLM API）、pi-agent-core（agent 运行时）、pi-coding-agent（编码 agent CLI）、pi-tui（差分渲染终端 UI）、pi-telemetry（厂商中立遥测）。下游项目按需取用——Prime Agent 一次引用了 4 个。',
+        points: ['@earendil-works/pi-ai', '@earendil-works/pi-agent-core', '@earendil-works/pi-coding-agent', '@earendil-works/pi-tui', '@earendil-works/pi-telemetry', '另有 pi-chat（Slack/聊天自动化）']
+      },
+      eco: {
+        title: '385K★ <em>· OpenClaw 直接依赖 pi-tui</em>',
+        desc: 'OpenClaw（openclaw/openclaw，385,449★，GitHub 最火的个人 AI 助手之一）在 package.json 中直接依赖 @earendil-works/pi-tui 0.82.1。Pi 的 TUI 库是 OpenClaw 终端体验的地基。',
+        points: ['openclaw/openclaw = 385,449★', '直接依赖 @earendil-works/pi-tui 0.82.1', 'Pi 的 TUI 是 OpenClaw 终端体验地基', 'Prime Agent 依赖 pi-coding-agent + pi-ai + pi-tui + pi-agent-core']
+      },
+      pi: {
+        title: 'Pi Core <em>· 极简 harness</em>',
+        desc: 'Pi 是极简 agent harness：统一 LLM API + agent 循环 + TUI，三个核心包各司其职。官网口号："There are many agent harnesses but this one is yours"——适配你的工作流，而不是反过来。',
+        points: ['极简设计哲学 · 最小系统提示', 'token 高效 · 自带 skills + AGENTS.md', '可扩展：扩展/skills/提示模板/主题', '以 Pi 包形式分发（npm 或 git）', '支持回放任意历史消息、分支会话']
+      },
+      openclaw: {
+        title: 'OpenClaw <em>· 385K★ 的旗舰下游</em>',
+        desc: 'OpenClaw（"Your own personal AI assistant. Any OS. Any Platform. The lobster way."）是 Pi 生态最耀眼的继承者——GitHub 385,449★。它的 package.json 直接依赖 @earendil-works/pi-tui 0.82.1，终端 UI 层建立在 Pi 之上。',
+        points: ['openclaw/openclaw · 385,449★', '依赖 @earendil-works/pi-tui 0.82.1', '个人 AI 助手 · 全平台', '5,400+ OpenClaw skills 生态']
+      },
+      prime: {
+        title: 'Prime Agent <em>· 自我改进 RLM Agent</em>',
+        desc: 'PrimeIntellect-ai/prime-agent（5,437★）是一个 self-improving RLM agent，专为编码工作流和长时间自治任务设计。它的依赖树包含 4 个 pi 包：pi-coding-agent、pi-agent-core、pi-ai、pi-tui——几乎把 Pi 全家桶装进了一个研究项目。',
+        points: ['PrimeIntellect-ai/prime-agent · 5,437★', '依赖 pi-coding-agent ^0.7.0', '依赖 pi-agent-core + pi-ai + pi-tui', '自我改进 RLM · 编码工作流', '关联 PRIME-RL · Verifiers · pi-mono']
+      },
+      cfos: {
+        title: 'Cloudflare OS <em>· AI Gateway 用 pi-agent-core</em>',
+        desc: 'Cloudflare OS 的官方 README 明确写道：AI Gateway 基于 Pi（specifically pi-agent-core），"which made it easy to support every LLM provider with one API"——一个 API 接所有 LLM。企业级 AI 操作系统的模型层也站在 Pi 上。',
+        points: ['cloudflare/cloudflare-os 官方 README 确认', 'AI Gateway = pi-agent-core', '"one API to support every LLM provider"', '5.1K★ · 公司级 AI OS']
+      },
+      ports: {
+        title: '跨语言移植 <em>· 架构被三语言社区验证</em>',
+        desc: 'Pi 的架构吸引力催生了三个独立语言移植：sky-valley/pi（纯 Go 移植 pi-ai 统一 LLM API）、OdradekAI/opi（Rust 重新实现）、kiroguzitto/pi-zig（Zig 移植 coding-agent 后端）。被三个语言社区同时重写，是架构质量最硬的证明。',
+        points: ['sky-valley/pi · 纯 Go 移植', 'OdradekAI/opi · Rust 重实现', 'pi-zig · Zig 移植', 'chasey-myagi/harness-pi · Hook-first harness', 'pi-mono · Prime 生态 monorepo']
+      },
+      f0: {
+        title: '🦞 生态核心 <em>· OpenClaw / Prime / Cloudflare OS</em>',
+        desc: 'Pi 最重要的身份不是"又一个 agent 工具包"，而是生态地基：OpenClaw（385K★）依赖 pi-tui；Prime Agent（5.4K★）引用 4 个 pi 包；Cloudflare OS 的 AI Gateway 明确基于 pi-agent-core。下游项目加起来超过 39 万星——Pi 是它们共同的地基。',
+        points: ['openclaw@385,449★ → pi-tui', 'prime-agent@5,437★ → 4 个 pi 包', 'cloudflare-os → pi-agent-core', 'pi-chat（官方 Slack 自动化）', '下游合计 39 万+ stars']
+      },
+      f1: {
+        title: '🔌 pi-ai <em>· 一个 API 接所有 LLM</em>',
+        desc: '统一多 Provider LLM API：OpenAI、Anthropic、Google 等全部统一接口。Cloudflare OS 官方 README 说得很直白：AI Gateway 基于 pi-agent-core，"made it easy to support every LLM provider with one API"。模型路由、归因、预算限流一站解决。',
+        points: ['OpenAI / Anthropic / Google 统一接口', '一个 API 接所有 provider', 'Cloudflare OS AI Gateway 的底座', '模型路由 + 归因 + 预算', 'TypeScript 实现 · MIT']
+      },
+      f2: {
+        title: '🧠 pi-agent-core <em>· Agent 运行时</em>',
+        desc: '工具调用 + 状态管理 + 最小系统提示。极简是刻意的：系统提示越少越省 token，行为越可预测。官网演示：让 Pi 自己写一个带自定义 TUI 的工作流扩展来加速 commit/push——agent 可以扩展自己的 harness。',
+        points: ['工具调用 + 状态管理', '最小系统提示 → token 高效', '回放任意历史消息、分支会话', '支持 skills + AGENTS.md', '可被下游项目直接引用']
+      },
+      f3: {
+        title: '🖥️ pi-tui + CLI <em>· 终端体验层</em>',
+        desc: 'pi-tui 是带差分渲染（differential rendering）的终端 UI 库——OpenClaw 就靠它做终端体验。pi-coding-agent 是交互式编码 agent CLI。社区还有 @termdraw/pi（Ben Vinegar 做的画图扩展）——扩展生态已经长出来了。',
+        points: ['pi-tui · 差分渲染 TUI 库', 'OpenClaw 依赖 pi-tui 0.82.1', 'pi-coding-agent · 交互式编码 CLI', '扩展生态：@termdraw/pi 等', '扩展/skills/主题/提示模板可打包分发']
+      },
+      f4: {
+        title: '🌍 跨语言移植 <em>· Go / Rust / Zig</em>',
+        desc: '被三个语言社区同时重写是架构质量最硬的证明：sky-valley/pi 用纯 Go 移植 pi-ai；OdradekAI/opi 用 Rust 重新实现；kiroguzitto/pi-zig 用 Zig 移植 coding-agent 后端。还有 PI-Desktop（Electron + Rust host）做桌面形态。',
+        points: ['Go：sky-valley/pi', 'Rust：OdradekAI/opi', 'Zig：kiroguzitto/pi-zig', '桌面：PI-Desktop · pi-workbench', 'harness-pi：Hook-first 新玩法']
+      },
+      tech0: {
+        title: 'TypeScript <em>· 全栈实现</em>',
+        desc: 'Pi 整个工具包用 TypeScript 实现（monorepo + packages/ 组织），npm 分发。构建系统支持离线构建（build:offline 用现有模型数据），测试脚本可跳过 LLM 依赖测试。',
+        points: ['TypeScript monorepo', 'npm install --ignore-scripts', 'npm run build / build:offline', './test.sh 跳过 LLM 测试', './pi-test.sh 从源码跑 pi']
+      },
+      tech1: {
+        title: 'pi-ai <em>· 统一 LLM API 包</em>',
+        desc: '多 Provider 统一接口：OpenAI、Anthropic、Google 等。企业级下游（Cloudflare OS AI Gateway）直接用它在生产环境支撑"一个 API 接所有 LLM"。',
+        points: ['多 provider 统一 API', '模型路由与归因', '预算限流', '生产验证：Cloudflare OS']
+      },
+      tech2: {
+        title: 'pi-tui <em>· 差分渲染 TUI</em>',
+        desc: '终端 UI 库，带差分渲染——只重绘变化的区域，终端动画流畅。OpenClaw 直接依赖它做个人 AI 助手的终端界面。',
+        points: ['差分渲染（differential rendering）', 'OpenClaw 生产依赖 0.82.1', '可自定义主题', '@termdraw/pi 等第三方扩展']
+      },
+      tech3: {
+        title: 'pi-telemetry <em>· 中立遥测</em>',
+        desc: '厂商中立的遥测合约：参考适配器 + 一致性测试 + 类型化 schema。让下游项目接遥测时不绑定任何特定厂商。',
+        points: ['Vendor-neutral 遥测合约', '参考 adapter + conformance tests', '类型化 schema', '可插拔']
+      },
+      story: {
+        title: '背景故事 <em>· 一年从零到 85K★ 的生态中心</em>',
+        desc: 'Pi 由 Earendil Inc. 开发，2025-08-09 开源。定位是极简 agent harness：统一 LLM API + agent 循环 + TUI，让开发者"make it yours"。一年后它成为 AI agent 基础设施的地基——OpenClaw、Prime Agent、Cloudflare OS 全部构建其上，Go/Rust/Zig 三社区竞相移植。官网第一句话就是它最准确的注脚："There are many agent harnesses but this one is yours."',
+        points: ['Earendil Inc. · 2025-08-09 开源', '极简 harness 哲学 · "make it yours"', '一年 85,169★ · 10,560 forks', 'OpenClaw 385K★ 依赖 pi-tui', 'Prime Agent 引用 4 个 pi 包', 'Cloudflare OS AI Gateway 基于 pi-agent-core', 'Go / Rust / Zig 三语言移植']
+      },
+      install: {
+        title: '安装 <em>· 一条命令跑起来</em>',
+        desc: '官方安装脚本、npm/pnpm/bun 全局安装、或从源码跑。Pi 自带 skills 支持、AGENTS.md 支持，回车立即接管当前运行、Alt+Enter 排队后续任务。',
+        points: ['curl -fsSL https://pi.dev/install.sh | sh', 'npm i -g @earendil-works/pi-coding-agent', 'powershell / pnpm / bun 全支持', '从源码：./pi-test.sh', '支持 skills + AGENTS.md', 'Enter 接管 · Alt+Enter 排队'],
+        code: '# 安装（任选其一）\ncurl -fsSL https://pi.dev/install.sh | sh\nnpm install -g --ignore-scripts @earendil-works/pi-coding-agent\n\n# 从源码跑\n./pi-test.sh\n\n# 下游引用（如 prime-agent 的做法）\nnpm i @earendil-works/pi-ai @earendil-works/pi-agent-core\nnpm i @earendil-works/pi-tui @earendil-works/pi-coding-agent'
+      }
+    };
+
+    function openSheet(key){
+      var d = DATA[key]; if(!d) return;
+      sheetTitle.innerHTML = d.title;
+      sheetDesc.textContent = d.desc;
+      if(d.code){
+        sheetCode.style.display = 'block';
+        sheetCode.textContent = d.code;
+      }else{
+        sheetCode.style.display = 'none';
+      }
+      sheetPoints.innerHTML = d.points.map(function(p){
+        return '<div class="sheet-point' + (p.indexOf('✓')===0 ? ' green' : '') + '">' + p + '</div>';
+      }).join('');
+      overlay.classList.add('active');
+      if(navigator.vibrate) navigator.vibrate(15);
+    }
+    function closeSheet(){ overlay.classList.remove('active'); }
+
+    // 3D 视差倾斜：跟随手指/鼠标
+    var stage = $('#stage');
+    var tiltRaf = null;
+    function onTilt(x, y){
+      if(tiltRaf) return;
+      tiltRaf = requestAnimationFrame(function(){
+        var w = stage.clientWidth, h = stage.clientHeight;
+        var nx = (x / w) * 2 - 1, ny = (y / h) * 2 - 1;
+        stage.style.transform = 'rotateX(' + (-ny * 6).toFixed(2) + 'deg) rotateY(' + (nx * 8).toFixed(2) + 'deg)';
+        tiltRaf = null;
+      });
+    }
+    function resetTilt(){ stage.style.transform = ''; }
+    stage.addEventListener('mousemove', function(e){
+      var r = stage.getBoundingClientRect();
+      onTilt(e.clientX - r.left, e.clientY - r.top);
+    });
+    stage.addEventListener('touchmove', function(e){
+      if(e.touches.length !== 1) return;
+      var r = stage.getBoundingClientRect();
+      onTilt(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top);
+    }, {passive: true});
+    stage.addEventListener('mouseleave', resetTilt);
+    stage.addEventListener('touchend', resetTilt);
+
+    // Stamp 连点彩蛋：5 次 → 旋转 + 背景故事
+    var stampHits = 0, stampTimer = null;
+    $('#stamp').addEventListener('click', function(){
+      stampHits++;
+      clearTimeout(stampTimer);
+      stampTimer = setTimeout(function(){ stampHits = 0; }, 1200);
+      if(stampHits >= 5){
+        stampHits = 0;
+        var s = $('#stamp');
+        s.style.transition = 'transform .6s';
+        s.style.transform = 'rotate(720deg) scale(1.3)';
+        setTimeout(function(){ s.style.transform = ''; }, 700);
+        if(navigator.vibrate) navigator.vibrate([30, 40, 30]);
+        toast.textContent = 'π 生态觉醒 · 打开背景故事';
+        toast.classList.add('show');
+        setTimeout(function(){ toast.classList.remove('show'); }, 1600);
+        openSheet('story');
+      }else{
+        s.style.transform = 'rotate(30deg) scale(1.1)';
+        setTimeout(function(){ s.style.transform = ''; }, 250);
+      }
+    });
+
+    document.querySelectorAll('.stat-card').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet(el.dataset.stat); });
+    });
+    document.querySelectorAll('.flow-node').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet(el.id.replace('flow-','')); });
+    });
+    document.querySelectorAll('.feature').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet('f'+el.dataset.f); });
+    });
+    $('#termWin').addEventListener('click', function(){ openSheet('install'); });
+    $('#sheetClose').addEventListener('click', closeSheet);
+    overlay.addEventListener('click', function(e){ if(e.target===overlay) closeSheet(); });
+
+    // Tech pills 点击 → 技术说明弹窗
+    var techMap = {0:'tech0', 1:'tech1', 2:'tech2', 3:'tech2', 4:'tech3', 5:'story', 6:'f0'};
+    document.querySelectorAll('.tech-pill').forEach(function(el, i){
+      el.addEventListener('click', function(){ openSheet(techMap[i] || 'story'); });
+    });
+
+    $('#shareBtn').addEventListener('click', function(){
+      var url = location.href.split('?')[0];
+      if(navigator.share){
+        navigator.share({title:'Pi — AI Agent 工具包 · 生态中心 85K★', url:url}).catch(function(){});
+      }else if(navigator.clipboard){
+        navigator.clipboard.writeText(url).then(function(){
+          toast.textContent = '链接已复制';
+          toast.classList.add('show');
+          setTimeout(function(){ toast.classList.remove('show'); }, 1800);
+        });
+      }
+    });
+    document.querySelectorAll('.reveal').forEach(function(x){ x.classList.add('visible'); });
+  })();
+  </script>
+</body>
+</html>
