@@ -1,0 +1,135 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="356" viewBox="0 0 200 356" role="img" aria-label="TaiT CRT Interface Skill">
+  <title>TaiT CRT Interface Skill</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0B100B"/>
+      <stop offset="0.55" stop-color="#121A12"/>
+      <stop offset="1" stop-color="#060906"/>
+    </linearGradient>
+    <linearGradient id="core" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7BFF7E"/>
+      <stop offset="0.45" stop-color="#13F81F"/>
+      <stop offset="1" stop-color="#0D3D2D"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#13F81F" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#13F81F" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#2EE6A8" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#2EE6A8" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="neon" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="2.2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="neonBig" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="3.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <pattern id="grid" width="14" height="14" patternUnits="userSpaceOnUse">
+      <path d="M14 0H0V14" fill="none" stroke="#13F81F" stroke-opacity="0.06" stroke-width="0.5"/>
+    </pattern>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="200" height="356" fill="url(#bg)"/>
+  <rect width="200" height="356" fill="url(#grid)"/>
+  <circle cx="100" cy="126" r="80" fill="url(#glow)"/>
+  <circle cx="100" cy="126" r="48" fill="url(#glow2)"/>
+
+  <!-- 顶部品牌行 -->
+  <g font-family="monospace" font-size="5.2" letter-spacing="1.6" fill="#5B6B5E">
+    <text x="10" y="13">CODEX IMAGE GEN SKILL</text>
+    <text x="182" y="13" text-anchor="end" fill="#13F81F">🖥️</text>
+  </g>
+
+  <!-- CRT 显示器：外壳 + 屏幕 + 扫描线 + 像素内容 -->
+  <!-- 显示器外壳 -->
+  <rect x="46" y="52" width="108" height="88" rx="10" fill="#121A12" stroke="#13F81F" stroke-opacity="0.35" stroke-width="1">
+    <animate attributeName="y" values="52;50;52" dur="3.4s" repeatCount="indefinite"/>
+  </rect>
+  <!-- 屏幕 -->
+  <rect x="54" y="60" width="92" height="66" rx="6" fill="#0A1206" stroke="#13F81F" stroke-opacity="0.6" stroke-width="0.9">
+    <animate attributeName="y" values="60;58;60" dur="3.4s" repeatCount="indefinite"/>
+  </rect>
+  <!-- 扫描线 -->
+  <g stroke="#13F81F" stroke-opacity="0.14" stroke-width="0.6">
+    <line x1="54" y1="66" x2="146" y2="66"/>
+    <line x1="54" y1="72" x2="146" y2="72"/>
+    <line x1="54" y1="78" x2="146" y2="78"/>
+    <line x1="54" y1="84" x2="146" y2="84"/>
+    <line x1="54" y1="90" x2="146" y2="90"/>
+    <line x1="54" y1="96" x2="146" y2="96"/>
+    <line x1="54" y1="102" x2="146" y2="102"/>
+    <line x1="54" y1="108" x2="146" y2="108"/>
+    <line x1="54" y1="114" x2="146" y2="114"/>
+    <line x1="54" y1="120" x2="146" y2="120"/>
+  </g>
+  <!-- 屏幕辉光 -->
+  <rect x="54" y="60" width="92" height="66" rx="6" fill="url(#glow)" fill-opacity="0.25"/>
+  <!-- 顶部菜单条 -->
+  <rect x="58" y="64" width="84" height="4" fill="#13F81F" fill-opacity="0.18"/>
+  <g fill="#13F81F">
+    <rect x="60" y="65" width="2" height="2"/>
+    <rect x="64" y="65" width="2" height="2"/>
+    <rect x="68" y="65" width="2" height="2"/>
+  </g>
+  <!-- 像素小人（头+身+手） -->
+  <g filter="url(#neon)">
+    <rect x="78" y="82" width="8" height="8" fill="#13F81F"/>
+    <rect x="78" y="90" width="8" height="9" fill="#0D3D2D"/>
+    <rect x="74" y="90" width="4" height="4" fill="#13F81F"/>
+    <rect x="86" y="90" width="4" height="4" fill="#13F81F"/>
+    <rect x="78" y="77" width="7" height="5" fill="#2EE6A8"/>
+  </g>
+  <!-- 悬浮像素窗 -->
+  <g>
+    <rect x="112" y="78" width="26" height="34" fill="#13F81F" fill-opacity="0.06" stroke="#13F81F" stroke-opacity="0.5" stroke-width="0.8">
+      <animateTransform attributeName="transform" type="rotate" values="2 125 95;-3 125 95;2 125 95" dur="4.6s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="113" y="79" width="24" height="4" fill="#13F81F" fill-opacity="0.22"/>
+    <rect x="115" y="86" width="20" height="2.5" fill="#13F81F" fill-opacity="0.4"/>
+    <rect x="115" y="91" width="16" height="2.5" fill="#13F81F" fill-opacity="0.2"/>
+    <rect x="115" y="96" width="18" height="2.5" fill="#13F81F" fill-opacity="0.3"/>
+  </g>
+  <!-- 元素提取窗（放大镜） -->
+  <g>
+    <rect x="60" y="104" width="22" height="16" fill="#2EE6A8" fill-opacity="0.06" stroke="#2EE6A8" stroke-opacity="0.45" stroke-width="0.8">
+      <animateTransform attributeName="transform" type="rotate" values="-2 71 112;3 71 112;-2 71 112" dur="5.2s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="66" y="106" width="4" height="4" fill="#2EE6A8" fill-opacity="0.7"/>
+    <rect x="72" y="106" width="4" height="4" fill="#2EE6A8" fill-opacity="0.4"/>
+  </g>
+  <!-- CRT 光标 -->
+  <rect x="88" y="118" width="4" height="6" fill="#13F81F" filter="url(#neon)">
+    <animate attributeName="opacity" values="1;0;1" dur="1s" repeatCount="indefinite"/>
+  </rect>
+  <!-- 底座 -->
+  <rect x="78" y="142" width="44" height="5" rx="2" fill="#162016" stroke="#13F81F" stroke-opacity="0.18" stroke-width="0.6"/>
+
+  <!-- 轨道数据点（CRT 信号环绕） -->
+  <g filter="url(#neon)">
+    <circle cx="172" cy="70" r="1.8" fill="#13F81F">
+      <animate attributeName="opacity" values="0.2;1;0.2" dur="2.4s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="28" cy="76" r="1.5" fill="#2EE6A8">
+      <animate attributeName="opacity" values="1;0.2;1" dur="2.4s" repeatCount="indefinite" begin="0.6s"/>
+    </circle>
+    <circle cx="174" cy="132" r="1.6" fill="#E8E5DF">
+      <animate attributeName="opacity" values="0.2;1;0.2" dur="2.4s" repeatCount="indefinite" begin="1.2s"/>
+    </circle>
+    <circle cx="26" cy="140" r="1.8" fill="#13F81F">
+      <animate attributeName="opacity" values="1;0.2;1" dur="2.4s" repeatCount="indefinite" begin="1.8s"/>
+    </circle>
+  </g>
+
+  <!-- 底部标题区 -->
+  <rect x="0" y="296" width="200" height="60" fill="url(#bg)" fill-opacity="0.92"/>
+  <line x1="10" y1="296" x2="190" y2="296" stroke="#13F81F" stroke-opacity="0.4" stroke-width="0.8"/>
+
+  <text x="14" y="320" font-family="monospace" font-size="6" letter-spacing="1.8" fill="#7E9A7E">CODEX SKILL · 8 PALETTES · 2026.08</text>
+  <text x="14" y="338" font-family="'Helvetica Neue', Arial, sans-serif" font-size="17" font-weight="700" fill="#EFF7EF">TaiT CRT<span fill="#13F81F" font-size="13">.</span></text>
+  <text x="184" y="338" text-anchor="end" font-family="monospace" font-size="7.5" fill="#13F81F">182★</text>
+  <text x="14" y="351" font-family="'Helvetica Neue', Arial, sans-serif" font-size="7.5" letter-spacing="0.5" fill="#7E9A7E">上传人像，CRT 复活它</text>
+</svg>

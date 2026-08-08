@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0B100B">
+  <title>TaiT CRT Interface Skill — 人像 × 复古 CRT 插画</title>
+  <link rel="preconnect" href="https://fonts.googleapis.cn">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.cn/css2?family=Noto+Serif+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0B100B;
+      --bg-2: #121A12;
+      --accent: #13F81F;
+      --accent-deep: #0D3D2D;
+      --ice: #D8FFD8;
+      --text: #EFF7EF;
+      --muted: #7E9A7E;
+      --success: #2EE6A8;
+      --amber: #E8E5DF;
+      --surface: #121A12;
+      --serif: 'Noto Serif SC', serif;
+      --cn: 'Noto Sans SC', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; background: #060906; font-family: 'Noto Sans SC', sans-serif; color: #EFF7EF; -webkit-font-smoothing: antialiased; }
+    body { display: flex; align-items: center; justify-content: center; }
+
+    .stage {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      height: min(100vh, calc(100vw * 16 / 9));
+      width: min(100vw, calc(100vh * 9 / 16));
+      background: #0B100B;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,.6);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 16px 10px;
+      perspective: 1000px;
+      transform-style: preserve-3d;
+      transition: transform .12s ease-out;
+    }
+    .tilt-deep { transform: translateZ(-50px) scale(1.08); }
+    .tilt-mid { transform: translateZ(0); }
+    .tilt-front { transform: translateZ(45px); }
+
+    /* CSS 3D CRT 显示器（零依赖）——复古荧光屏 + 扫描线 + 像素窗
+       ⚠️ 左右两栏：特效方块放 Hero 左侧 ~118px，禁全宽占位/absolute 覆盖文字 */
+    .crt3d {
+      position: relative;
+      flex-shrink: 0;
+      width: 118px;
+      height: 118px;
+      margin: 0;
+      z-index: 1;
+      pointer-events: none;
+      transform-style: preserve-3d;
+      perspective: 420px;
+    }
+    /* 显示器外壳 */
+    .crt-body {
+      position: absolute;
+      top: 8px; left: 50%;
+      width: 96px; height: 76px;
+      margin-left: -48px;
+      background: linear-gradient(160deg, #1A241A, #0C140C);
+      border: 1px solid rgba(19, 248, 31, .25);
+      border-radius: 10px;
+      box-shadow: 0 0 22px rgba(19, 248, 31, .14), inset 0 0 14px rgba(0, 0, 0, .7);
+      transform: rotateX(10deg) rotateY(-7deg);
+      animation: crtFloat 5.5s ease-in-out infinite;
+      transform-style: preserve-3d;
+    }
+    @keyframes crtFloat {
+      0%, 100% { transform: rotateX(10deg) rotateY(-7deg) translateY(0); }
+      50% { transform: rotateX(10deg) rotateY(-7deg) translateY(-4px); }
+    }
+    /* 屏幕（带桶形畸变感 + 扫描线 + 辉光） */
+    .crt-screen {
+      position: absolute;
+      top: 8px; left: 8px;
+      width: 80px; height: 60px;
+      background: #0A1206;
+      border: 1px solid rgba(19, 248, 31, .35);
+      border-radius: 6px / 10px;
+      overflow: hidden;
+      box-shadow: inset 0 0 10px rgba(19, 248, 31, .12);
+    }
+    .crt-screen::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      background: repeating-linear-gradient(0deg, rgba(0, 0, 0, .38) 0 1px, transparent 1px 3px);
+      animation: scanMove 5s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes scanMove {
+      0% { background-position: 0 0; }
+      100% { background-position: 0 60px; }
+    }
+    .crt-screen::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      background: radial-gradient(ellipse at center, transparent 50%, rgba(19, 248, 31, .10) 100%);
+      pointer-events: none;
+    }
+    /* 屏幕内容：顶部菜单 + 像素小人 + 像素窗 + 光标 */
+    .crt-ui { position: absolute; inset: 0; z-index: 2; }
+    .crt-menu {
+      position: absolute;
+      top: 4px; left: 4px; right: 4px;
+      height: 5px;
+      background: rgba(19, 248, 31, .16);
+      border-bottom: 1px solid rgba(19, 248, 31, .3);
+    }
+    .crt-menu::after {
+      content: '';
+      position: absolute;
+      top: 1px; left: 3px;
+      width: 2px; height: 3px;
+      background: #13F81F;
+      box-shadow: 4px 0 0 #13F81F, 8px 0 0 #13F81F, 12px 0 0 #13F81F;
+    }
+    /* 像素小人（头+身+手，方块像素风） */
+    .pixel-man { position: absolute; left: 12px; top: 15px; width: 8px; height: 8px; background: #13F81F; box-shadow: 0 8px 0 #0D3D2D; opacity: .95; animation: manBob 3.2s ease-in-out infinite; }
+    .pixel-man::before { content: ''; position: absolute; left: -4px; top: 8px; width: 4px; height: 4px; background: #13F81F; box-shadow: 12px 0 0 #13F81F; }
+    .pixel-man::after { content: ''; position: absolute; left: 0; top: -5px; width: 6px; height: 5px; background: #2EE6A8; }
+    @keyframes manBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+    /* 悬浮像素窗 */
+    .pix-win {
+      position: absolute;
+      right: 5px; top: 14px;
+      width: 22px; height: 30px;
+      background: rgba(19, 248, 31, .06);
+      border: 1px solid rgba(19, 248, 31, .4);
+      box-shadow: 2px 2px 0 rgba(19, 248, 31, .18);
+      animation: winTilt 4.6s ease-in-out infinite;
+    }
+    @keyframes winTilt {
+      0%, 100% { transform: rotate(2deg); }
+      50% { transform: rotate(-3deg); }
+    }
+    .pix-win::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 5px;
+      background: rgba(19, 248, 31, .25);
+      border-bottom: 1px solid rgba(19, 248, 31, .35);
+    }
+    .pix-win::after {
+      content: '';
+      position: absolute;
+      left: 3px; right: 3px; top: 9px;
+      height: 3px;
+      background: rgba(19, 248, 31, .5);
+      box-shadow: 0 5px 0 rgba(19, 248, 31, .22);
+    }
+    /* CRT 光标 */
+    .crt-cursor {
+      position: absolute;
+      left: 34px; bottom: 5px;
+      width: 4px; height: 5px;
+      background: #13F81F;
+      box-shadow: 0 0 6px #13F81F;
+      animation: blink 1s steps(1) infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+    /* 底座 */
+    .crt-foot {
+      position: absolute;
+      bottom: 2px; left: 50%;
+      width: 30px; height: 4px;
+      margin-left: -15px;
+      background: #162016;
+      border-radius: 2px;
+      border-bottom: 1px solid rgba(19, 248, 31, .18);
+    }
+
+    /* 浮动数据粒子（3D 视差前景） */
+    .flakes { position: absolute; inset: 0; pointer-events: none; z-index: 3; overflow: hidden; }
+    .flake {
+      position: absolute;
+      width: 8px; height: 8px;
+      border: 1px solid rgba(19, 248, 31, .4);
+      border-radius: 2px;
+      opacity: .5;
+      animation: floatY 6s ease-in-out infinite;
+    }
+    .flake.f1 { left: 6%; top: 20%; animation-delay: 0s; }
+    .flake.f2 { left: 90%; top: 28%; width: 6px; height: 6px; animation-delay: 1.2s; }
+    .flake.f3 { left: 12%; top: 70%; width: 5px; height: 5px; border-color: rgba(46, 230, 168, .4); animation-delay: 2.1s; }
+    .flake.f4 { left: 86%; top: 74%; width: 7px; height: 7px; animation-delay: .6s; }
+    .flake.f5 { left: 50%; top: 14%; width: 5px; height: 5px; border-color: rgba(232, 229, 223, .4); animation-delay: 1.8s; }
+    @keyframes floatY {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-14px) rotate(90deg); }
+    }
+    /* 探索 hint 角标 */
+    .hint-badge {
+      position: relative;
+      z-index: 5;
+      align-self: flex-start;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      letter-spacing: .18em;
+      color: #5FAF5F;
+      border: 1px dashed rgba(19, 248, 31, .35);
+      border-radius: 10px;
+      padding: 2px 8px;
+      margin-top: 5px;
+      flex-shrink: 0;
+      animation: hintPulse 2.4s ease-in-out infinite;
+    }
+    @keyframes hintPulse {
+      0%, 100% { opacity: .55; }
+      50% { opacity: 1; box-shadow: 0 0 12px rgba(19, 248, 31, .25); }
+    }
+    .stage::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 38% at 78% 2%, rgba(19, 248, 31, .08) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 35% at 8% 45%, rgba(13, 61, 45, .10) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 50% 100%, rgba(11, 16, 11, .95) 0%, transparent 60%);
+    }
+    .stage::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(rgba(239, 247, 239, .012) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(239, 247, 239, .012) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    /* 顶部条 */
+    .topbar {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .16em;
+      color: #7E9A7E;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(239, 247, 239, .06);
+    }
+    .brand { display: flex; align-items: center; gap: 6px; color: #EFF7EF; }
+    .brand-dot { width: 5px; height: 5px; background: #13F81F; border-radius: 50%; box-shadow: 0 0 8px #13F81F; animation: pulse 2.2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .3; transform: scale(.6); } }
+    .share-btn {
+      background: none;
+      border: 1px solid rgba(239, 247, 239, .2);
+      padding: 4px 8px 3px;
+      font: inherit;
+      color: #EFF7EF;
+      cursor: pointer;
+      letter-spacing: .12em;
+      transition: all .3s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 7.5px;
+    }
+    .share-btn:active { background: #13F81F; color: #0B100B; border-color: #13F81F; }
+
+    /* Hero —— 左右两栏：左 3D 特效方块 + 右文字 */
+    .hero { position: relative; z-index: 5; flex-shrink: 0; margin-top: 6px; display: flex; align-items: flex-start; gap: 12px; }
+    .hero-side { flex: 1; min-width: 0; }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #7E9A7E;
+      margin-bottom: 4px;
+    }
+    .vol { color: #13F81F; }
+    .title-block { display: flex; align-items: flex-start; gap: 10px; }
+    .pg-stamp {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(19, 248, 31, .6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 19px;
+      flex-shrink: 0;
+      position: relative;
+      box-shadow: 0 0 18px rgba(19, 248, 31, .18) inset, 0 0 12px rgba(19, 248, 31, .1);
+    }
+    .pg-stamp::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 1px dashed rgba(19, 248, 31, .35);
+      animation: spin 9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .title-text { min-width: 0; }
+    .pg-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: -.02em;
+      line-height: 1.05;
+      color: #EFF7EF;
+    }
+    .pg-title .dot { color: #13F81F; }
+    .superdesign-line { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+    .superdesign { font-family: 'JetBrains Mono', monospace; font-size: 7px; letter-spacing: .14em; color: #9CA3AF; }
+    .v-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      letter-spacing: .14em;
+      color: #13F81F;
+      border: 1px solid rgba(19, 248, 31, .3);
+      padding: 1px 5px;
+      border-radius: 2px;
+      background: rgba(19, 248, 31, .06);
+    }
+    .v-tag.green { color: #2EE6A8; border-color: rgba(46, 230, 168, .3); background: rgba(46, 230, 168, .06); }
+    .tagline {
+      margin-top: 5px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10.5px;
+      color: #C9D9C9;
+      line-height: 1.45;
+    }
+    .tagline em { color: #13F81F; font-style: normal; font-weight: 500; }
+
+    /* 效果图图库（核心展示区） */
+    .gallery { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .gallery-header { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #C9D9C9; margin-bottom: 4px; }
+    .gallery-header::after { content: ''; flex: 1; height: 1px; background: rgba(239, 247, 239, .06); }
+    .gallery-screen {
+      position: relative;
+      background: #060906;
+      border: 1px solid rgba(19, 248, 31, .3);
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .gallery-screen:active { border-color: rgba(19, 248, 31, .6); }
+    .gallery-screen::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      pointer-events: none;
+      background: repeating-linear-gradient(0deg, rgba(0, 0, 0, .22) 0 1px, transparent 1px 3px);
+    }
+    .gallery-img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      transition: opacity .3s;
+    }
+    .gallery-img.switching { opacity: 0; }
+    .gallery-caption {
+      position: absolute;
+      left: 8px; bottom: 7px;
+      z-index: 6;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .12em;
+      color: #0B100B;
+      background: rgba(19, 248, 31, .85);
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-weight: 500;
+    }
+    .gallery-tabs { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+    .gtab {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6.5px;
+      letter-spacing: .06em;
+      color: #7E9A7E;
+      border: 1px solid rgba(239, 247, 239, .1);
+      background: rgba(239, 247, 239, .02);
+      padding: 2px 7px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all .2s;
+      flex: 1;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .gtab:active { background: rgba(19, 248, 31, .08); }
+    .gtab.active { color: #0B100B; background: #13F81F; border-color: #13F81F; font-weight: 500; }
+
+    /* Stats */
+    .stats-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .stats-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .stats-title { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #C9D9C9; }
+    .stats-badge { font-family: 'JetBrains Mono', monospace; font-size: 6px; letter-spacing: .16em; color: #2EE6A8; border: 1px solid rgba(46, 230, 168, .3); padding: 1px 5px; border-radius: 2px; }
+    .stats-chart { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .stat-card {
+      background: rgba(239, 247, 239, .02);
+      border: 1px solid rgba(239, 247, 239, .07);
+      border-radius: 7px;
+      padding: 7px 6px 5px;
+      cursor: pointer;
+      transition: all .25s;
+      min-width: 0;
+    }
+    .stat-card:active { background: rgba(19, 248, 31, .07); border-color: rgba(19, 248, 31, .3); transform: scale(.96); }
+    .stat-num { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; color: #EFF7EF; line-height: 1; white-space: nowrap; }
+    .stat-num .accent { color: var(--stat-color, #13F81F); }
+    .stat-label { font-size: 7px; color: #7E9A7E; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .stat-mini-chart { display: flex; align-items: flex-end; gap: 2px; height: 12px; margin-top: 4px; }
+    .stat-bar { width: 4px; background: var(--stat-color, #13F81F); opacity: .55; border-radius: 1px; transform-origin: bottom; }
+
+    /* Flow */
+    .flow-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .flow-header { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #C9D9C9; margin-bottom: 4px; }
+    .flow-header::after { content: ''; flex: 1; height: 1px; background: rgba(239, 247, 239, .06); }
+    .flow-svg { width: 100%; height: auto; display: block; }
+    .flow-node { cursor: pointer; }
+    .flow-node:active { opacity: .7; }
+    .flow-arrow { animation: flowPulse 2s ease-in-out infinite; }
+    @keyframes flowPulse { 0%, 100% { stroke-opacity: .4; } 50% { stroke-opacity: 1; } }
+
+    /* Features */
+    .features { position: relative; z-index: 5; margin-top: 6px; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      background: rgba(239, 247, 239, .02);
+      border: 1px solid rgba(239, 247, 239, .07);
+      border-radius: 7px;
+      padding: 6px 9px;
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .feature:active { background: rgba(19, 248, 31, .05); border-color: rgba(19, 248, 31, .22); }
+    .feature-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: rgba(19, 248, 31, .1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .feature-icon svg { width: 13px; height: 13px; stroke: #13F81F; fill: none; stroke-width: 1.5; }
+    .feature-icon.green { background: rgba(46, 230, 168, .1); }
+    .feature-icon.green svg { stroke: #2EE6A8; }
+    .feature-content { flex: 1; min-width: 0; }
+    .feature-title { font-family: 'Noto Sans SC', sans-serif; font-size: 9.5px; font-weight: 500; color: #EFF7EF; letter-spacing: .02em; }
+    .feature-desc { font-size: 7.5px; color: #7E9A7E; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .feature-arrow { font-size: 11px; color: #13F81F; opacity: 0; transform: translateX(-2px); transition: all .25s; flex-shrink: 0; }
+    .feature:active .feature-arrow { opacity: 1; transform: translateX(2px); }
+    .feature-progress { height: 2px; background: rgba(239, 247, 239, .06); border-radius: 1px; margin-top: 4px; overflow: hidden; }
+    .feature-progress-bar { height: 100%; background: linear-gradient(90deg, #13F81F, #2EE6A8); border-radius: 1px; transform-origin: left; animation: progressIn .8s cubic-bezier(.4, 0, .2, 1) forwards; transform: scaleX(0); }
+    @keyframes progressIn { to { transform: scaleX(1); } }
+
+    /* Tech */
+    .tech-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .tech-header { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #C9D9C9; margin-bottom: 4px; }
+    .tech-pills { display: flex; flex-wrap: wrap; gap: 4px; }
+    .tech-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6.5px;
+      letter-spacing: .08em;
+      color: #9CA3AF;
+      border: 1px solid rgba(239, 247, 239, .1);
+      padding: 2px 7px;
+      border-radius: 10px;
+      cursor: pointer;
+      background: rgba(239, 247, 239, .02);
+      transition: all .2s;
+    }
+    .tech-pill:active { background: rgba(239, 247, 239, .08); }
+    .tech-pill.accent { border-color: rgba(19, 248, 31, .35); color: #13F81F; }
+    .tech-pill.green { border-color: rgba(46, 230, 168, .3); color: #7FE8C4; }
+
+    /* Bottom bar */
+    .bottombar {
+      position: relative;
+      z-index: 5;
+      margin-top: 8px;
+      padding-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      border-top: 1px solid rgba(239, 247, 239, .06);
+    }
+    .github-link { display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 8px; color: #C9D9C9; text-decoration: none; }
+    .github-link svg { width: 13px; height: 13px; fill: #7E9A7E; transition: fill .25s; }
+    .github-link:active svg { fill: #13F81F; }
+    .visit-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .14em;
+      color: #0B100B;
+      background: linear-gradient(90deg, #13F81F, #7BFF7E);
+      padding: 6px 13px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all .25s;
+    }
+    .visit-btn:active { transform: scale(.95); filter: brightness(1.15); }
+
+    /* Overlay + Sheet */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: flex-end;
+      background: rgba(0, 0, 0, .5);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .35s;
+    }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+    .sheet {
+      width: 100%;
+      max-height: 76%;
+      background: linear-gradient(180deg, #121A12, #0B100B);
+      border: 1px solid rgba(19, 248, 31, .2);
+      border-bottom: none;
+      border-radius: 16px 16px 0 0;
+      padding: 14px 18px 18px;
+      transform: translateY(101%);
+      transition: transform .45s cubic-bezier(.7, 0, .3, 1);
+      overflow-y: auto;
+    }
+    .overlay.active .sheet { transform: translateY(0); }
+    .sheet-handle { width: 32px; height: 3px; background: #2A3A2A; border-radius: 2px; margin: 0 auto 12px; }
+    .sheet-title { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; color: #EFF7EF; margin-bottom: 7px; }
+    .sheet-title em { color: #13F81F; font-style: normal; }
+    .sheet-desc { font-size: 10.5px; line-height: 1.65; color: #9CA3AF; }
+    .sheet-desc code { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #13F81F; background: rgba(19, 248, 31, .08); padding: 1px 4px; border-radius: 2px; }
+    .sheet-code {
+      margin-top: 10px;
+      background: #060906;
+      border: 1px solid rgba(239, 247, 239, .08);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      line-height: 1.7;
+      color: #13F81F;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .sheet-img {
+      margin-top: 10px;
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid rgba(19, 248, 31, .2);
+      display: block;
+    }
+    .sheet-points { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+    .sheet-point { display: flex; align-items: flex-start; gap: 8px; font-family: 'Noto Sans SC', sans-serif; font-size: 10px; color: #D0D8D0; line-height: 1.55; }
+    .sheet-point::before { content: ''; width: 5px; height: 5px; background: #13F81F; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .sheet-point.green::before { background: #2EE6A8; }
+    .sheet-close {
+      margin-top: 14px;
+      width: 100%;
+      padding: 10px;
+      background: rgba(19, 248, 31, .08);
+      border: 1px solid rgba(19, 248, 31, .25);
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .15em;
+      color: #13F81F;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .sheet-close:active { background: #13F81F; color: #0B100B; }
+
+    /* Toast */
+    .toast {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #2EE6A8;
+      color: #0B100B;
+      padding: 7px 14px;
+      border-radius: 5px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: all .3s;
+      z-index: 200;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .reveal { opacity: 0; transform: translateY(10px); transition: all .45s cubic-bezier(.4, 0, .2, 1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @keyframes chartGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+    .chart-animate { animation: chartGrow .6s cubic-bezier(.4, 0, .2, 1) forwards; }
+
+    /* 小屏兜底 */
+    @media (max-height: 730px) {
+      .pg-title { font-size: 20px; }
+      .pg-stamp { width: 34px; height: 34px; font-size: 16px; }
+      .tagline { font-size: 9.5px; }
+      .feature { padding: 5px 9px; }
+      .feature-title { font-size: 9px; }
+      .stat-num { font-size: 13.5px; }
+      .sheet { max-height: 80%; }
+      .crt3d { width: 92px; height: 92px; }
+      .crt-body { width: 76px; height: 62px; margin-left: -38px; top: 6px; }
+      .crt-screen { width: 60px; height: 46px; top: 6px; left: 7px; }
+      .pix-win { width: 16px; height: 22px; right: 4px; top: 10px; }
+      .hero { gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage" id="stage">
+    <!-- 3D 视差前景：浮动数据粒子 -->
+    <div class="flakes">
+      <div class="flake f1"></div><div class="flake f2"></div><div class="flake f3"></div>
+      <div class="flake f4"></div><div class="flake f5"></div>
+    </div>
+
+    <!-- Topbar -->
+    <div class="topbar reveal tilt-mid">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <span>Young's Insight</span>
+      </div>
+      <button class="share-btn" id="shareBtn">SHARE <span class="arr">↗</span></button>
+    </div>
+
+    <!-- Hero —— 左右两栏：左文字 + 右 3D CRT 显示器 -->
+    <div class="hero reveal">
+      <div class="hero-side">
+        <div class="meta-row">
+          <span class="vol">CODEX IMAGE GEN SKILL</span>
+          <span>2026.08.08</span>
+        </div>
+        <div class="title-block">
+          <div class="pg-stamp" id="stamp">🖥️</div>
+          <div class="title-text">
+            <div class="pg-title">TaiT CRT<span class="dot">.</span></div>
+            <div class="superdesign-line">
+              <span class="superdesign">crt-interface-skill · Codex</span>
+              <span class="v-tag">开源</span>
+              <span class="v-tag green">182★</span>
+            </div>
+          </div>
+        </div>
+        <div class="tagline">上传一张人像，<em>CRT 复活它</em>——像素壁纸 + Macintosh 悬浮视窗 + 扫描线辉光，8 套色卡任选</div>
+        <div class="hint-badge">✦ 轻触任何元素探索 · 拖动卡片看 3D 视差</div>
+      </div>
+      <div class="crt3d tilt-deep">
+        <div class="crt-foot"></div>
+        <div class="crt-body">
+          <div class="crt-screen">
+            <div class="crt-ui">
+              <div class="crt-menu"></div>
+              <div class="pixel-man"></div>
+              <div class="pix-win"></div>
+              <div class="crt-cursor"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 效果图图库（核心展示区） -->
+    <div class="gallery reveal">
+      <div class="gallery-header">Gallery · 真实生成效果</div>
+      <div class="gallery-screen" id="galScreen">
+        <img class="gallery-img" id="galImg" src="cards/tait-crt-interface/classic-a.jpg" alt="CRT 生成效果">
+        <span class="gallery-caption" id="galCap">经典 · CLASSIC</span>
+      </div>
+      <div class="gallery-tabs">
+        <button class="gtab active" data-g="0">经典</button>
+        <button class="gtab" data-g="1">极客01</button>
+        <button class="gtab" data-g="2">游戏01</button>
+        <button class="gtab" data-g="3">粉黛</button>
+        <button class="gtab" data-g="4">色卡</button>
+        <button class="gtab" data-g="5">参考图</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-section reveal">
+      <div class="stats-header">
+        <span class="stats-title">Signals</span>
+        <span class="stats-badge">CODEX SKILL · 2026.08</span>
+      </div>
+      <div class="stats-chart">
+        <div class="stat-card" data-stat="stars" style="--stat-color: #13F81F">
+          <div class="stat-num"><span class="accent">182</span></div>
+          <div class="stat-label">Stars · 5 天破百</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 5px; animation-delay: .1s"></div>
+            <div class="stat-bar chart-animate" style="height: 9px; animation-delay: .15s"></div>
+            <div class="stat-bar chart-animate" style="height: 13px; animation-delay: .2s"></div>
+            <div class="stat-bar chart-animate" style="height: 16px; animation-delay: .25s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="palettes" style="--stat-color: #2EE6A8">
+          <div class="stat-num"><span class="accent">8</span></div>
+          <div class="stat-label">预设色卡</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 10px; background: #2EE6A8; animation-delay: .3s"></div>
+            <div class="stat-bar chart-animate" style="height: 12px; background: #2EE6A8; animation-delay: .35s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="ratios" style="--stat-color: #2EE6A8">
+          <div class="stat-num"><span class="accent">4</span></div>
+          <div class="stat-label">预设比例</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 6px; background: #2EE6A8; animation-delay: .4s"></div>
+            <div class="stat-bar chart-animate" style="height: 12px; background: #2EE6A8; animation-delay: .45s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="rules" style="--stat-color: #13F81F">
+          <div class="stat-num"><span class="accent">30</span></div>
+          <div class="stat-label">质量门槛条目</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 8px; animation-delay: .5s"></div>
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .55s"></div>
+            <div class="stat-bar chart-animate" style="height: 9px; animation-delay: .6s"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flow -->
+    <div class="flow-section reveal">
+      <div class="flow-header">Pipeline · 从人像到 CRT 插画</div>
+      <svg class="flow-svg" viewBox="0 0 350 44" fill="none">
+        <defs>
+          <marker id="tc-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L6,3 z" fill="#13F81F" fill-opacity=".6"/>
+          </marker>
+        </defs>
+        <g class="flow-node" id="flow-intake">
+          <rect x="3" y="9" width="52" height="26" rx="5" fill="rgba(19,248,31,.08)" stroke="#13F81F" stroke-width="1" stroke-opacity=".5"/>
+          <text x="29" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#EFF7EF" text-anchor="middle">两阶段入口</text>
+          <text x="29" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#7E9A7E" text-anchor="middle">选色卡+比例</text>
+        </g>
+        <path class="flow-arrow" d="M58 22 L70 22" stroke="#13F81F" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#tc-arrow)"/>
+        <g class="flow-node" id="flow-anchor">
+          <rect x="73" y="9" width="58" height="26" rx="5" fill="rgba(19,248,31,.12)" stroke="#13F81F" stroke-width="1.2"/>
+          <text x="102" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#7BFF7E" text-anchor="middle">主体锚定</text>
+          <text x="102" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#7E9A7E" text-anchor="middle">识别+锁定名单</text>
+        </g>
+        <path class="flow-arrow" d="M134 22 L146 22" stroke="#2EE6A8" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#tc-arrow)" style="animation-delay: .3s"/>
+        <g class="flow-node" id="flow-cartoon">
+          <rect x="149" y="9" width="58" height="26" rx="5" fill="rgba(46,230,168,.12)" stroke="#2EE6A8" stroke-width="1.2"/>
+          <text x="178" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#7FE8C4" text-anchor="middle">漫画化突变</text>
+          <text x="178" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#7E9A7E" text-anchor="middle">5-9 块面质块</text>
+        </g>
+        <path class="flow-arrow" d="M210 22 L222 22" stroke="#13F81F" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#tc-arrow)" style="animation-delay: .6s"/>
+        <g class="flow-node" id="flow-lattice">
+          <rect x="225" y="9" width="58" height="26" rx="5" fill="rgba(19,248,31,.08)" stroke="#13F81F" stroke-width="1" stroke-opacity=".5"/>
+          <text x="254" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#EFF7EF" text-anchor="middle">像素拓扑</text>
+          <text x="254" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#7E9A7E" text-anchor="middle">全局 p×p 格子</text>
+        </g>
+        <path class="flow-arrow" d="M286 22 L298 22" stroke="#2EE6A8" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#tc-arrow)" style="animation-delay: .9s"/>
+        <g class="flow-node" id="flow-finalize">
+          <rect x="301" y="9" width="46" height="26" rx="5" fill="rgba(46,230,168,.08)" stroke="#2EE6A8" stroke-width="1" stroke-opacity=".5"/>
+          <text x="324" y="22" font-family="JetBrains Mono, monospace" font-size="5.5" fill="#EFF7EF" text-anchor="middle">后处理</text>
+          <text x="324" y="31" font-family="JetBrains Mono, monospace" font-size="4" fill="#7E9A7E" text-anchor="middle">CRT畸变</text>
+        </g>
+        <circle cx="64" cy="22" r="2" fill="#13F81F">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="140" cy="22" r="2" fill="#2EE6A8">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0.5s"/>
+        </circle>
+        <circle cx="216" cy="22" r="2" fill="#13F81F">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="1s"/>
+        </circle>
+        <circle cx="292" cy="22" r="2" fill="#2EE6A8">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="1.3s"/>
+        </circle>
+      </svg>
+    </div>
+
+    <!-- Features -->
+    <div class="features reveal">
+      <div class="feature" data-f="0">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">像素风主体壁纸 · 独立创作不描图</div>
+          <div class="feature-desc">主体占画面 60-80%，身份锚点保留，绝不像素化滤镜套图</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 100%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="1">
+        <div class="feature-icon green">
+          <svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M4 9h16M9 5v14"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">Macintosh 悬浮视窗 · 3-6 个系统弹窗</div>
+          <div class="feature-desc">窗口分层堆叠 + 1-3 个元素提取窗，顶部菜单 + 下拉 + 光标</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 97%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="2">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/><path d="M3 9h18M9 3v18"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">全局像素格子 · 主体 UI 文字同一网格</div>
+          <div class="feature-desc">p ≈ 短边/384，方形整数格对齐，棋盘格光学灰度</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 95%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="3">
+        <div class="feature-icon green">
+          <svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/><path d="M9 12l2 2 4-4"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">CRT 信号表面 · 扫描线辉光噪点</div>
+          <div class="feature-desc">扫描线 + 辉光 + 噪点 + 信号干扰，四周桶形畸变</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 93%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="4">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M4 7h16v13H4z"/><path d="M8 7V4h8v3"/><path d="M9 12h6M9 15h4"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">8 套色卡 + 固定签名 · 风格锁定</div>
+          <div class="feature-desc">经典/粉黛/极客/复古/游戏 8 套，右上角不可变签名</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 91%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+    </div>
+
+    <!-- Tech -->
+    <div class="tech-section reveal">
+      <div class="tech-header">Stack &amp; Spec</div>
+      <div class="tech-pills">
+        <span class="tech-pill accent">Codex</span>
+        <span class="tech-pill">SKILL.md</span>
+        <span class="tech-pill green">finalize_crt.py</span>
+        <span class="tech-pill accent">Pillow</span>
+        <span class="tech-pill">8-bit</span>
+        <span class="tech-pill green">Minitel</span>
+      </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="bottombar reveal">
+      <a href="https://github.com/TaiT-tt/tait-crt-interface-skill" target="_blank" class="github-link">
+        <svg viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        TaiT-tt/tait-crt-interface-skill
+      </a>
+      <a href="https://github.com/TaiT-tt/tait-crt-interface-skill" target="_blank" class="visit-btn">GITHUB →</a>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title" id="sheetTitle"></div>
+        <div class="sheet-desc" id="sheetDesc"></div>
+        <div class="sheet-img" id="sheetImg" style="display:none"></div>
+        <div class="sheet-code" id="sheetCode" style="display:none"></div>
+        <div class="sheet-points" id="sheetPoints"></div>
+        <button class="sheet-close" id="sheetClose">CLOSE</button>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script>
+  (function(){
+    var $=function(s){return document.querySelector(s)};
+    var overlay=$('#overlay'), sheetTitle=$('#sheetTitle'), sheetDesc=$('#sheetDesc'),
+        sheetPoints=$('#sheetPoints'), sheetCode=$('#sheetCode'), sheetImg=$('#sheetImg'),
+        toast=$('#toast');
+
+    // 图库：真实生成效果图
+    var GALLERY = [
+      {img: 'cards/tait-crt-interface/classic-a.jpg', cap: '经典 · CLASSIC', key: 'g-classic'},
+      {img: 'cards/tait-crt-interface/geek01-a.jpg', cap: '极客01 · GEEK 01', key: 'g-geek01'},
+      {img: 'cards/tait-crt-interface/game01-a.jpg', cap: '游戏01 · GAME 01', key: 'g-game01'},
+      {img: 'cards/tait-crt-interface/fendai-a.jpg', cap: '粉黛 · FENDAI', key: 'g-fendai'},
+      {img: 'cards/tait-crt-interface/color-card.jpg', cap: '8 套色卡 · COLOR CARD', key: 'g-colorcard'},
+      {img: 'cards/tait-crt-interface/ref-01.jpg', cap: '参考图 · SOURCE', key: 'g-ref'}
+    ];
+    var galImg=$('#galImg'), galCap=$('#galCap');
+
+    var DATA = {
+      stars: {
+        title: '182 Stars <em>· 5 天破百的爆款 Skill</em>',
+        desc: '2026-08-02 创建，5 天内冲到 182 stars、7 forks，至今高频推送。作为对比，大多数 Codex skill 仓库星标都是个位数到几十——它靠的是独特的视觉完成度：不是简单像素滤镜，而是完整重绘的 80 年代 CRT 系统插画。GitHub 上无 license 声明，README 中英双语。',
+        points: ['182 ★ / 7 forks / 2026-08-06 仍活跃', '创建 2026-08-02，一周内破百', '无 license 声明（个人项目）', 'SKILL.md 24KB = 完整工作流规范', '脚本 finalize_crt.py 14KB = Pillow 后处理']
+      },
+      palettes: {
+        title: '8 套预设色卡 <em>· 风格即色卡</em>',
+        desc: '两阶段入口先让用户选色卡：经典（#dee4e0/#2e382d 两色）、粉黛（柔粉）、极客01（黑客荧光绿）、极客02（青绿）、复古01（黄绿粉五色）、复古02（暖橙绿）、游戏01（赛博霓虹）、游戏02（清新粉绿）。也可以回复"如图"——Skill 从上传图片的情绪氛围自动推导 2-5 色。',
+        points: ['经典：#dee4e0 / #2e382d', '粉黛：#f2d1d7 / #7a3f43', '极客01：#13f81f 荧光绿 + 墨绿', '极客02：#2ca770 青绿 + #3e6a9e 蓝', '复古01：黄绿粉五色套装', '复古02：暖橙 + 森林绿', '游戏01：#22e6da 青 + #e90cbe 品红', '游戏02：清新粉 + 薄荷绿', '"如图" = 从参考图推导 2-5 色']
+      },
+      ratios: {
+        title: '4 种预设比例 <em>· 画布自由</em>',
+        desc: '色卡选定后，Skill 会问比例：3:4、4:3、9:16、16:9，也可以输入任意其他比例。生成一次成型、绝不 resize——最终图保持生成器原生尺寸，finalize 脚本只加 CRT 畸变不加缩放。',
+        points: ['3:4 / 4:3 / 9:16 / 16:9 预设', '支持任意自定义比例', '一次生成，禁止低清预渲染', '禁止 resize / 增强 / 重试', '最终 PNG = 生成器原生分辨率']
+      },
+      rules: {
+        title: '30 条质量门槛 <em>· 像素级较真</em>',
+        desc: 'SKILL.md 的 Quality Gate 有约 30 条硬性检查：主体必须是独立创作的 80 年代卡通（移除 UI 和 CRT 纹理后不能是照片套滤镜）；每个锚定人物保持独立身份不融合不换脸；手部拓扑必须合理；全局像素格子完全整数对齐，无半格无拉伸；棋盘格必须用色卡最深/最浅色，绝不发明灰阶。',
+        points: ['主体覆盖 ≥50%，目标 60-80%', '身份锚点 3-5 个/人，名单不可变', '手部：正确手腕/手掌/手指，可接受连指', '30×30 规划网格 ≈ 细节预算', '棋盘格 = 最深+最浅色 50% 交替', '扫描线/噪点是表面纹理，非第二网格']
+      },
+      intake: {
+        title: '两阶段入口 <em>· 绝不一次问完</em>',
+        desc: '严格的两阶段 intake gate：先缺色卡就只展示色卡图问色卡名（经典/粉黛/极客01…或"如图"），停下来等回答；色卡定了才问比例。两个都齐才生成。如果调用时已给出其中一个，只跳过对应问题——不重复确认用户给过的选择。',
+        points: ['阶段1：缺色卡 → 只问色卡，停止回合', '阶段2：缺比例 → 只问 3:4/4:3/9:16/16:9', '两字段齐 → 立即生成', '已提供的字段不重复询问', '"如图" → 从参考图推导色卡，不再追问']
+      },
+      anchor: {
+        title: '主体锚定 <em>· 识别后锁定名单</em>',
+        desc: '先做 Subject Recognition and Anchoring：识别所有显著或互动的角色/生物/物体，锁定名单 S1、S2…及其左右顺序、相对比例、姿态关系、接触遮挡。名单不可变——除非用户明确指定，绝不合并两人、不借用他人五官。每人只提取 3-5 个高信息身份锚点（发量、面部间距、姿势、配饰）。',
+        points: ['锁定主体名单 S1/S2…及空间关系', '身份锚点 3-5 个/人，绑定到 ID', '名单不可变：禁止融合/换脸/杂交', '远距离路人 = 背景，不删显著角色', '锚点仅描述特征，不记录照片全轮廓']
+      },
+      cartoon: {
+        title: '漫画化突变 <em>· 5-9 块面质块</em>',
+        desc: 'source severance 原则：提取锚点后完全脱离照片几何，从语义描述重建——新主体不可能通过给原图加马赛克滤镜得到。选择 2-3 个特征夸张化，至少改变 3 处结构关系（头身比、五官间距、四肢粗细、姿态角度）。用 5-9 个扁平咬合质块重绘，目标是"有主见的 80 年代终端吉祥物"：憨、怪、工业、丑得可爱。',
+        points: ['source severance：重建而非描摹', '2-3 个特征夸张 + ≥3 处结构改变', '5-9 个（最好 5-7）扁平质块', '脸部简化为眼鼻口簇', '删除毛孔/发丝/褶皱/表情细节', '四重拒绝测试：名单/手/剪影/滤镜'
+        ]
+      },
+      lattice: {
+        title: '像素拓扑 <em>· 全局一个 p×p 格子</em>',
+        desc: '整个画面共享同一个方形基础格 p ≈ 短边/384。主体、窗口、边框、字形、图标、光标、图表、棋盘格全部吸附到这个网格上——主体绝不能用更粗的独立像素尺寸。对角线是刻意阶梯，曲线是阶梯簇，禁止半格/拉伸/旋转格/错行/断棋盘。30×30 规划网格只是主体轮廓的复杂度预算。',
+        points: ['p ≈ 短边 / 384，全画面唯一格子', '主体/UI/文字同一网格，禁止主体粗像素', '对角线 = 阶梯序列，曲线 = 阶梯簇', '禁止半格/拉伸/旋转格/子格碎片', '棋盘格：最深+最浅色 50% 交替', '扫描线是 CRT 表面纹理，不是第二网格']
+      },
+      finalize: {
+        title: 'CRT 后处理 <em>· finalize_crt.py</em>',
+        desc: '生成后用 Python 脚本 finalize_crt.py 做最后加工：强制桶形畸变（四边外圈 10% 径向压缩，角比边更压，顶栏基线可见弯曲）、色卡约束检查、棋盘格统计。必须用 codex 工作区自带的 Python（含 Pillow），禁止裸 python；--edge-warp 0.12 是默认畸变强度。',
+        points: ['脚本：scripts/finalize_crt.py（14KB）', '--palette 传入逗号分隔 hex 色卡', '--polarity：positive/negative/preserve', '--edge-warp 0.12 默认畸变', '必须用 codex 自带 Python + Pillow', '只加畸变不 resize，不覆盖源图']
+      },
+      g0: {
+        title: '经典色卡 <em>· 80 年代绿灰终端</em>',
+        desc: '极简双色：#dee4e0（米白）/ #2e382d（墨绿）。最经典的老 Macintosh 配色——主体剪影 + 棋盘格灰度，像翻开一本 1985 年的电脑杂志。',
+        points: ['#dee4e0 / #2e382d 双色', '米白底 + 墨绿主体', '最接近早期 Mac 的观感', 'polarity：light-field 亮场'
+        ]
+      },
+      g1: {
+        title: '极客01 <em>· 黑客荧光绿</em>',
+        desc: '#13f81f 荧光绿 + 墨绿 #111e16 + 亮白 #f2fcf6 + 灰绿 #485446。最出圈的色卡——那种"深夜机房 CRT 终端"的赛博氛围，生成效果视觉冲击最强。',
+        points: ['#13f81f 荧光绿主色', '#111e16 近黑墨绿', '#485446 灰绿过渡', 'dark-field 暗场，黑客风'
+        ]
+      },
+      g2: {
+        title: '游戏01 <em>· 赛博霓虹</em>',
+        desc: '#22e6da 青 + #fabf37 金 + #e90cbe 品红 + #2a4ac5 宝蓝 + #1d2c6b 深蓝。五色霓虹套装，像 8-bit 街机房的屏幕墙。',
+        points: ['青 + 金 + 品红 + 宝蓝 + 深蓝', '五色霓虹，街机氛围', 'split-local-fields 分区极性', '适合游戏角色主题'
+        ]
+      },
+      g3: {
+        title: '粉黛 <em>· 柔粉复古</em>',
+        desc: '#f2d1d7 浅粉 / #7a3f43 深红褐。双色温柔系——像素画里少见的柔美配色，和"粉黛"的名字一样是古风妆面意象。',
+        points: ['#f2d1d7 浅粉 / #7a3f43 深红褐', '双色，温柔复古', '适合女性人像 / 古风主题', '棋盘格：浅粉+深红褐交替'
+        ]
+      },
+      g4: {
+        title: '8 套色卡 <em>· 选卡即定风格</em>',
+        desc: '官方色卡图：8 套预设 + "如图"模式。回复卡片名称或"如图"即可，Skill 会严格使用所选色卡的颜色——主体、窗口、文字、扫描线全部 palette-bound。',
+        points: ['经典 / 粉黛 / 极客01 / 极客02', '复古01 / 复古02 / 游戏01 / 游戏02', '"如图" = 参考图推导 2-5 色', '色卡之外的颜色禁止出现']
+      },
+      g5: {
+        title: '参考图 <em>· 输入 vs 输出</em>',
+        desc: '左边是用户上传的原照片（参考图01），右边是 Skill 生成的 CRT 插画。注意生成结果如何保留发型、姿态等身份锚点，同时完全脱离照片轮廓——这是 source severance 的直观演示：不是滤镜，是重绘。',
+        points: ['原图只提供身份锚点', '轮廓/光影/细节全部丢弃', '新主体不可能靠马赛克得到', '卡通化优先于写实相似度', '多人图：每个角色独立保留'
+        ]
+      },
+      f0: {
+        title: '🎨 像素风主体壁纸 <em>· 独立创作不描图</em>',
+        desc: '主体是整张画面的第一优先级：一个主体或一个锚定群组直接画在背景上，作为无边框系统壁纸，覆盖 60-80% 画布。上传图只当"身份锚点来源"，绝不当作剪裁遮罩/描摹模板/自动像素化来源。卡通、抽象、个性优先于字面相似。',
+        points: ['单壁纸构图：一人或一锚定群组', '剪影覆盖 ≥50%，目标 60-80%', '禁止重复构图 / 居中对称', '上传图禁止作为描摹模板', '识别度靠 3-5 个身份锚点维持']
+      },
+      f1: {
+        title: '🪟 Macintosh 悬浮视窗 <em>· 3-6 个系统弹窗</em>',
+        desc: '3-6 个大小比例位置各异的前景视窗：明显的大中小层级（主窗约 1.8× 中窗，最小窗 ≤ 半中窗）、跨象限分布、5-20% 重叠、穿过主体边界。其中 1-3 个是"元素提取视窗"——只展示五官/饰品/局部特征的放大裁剪，绝不重复展示整个主体。',
+        points: ['3-6 窗：大中小明确层级', '中心跨 ≥2 个象限，最好 3 个', '重叠 5-20%，穿过主体边界', '1-3 个元素提取窗（尺寸比例互不相同）', '全宽菜单 + 一个下拉 + 恰好一个光标', '保留 20-30% 连通空白区']
+      },
+      f2: {
+        title: '🔲 全局像素格子 <em>· 主体 UI 文字同一网格</em>',
+        desc: '一个全局内容格子：方形基格 p ≈ 短边/384，主体、窗口、边框、字形、图标、光标、图表、棋盘格全部吸附同一 p×p 格子。光学灰度用色卡最深/最浅色做规则交替棋盘格（约覆盖主体 15-35%），绝不发明灰阶、不用渐变、不用抗锯齿。',
+        points: ['p ≈ 短边/384，全画面唯一', '5x7 / 6x8 / 7x9 位图字形', '棋盘格 = 最深+最浅 50% 交替', '扫描线/噪点 = 表面纹理', '禁止渐变/半透明/中间灰/抗锯齿']
+      },
+      f3: {
+        title: '📺 CRT 信号表面 <em>· 扫描线辉光噪点</em>',
+        desc: '画面覆盖密集扫描线、稀疏噪点、单格错位、短垂直余晖、一次克制的同步扰动。四边外圈 10% 强制径向桶形畸变：角比边压得更狠，顶栏基线和侧栏明显弯曲，任何成片都不是矩形。Bloom 只用色卡色做硬格扩展或棋盘边缘。',
+        points: ['密集 palette-bound 扫描线', '单格 misregistration + 垂直余晖', '一次克制 sync disturbance', '外圈 10% 桶形畸变，角>边', '内圈 80% 保持稳定', '不显示真实显示器/边框/房间']
+      },
+      f4: {
+        title: '🖋️ 8 套色卡 + 固定签名 <em>· 风格锁定</em>',
+        desc: '右上角标题栏保留不可变的小写签名 tait-crt-interface-skill——同一全局网格同字体渲染，永远不省略/翻译/裁切/遮挡/改名。签名是这条流水线的"版权章"：一眼可辨谁生成的，也防止 AI 图被冒充。色卡则锁死全部颜色范围。',
+        points: ['签名：tait-crt-interface-skill（小写）', '位置：右上标题栏，全局网格渲染', '不可变：即使后续指令要求也不改', '色卡锁定：色外颜色禁止出现', '签名 = 版权章 + 防冒充'
+        ]
+      },
+      tech0: {
+        title: 'Codex <em>· OpenAI 编码智能体</em>',
+        desc: '这个 Skill 运行在 OpenAI Codex 里，通过 SKILL.md 定义完整工作流。安装方式：整个文件夹放进 ~/.codex/skills/tait-crt-interface-skill，或让 Codex 从 GitHub 链接自动安装。调用名：tait-crt-interface-skill。',
+        points: ['安装：~/.codex/skills/tait-crt-interface-skill', '或让 Codex 自动安装 GitHub 链接', '调用：$tait-crt-interface-skill', '用户指令是第一层级，可覆盖固有设定', '支持玩法扩展：海报/六角战力图/场记板等'
+        ]
+      },
+      tech1: {
+        title: 'SKILL.md <em>· 24KB 完整规范</em>',
+        desc: '156 行的完整工作流规范：Mode Policy、Two-Stage Intake Gate、Non-Negotiable Invariants、Standard Prompt Compiler（抽象蓝图五步）、Variation Engine（16 个变化轴）、Workflow、Quality Gate、Hard Avoids。是少见的"把自己写成了工程规范"的图像 skill。',
+        points: ['24KB / 156 行结构化规范', '不变式：生成一次/名单不可变/签名固定', '16 轴变化引擎防同质化', '四重拒绝测试：名单/手/剪影/滤镜', 'Quality Gate 约 30 条可检查项'
+        ]
+      },
+      tech2: {
+        title: 'finalize_crt.py <em>· CRT 畸变后处理</em>',
+        desc: '14KB Python 脚本，用 Pillow 做最终加工：强制四边桶形畸变（--edge-warp 0.12）、色卡约束校验、棋盘格统计、报告全局网格格。必须用 Codex 工作区自带 Python（含 Pillow）执行，禁止系统 python。',
+        points: ['Pillow 图像处理', '--palette / --polarity / --edge-warp', '只加畸变不 resize', '必须 workspace Python，禁裸 python', '输出 report：色卡/棋盘格/网格单元'
+        ]
+      },
+      tech3: {
+        title: 'Pillow <em>· Python 图像库</em>',
+        desc: 'finalize 脚本依赖 Pillow：读取生成图、应用径向桶形畸变位移、验证调色板约束、计算棋盘格区域统计。Codex 工作区自带捆绑 Python（含 Pillow），脚本通过 codex_app__load_workspace_dependencies 获取解释器。',
+        points: ['Pillow 处理畸变与校验', 'nearest-cell 位移实现桶形畸变', '外圈 10% 压缩，角>边', '生成报告：色卡/棋盘/网格'
+        ]
+      },
+      tech4: {
+        title: '8-bit <em>· 像素美学语言</em>',
+        desc: '视觉语言参考早期 8-bit 计算机：共享方形像素格、硬边锯齿、位图字形（5x7/6x8/7x9）、棋盘格灰度。主体是"有主见的 80 年代终端吉祥物"——憨、怪、工业、丑得可爱。',
+        points: ['早期 Macintosh / Minitel / 8-bit 界面', '硬边锯齿 + 共享像素格', '位图字形：5x7 / 6x8 / 7x9', '禁止现代 UI：卡片/玻璃拟态/矢量导出/3D'
+        ]
+      },
+      tech5: {
+        title: 'Minitel <em>· 法国前互联网终端</em>',
+        desc: '视觉参考之一：Minitel 是 1980 年代法国的家用终端（比万维网早十年）。它的文本界面语言、窗口结构、配色逻辑被融合进这套 CRT 美学——短法语位图标签是签名元素之一。',
+        points: ['1980s 法国家用终端', '早于万维网十年的前互联网', '短法语位图标签', '与 Macintosh/8-bit 融合成统一语言'
+        ]
+      },
+      story: {
+        title: '背景故事 <em>· 把照片变成 1985 年的屏幕</em>',
+        desc: 'TaiT-tt 作者的思路：大多数"像素化"工具只是给照片套马赛克滤镜，缺少真正属于计算机时代的视觉语言。这个 Skill 让 Codex 把上传的人像当成"身份锚点来源"，完整重绘成早期 CRT 系统插画——像素壁纸、悬浮视窗、元素提取窗、扫描线辉光，全部是 80 年代界面语言。最出圈的是固定签名 tait-crt-interface-skill：每一张生成图右上角都带这行小写签名，既是风格印章也是防冒充标识。2026-08-02 发布后 5 天破百星，成为 Codex skill 生态的现象级样本。',
+        points: ['理念：像素化 ≠ 套滤镜，是重绘', '身份锚点 3-5 个 → 完整卡通重建', '早期 Mac / Minitel / 8-bit 三源融合', '固定签名 = 风格印章 + 防冒充', '5 天破百星，Codex skill 现象级', '用户指令第一层级，玩法可无限扩展'
+        ]
+      },
+      install: {
+        title: '安装与使用 <em>· 一分钟上手</em>',
+        desc: '方法一：把整个 skill 文件夹放进 ~/.codex/skills/tait-crt-interface-skill。方法二：直接让 Codex 安装："请帮我安装这个GitHub链接中的skill"。使用：上传参考图，调用 $tait-crt-interface-skill，先选色卡再选比例；或直接指定："使用 $tait-crt-interface-skill 生成图片，极客02色卡，4:3比例"。',
+        code: '# 方法一：手动安装\n~/.codex/skills/tait-crt-interface-skill\n\n# 方法二：让 Codex 自动安装\n请帮我安装这个GitHub链接中的skill：\nhttps://github.com/TaiT-tt/tait-crt-interface-skill\n\n# 使用（上传图片后）\n使用 $tait-crt-interface-skill 把这张图片生成 CRT 复古电脑界面插画\n\n# 或直接指定色卡+比例，跳过询问\n使用 $tait-crt-interface-skill 生成图片，极客02色卡，4:3比例',
+        points: ['调用名：tait-crt-interface-skill', '默认两轮询问：色卡 → 比例', '直接指定可跳过询问', '支持"如图"自动推导色卡', '扩展玩法：文字海报/六角战力图/场记板'
+        ]
+      }
+    };
+
+    function openSheet(key){
+      var d = DATA[key]; if(!d) return;
+      sheetTitle.innerHTML = d.title;
+      sheetDesc.textContent = d.desc;
+      if(d.img){
+        sheetImg.style.display = 'block';
+        sheetImg.src = d.img;
+      }else{
+        sheetImg.style.display = 'none';
+      }
+      if(d.code){
+        sheetCode.style.display = 'block';
+        sheetCode.textContent = d.code;
+      }else{
+        sheetCode.style.display = 'none';
+      }
+      sheetPoints.innerHTML = d.points.map(function(p){
+        return '<div class="sheet-point">' + p + '</div>';
+      }).join('');
+      overlay.classList.add('active');
+      if(navigator.vibrate) navigator.vibrate(15);
+    }
+    function closeSheet(){ overlay.classList.remove('active'); }
+
+    // 图库 tab 切换
+    var gIdx = 0;
+    document.querySelectorAll('.gtab').forEach(function(el, i){
+      el.addEventListener('click', function(){
+        if(i === gIdx) return;
+        gIdx = i;
+        document.querySelectorAll('.gtab').forEach(function(t){ t.classList.remove('active'); });
+        el.classList.add('active');
+        galImg.classList.add('switching');
+        setTimeout(function(){
+          galImg.src = GALLERY[i].img;
+          galCap.textContent = GALLERY[i].cap;
+          galImg.onload = function(){ galImg.classList.remove('switching'); };
+        }, 150);
+        if(navigator.vibrate) navigator.vibrate(10);
+      });
+    });
+    // 点主图 → 大图弹窗
+    $('#galScreen').addEventListener('click', function(){
+      var g = GALLERY[gIdx];
+      sheetTitle.innerHTML = '效果图 <em>· ' + g.cap.split(' · ')[0] + '</em>';
+      sheetDesc.textContent = '';
+      sheetImg.style.display = 'block';
+      sheetImg.src = g.img;
+      sheetCode.style.display = 'none';
+      sheetPoints.innerHTML = '';
+      overlay.classList.add('active');
+      if(navigator.vibrate) navigator.vibrate(15);
+    });
+
+    // 3D 视差倾斜：跟随手指/鼠标
+    var stage = $('#stage');
+    var tiltRaf = null;
+    function onTilt(x, y){
+      if(tiltRaf) return;
+      tiltRaf = requestAnimationFrame(function(){
+        var w = stage.clientWidth, h = stage.clientHeight;
+        var nx = (x / w) * 2 - 1, ny = (y / h) * 2 - 1;
+        stage.style.transform = 'rotateX(' + (-ny * 6).toFixed(2) + 'deg) rotateY(' + (nx * 8).toFixed(2) + 'deg)';
+        tiltRaf = null;
+      });
+    }
+    function resetTilt(){ stage.style.transform = ''; }
+    stage.addEventListener('mousemove', function(e){
+      var r = stage.getBoundingClientRect();
+      onTilt(e.clientX - r.left, e.clientY - r.top);
+    });
+    stage.addEventListener('touchmove', function(e){
+      if(e.touches.length !== 1) return;
+      var r = stage.getBoundingClientRect();
+      onTilt(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top);
+    }, {passive: true});
+    stage.addEventListener('mouseleave', resetTilt);
+    stage.addEventListener('touchend', resetTilt);
+
+    // Stamp 连点彩蛋：5 次 → 旋转 + 背景故事
+    var stampHits = 0, stampTimer = null;
+    $('#stamp').addEventListener('click', function(){
+      stampHits++;
+      clearTimeout(stampTimer);
+      stampTimer = setTimeout(function(){ stampHits = 0; }, 1200);
+      if(stampHits >= 5){
+        stampHits = 0;
+        var s = $('#stamp');
+        s.style.transition = 'transform .6s';
+        s.style.transform = 'rotate(720deg) scale(1.3)';
+        setTimeout(function(){ s.style.transform = ''; }, 700);
+        if(navigator.vibrate) navigator.vibrate([30, 40, 30]);
+        toast.textContent = '🖥️ CRT 启动 · 解锁背景故事';
+        toast.classList.add('show');
+        setTimeout(function(){ toast.classList.remove('show'); }, 1600);
+        openSheet('story');
+      }else{
+        s.style.transform = 'rotate(30deg) scale(1.1)';
+        setTimeout(function(){ s.style.transform = ''; }, 250);
+      }
+    });
+
+    document.querySelectorAll('.stat-card').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet(el.dataset.stat); });
+    });
+    document.querySelectorAll('.flow-node').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet(el.id.replace('flow-','')); });
+    });
+    document.querySelectorAll('.feature').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet('f'+el.dataset.f); });
+    });
+    $('#sheetClose').addEventListener('click', closeSheet);
+    overlay.addEventListener('click', function(e){ if(e.target===overlay) closeSheet(); });
+
+    // Tech pills 点击 → 技术说明弹窗
+    var techMap = {0:'tech0', 1:'tech1', 2:'tech2', 3:'tech3', 4:'tech4', 5:'tech5'};
+    document.querySelectorAll('.tech-pill').forEach(function(el, i){
+      el.addEventListener('click', function(){ openSheet(techMap[i] || 'story'); });
+    });
+
+    $('#shareBtn').addEventListener('click', function(){
+      var url = location.href.split('?')[0];
+      if(navigator.share){
+        navigator.share({title:'TaiT CRT Interface Skill — 人像 × 复古 CRT 插画', url:url}).catch(function(){});
+      }else if(navigator.clipboard){
+        navigator.clipboard.writeText(url).then(function(){
+          toast.textContent = '链接已复制';
+          toast.classList.add('show');
+          setTimeout(function(){ toast.classList.remove('show'); }, 1800);
+        });
+      }
+    });
+    document.querySelectorAll('.reveal').forEach(function(x){ x.classList.add('visible'); });
+  })();
+  </script>
+</body>
+</html>

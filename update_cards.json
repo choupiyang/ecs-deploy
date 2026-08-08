@@ -1,10 +1,10 @@
 {
-  "id": "agent-plugins",
-  "title": "Agent Plugins",
-  "subtitle": "Skills + MCP 打包标准 · 大厂联合 · 546★",
-  "image": "cards/agent-plugins-cover.svg",
-  "page": "pages/agent-plugins.html",
-  "tags": ["Agent Plugins", "MCP", "Agent Skills", "开源规范", "打包标准", "546★"],
+  "id": "tait-crt-interface",
+  "title": "TaiT CRT Interface",
+  "subtitle": "Codex 图像 Skill · 人像→CRT 复古插画 · 182★",
+  "image": "cards/tait-crt-interface-cover.svg",
+  "page": "pages/tait-crt-interface.html",
+  "tags": ["Codex", "图像生成", "CRT", "像素风", "Skill", "182★"],
   "date": "2026-08-08",
   "type": "recommendation"
 }
