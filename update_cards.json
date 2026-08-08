@@ -1,10 +1,10 @@
 {
-  "id": "tait-crt-interface",
-  "title": "TaiT CRT Interface",
-  "subtitle": "Codex 图像 Skill · 人像→CRT 复古插画 · 182★",
-  "image": "cards/tait-crt-interface-cover.svg",
-  "page": "pages/tait-crt-interface.html",
-  "tags": ["Codex", "图像生成", "CRT", "像素风", "Skill", "182★"],
+  "id": "prime-agent",
+  "title": "Prime Agent",
+  "subtitle": "自改进 RLM 编码 Agent · 8818★ · MIT",
+  "image": "cards/prime-agent-cover.svg",
+  "page": "pages/prime-agent.html",
+  "tags": ["RLM", "AI Agent", "自改进", "开源", "TypeScript", "8818★"],
   "date": "2026-08-08",
   "type": "recommendation"
 }

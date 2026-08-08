@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#05070D">
+  <title>Prime Agent — 自改进 RLM 编码 Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.cn">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.cn/css2?family=Noto+Serif+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #05070D;
+      --bg-2: #0A0F1E;
+      --accent: #38BDF8;
+      --accent-deep: #0EA5E9;
+      --ice: #E0F2FE;
+      --text: #F0F6FC;
+      --muted: #7C8AA5;
+      --success: #34D399;
+      --surface: #0A0F1E;
+      --serif: 'Noto Serif SC', serif;
+      --cn: 'Noto Sans SC', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; background: #03050A; font-family: 'Noto Sans SC', sans-serif; color: #F0F6FC; -webkit-font-smoothing: antialiased; }
+    body { display: flex; align-items: center; justify-content: center; }
+
+    .stage {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      height: min(100svh, calc(100vw * 16 / 9));
+      width: min(100vw, calc(100svh * 9 / 16));
+      background: var(--bg);
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,.6);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 16px 10px;
+      perspective: 1000px;
+      transform-style: preserve-3d;
+      transition: transform .12s ease-out;
+    }
+    @supports not (height: 100svh) {
+      .stage {
+        height: min(100vh, calc(100vw * 16 / 9));
+        width: min(100vw, calc(100vh * 9 / 16));
+      }
+    }
+    .tilt-deep { transform: translateZ(-50px) scale(1.08); }
+    .tilt-mid { transform: translateZ(0); }
+    .tilt-front { transform: translateZ(45px); }
+
+    /* reveal 入场 */
+    .reveal { opacity: 0; transform: translateY(14px); transition: opacity .45s ease, transform .45s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ═══ 3D 递归终端立方体（零依赖）——RLM 递归意象：外层终端套内层终端 ═══ */
+    .rec3d {
+      position: relative;
+      flex-shrink: 0;
+      width: 118px;
+      height: 118px;
+      transform-style: preserve-3d;
+      animation: recSpin 16s linear infinite;
+      z-index: 4;
+    }
+    .rec3d .cube-face {
+      position: absolute;
+      inset: 8px;
+      background: rgba(10, 20, 40, .92);
+      border: 1.5px solid rgba(56, 189, 248, .75);
+      border-radius: 6px;
+      box-shadow: inset 0 0 18px rgba(56, 189, 248, .15), 0 0 12px rgba(56, 189, 248, .12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      color: #7DD3FC;
+      letter-spacing: .08em;
+      overflow: hidden;
+    }
+    .rec3d .cube-face .code-line {
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      font-size: 6.5px;
+      color: #38BDF8;
+      white-space: pre;
+      opacity: 0;
+      animation: codeScroll 8s linear infinite;
+    }
+    .rec3d .cube-face .code-line:nth-child(1) { top: 22px; animation-delay: 0s; }
+    .rec3d .cube-face .code-line:nth-child(2) { top: 34px; animation-delay: 1.6s; }
+    .rec3d .cube-face .code-line:nth-child(3) { top: 46px; animation-delay: 3.2s; }
+    .rec3d .cube-face .code-line:nth-child(4) { top: 58px; animation-delay: 4.8s; }
+    .rec3d .cube-face .code-line:nth-child(5) { top: 70px; animation-delay: 6.4s; }
+    @keyframes codeScroll {
+      0% { opacity: 0; transform: translateY(6px); }
+      12% { opacity: .9; }
+      78% { opacity: .9; }
+      92% { opacity: 0; transform: translateY(-4px); }
+      100% { opacity: 0; }
+    }
+    .rec3d .cube-face .cursor-bar {
+      position: absolute;
+      bottom: 10px;
+      left: 8px;
+      width: 24px;
+      height: 3px;
+      background: #38BDF8;
+      animation: cursorBlink 1s steps(2) infinite;
+    }
+    @keyframes cursorBlink { 50% { opacity: 0; } }
+    .rec3d .face-front { transform: translateZ(59px); }
+    .rec3d .face-back { transform: rotateY(180deg) translateZ(59px); }
+    .rec3d .face-right { transform: rotateY(90deg) translateZ(59px); }
+    .rec3d .face-left { transform: rotateY(-90deg) translateZ(59px); }
+    .rec3d .face-top { transform: rotateX(90deg) translateZ(59px); }
+    .rec3d .face-bottom { transform: rotateX(-90deg) translateZ(59px); }
+    /* 内层递归子终端 */
+    .rec3d .inner-cube {
+      position: absolute;
+      inset: 38px;
+      border: 1.5px solid rgba(56, 189, 248, .5);
+      border-radius: 5px;
+      background: rgba(8, 15, 30, .9);
+      box-shadow: inset 0 0 12px rgba(56, 189, 248, .2);
+      transform: translateZ(22px);
+      animation: innerPulse 3s ease-in-out infinite;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      color: #38BDF8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      letter-spacing: .06em;
+    }
+    .rec3d .inner-cube::after {
+      content: 'rlm(...)';
+      animation: innerBlink 2.4s steps(2) infinite;
+    }
+    @keyframes innerPulse { 0%,100% { box-shadow: inset 0 0 10px rgba(56,189,248,.15); } 50% { box-shadow: inset 0 0 22px rgba(56,189,248,.45); } }
+    @keyframes innerBlink { 50% { opacity: .45; } }
+    /* 扫描光效 */
+    .rec3d::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      background: linear-gradient(180deg, transparent 40%, rgba(56, 189, 248, .12) 50%, transparent 60%);
+      background-size: 100% 200%;
+      animation: scanSweep 2.8s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes scanSweep { 0% { background-position: 0 -100%; } 100% { background-position: 0 200%; } }
+    @keyframes recSpin { from { transform: rotateX(-18deg) rotateY(0); } to { transform: rotateX(-18deg) rotateY(360deg); } }
+    @media (max-height: 730px) {
+      .rec3d { width: 92px; height: 92px; }
+      .rec3d .face-front { transform: translateZ(46px); }
+      .rec3d .face-back { transform: rotateY(180deg) translateZ(46px); }
+      .rec3d .face-right { transform: rotateY(90deg) translateZ(46px); }
+      .rec3d .face-left { transform: rotateY(-90deg) translateZ(46px); }
+      .rec3d .face-top { transform: rotateX(90deg) translateZ(46px); }
+      .rec3d .face-bottom { transform: rotateX(-90deg) translateZ(46px); }
+      .rec3d .inner-cube { inset: 30px; transform: translateZ(16px); }
+    }
+
+    /* ── Topbar ── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      padding: 0 2px 8px;
+    }
+    .brand { display: flex; align-items: center; gap: 7px; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: .14em; color: #A5C9E5; cursor: pointer; }
+    .brand .dot { width: 8px; height: 8px; border-radius: 2px; background: var(--accent); box-shadow: 0 0 8px rgba(56,189,248,.8); animation: dotPulse 2s ease-in-out infinite; }
+    @keyframes dotPulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+    .share-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .1em;
+      color: #A5C9E5;
+      background: rgba(56, 189, 248, .08);
+      border: 1px solid rgba(56, 189, 248, .3);
+      border-radius: 5px;
+      padding: 4px 10px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .share-btn:active { transform: scale(.93); background: rgba(56, 189, 248, .22); }
+
+    /* ── Hero（左右两栏：3D 特效 + 文字） ── */
+    .hero {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      flex-shrink: 0;
+    }
+    .hero-side { flex: 1; min-width: 0; }
+    .pg-row { display: flex; align-items: center; gap: 8px; }
+    .pg-stamp {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(56,189,248,.5), rgba(10,20,40,.9));
+      border: 1px solid rgba(56, 189, 248, .6);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      color: #E0F2FE;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: all .2s;
+      box-shadow: 0 0 10px rgba(56, 189, 248, .25);
+      flex-shrink: 0;
+    }
+    .pg-stamp:active { transform: scale(.9) rotate(20deg); box-shadow: 0 0 18px rgba(56,189,248,.6); }
+    .pg-title {
+      font-family: 'Noto Serif SC', serif;
+      font-weight: 900;
+      font-size: 21px;
+      letter-spacing: .02em;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .pg-title em { color: var(--accent); font-style: normal; }
+    .pg-tags { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+    .pg-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6.5px;
+      letter-spacing: .08em;
+      color: #7DD3FC;
+      background: rgba(56, 189, 248, .08);
+      border: 1px solid rgba(56, 189, 248, .22);
+      border-radius: 3px;
+      padding: 2px 6px;
+    }
+    .tagline {
+      margin-top: 7px;
+      font-size: 9.5px;
+      line-height: 1.5;
+      color: var(--muted);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .tagline em { color: var(--accent); font-style: normal; font-weight: 500; }
+
+    /* ── 核心展示区：终端窗口（flex 弹性吸收剩余空间） ── */
+    .termbox {
+      position: relative;
+      margin-top: 9px;
+      flex: 1 1 auto;
+      min-height: 0;
+      background: #060B16;
+      border: 1px solid rgba(56, 189, 248, .3);
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all .25s;
+      display: flex;
+      flex-direction: column;
+    }
+    .termbox:active { border-color: rgba(56, 189, 248, .7); transform: scale(.995); }
+    .termbar {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 9px;
+      background: rgba(56, 189, 248, .07);
+      border-bottom: 1px solid rgba(56, 189, 248, .18);
+      flex-shrink: 0;
+    }
+    .termbar .tb-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .termbar .tb-dot:nth-child(1) { background: #EF4444; }
+    .termbar .tb-dot:nth-child(2) { background: #F59E0B; }
+    .termbar .tb-dot:nth-child(3) { background: #10B981; }
+    .termbar .tb-title {
+      margin-left: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .1em;
+      color: #7C8AA5;
+    }
+    .term-body {
+      flex: 1;
+      padding: 8px 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      line-height: 1.7;
+      color: #A8C5E0;
+      overflow: hidden;
+      white-space: pre;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: flex-start;
+    }
+    .term-body > span, .term-body > .prompt { flex-shrink: 0; }
+    /* 滚动条样式 */
+    .term-body::-webkit-scrollbar { width: 3px; }
+    .term-body::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, .3); border-radius: 2px; }
+    .term-body .prompt { color: #38BDF8; }
+    .term-body .ok { color: #34D399; }
+    .term-body .dim { color: #5B6B85; }
+    .term-cursor {
+      display: inline-block;
+      width: 7px; height: 10px;
+      background: #38BDF8;
+      vertical-align: -2px;
+      animation: cursorBlink 1.1s steps(2) infinite;
+    }
+    .term-hint {
+      position: absolute;
+      right: 8px; bottom: 7px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6.5px;
+      letter-spacing: .1em;
+      color: #0B1A2E;
+      background: rgba(56, 189, 248, .88);
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-weight: 500;
+      z-index: 5;
+      animation: hintPulse 2.2s ease-in-out infinite;
+    }
+    @keyframes hintPulse { 0%,100% { opacity: 1; } 50% { opacity: .6; } }
+
+    /* ── Stats ── */
+    .stats-section { margin-top: 9px; flex-shrink: 0; }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid rgba(56, 189, 248, .15);
+      border-radius: 6px;
+      padding: 6px 5px 5px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .stat-card:active { transform: scale(.95); border-color: rgba(56, 189, 248, .5); background: rgba(56, 189, 248, .06); }
+    .stat-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--accent);
+      letter-spacing: .02em;
+    }
+    .stat-label {
+      margin-top: 2px;
+      font-size: 6.5px;
+      color: var(--muted);
+      letter-spacing: .05em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ── Flow（RLM 递归流程） ── */
+    .flow-section { margin-top: 9px; flex-shrink: 0; }
+    .flow-hd {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7.5px;
+      letter-spacing: .18em;
+      color: #A5C9E5;
+      margin-bottom: 5px;
+    }
+    .flow-hd::after { content: ''; flex: 1; height: 1px; background: rgba(56, 189, 248, .12); }
+    .flow-row { display: flex; align-items: stretch; gap: 0; }
+    .flow-node {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid rgba(56, 189, 248, .18);
+      border-radius: 5px;
+      padding: 5px 4px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .2s;
+      position: relative;
+    }
+    .flow-node:active { transform: scale(.94); border-color: rgba(56, 189, 248, .55); }
+    .flow-node .fn-ico { font-size: 11px; }
+    .flow-node .fn-name {
+      margin-top: 2px;
+      font-size: 6.5px;
+      color: #D6E8FA;
+      white-space: nowrap;
+    }
+    .flow-node .fn-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 5.5px;
+      color: var(--muted);
+      margin-top: 1px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .flow-arrow {
+      display: flex;
+      align-items: center;
+      color: var(--accent);
+      font-size: 9px;
+      padding: 0 3px;
+      flex-shrink: 0;
+    }
+
+    /* ── Features ── */
+    .features { margin-top: 9px; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; flex-shrink: 0; }
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--surface);
+      border: 1px solid rgba(56, 189, 248, .15);
+      border-radius: 6px;
+      padding: 6px 8px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .feature:active { transform: scale(.96); border-color: rgba(56, 189, 248, .55); background: rgba(56, 189, 248, .05); }
+    .feature .f-ico { font-size: 13px; flex-shrink: 0; }
+    .feature .f-txt { min-width: 0; }
+    .feature .f-name { font-size: 8px; color: #D6E8FA; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .feature .f-desc {
+      margin-top: 2px;
+      font-size: 6.5px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block;
+    }
+
+    /* ── Tech Pills ── */
+    .tech-section { margin-top: 8px; flex-shrink: 0; }
+    .tech-pills { display: flex; gap: 4px; flex-wrap: wrap; }
+    .tech-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      letter-spacing: .06em;
+      color: #7DD3FC;
+      background: rgba(56, 189, 248, .06);
+      border: 1px solid rgba(56, 189, 248, .2);
+      border-radius: 3px;
+      padding: 2.5px 7px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .tech-pill:active { transform: scale(.93); background: rgba(56, 189, 248, .2); }
+
+    /* ── Bottom Bar ── */
+    .bottombar {
+      display: flex;
+      gap: 7px;
+      margin-top: 9px;
+      flex-shrink: 0;
+    }
+    .bb-btn {
+      flex: 1;
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7.5px;
+      letter-spacing: .08em;
+      text-decoration: none;
+      color: #A5C9E5;
+      border: 1px solid rgba(56, 189, 248, .28);
+      border-radius: 5px;
+      padding: 6px 0;
+      transition: all .2s;
+    }
+    .bb-btn:active { transform: scale(.95); background: rgba(56, 189, 248, .14); }
+    .bb-btn.primary { background: rgba(56, 189, 248, .12); color: #7DD3FC; }
+
+    /* ── Overlay Sheet ── */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 4, 8, .75);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s;
+    }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+    .sheet {
+      width: min(88%, 400px);
+      max-height: 82%;
+      background: #0A101F;
+      border: 1px solid rgba(56, 189, 248, .3);
+      border-radius: 12px;
+      box-shadow: 0 24px 80px rgba(0,0,0,.6);
+      transform: translateY(40px);
+      opacity: 0;
+      transition: transform .45s cubic-bezier(.7, 0, .3, 1), opacity .3s;
+      padding: 18px 18px 14px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .overlay.active .sheet { transform: translateY(0); opacity: 1; }
+    .sheet-title {
+      font-family: 'Noto Serif SC', serif;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--text);
+      line-height: 1.4;
+    }
+    .sheet-title em { color: var(--accent); font-style: normal; }
+    .sheet-desc {
+      margin-top: 10px;
+      font-size: 10.5px;
+      line-height: 1.75;
+      color: #A8B8D0;
+    }
+    .sheet-desc b { color: #E0F2FE; font-weight: 500; }
+    .sheet-desc code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9.5px;
+      color: #7DD3FC;
+      background: rgba(56, 189, 248, .08);
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+    .sheet-img {
+      margin-top: 10px;
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid rgba(56, 189, 248, .2);
+      display: block;
+    }
+    .sheet-code {
+      margin-top: 10px;
+      background: #050A16;
+      border: 1px solid rgba(56, 189, 248, .18);
+      border-radius: 6px;
+      padding: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      line-height: 1.65;
+      color: #7DD3FC;
+      white-space: pre;
+      overflow-x: auto;
+    }
+    .sheet-points { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+    .sheet-point {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 10px;
+      color: #A8B8D0;
+      line-height: 1.6;
+    }
+    .sheet-point::before {
+      content: '▸';
+      color: var(--accent);
+      font-size: 9px;
+      margin-top: 1px;
+      flex-shrink: 0;
+    }
+    .sheet-close {
+      margin-top: 14px;
+      background: rgba(56, 189, 248, .12);
+      border: 1px solid rgba(56, 189, 248, .35);
+      border-radius: 6px;
+      padding: 9px 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: .2em;
+      color: #7DD3FC;
+      cursor: pointer;
+      transition: all .2s;
+      flex-shrink: 0;
+    }
+    .sheet-close:active { transform: scale(.96); background: rgba(56, 189, 248, .25); }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 30px;
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(10, 20, 40, .95);
+      border: 1px solid rgba(56, 189, 248, .4);
+      color: #E0F2FE;
+      font-size: 10px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: all .3s;
+      white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* 小屏兜底 */
+    @media (max-height: 730px) {
+      .feature { padding: 4px 8px; }
+      .stat-card { padding: 4px 5px 3px; }
+      .pg-title { font-size: 18px; }
+      .pg-stamp { width: 22px; height: 22px; font-size: 10px; }
+      .tagline { font-size: 8.5px; }
+      .flow-node .fn-name { font-size: 6px; }
+      .flow-node .fn-sub { font-size: 5px; }
+      .term-body { font-size: 7px; }
+      .tech-pill { font-size: 5.5px; }
+      .stats-grid { gap: 4px; }
+    }
+    /* 平板/中屏：进一步压缩让内容收进 stage */
+    @media (min-height: 731px) and (max-height: 1040px) {
+      .term-body { font-size: 7px; line-height: 1.55; }
+      .flow-node .fn-sub { display: none; }
+      .feature { padding: 5px 7px; }
+      .tech-pill { padding: 2px 6px; }
+      .flow-section { margin-top: 7px; }
+      .features { margin-top: 7px; }
+      .tech-section { margin-top: 6px; }
+      .bottombar { margin-top: 7px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage" id="stage">
+    <!-- 背景网格 -->
+    <div style="position:absolute; inset:0; background:
+      radial-gradient(ellipse at 70% 20%, rgba(56,189,248,.07), transparent 55%),
+      linear-gradient(rgba(56,189,248,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(56,189,248,.04) 1px, transparent 1px);
+      background-size: 100% 100%, 28px 28px, 28px 28px;
+      z-index:0; pointer-events:none;"></div>
+
+    <!-- Topbar -->
+    <div class="topbar reveal">
+      <div class="brand" id="brandBtn"><span class="dot"></span>PRIME AGENT</div>
+      <button class="share-btn" id="shareBtn">分享 ↗</button>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero reveal">
+      <div class="rec3d" id="rec3d">
+        <div class="cube-face face-front"><span class="code-line">$ prime-agent</span><span class="code-line">✓ session ready</span><span class="code-line">rlm() spawned</span><span class="code-line">✓ child #2 done</span><span class="code-line">/refine applied</span><span class="cursor-bar"></span></div>
+        <div class="cube-face face-back"><span class="code-line">context: 8192</span><span class="code-line">✓ kernel alive</span><span class="code-line">goal: shipped</span><span class="code-line">✓ heartbeat</span><span class="code-line">autonomous on</span><span class="cursor-bar"></span></div>
+        <div class="cube-face face-right"><span class="code-line">ipython ⟶</span><span class="code-line">%cd project</span><span class="code-line">run tests ✓</span><span class="code-line">save state</span><span class="code-line">✓ compacted</span><span class="cursor-bar"></span></div>
+        <div class="cube-face face-left"><span class="code-line">agent msg</span><span class="code-line">→ parent ✓</span><span class="code-line">schedule 9am</span><span class="code-line">✓ retained</span><span class="code-line">daemon on</span><span class="cursor-bar"></span></div>
+        <div class="cube-face face-top"><span class="code-line">/refine</span><span class="code-line">memory ↑</span><span class="code-line">skill new</span><span class="code-line">✓ evidence</span><span class="code-line">rollback ok</span><span class="cursor-bar"></span></div>
+        <div class="cube-face face-bottom"><span class="code-line">rlm(...)</span><span class="code-line">child #1 ✓</span><span class="code-line">child #2 ✓</span><span class="code-line">merge diff</span><span class="code-line">✓ committed</span><span class="cursor-bar"></span></div>
+        <div class="inner-cube"></div>
+      </div>
+      <div class="hero-side">
+        <div class="pg-row">
+          <div class="pg-stamp" id="stampBtn">PA</div>
+          <div class="pg-title">Prime <em>Agent</em></div>
+        </div>
+        <div class="pg-tags">
+          <span class="pg-tag">RLM</span>
+          <span class="pg-tag">SELF-IMPROVING</span>
+          <span class="pg-tag">OPEN SOURCE</span>
+        </div>
+        <div class="tagline">自改进递归语言模型 Agent —— 持久 Python REPL 里 <em>编程式</em> 完成编码与研究长任务，/refine 持续进化。</div>
+      </div>
+    </div>
+
+    <!-- 核心展示区：终端 -->
+    <div class="termbox reveal" id="termBox">
+      <div class="termbar"><span class="tb-dot"></span><span class="tb-dot"></span><span class="tb-dot"></span><span class="tb-title">prime-agent — RLM session</span></div>
+      <div class="term-body" id="termBody"><span class="prompt">$</span> prime-agent
+✓ daemon ready · ipython kernel alive · t=0.04s
+<span class="prompt">In [1]:</span> <span class="dim">import</span> prime_agent <span class="dim">as</span> pa
+<span class="prompt">In [2]:</span> handle = <span class="ok">await pa.rlm</span>(<span class="dim">"review auth flow"</span>, name=<span class="dim">"auth"</span>)
+<span class="prompt">In [3]:</span> <span class="ok">✓</span> child admitted <span class="dim">·</span> review running in background
+<span class="prompt">In [4]:</span> <span class="ok">await agent_message.send</span>(<span class="dim">"any findings?"</span>, role=<span class="dim">"child"</span>)
+<span class="prompt">In [5]:</span> <span class="ok">✓</span> <span class="dim">2</span> issues found <span class="dim">·</span> patches applied
+<span class="prompt">In [6]:</span> <span class="ok">await pa.rlm</span>(<span class="dim">"run integration suite"</span>, name=<span class="dim">"e2e"</span>)
+<span class="prompt">In [7]:</span> <span class="ok">✓</span> e2e admitted <span class="dim">·</span> 12 specs queued
+<span class="prompt">In [8]:</span> <span class="dim">%cd</span> /repo <span class="dim">&&</span> <span class="ok">run tests</span>
+<span class="prompt">In [9]:</span> <span class="ok">✓</span> 128 passed <span class="dim">·</span> coverage 94%
+<span class="prompt">In [10]:</span> <span class="ok">await agent_message.send</span>(<span class="dim">"merge?"</span>, role=<span class="dim">"parent"</span>)
+<span class="prompt">In [11]:</span> <span class="ok">✓</span> merged <span class="dim">·</span> <span class="ok">/refine</span> lesson saved<span class="term-cursor"></span></div>
+      <div class="term-hint">轻触查看 RLM 会话</div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-section reveal">
+      <div class="stats-grid">
+        <div class="stat-card" data-s="s0"><div class="stat-num">8.8K</div><div class="stat-label">GitHub ★</div></div>
+        <div class="stat-card" data-s="s1"><div class="stat-num">825</div><div class="stat-label">Forks</div></div>
+        <div class="stat-card" data-s="s2"><div class="stat-num">MIT</div><div class="stat-label">License</div></div>
+        <div class="stat-card" data-s="s3"><div class="stat-num">5/08</div><div class="stat-label">创建 2026</div></div>
+      </div>
+    </div>
+
+    <!-- Flow：RLM 递归流程 -->
+    <div class="flow-section reveal">
+      <div class="flow-hd">RLM RECURSION LOOP</div>
+      <div class="flow-row">
+        <div class="flow-node" data-s="f0"><div class="fn-ico">🧠</div><div class="fn-name">Parent</div><div class="fn-sub">task + context</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" data-s="f1"><div class="fn-ico">⚙️</div><div class="fn-name">IPython</div><div class="fn-sub">programmatic</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" data-s="f2"><div class="fn-ico">📦</div><div class="fn-name">Skills</div><div class="fn-sub">python callable</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" data-s="f3"><div class="fn-ico">🌱</div><div class="fn-name">rlm()</div><div class="fn-sub">child agents</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" data-s="f4"><div class="fn-ico">🔄</div><div class="fn-name">/refine</div><div class="fn-sub">self-improve</div></div>
+      </div>
+    </div>
+
+    <!-- Features 2×2 -->
+    <div class="features reveal">
+      <div class="feature" data-f="0"><div class="f-ico">🔁</div><div class="f-txt"><div class="f-name">递归子代理</div><span class="f-desc">rlm() 原生调用，异步并行</span></div></div>
+      <div class="feature" data-f="1"><div class="f-ico">📝</div><div class="f-txt"><div class="f-name">持久状态</div><span class="f-desc">变量跨轮存活，自动压缩</span></div></div>
+      <div class="feature" data-f="2"><div class="f-ico">🧬</div><div class="f-txt"><div class="f-name">自改进 Harness</div><span class="f-desc">/refine 小步证据驱动更新</span></div></div>
+      <div class="feature" data-f="3"><div class="f-ico">🌙</div><div class="f-txt"><div class="f-name">后台常驻</div><span class="f-desc">daemon 断线续跑，可重连</span></div></div>
+    </div>
+
+    <!-- Tech Pills -->
+    <div class="tech-section reveal">
+      <div class="tech-pills">
+        <span class="tech-pill" data-t="0">TypeScript</span>
+        <span class="tech-pill" data-t="1">IPython</span>
+        <span class="tech-pill" data-t="2">RLM</span>
+        <span class="tech-pill" data-t="3">Harness</span>
+        <span class="tech-pill" data-t="4">pi</span>
+        <span class="tech-pill" data-t="5">TUI</span>
+      </div>
+    </div>
+
+    <!-- Bottom Bar -->
+    <div class="bottombar reveal">
+      <a class="bb-btn" href="https://github.com/PrimeIntellect-ai/prime-agent" target="_blank">GitHub ↗</a>
+      <a class="bb-btn primary" href="https://primeintellect.ai" target="_blank">primeintellect.ai ↗</a>
+    </div>
+  </div>
+
+  <!-- Overlay -->
+  <div class="overlay" id="overlay">
+    <div class="sheet">
+      <div class="sheet-title" id="sheetTitle"></div>
+      <div class="sheet-desc" id="sheetDesc"></div>
+      <div class="sheet-img" id="sheetImg" style="display:none"></div>
+      <div class="sheet-code" id="sheetCode" style="display:none"></div>
+      <div class="sheet-points" id="sheetPoints"></div>
+      <button class="sheet-close" id="sheetClose">CLOSE</button>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+  (function(){
+    var $=function(s){return document.querySelector(s)};
+    var overlay=$('#overlay'), sheetTitle=$('#sheetTitle'), sheetDesc=$('#sheetDesc'),
+        sheetPoints=$('#sheetPoints'), sheetCode=$('#sheetCode'), sheetImg=$('#sheetImg'),
+        toast=$('#toast');
+
+    var DATA = {
+      story: {
+        title: 'Prime Agent <em>· 自改进 RLM Agent</em>',
+        desc: 'Prime Intellect（前身 Prime Intellect AI）开源的自改进编码与研究 Agent，核心是 Recursive Language Model（RLM）范式：模型不直接吞掉全部上下文，而是在一个持久 Python REPL 里编程式地检查、变换数据，并把子任务递归派发给子 Agent。配套的 Continual Harness（arXiv 2605.09998）让 Agent 能在单次运行内在线打磨自己的提示词、技能与记忆——这就是"自改进"的来源。',
+        points: ['Prime Intellect AI 出品，2026-05-08 创建', '8818★ / 825 forks，MIT 协议', '构建在 pi（earendil-works/pi）之上', 'TUI + JSON/RPC 双模式', '安装一条 curl 命令，校验 SHA-256', '官方文档 9 篇，覆盖安装/RLM/架构/技能']
+      },
+      s0: {
+        title: '8,818 <em>· GitHub Stars</em>',
+        desc: '开源两个月即接近 9k 星（截至 2026-08-08），是 RLM 范式最受关注的落地实现之一。同期 825 forks、380 个 open issues——社区活跃度直接反映在 Issue 讨论上。',
+        points: ['8818 stars / 825 forks / 380 issues', '2026-05-08 创建，2 个月冲上 8.8k', 'TypeScript 编写，MIT 许可', 'CI + 二进制构建双 workflow 全绿', '社区关注点：RLM 编程模型、长任务可靠性']
+      },
+      s1: {
+        title: '825 <em>· Forks</em>',
+        desc: 'Fork 数说明开发者不止在看，还在改。825 个 fork 大多围绕：换模型提供商、定制 Skills 包、把 Agent 嵌入自己的 CI/自动化流程。',
+        points: ['825 forks，派生用途多样', '自带 providers 抽象，支持订阅/API-Key', 'Skills 即 Python 包，易扩展', 'RPC/JSON 模式可嵌入现有工具链', 'MIT 协议无商用限制']
+      },
+      s2: {
+        title: 'MIT <em>· 协议</em>',
+        desc: '完全开源，MIT 协议——商用、修改、分发全自由。README 明确 "fully open source"，连构建产物（二进制）都提供预编译下载。',
+        points: ['MIT License，零限制商用', '二进制安装包 + SHA-256 校验', 'macOS / Linux 支持', '安装脚本官方托管 app.primeintellect.ai', '更新命令 prime-agent update']
+      },
+      s3: {
+        title: '2026-05-08 <em>· 创建</em>',
+        desc: '项目 2026 年 5 月 8 日创建，两个月冲到 8.8k 星。同期 Prime Intellect 连发 RLM 博客（2026-01）与 Continual Harness 论文，形成"理论 → 产品"闭环。',
+        points: ['2026-05-08 创建，2026-08 活跃开发中', 'RLM 博客 2026-01 发布，产品 5 月落地', 'arXiv 2605.09998 Continual Harness 支撑', 'PRIME-RL 训练栈 + verifiers 工具链配套', '更新时间 2026-08-08：最近仍有提交']
+      },
+      f0: {
+        title: 'RLM 递归流程 <em>· 从任务到进化</em>',
+        desc: '整个循环：Parent 模型持任务上下文 → 通过持久 IPython kernel 编程式操作数据（不占模型上下文）→ 调用 Python-backed Skills → 用 rlm() 递归派生子 Agent → 完成工作后 /refine 把经验写回 Harness。每一步都可在弹窗里查看细节。',
+        points: ['Parent 只持有精简上下文，避免 context rot', 'IPython kernel 跨轮存活，变量不丢', 'Skills 是可 import 的 Python 包', 'rlm() 返回 handle，异步后台运行', '/refine 永不重写基础系统 prompt', '快照记录支持回滚']
+      },
+      s_story: {},
+      term: {
+        title: 'RLM 会话 <em>· 持久 REPL 演示</em>',
+        desc: '终端里是真实 RLM 编程模型的简化会话：模型用 IPython 做一切——导入模块、rlm() 派生子代理做安全审查、agent_message 向子代理追问、拿回补丁。Python 状态跨轮存活，所以多轮任务不需要重复加载上下文。',
+        code: '$ prime-agent\n' +
+              '✓ daemon ready · ipython kernel alive\n' +
+              'In [1]: import prime_agent as pa\n' +
+              'In [2]: handle = await pa.rlm("review auth flow", name="auth")\n' +
+              '        ✓ child admitted · review running in background\n' +
+              'In [3]: await agent_message.send("any findings?", role="child")\n' +
+              'In [4]: ✓ 2 issues found · patches applied · tests green',
+        points: ['IPython 是模型唯一内置工具', '%%bash 临时子 shell，Python 状态持久', 'rlm() 立即返回，不阻塞等待结果', '子代理结果经 agent_message 或文件返回', 'child registry 跨压缩/重启存活', '默认 recursion depth 1，可加深']
+      },
+      g1: {
+        title: 'Continual Harness <em>· 在线自适应</em>',
+        desc: '论文（arXiv 2605.09998）的灵感来自 Gemini Plays Pokemon 实验：人类逐步改进 harness，最终让 AI 无败绩通关 Pokemon Blue/Yellow/Crystal——过程中 Agent 自己也开始用长上下文记忆迭代策略。Continual Harness 把人类从这个循环中完全移除：Agent 在单次运行内交替"行动"与"改进自身 prompt/子代理/技能/记忆"。',
+        points: ['GPP 首个通关 Pokemon Blue 的 AI 系统', 'Blue/Yellow/Crystal 全部无败绩', '免重置：在线自适应，无需 episode reset', 'prompt 优化方法需要重置，Harness 不用', '从最小环境接口起步，零预设策略', '跨 frontier 模型验证（Pokemon Red/Emerald）']
+      },
+      g2: {
+        title: '/refine <em>· 小步自改进</em>',
+        desc: 'Prime Agent 把论文思想落地成 /refine 命令：审查当前轨迹，把可复用的经验以"小步、有证据"的更新写进 Harness 补充状态（supplemental prompts / memories / skill descriptions / subagent specs）。基础系统 prompt 永不重写，每次更新都有快照可回滚。',
+        points: ['/refine 审查当前轨迹后更新', '写补充 prompt / 记忆 / 技能描述 / 子代理规格', '永不重写不可变基础系统 prompt', '更新历史全程记录，支持回滚', '本地会话默认隔离，可共享到项目/个人', '手动打包技能仍是首选发布路径']
+      },
+      g3: {
+        title: 'Skills <em>· 可执行的 Python 包</em>',
+        desc: 'Prime Agent 兼容 Agent Skills markdown 格式，并扩展 Python-backed skills：SKILL.md 负责发现/路由，同目录 Python 包安装进 kernel 环境按 import 名暴露。模型直接 await 调用，还可以在 skill 内部再 rlm() 递归。',
+        points: ['SKILL.md + Python 包双格式', '安装进 kernel，import 即用', '支持 typed callable / 依赖 / shell 命令', '可内部递归调用 rlm()', '内置 skill creator 把重复工作流转成 skill', '只需元数据进启动 prompt，按需加载全文']
+      },
+      g4: {
+        title: '后台与长任务 <em>· 断线不丢</em>',
+        desc: 'daemon 架构让 Agent 在终端断开后继续运行：workers 独立进程持有 session，客户端随时重连。配合持久目标 /goal、心跳 /heartbeat、定时 prime-agent schedule、有界自主模式 /autonomous——长任务可以"无人值守"跑完。',
+        points: ['daemon 进程：断开终端不掉线', 'prime-agent attach 随时重连', '/goal 目标跨轮保持', '心跳与调度周期性唤醒会话', '/autonomous 限 turn/token/时间预算', '质量闸门（quality gates）可自定义']
+      },
+      t0: {
+        title: 'TypeScript <em>· 宿主语言</em>',
+        desc: 'Agent 的宿主（host）用 TypeScript 编写：负责 provider 调用、队列、工具、压缩、目标、子代理生命周期与 transcript 持久化。模型面对的编程面是 IPython，宿主是 TypeScript——职责清晰分离。',
+        points: ['宿主：TypeScript', '模型编程面：IPython kernel', 'host 拥有凭据与 provider 执行', 'worker/kernel 分进程隔离生命周期', '不是安全沙箱，权限与客户端相同']
+      },
+      t1: {
+        title: 'IPython <em>· 模型的内置工具</em>',
+        desc: 'RLM 运行时的核心设计：模型只有 ipython 一个内置工具。文件读写、shell 命令、数据变换、技能调用、子代理派生全部从持久 kernel 出发，而不是一堆独立工具调用。',
+        points: ['默认暴露单一模型工具：ipython', 'Python 状态跨 tool calls 与压缩存活', '%%bash 临时子 shell，%cd 持久', 'typed host requests 校验状态转换', 'extension 可加自定义工具，但非必需']
+      },
+      t2: {
+        title: 'RLM <em>· Recursive Language Model</em>',
+        desc: 'RLM 是 Prime Intellect 2026-01 提出的范式（博客 "Recursive Language Models: the paradigm of 2026"）：LLM 用持久 Python REPL 检查/变换输入数据，并从 REPL 内调用子 LLM——prompt-as-a-variable。大输入（PDF/数据集/视频）不塞进上下文，模型更精简、避免 context rot。',
+        points: ['prompt-as-a-variable：上下文即变量', '大输入只程序化访问，不占上下文', 'REPL 输出默认限 8192 字符/轮', '子 LLM 并行处理部分输入', '避免 context rot（上下文腐烂）', '由 Alex Zhang 原创，Prime Intellect 实现']
+      },
+      t3: {
+        title: 'Harness <em>· 持续进化框架</em>',
+        desc: 'Continual Harness 把"提示词 + 记忆 + 技能描述 + 子代理规格"作为可持久化状态，Agent 用 /refine 做小步证据驱动的更新。与 Claude Code/OpenHands 那种"工具+记忆+规划"的静态 harness 不同，它会在单次运行中自我演化。',
+        points: ['supplemental prompts / memories / skills / specs', '本地到会话，默认不扩散', '快照回滚保证可逆', 'arXiv 2605.09998 论文支撑', '理念源自 Gemini Plays Pokemon 实验']
+      },
+      t4: {
+        title: 'pi <em>· 构建基座</em>',
+        desc: 'README 致谢：Prime Agent 的 Agent 与 TUI 构建在 pi（github.com/earendil-works/pi）之上。pi 提供 TUI/Agent 基础设施，Prime Agent 在其上叠加 RLM 运行时、Harness 与 daemon 架构。',
+        points: ['基于 pi（earendil-works/pi）', 'TUI 与 Agent 核心继承自 pi', 'Prime Intellect 致谢 pi 作者', '叠加层：RLM runtime + Harness + daemon', '完全开源，MIT 协议']
+      },
+      t5: {
+        title: 'TUI <em>· 终端交互界面</em>',
+        desc: '主交互是终端 UI（TUI）：agents 浏览会话、attach 重连、status 看后台、doctor 修复、update 升级。无头场景走 Print/JSON/RPC 模式，可嵌入 CI 与自动化。',
+        points: ['prime-agent agents / attach / status', 'doctor --fix 修复后台服务', 'update / shutdown 管理生命周期', 'JSON 模式 & RPC 模式支持无头', 'daemon 协议本地通信']
+      }
+    };
+    DATA.s_story = DATA.story;
+
+    function openSheet(key){
+      var d = DATA[key]; if(!d) return;
+      sheetTitle.innerHTML = d.title;
+      sheetDesc.textContent = d.desc;
+      if(d.img){
+        sheetImg.style.display = 'block';
+        sheetImg.src = d.img;
+      }else{
+        sheetImg.style.display = 'none';
+      }
+      if(d.code){
+        sheetCode.style.display = 'block';
+        sheetCode.textContent = d.code;
+      }else{
+        sheetCode.style.display = 'none';
+      }
+      sheetPoints.innerHTML = d.points.map(function(p){
+        return '<div class="sheet-point">' + p + '</div>';
+      }).join('');
+      overlay.classList.add('active');
+      if(navigator.vibrate) navigator.vibrate(15);
+    }
+    function closeSheet(){ overlay.classList.remove('active'); }
+
+    // 绑定点击
+    document.querySelectorAll('.stat-card').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet(el.dataset.s); });
+    });
+    document.querySelectorAll('.flow-node').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet(el.dataset.s); });
+    });
+    document.querySelectorAll('.feature').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet('g' + (parseInt(el.dataset.f) + 1)); });
+    });
+    document.querySelectorAll('.tech-pill').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet('t'+el.dataset.t); });
+    });
+    $('#termBox').addEventListener('click', function(){ openSheet('term'); });
+    $('#stampBtn').addEventListener('click', function(){ openSheet('story'); });
+    $('#brandBtn').addEventListener('click', function(){ openSheet('story'); });
+    $('#sheetClose').addEventListener('click', closeSheet);
+    overlay.addEventListener('click', function(e){ if(e.target===overlay) closeSheet(); });
+
+    $('#shareBtn').addEventListener('click', function(){
+      var url = location.href.split('?')[0];
+      var intro = 'Prime Agent — 自改进 RLM 编码 Agent（8818★）';
+      var sub = '你可以用任何AI工具订阅我的博客文章：https://mindresonance.online/youngsinsight/subscribe.html';
+      var full = intro + '\n' + url + '\n\n' + sub;
+      if(navigator.share){
+        // 注意：text 已含链接，勿再传 url，否则部分平台会重复追加
+        navigator.share({title:'Prime Agent — 自改进 RLM 编码 Agent', text: full}).catch(function(){});
+      }else if(navigator.clipboard){
+        navigator.clipboard.writeText(full).then(function(){
+          toast.textContent = '已复制：介绍 + 链接 + 订阅推荐';
+          toast.classList.add('show');
+          setTimeout(function(){ toast.classList.remove('show'); }, 1800);
+        });
+      }
+    });
+
+    // 3D 视差倾斜
+    var stage = $('#stage');
+    var tx = 0, ty = 0, raf = null;
+    function tilt(){
+      stage.style.transform = 'rotateX(' + ty + 'deg) rotateY(' + tx + 'deg)';
+      raf = null;
+    }
+    function onMove(x, y, w, h){
+      tx = ((x / w) - 0.5) * 6;
+      ty = -((y / h) - 0.5) * 6;
+      if(!raf) raf = requestAnimationFrame(tilt);
+    }
+    stage.addEventListener('mousemove', function(e){
+      var r = stage.getBoundingClientRect();
+      onMove(e.clientX - r.left, e.clientY - r.top, r.width, r.height);
+    });
+    stage.addEventListener('touchmove', function(e){
+      var t = e.touches[0]; var r = stage.getBoundingClientRect();
+      onMove(t.clientX - r.left, t.clientY - r.top, r.width, r.height);
+    }, {passive: true});
+    stage.addEventListener('mouseleave', function(){
+      tx = 0; ty = 0; stage.style.transform = '';
+    });
+
+    // reveal
+    document.querySelectorAll('.reveal').forEach(function(x){ x.classList.add('visible'); });
+  })();
+  </script>
+</body>
+</html>
