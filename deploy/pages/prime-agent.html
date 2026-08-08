@@ -252,7 +252,7 @@
     }
     .tagline em { color: var(--accent); font-style: normal; font-weight: 500; }
 
-    /* ── 核心展示区：官网动画（flex 弹性吸收剩余空间） ── */
+    /* ── 核心展示区：官网动画/截图（flex 弹性吸收剩余空间） ── */
     .splashbox {
       position: relative;
       margin-top: 9px;
@@ -268,6 +268,32 @@
       flex-direction: column;
     }
     .splashbox:active { border-color: rgba(56, 189, 248, .7); }
+    .termbar {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 9px;
+      background: rgba(56, 189, 248, .07);
+      border-bottom: 1px solid rgba(56, 189, 248, .18);
+      flex-shrink: 0;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .termbar .tb-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .termbar .tb-dot:nth-child(1) { background: #EF4444; }
+    .termbar .tb-dot:nth-child(2) { background: #F59E0B; }
+    .termbar .tb-dot:nth-child(3) { background: #10B981; }
+    .termbar .tb-title {
+      margin-left: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .1em;
+      color: #7C8AA5;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+      min-width: 0;
+    }
     .splash-body {
       position: relative;
       flex: 1;
@@ -298,6 +324,24 @@
       z-index: 5;
     }
     .sp-ico { font-size: 8px; }
+    /* 图库 tab（小圆点导航） */
+    .splash-tabs {
+      position: absolute;
+      left: 8px; bottom: 7px;
+      display: flex;
+      gap: 4px;
+      z-index: 5;
+    }
+    .stab {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: rgba(56, 189, 248, .25);
+      border: 1px solid rgba(56, 189, 248, .35);
+      cursor: pointer;
+      transition: all .2s;
+      padding: 0;
+    }
+    .stab.active { background: #38BDF8; box-shadow: 0 0 6px rgba(56, 189, 248, .7); transform: scale(1.2); }
 
     /* ── 终端小条 ── */
     .term-strip {
@@ -675,12 +719,19 @@
       </div>
     </div>
 
-    <!-- 核心展示区：官网动画 -->
+    <!-- 核心展示区：官网动画/截图 -->
     <div class="splashbox reveal" id="splashBox">
-      <div class="termbar"><span class="tb-dot"></span><span class="tb-dot"></span><span class="tb-dot"></span><span class="tb-title">primeintellect.ai — onboarding</span></div>
+      <div class="termbar"><span class="tb-dot"></span><span class="tb-dot"></span><span class="tb-dot"></span><span class="tb-title" id="tbTitle">primeintellect.ai — onboarding</span></div>
       <div class="splash-body" id="splashBody">
         <img class="splash-img" id="splashImg" src="../cards/prime-agent/splash.gif" alt="Prime Agent 官网动画">
-        <div class="splash-overlay" id="splashOverlay"><span class="sp-ico" id="spIco">⏸</span><span class="sp-txt">轻触暂停/播放</span></div>
+        <div class="splash-tabs" id="splashTabs">
+          <button class="stab active" data-i="0"></button>
+          <button class="stab" data-i="1"></button>
+          <button class="stab" data-i="2"></button>
+          <button class="stab" data-i="3"></button>
+          <button class="stab" data-i="4"></button>
+        </div>
+        <div class="splash-overlay" id="splashOverlay"><span class="sp-ico" id="spIco">⏸</span><span class="sp-txt" id="spTxt">轻触暂停</span></div>
       </div>
     </div>
 
@@ -899,16 +950,45 @@
       el.addEventListener('click', function(){ openSheet('t'+el.dataset.t); });
     });
     $('#termBox').addEventListener('click', function(){ openSheet('term'); });
-    // 官网动画：点击暂停/播放
-    var splashImg = $('#splashImg'), spIco = $('#spIco'), playing = true;
+    // 官网图库：5 张切换（gif + 4 截图）
+    var GALLERY = [
+      {src: '../cards/prime-agent/splash.gif', title: 'primeintellect.ai — onboarding 动画', anim: true},
+      {src: '../cards/prime-agent/agents-view.jpg', title: 'primeintellect.ai — agents 会话列表', anim: false},
+      {src: '../cards/prime-agent/tui-view.jpg', title: 'primeintellect.ai — TUI 界面', anim: false},
+      {src: '../cards/prime-agent/architecture.jpg', title: 'primeintellect.ai — 架构图', anim: false},
+      {src: '../cards/prime-agent/factorio.jpg', title: 'primeintellect.ai — Factorio 自主任务', anim: false}
+    ];
+    var splashImg = $('#splashImg'), spIco = $('#spIco'), spTxt = $('#spTxt'), tbTitle = $('#tbTitle');
+    var gIdx = 0, playing = true;
+    function setGallery(i){
+      gIdx = i;
+      var g = GALLERY[i];
+      splashImg.src = g.src.split('?')[0] + (g.anim ? '?t=' + Date.now() : '');
+      tbTitle.textContent = g.title;
+      playing = true;
+      spIco.textContent = g.anim ? '⏸' : '⏸';
+      spTxt.textContent = '轻触暂停';
+      document.querySelectorAll('.stab').forEach(function(b, j){
+        b.classList.toggle('active', j === i);
+      });
+    }
+    document.querySelectorAll('.stab').forEach(function(b){
+      b.addEventListener('click', function(e){
+        e.stopPropagation();
+        setGallery(parseInt(b.dataset.i));
+        if(navigator.vibrate) navigator.vibrate(10);
+      });
+    });
     $('#splashBox').addEventListener('click', function(){
       playing = !playing;
       if(playing){
-        splashImg.src = splashImg.src.split('?')[0] + '?t=' + Date.now(); // 重新加载 gif 从头播
+        splashImg.src = GALLERY[gIdx].src.split('?')[0] + '?t=' + Date.now();
         spIco.textContent = '⏸';
+        spTxt.textContent = '轻触暂停';
       }else{
-        splashImg.src = splashImg.src.split('?')[0]; // 重置到第一帧（相当于暂停在开头）
+        splashImg.src = GALLERY[gIdx].src.split('?')[0];
         spIco.textContent = '▶';
+        spTxt.textContent = '轻触播放';
       }
       if(navigator.vibrate) navigator.vibrate(10);
     });
