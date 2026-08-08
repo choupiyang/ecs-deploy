@@ -52,8 +52,8 @@
     .crt3d {
       position: relative;
       flex-shrink: 0;
-      width: 118px;
-      height: 118px;
+      width: 100px;
+      height: 100px;
       margin: 0;
       z-index: 1;
       pointer-events: none;
@@ -63,9 +63,9 @@
     /* 显示器外壳 */
     .crt-body {
       position: absolute;
-      top: 8px; left: 50%;
-      width: 96px; height: 76px;
-      margin-left: -48px;
+      top: 4px; left: 50%;
+      width: 84px; height: 68px;
+      margin-left: -42px;
       background: linear-gradient(160deg, #1A241A, #0C140C);
       border: 1px solid rgba(19, 248, 31, .25);
       border-radius: 10px;
@@ -81,8 +81,8 @@
     /* 屏幕（带桶形畸变感 + 扫描线 + 辉光） */
     .crt-screen {
       position: absolute;
-      top: 8px; left: 8px;
-      width: 80px; height: 60px;
+      top: 7px; left: 7px;
+      width: 70px; height: 54px;
       background: #0A1206;
       border: 1px solid rgba(19, 248, 31, .35);
       border-radius: 6px / 10px;
@@ -128,15 +128,15 @@
       box-shadow: 4px 0 0 #13F81F, 8px 0 0 #13F81F, 12px 0 0 #13F81F;
     }
     /* 像素小人（头+身+手，方块像素风） */
-    .pixel-man { position: absolute; left: 12px; top: 15px; width: 8px; height: 8px; background: #13F81F; box-shadow: 0 8px 0 #0D3D2D; opacity: .95; animation: manBob 3.2s ease-in-out infinite; }
+    .pixel-man { position: absolute; left: 10px; top: 12px; width: 7px; height: 7px; background: #13F81F; box-shadow: 0 7px 0 #0D3D2D; opacity: .95; animation: manBob 3.2s ease-in-out infinite; }
     .pixel-man::before { content: ''; position: absolute; left: -4px; top: 8px; width: 4px; height: 4px; background: #13F81F; box-shadow: 12px 0 0 #13F81F; }
     .pixel-man::after { content: ''; position: absolute; left: 0; top: -5px; width: 6px; height: 5px; background: #2EE6A8; }
     @keyframes manBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
     /* 悬浮像素窗 */
     .pix-win {
       position: absolute;
-      right: 5px; top: 14px;
-      width: 22px; height: 30px;
+      right: 4px; top: 11px;
+      width: 19px; height: 26px;
       background: rgba(19, 248, 31, .06);
       border: 1px solid rgba(19, 248, 31, .4);
       box-shadow: 2px 2px 0 rgba(19, 248, 31, .18);
@@ -165,7 +165,7 @@
     /* CRT 光标 */
     .crt-cursor {
       position: absolute;
-      left: 34px; bottom: 5px;
+      left: 30px; bottom: 4px;
       width: 4px; height: 5px;
       background: #13F81F;
       box-shadow: 0 0 6px #13F81F;
@@ -175,9 +175,9 @@
     /* 底座 */
     .crt-foot {
       position: absolute;
-      bottom: 2px; left: 50%;
-      width: 30px; height: 4px;
-      margin-left: -15px;
+      bottom: -1px; left: 50%;
+      width: 26px; height: 4px;
+      margin-left: -13px;
       background: #162016;
       border-radius: 2px;
       border-bottom: 1px solid rgba(19, 248, 31, .18);
@@ -281,7 +281,7 @@
     .share-btn:active { background: #13F81F; color: #0B100B; border-color: #13F81F; }
 
     /* Hero —— 左右两栏：左 3D 特效方块 + 右文字 */
-    .hero { position: relative; z-index: 5; flex-shrink: 0; margin-top: 6px; display: flex; align-items: flex-start; gap: 12px; }
+    .hero { position: relative; z-index: 5; flex-shrink: 0; margin-top: 5px; display: flex; align-items: flex-start; gap: 12px; }
     .hero-side { flex: 1; min-width: 0; }
     .meta-row {
       display: flex;
@@ -320,7 +320,7 @@
     .title-text { min-width: 0; }
     .pg-title {
       font-family: 'Noto Serif SC', serif;
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 900;
       letter-spacing: -.02em;
       line-height: 1.05;
@@ -341,11 +341,11 @@
     }
     .v-tag.green { color: #2EE6A8; border-color: rgba(46, 230, 168, .3); background: rgba(46, 230, 168, .06); }
     .tagline {
-      margin-top: 5px;
+      margin-top: 4px;
       font-family: 'Noto Sans SC', sans-serif;
-      font-size: 10.5px;
+      font-size: 10px;
       color: #C9D9C9;
-      line-height: 1.45;
+      line-height: 1.4;
     }
     .tagline em { color: #13F81F; font-style: normal; font-weight: 500; }
 
@@ -374,8 +374,9 @@
     .gallery-img {
       display: block;
       width: 100%;
-      aspect-ratio: 4 / 3;
+      height: 74px;
       object-fit: cover;
+      object-position: center top;
       transition: opacity .3s;
     }
     .gallery-img.switching { opacity: 0; }
@@ -392,7 +393,7 @@
       border-radius: 3px;
       font-weight: 500;
     }
-    .gallery-tabs { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+    .gallery-tabs { display: flex; gap: 3px; margin-top: 3px; flex-wrap: wrap; }
     .gtab {
       font-family: 'JetBrains Mono', monospace;
       font-size: 6.5px;
@@ -412,29 +413,31 @@
     .gtab.active { color: #0B100B; background: #13F81F; border-color: #13F81F; font-weight: 500; }
 
     /* Stats */
-    .stats-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
-    .stats-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .stats-section { position: relative; z-index: 5; margin-top: 6px; flex-shrink: 0; }
+    .stats-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
     .stats-title { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #C9D9C9; }
     .stats-badge { font-family: 'JetBrains Mono', monospace; font-size: 6px; letter-spacing: .16em; color: #2EE6A8; border: 1px solid rgba(46, 230, 168, .3); padding: 1px 5px; border-radius: 2px; }
     .stats-chart { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
     .stat-card {
       background: rgba(239, 247, 239, .02);
       border: 1px solid rgba(239, 247, 239, .07);
-      border-radius: 7px;
-      padding: 7px 6px 5px;
+      border-radius: 6px;
+      padding: 5px 6px 4px;
       cursor: pointer;
       transition: all .25s;
       min-width: 0;
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
     }
     .stat-card:active { background: rgba(19, 248, 31, .07); border-color: rgba(19, 248, 31, .3); transform: scale(.96); }
-    .stat-num { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; color: #EFF7EF; line-height: 1; white-space: nowrap; }
+    .stat-num { font-family: 'Noto Serif SC', serif; font-size: 13px; font-weight: 700; color: #EFF7EF; line-height: 1; white-space: nowrap; }
     .stat-num .accent { color: var(--stat-color, #13F81F); }
-    .stat-label { font-size: 7px; color: #7E9A7E; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .stat-mini-chart { display: flex; align-items: flex-end; gap: 2px; height: 12px; margin-top: 4px; }
-    .stat-bar { width: 4px; background: var(--stat-color, #13F81F); opacity: .55; border-radius: 1px; transform-origin: bottom; }
+    .stat-label { font-size: 6.5px; color: #7E9A7E; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .stat-mini-chart { display: none; }
 
     /* Flow */
-    .flow-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .flow-section { position: relative; z-index: 5; margin-top: 6px; flex-shrink: 0; }
     .flow-header { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #C9D9C9; margin-bottom: 4px; }
     .flow-header::after { content: ''; flex: 1; height: 1px; background: rgba(239, 247, 239, .06); }
     .flow-svg { width: 100%; height: auto; display: block; }
@@ -444,22 +447,22 @@
     @keyframes flowPulse { 0%, 100% { stroke-opacity: .4; } 50% { stroke-opacity: 1; } }
 
     /* Features */
-    .features { position: relative; z-index: 5; margin-top: 6px; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+    .features { position: relative; z-index: 5; margin-top: 5px; display: flex; flex-direction: column; gap: 3px; flex-shrink: 0; }
     .feature {
       display: flex;
       align-items: center;
       gap: 9px;
       background: rgba(239, 247, 239, .02);
       border: 1px solid rgba(239, 247, 239, .07);
-      border-radius: 7px;
-      padding: 6px 9px;
+      border-radius: 6px;
+      padding: 5px 9px;
       cursor: pointer;
       transition: all .25s;
     }
     .feature:active { background: rgba(19, 248, 31, .05); border-color: rgba(19, 248, 31, .22); }
     .feature-icon {
-      width: 24px;
-      height: 24px;
+      width: 22px;
+      height: 22px;
       border-radius: 6px;
       background: rgba(19, 248, 31, .1);
       display: flex;
@@ -471,16 +474,16 @@
     .feature-icon.green { background: rgba(46, 230, 168, .1); }
     .feature-icon.green svg { stroke: #2EE6A8; }
     .feature-content { flex: 1; min-width: 0; }
-    .feature-title { font-family: 'Noto Sans SC', sans-serif; font-size: 9.5px; font-weight: 500; color: #EFF7EF; letter-spacing: .02em; }
-    .feature-desc { font-size: 7.5px; color: #7E9A7E; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .feature-title { font-family: 'Noto Sans SC', sans-serif; font-size: 9px; font-weight: 500; color: #EFF7EF; letter-spacing: .02em; }
+    .feature-desc { font-size: 7px; color: #7E9A7E; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .feature-arrow { font-size: 11px; color: #13F81F; opacity: 0; transform: translateX(-2px); transition: all .25s; flex-shrink: 0; }
     .feature:active .feature-arrow { opacity: 1; transform: translateX(2px); }
-    .feature-progress { height: 2px; background: rgba(239, 247, 239, .06); border-radius: 1px; margin-top: 4px; overflow: hidden; }
+    .feature-progress { height: 2px; background: rgba(239, 247, 239, .06); border-radius: 1px; margin-top: 3px; overflow: hidden; }
     .feature-progress-bar { height: 100%; background: linear-gradient(90deg, #13F81F, #2EE6A8); border-radius: 1px; transform-origin: left; animation: progressIn .8s cubic-bezier(.4, 0, .2, 1) forwards; transform: scaleX(0); }
     @keyframes progressIn { to { transform: scaleX(1); } }
 
     /* Tech */
-    .tech-section { position: relative; z-index: 5; margin-top: 7px; flex-shrink: 0; }
+    .tech-section { position: relative; z-index: 5; margin-top: 6px; flex-shrink: 0; }
     .tech-header { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #C9D9C9; margin-bottom: 4px; }
     .tech-pills { display: flex; flex-wrap: wrap; gap: 4px; }
     .tech-pill {
@@ -503,8 +506,8 @@
     .bottombar {
       position: relative;
       z-index: 5;
-      margin-top: 8px;
-      padding-top: 8px;
+      margin-top: 6px;
+      padding-top: 6px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -629,6 +632,10 @@
 
     /* 小屏兜底 */
     @media (max-height: 730px) {
+      .gallery-img { height: 76px; }
+      .feature { padding: 4px 8px; }
+      .stat-card { padding: 4px 5px 3px; }
+      .flow-svg { display: none; }
       .pg-title { font-size: 20px; }
       .pg-stamp { width: 34px; height: 34px; font-size: 16px; }
       .tagline { font-size: 9.5px; }
@@ -636,10 +643,10 @@
       .feature-title { font-size: 9px; }
       .stat-num { font-size: 13.5px; }
       .sheet { max-height: 80%; }
-      .crt3d { width: 92px; height: 92px; }
-      .crt-body { width: 76px; height: 62px; margin-left: -38px; top: 6px; }
-      .crt-screen { width: 60px; height: 46px; top: 6px; left: 7px; }
-      .pix-win { width: 16px; height: 22px; right: 4px; top: 10px; }
+      .crt3d { width: 84px; height: 84px; }
+      .crt-body { width: 70px; height: 56px; margin-left: -35px; top: 4px; }
+      .crt-screen { width: 56px; height: 44px; top: 5px; left: 6px; }
+      .pix-win { width: 14px; height: 20px; right: 3px; top: 8px; }
       .hero { gap: 8px; }
     }
   </style>
@@ -701,7 +708,7 @@
     <div class="gallery reveal">
       <div class="gallery-header">Gallery · 真实生成效果</div>
       <div class="gallery-screen" id="galScreen">
-        <img class="gallery-img" id="galImg" src="cards/tait-crt-interface/classic-a.jpg" alt="CRT 生成效果">
+        <img class="gallery-img" id="galImg" src="../cards/tait-crt-interface/classic-a.jpg" alt="CRT 生成效果">
         <span class="gallery-caption" id="galCap">经典 · CLASSIC</span>
       </div>
       <div class="gallery-tabs">
@@ -762,51 +769,51 @@
     <!-- Flow -->
     <div class="flow-section reveal">
       <div class="flow-header">Pipeline · 从人像到 CRT 插画</div>
-      <svg class="flow-svg" viewBox="0 0 350 44" fill="none">
+      <svg class="flow-svg" viewBox="0 0 350 36" fill="none">
         <defs>
           <marker id="tc-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
             <path d="M0,0 L0,6 L6,3 z" fill="#13F81F" fill-opacity=".6"/>
           </marker>
         </defs>
         <g class="flow-node" id="flow-intake">
-          <rect x="3" y="9" width="52" height="26" rx="5" fill="rgba(19,248,31,.08)" stroke="#13F81F" stroke-width="1" stroke-opacity=".5"/>
-          <text x="29" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#EFF7EF" text-anchor="middle">两阶段入口</text>
-          <text x="29" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#7E9A7E" text-anchor="middle">选色卡+比例</text>
+          <rect x="3" y="6" width="52" height="24" rx="5" fill="rgba(19,248,31,.08)" stroke="#13F81F" stroke-width="1" stroke-opacity=".5"/>
+          <text x="29" y="18" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#EFF7EF" text-anchor="middle">两阶段入口</text>
+          <text x="29" y="26" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#7E9A7E" text-anchor="middle">选色卡+比例</text>
         </g>
         <path class="flow-arrow" d="M58 22 L70 22" stroke="#13F81F" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#tc-arrow)"/>
         <g class="flow-node" id="flow-anchor">
-          <rect x="73" y="9" width="58" height="26" rx="5" fill="rgba(19,248,31,.12)" stroke="#13F81F" stroke-width="1.2"/>
-          <text x="102" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#7BFF7E" text-anchor="middle">主体锚定</text>
-          <text x="102" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#7E9A7E" text-anchor="middle">识别+锁定名单</text>
+          <rect x="73" y="6" width="58" height="24" rx="5" fill="rgba(19,248,31,.12)" stroke="#13F81F" stroke-width="1.2"/>
+          <text x="102" y="18" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#7BFF7E" text-anchor="middle">主体锚定</text>
+          <text x="102" y="26" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#7E9A7E" text-anchor="middle">识别+锁定名单</text>
         </g>
         <path class="flow-arrow" d="M134 22 L146 22" stroke="#2EE6A8" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#tc-arrow)" style="animation-delay: .3s"/>
         <g class="flow-node" id="flow-cartoon">
-          <rect x="149" y="9" width="58" height="26" rx="5" fill="rgba(46,230,168,.12)" stroke="#2EE6A8" stroke-width="1.2"/>
-          <text x="178" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#7FE8C4" text-anchor="middle">漫画化突变</text>
-          <text x="178" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#7E9A7E" text-anchor="middle">5-9 块面质块</text>
+          <rect x="149" y="6" width="58" height="24" rx="5" fill="rgba(46,230,168,.12)" stroke="#2EE6A8" stroke-width="1.2"/>
+          <text x="178" y="18" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#7FE8C4" text-anchor="middle">漫画化突变</text>
+          <text x="178" y="26" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#7E9A7E" text-anchor="middle">5-9 块面质块</text>
         </g>
         <path class="flow-arrow" d="M210 22 L222 22" stroke="#13F81F" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#tc-arrow)" style="animation-delay: .6s"/>
         <g class="flow-node" id="flow-lattice">
-          <rect x="225" y="9" width="58" height="26" rx="5" fill="rgba(19,248,31,.08)" stroke="#13F81F" stroke-width="1" stroke-opacity=".5"/>
-          <text x="254" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#EFF7EF" text-anchor="middle">像素拓扑</text>
-          <text x="254" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#7E9A7E" text-anchor="middle">全局 p×p 格子</text>
+          <rect x="225" y="6" width="58" height="24" rx="5" fill="rgba(19,248,31,.08)" stroke="#13F81F" stroke-width="1" stroke-opacity=".5"/>
+          <text x="254" y="18" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#EFF7EF" text-anchor="middle">像素拓扑</text>
+          <text x="254" y="26" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#7E9A7E" text-anchor="middle">全局 p×p 格子</text>
         </g>
         <path class="flow-arrow" d="M286 22 L298 22" stroke="#2EE6A8" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#tc-arrow)" style="animation-delay: .9s"/>
         <g class="flow-node" id="flow-finalize">
-          <rect x="301" y="9" width="46" height="26" rx="5" fill="rgba(46,230,168,.08)" stroke="#2EE6A8" stroke-width="1" stroke-opacity=".5"/>
+          <rect x="301" y="6" width="46" height="24" rx="5" fill="rgba(46,230,168,.08)" stroke="#2EE6A8" stroke-width="1" stroke-opacity=".5"/>
           <text x="324" y="22" font-family="JetBrains Mono, monospace" font-size="5.5" fill="#EFF7EF" text-anchor="middle">后处理</text>
-          <text x="324" y="31" font-family="JetBrains Mono, monospace" font-size="4" fill="#7E9A7E" text-anchor="middle">CRT畸变</text>
+          <text x="324" y="26" font-family="JetBrains Mono, monospace" font-size="4" fill="#7E9A7E" text-anchor="middle">CRT畸变</text>
         </g>
-        <circle cx="64" cy="22" r="2" fill="#13F81F">
+        <circle cx="64" cy="18" r="2" fill="#13F81F">
           <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
         </circle>
-        <circle cx="140" cy="22" r="2" fill="#2EE6A8">
+        <circle cx="140" cy="18" r="2" fill="#2EE6A8">
           <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0.5s"/>
         </circle>
-        <circle cx="216" cy="22" r="2" fill="#13F81F">
+        <circle cx="216" cy="18" r="2" fill="#13F81F">
           <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="1s"/>
         </circle>
-        <circle cx="292" cy="22" r="2" fill="#2EE6A8">
+        <circle cx="292" cy="18" r="2" fill="#2EE6A8">
           <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="1.3s"/>
         </circle>
       </svg>
@@ -847,19 +854,8 @@
         </div>
         <span class="feature-arrow">→</span>
       </div>
-      <div class="feature" data-f="3">
-        <div class="feature-icon green">
-          <svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/><path d="M9 12l2 2 4-4"/></svg>
-        </div>
-        <div class="feature-content">
-          <div class="feature-title">CRT 信号表面 · 扫描线辉光噪点</div>
-          <div class="feature-desc">扫描线 + 辉光 + 噪点 + 信号干扰，四周桶形畸变</div>
-          <div class="feature-progress"><div class="feature-progress-bar" style="width: 93%"></div></div>
-        </div>
-        <span class="feature-arrow">→</span>
-      </div>
       <div class="feature" data-f="4">
-        <div class="feature-icon">
+        <div class="feature-icon green">
           <svg viewBox="0 0 24 24"><path d="M4 7h16v13H4z"/><path d="M8 7V4h8v3"/><path d="M9 12h6M9 15h4"/></svg>
         </div>
         <div class="feature-content">
@@ -919,12 +915,12 @@
 
     // 图库：真实生成效果图
     var GALLERY = [
-      {img: 'cards/tait-crt-interface/classic-a.jpg', cap: '经典 · CLASSIC', key: 'g-classic'},
-      {img: 'cards/tait-crt-interface/geek01-a.jpg', cap: '极客01 · GEEK 01', key: 'g-geek01'},
-      {img: 'cards/tait-crt-interface/game01-a.jpg', cap: '游戏01 · GAME 01', key: 'g-game01'},
-      {img: 'cards/tait-crt-interface/fendai-a.jpg', cap: '粉黛 · FENDAI', key: 'g-fendai'},
-      {img: 'cards/tait-crt-interface/color-card.jpg', cap: '8 套色卡 · COLOR CARD', key: 'g-colorcard'},
-      {img: 'cards/tait-crt-interface/ref-01.jpg', cap: '参考图 · SOURCE', key: 'g-ref'}
+      {img: '../cards/tait-crt-interface/classic-a.jpg', cap: '经典 · CLASSIC', key: 'g-classic'},
+      {img: '../cards/tait-crt-interface/geek01-a.jpg', cap: '极客01 · GEEK 01', key: 'g-geek01'},
+      {img: '../cards/tait-crt-interface/game01-a.jpg', cap: '游戏01 · GAME 01', key: 'g-game01'},
+      {img: '../cards/tait-crt-interface/fendai-a.jpg', cap: '粉黛 · FENDAI', key: 'g-fendai'},
+      {img: '../cards/tait-crt-interface/color-card.jpg', cap: '8 套色卡 · COLOR CARD', key: 'g-colorcard'},
+      {img: '../cards/tait-crt-interface/ref-01.jpg', cap: '参考图 · SOURCE', key: 'g-ref'}
     ];
     var galImg=$('#galImg'), galCap=$('#galCap');
 
