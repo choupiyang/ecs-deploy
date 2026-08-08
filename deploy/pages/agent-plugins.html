@@ -1071,13 +1071,14 @@
 
     $('#shareBtn').addEventListener('click', function(){
       var url = location.href.split('?')[0];
+      var intro = 'Agent Plugins — AI 组件打包标准';
       var sub = '你可以用任何AI工具订阅我的博客文章：https://mindresonance.online/youngsinsight/subscribe.html';
-      var full = url + '\n\n' + sub;
+      var full = intro + '\n' + url + '\n\n' + sub;
       if(navigator.share){
-        navigator.share({title:'Agent Plugins — AI 组件打包标准', text: sub, url: url}).catch(function(){});
+        navigator.share({title:'Agent Plugins — AI 组件打包标准', text: full, url: url}).catch(function(){});
       }else if(navigator.clipboard){
         navigator.clipboard.writeText(full).then(function(){
-          toast.textContent = '已复制：链接 + 订阅推荐';
+          toast.textContent = '已复制：介绍 + 链接 + 订阅推荐';
           toast.classList.add('show');
           setTimeout(function(){ toast.classList.remove('show'); }, 1800);
         });
