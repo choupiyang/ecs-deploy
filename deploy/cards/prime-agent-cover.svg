@@ -13,42 +13,49 @@
       <stop offset="0" stop-color="#38BDF8" stop-opacity="0.35"/>
       <stop offset="1" stop-color="#38BDF8" stop-opacity="0"/>
     </radialGradient>
-    <filter id="soft" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="3"/>
-    </filter>
   </defs>
 
   <!-- 背景 -->
   <rect width="200" height="356" fill="url(#bg)"/>
-  <!-- 网格 -->
+  <!-- 网格（缓慢漂移动画） -->
   <g stroke="#38BDF8" stroke-opacity="0.07" stroke-width="0.5">
-    <line x1="0" y1="40" x2="200" y2="40"/><line x1="0" y1="80" x2="200" y2="80"/>
-    <line x1="0" y1="120" x2="200" y2="120"/><line x1="0" y1="160" x2="200" y2="160"/>
-    <line x1="0" y1="200" x2="200" y2="200"/><line x1="0" y1="240" x2="200" y2="240"/>
-    <line x1="0" y1="280" x2="200" y2="280"/><line x1="0" y1="320" x2="200" y2="320"/>
-    <line x1="40" y1="0" x2="40" y2="356"/><line x1="80" y1="0" x2="80" y2="356"/>
-    <line x1="120" y1="0" x2="120" y2="356"/><line x1="160" y1="0" x2="160" y2="356"/>
+    <line x1="0" y1="40" x2="200" y2="40"><animate attributeName="y1" values="40;44;40" dur="6s" repeatCount="indefinite"/></line>
+    <line x1="0" y1="80" x2="200" y2="80"><animate attributeName="y1" values="80;84;80" dur="6s" repeatCount="indefinite"/></line>
+    <line x1="0" y1="120" x2="200" y2="120"><animate attributeName="y1" values="120;124;120" dur="6s" repeatCount="indefinite"/></line>
+    <line x1="0" y1="160" x2="200" y2="160"><animate attributeName="y1" values="160;164;160" dur="6s" repeatCount="indefinite"/></line>
+    <line x1="0" y1="200" x2="200" y2="200"><animate attributeName="y1" values="200;204;200" dur="6s" repeatCount="indefinite"/></line>
+    <line x1="0" y1="240" x2="200" y2="240"><animate attributeName="y1" values="240;244;240" dur="6s" repeatCount="indefinite"/></line>
+    <line x1="0" y1="280" x2="200" y2="280"><animate attributeName="y1" values="280;284;280" dur="6s" repeatCount="indefinite"/></line>
+    <line x1="0" y1="320" x2="200" y2="320"><animate attributeName="y1" values="320;324;320" dur="6s" repeatCount="indefinite"/></line>
+    <line x1="40" y1="0" x2="40" y2="356"><animate attributeName="x1" values="40;44;40" dur="7s" repeatCount="indefinite"/></line>
+    <line x1="80" y1="0" x2="80" y2="356"><animate attributeName="x1" values="80;84;80" dur="7s" repeatCount="indefinite"/></line>
+    <line x1="120" y1="0" x2="120" y2="356"><animate attributeName="x1" values="120;124;120" dur="7s" repeatCount="indefinite"/></line>
+    <line x1="160" y1="0" x2="160" y2="356"><animate attributeName="x1" values="160;164;160" dur="7s" repeatCount="indefinite"/></line>
   </g>
-  <!-- 顶部辉光 -->
-  <ellipse cx="100" cy="150" rx="90" ry="120" fill="url(#glow)"/>
+  <!-- 顶部辉光（呼吸） -->
+  <ellipse cx="100" cy="150" rx="90" ry="120" fill="url(#glow)">
+    <animate attributeName="opacity" values="0.6;1;0.6" dur="3.2s" repeatCount="indefinite"/>
+  </ellipse>
 
-  <!-- 3D 递归终端立方体（斜等测投影） -->
+  <!-- 3D 递归终端立方体（整体轻微浮动 + 顶部/右侧面呼吸） -->
   <g transform="translate(100, 148)">
+    <animateTransform attributeName="transform" type="translate" values="100,148;100,142;100,148" dur="4s" repeatCount="indefinite" additive="replace"/>
     <!-- 外立方体（青蓝线框） -->
     <g stroke="#38BDF8" stroke-width="1.2" fill="none" opacity="0.95">
-      <!-- 前面 -->
-      <rect x="-38" y="-30" width="76" height="60" fill="#0A1526" stroke="#38BDF8"/>
-      <!-- 顶面 -->
+      <rect x="-38" y="-30" width="76" height="60" fill="#0A1526" stroke="#38BDF8">
+        <animate attributeName="stroke-opacity" values="1;0.6;1" dur="2.4s" repeatCount="indefinite"/>
+      </rect>
       <polygon points="-38,-30 -18,-45 58,-45 38,-30" fill="#0D1B30" stroke="#38BDF8"/>
-      <!-- 右面 -->
-      <polygon points="38,-30 58,-45 58,15 38,30" fill="#081120" stroke="#38BDF8"/>
+      <polygon points="38,-30 58,-45 58,15 38,30" fill="#081120" stroke="#38BDF8">
+        <animate attributeName="stroke-opacity" values="1;0.7;1" dur="3.1s" repeatCount="indefinite"/>
+      </polygon>
     </g>
     <!-- 前面屏幕细节：菜单栏 -->
     <g stroke="#38BDF8" stroke-width="0.8">
       <line x1="-32" y1="-25" x2="32" y2="-25" opacity="0.7"/>
       <line x1="-32" y1="-25" x2="-22" y2="-25" opacity="0.4"/>
     </g>
-    <!-- 前面屏幕：代码行 -->
+    <!-- 前面屏幕：代码行（逐行显现） -->
     <g fill="#7DD3FC" font-family="monospace" font-size="5" opacity="0.9">
       <text x="-32" y="-15">$ prime-agent</text>
       <text x="-32" y="-7" fill="#34D399">✓ kernel alive</text>
@@ -56,25 +63,33 @@
       <text x="-32" y="9" fill="#34D399">✓ child #2 admitted</text>
       <text x="-32" y="17" fill="#7DD3FC">/refine applied</text>
     </g>
-    <!-- 光标 -->
-    <rect x="-32" y="19" width="10" height="2" fill="#38BDF8" opacity="0.9"/>
-    <!-- 内层递归子终端 -->
+    <!-- 光标（闪烁） -->
+    <rect x="-32" y="19" width="10" height="2" fill="#38BDF8" opacity="0.9">
+      <animate attributeName="opacity" values="1;0.2;1" dur="1s" repeatCount="indefinite"/>
+    </rect>
+    <!-- 内层递归子终端（脉冲） -->
     <g transform="translate(-6, -4)">
-      <rect x="-14" y="-12" width="28" height="22" fill="#0B1830" stroke="#7DD3FC" stroke-width="0.8" rx="2"/>
+      <rect x="-14" y="-12" width="28" height="22" fill="#0B1830" stroke="#7DD3FC" stroke-width="0.8" rx="2">
+        <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="2.2s" repeatCount="indefinite"/>
+      </rect>
       <text x="-10" y="-1" fill="#38BDF8" font-family="monospace" font-size="5" opacity="0.85">rlm(</text>
       <text x="-10" y="6" fill="#38BDF8" font-family="monospace" font-size="5" opacity="0.85">...)</text>
     </g>
-    <!-- 扫描线 -->
+    <!-- 扫描线（移动） -->
     <g stroke="#38BDF8" stroke-width="0.3" opacity="0.12">
-      <line x1="-38" y1="-20" x2="38" y2="-20"/><line x1="-38" y1="-10" x2="38" y2="-10"/>
-      <line x1="-38" y1="0" x2="38" y2="0"/><line x1="-38" y1="10" x2="38" y2="10"/>
-      <line x1="-38" y1="20" x2="38" y2="20"/>
+      <line x1="-38" y1="-20" x2="38" y2="-20"><animate attributeName="y1" values="-20;-14;-20" dur="1.4s" repeatCount="indefinite"/></line>
+      <line x1="-38" y1="-10" x2="38" y2="-10"><animate attributeName="y1" values="-10;-4;-10" dur="1.4s" repeatCount="indefinite"/></line>
+      <line x1="-38" y1="0" x2="38" y2="0"><animate attributeName="y1" values="0;6;0" dur="1.4s" repeatCount="indefinite"/></line>
+      <line x1="-38" y1="10" x2="38" y2="10"><animate attributeName="y1" values="10;16;10" dur="1.4s" repeatCount="indefinite"/></line>
+      <line x1="-38" y1="20" x2="38" y2="20"><animate attributeName="y1" values="20;26;20" dur="1.4s" repeatCount="indefinite"/></line>
     </g>
   </g>
 
   <!-- 标题区 -->
   <g transform="translate(100, 260)">
-    <rect x="-88" y="-2" width="176" height="42" rx="6" fill="#0A1526" stroke="#38BDF8" stroke-opacity="0.35"/>
+    <rect x="-88" y="-2" width="176" height="42" rx="6" fill="#0A1526" stroke="#38BDF8" stroke-opacity="0.35">
+      <animate attributeName="stroke-opacity" values="0.35;0.7;0.35" dur="3.6s" repeatCount="indefinite"/>
+    </rect>
     <text x="0" y="14" text-anchor="middle" fill="#F0F6FC" font-family="'Noto Serif SC', serif" font-size="16" font-weight="900">Prime Agent</text>
     <text x="0" y="30" text-anchor="middle" fill="#7DD3FC" font-family="'JetBrains Mono', monospace" font-size="7" letter-spacing="2">SELF-IMPROVING RLM AGENT</text>
   </g>

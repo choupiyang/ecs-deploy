@@ -252,8 +252,8 @@
     }
     .tagline em { color: var(--accent); font-style: normal; font-weight: 500; }
 
-    /* ── 核心展示区：终端窗口（flex 弹性吸收剩余空间） ── */
-    .termbox {
+    /* ── 核心展示区：官网动画（flex 弹性吸收剩余空间） ── */
+    .splashbox {
       position: relative;
       margin-top: 9px;
       flex: 1 1 auto;
@@ -267,70 +267,70 @@
       display: flex;
       flex-direction: column;
     }
-    .termbox:active { border-color: rgba(56, 189, 248, .7); transform: scale(.995); }
-    .termbar {
+    .splashbox:active { border-color: rgba(56, 189, 248, .7); }
+    .splash-body {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      background: #050A16;
+      overflow: hidden;
+    }
+    .splash-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+    }
+    .splash-overlay {
+      position: absolute;
+      right: 8px; bottom: 7px;
       display: flex;
       align-items: center;
       gap: 5px;
-      padding: 6px 9px;
-      background: rgba(56, 189, 248, .07);
-      border-bottom: 1px solid rgba(56, 189, 248, .18);
-      flex-shrink: 0;
-    }
-    .termbar .tb-dot { width: 7px; height: 7px; border-radius: 50%; }
-    .termbar .tb-dot:nth-child(1) { background: #EF4444; }
-    .termbar .tb-dot:nth-child(2) { background: #F59E0B; }
-    .termbar .tb-dot:nth-child(3) { background: #10B981; }
-    .termbar .tb-title {
-      margin-left: 6px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 7px;
-      letter-spacing: .1em;
-      color: #7C8AA5;
-    }
-    .term-body {
-      flex: 1;
-      padding: 8px 10px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 8px;
-      line-height: 1.7;
-      color: #A8C5E0;
-      overflow: hidden;
-      white-space: pre;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      align-items: flex-start;
-    }
-    .term-body > span, .term-body > .prompt { flex-shrink: 0; }
-    /* 滚动条样式 */
-    .term-body::-webkit-scrollbar { width: 3px; }
-    .term-body::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, .3); border-radius: 2px; }
-    .term-body .prompt { color: #38BDF8; }
-    .term-body .ok { color: #34D399; }
-    .term-body .dim { color: #5B6B85; }
-    .term-cursor {
-      display: inline-block;
-      width: 7px; height: 10px;
-      background: #38BDF8;
-      vertical-align: -2px;
-      animation: cursorBlink 1.1s steps(2) infinite;
-    }
-    .term-hint {
-      position: absolute;
-      right: 8px; bottom: 7px;
+      background: rgba(5, 10, 22, .85);
+      border: 1px solid rgba(56, 189, 248, .35);
+      border-radius: 4px;
+      padding: 3px 8px;
       font-family: 'JetBrains Mono', monospace;
       font-size: 6.5px;
-      letter-spacing: .1em;
-      color: #0B1A2E;
-      background: rgba(56, 189, 248, .88);
-      padding: 2px 7px;
-      border-radius: 3px;
-      font-weight: 500;
+      color: #7DD3FC;
       z-index: 5;
-      animation: hintPulse 2.2s ease-in-out infinite;
     }
-    @keyframes hintPulse { 0%,100% { opacity: 1; } 50% { opacity: .6; } }
+    .sp-ico { font-size: 8px; }
+
+    /* ── 终端小条 ── */
+    .term-strip {
+      margin-top: 8px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid rgba(56, 189, 248, .18);
+      border-radius: 6px;
+      padding: 7px 10px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .term-strip:active { transform: scale(.98); border-color: rgba(56, 189, 248, .5); background: rgba(56, 189, 248, .05); }
+    .term-strip .ts-ico { font-size: 12px; flex-shrink: 0; }
+    .term-strip .ts-txt {
+      flex: 1;
+      min-width: 0;
+      font-size: 8px;
+      color: #A8B8D0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .term-strip .ts-txt em { color: #7DD3FC; font-style: normal; font-family: 'JetBrains Mono', monospace; }
+    .term-strip .ts-go {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      color: #38BDF8;
+      flex-shrink: 0;
+    }
 
     /* ── Stats ── */
     .stats-section { margin-top: 9px; flex-shrink: 0; }
@@ -629,6 +629,8 @@
       .features { margin-top: 7px; }
       .tech-section { margin-top: 6px; }
       .bottombar { margin-top: 7px; }
+      .term-strip { margin-top: 6px; padding: 6px 9px; }
+      .term-strip .ts-txt { font-size: 7px; }
     }
   </style>
 </head>
@@ -650,15 +652,6 @@
 
     <!-- Hero -->
     <div class="hero reveal">
-      <div class="rec3d" id="rec3d">
-        <div class="cube-face face-front"><span class="code-line">$ prime-agent</span><span class="code-line">✓ session ready</span><span class="code-line">rlm() spawned</span><span class="code-line">✓ child #2 done</span><span class="code-line">/refine applied</span><span class="cursor-bar"></span></div>
-        <div class="cube-face face-back"><span class="code-line">context: 8192</span><span class="code-line">✓ kernel alive</span><span class="code-line">goal: shipped</span><span class="code-line">✓ heartbeat</span><span class="code-line">autonomous on</span><span class="cursor-bar"></span></div>
-        <div class="cube-face face-right"><span class="code-line">ipython ⟶</span><span class="code-line">%cd project</span><span class="code-line">run tests ✓</span><span class="code-line">save state</span><span class="code-line">✓ compacted</span><span class="cursor-bar"></span></div>
-        <div class="cube-face face-left"><span class="code-line">agent msg</span><span class="code-line">→ parent ✓</span><span class="code-line">schedule 9am</span><span class="code-line">✓ retained</span><span class="code-line">daemon on</span><span class="cursor-bar"></span></div>
-        <div class="cube-face face-top"><span class="code-line">/refine</span><span class="code-line">memory ↑</span><span class="code-line">skill new</span><span class="code-line">✓ evidence</span><span class="code-line">rollback ok</span><span class="cursor-bar"></span></div>
-        <div class="cube-face face-bottom"><span class="code-line">rlm(...)</span><span class="code-line">child #1 ✓</span><span class="code-line">child #2 ✓</span><span class="code-line">merge diff</span><span class="code-line">✓ committed</span><span class="cursor-bar"></span></div>
-        <div class="inner-cube"></div>
-      </div>
       <div class="hero-side">
         <div class="pg-row">
           <div class="pg-stamp" id="stampBtn">PA</div>
@@ -671,25 +664,31 @@
         </div>
         <div class="tagline">自改进递归语言模型 Agent —— 持久 Python REPL 里 <em>编程式</em> 完成编码与研究长任务，/refine 持续进化。</div>
       </div>
+      <div class="rec3d" id="rec3d">
+        <div class="cube-face face-front"><span class="code-line">$ prime-agent</span><span class="code-line">✓ session ready</span><span class="code-line">rlm() spawned</span><span class="code-line">✓ child #2 done</span><span class="code-line">/refine applied</span><span class="cursor-bar"></span></div>
+        <div class="cube-face face-back"><span class="code-line">context: 8192</span><span class="code-line">✓ kernel alive</span><span class="code-line">goal: shipped</span><span class="code-line">✓ heartbeat</span><span class="code-line">autonomous on</span><span class="cursor-bar"></span></div>
+        <div class="cube-face face-right"><span class="code-line">ipython ⟶</span><span class="code-line">%cd project</span><span class="code-line">run tests ✓</span><span class="code-line">save state</span><span class="code-line">✓ compacted</span><span class="cursor-bar"></span></div>
+        <div class="cube-face face-left"><span class="code-line">agent msg</span><span class="code-line">→ parent ✓</span><span class="code-line">schedule 9am</span><span class="code-line">✓ retained</span><span class="code-line">daemon on</span><span class="cursor-bar"></span></div>
+        <div class="cube-face face-top"><span class="code-line">/refine</span><span class="code-line">memory ↑</span><span class="code-line">skill new</span><span class="code-line">✓ evidence</span><span class="code-line">rollback ok</span><span class="cursor-bar"></span></div>
+        <div class="cube-face face-bottom"><span class="code-line">rlm(...)</span><span class="code-line">child #1 ✓</span><span class="code-line">child #2 ✓</span><span class="code-line">merge diff</span><span class="code-line">✓ committed</span><span class="cursor-bar"></span></div>
+        <div class="inner-cube"></div>
+      </div>
     </div>
 
-    <!-- 核心展示区：终端 -->
-    <div class="termbox reveal" id="termBox">
-      <div class="termbar"><span class="tb-dot"></span><span class="tb-dot"></span><span class="tb-dot"></span><span class="tb-title">prime-agent — RLM session</span></div>
-      <div class="term-body" id="termBody"><span class="prompt">$</span> prime-agent
-✓ daemon ready · ipython kernel alive · t=0.04s
-<span class="prompt">In [1]:</span> <span class="dim">import</span> prime_agent <span class="dim">as</span> pa
-<span class="prompt">In [2]:</span> handle = <span class="ok">await pa.rlm</span>(<span class="dim">"review auth flow"</span>, name=<span class="dim">"auth"</span>)
-<span class="prompt">In [3]:</span> <span class="ok">✓</span> child admitted <span class="dim">·</span> review running in background
-<span class="prompt">In [4]:</span> <span class="ok">await agent_message.send</span>(<span class="dim">"any findings?"</span>, role=<span class="dim">"child"</span>)
-<span class="prompt">In [5]:</span> <span class="ok">✓</span> <span class="dim">2</span> issues found <span class="dim">·</span> patches applied
-<span class="prompt">In [6]:</span> <span class="ok">await pa.rlm</span>(<span class="dim">"run integration suite"</span>, name=<span class="dim">"e2e"</span>)
-<span class="prompt">In [7]:</span> <span class="ok">✓</span> e2e admitted <span class="dim">·</span> 12 specs queued
-<span class="prompt">In [8]:</span> <span class="dim">%cd</span> /repo <span class="dim">&&</span> <span class="ok">run tests</span>
-<span class="prompt">In [9]:</span> <span class="ok">✓</span> 128 passed <span class="dim">·</span> coverage 94%
-<span class="prompt">In [10]:</span> <span class="ok">await agent_message.send</span>(<span class="dim">"merge?"</span>, role=<span class="dim">"parent"</span>)
-<span class="prompt">In [11]:</span> <span class="ok">✓</span> merged <span class="dim">·</span> <span class="ok">/refine</span> lesson saved<span class="term-cursor"></span></div>
-      <div class="term-hint">轻触查看 RLM 会话</div>
+    <!-- 核心展示区：官网动画 -->
+    <div class="splashbox reveal" id="splashBox">
+      <div class="termbar"><span class="tb-dot"></span><span class="tb-dot"></span><span class="tb-dot"></span><span class="tb-title">primeintellect.ai — onboarding</span></div>
+      <div class="splash-body" id="splashBody">
+        <img class="splash-img" id="splashImg" src="../cards/prime-agent/splash.gif" alt="Prime Agent 官网动画">
+        <div class="splash-overlay" id="splashOverlay"><span class="sp-ico" id="spIco">⏸</span><span class="sp-txt">轻触暂停/播放</span></div>
+      </div>
+    </div>
+
+    <!-- 终端小条：点击弹窗 -->
+    <div class="term-strip reveal" id="termBox">
+      <span class="ts-ico">⚙️</span>
+      <span class="ts-txt">RLM 会话实录 · <em>rlm()</em> 子代理 + <em>/refine</em> 自改进</span>
+      <span class="ts-go">查看 →</span>
     </div>
 
     <!-- Stats -->
@@ -900,6 +899,19 @@
       el.addEventListener('click', function(){ openSheet('t'+el.dataset.t); });
     });
     $('#termBox').addEventListener('click', function(){ openSheet('term'); });
+    // 官网动画：点击暂停/播放
+    var splashImg = $('#splashImg'), spIco = $('#spIco'), playing = true;
+    $('#splashBox').addEventListener('click', function(){
+      playing = !playing;
+      if(playing){
+        splashImg.src = splashImg.src.split('?')[0] + '?t=' + Date.now(); // 重新加载 gif 从头播
+        spIco.textContent = '⏸';
+      }else{
+        splashImg.src = splashImg.src.split('?')[0]; // 重置到第一帧（相当于暂停在开头）
+        spIco.textContent = '▶';
+      }
+      if(navigator.vibrate) navigator.vibrate(10);
+    });
     $('#stampBtn').addEventListener('click', function(){ openSheet('story'); });
     $('#brandBtn').addEventListener('click', function(){ openSheet('story'); });
     $('#sheetClose').addEventListener('click', closeSheet);
