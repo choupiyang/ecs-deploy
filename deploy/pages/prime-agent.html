@@ -721,15 +721,16 @@
 
     <!-- 核心展示区：官网动画/截图 -->
     <div class="splashbox reveal" id="splashBox">
-      <div class="termbar"><span class="tb-dot"></span><span class="tb-dot"></span><span class="tb-dot"></span><span class="tb-title" id="tbTitle">primeintellect.ai — onboarding</span></div>
+      <div class="termbar"><span class="tb-dot"></span><span class="tb-dot"></span><span class="tb-dot"></span><span class="tb-title" id="tbTitle">primeintellect.ai — RL 环境六边形网格</span></div>
       <div class="splash-body" id="splashBody">
-        <img class="splash-img" id="splashImg" src="../cards/prime-agent/splash.gif" alt="Prime Agent 官网动画">
+        <img class="splash-img" id="splashImg" src="../cards/prime-agent/rl-environments.svg" alt="Prime Agent 官网图">
         <div class="splash-tabs" id="splashTabs">
           <button class="stab active" data-i="0"></button>
           <button class="stab" data-i="1"></button>
           <button class="stab" data-i="2"></button>
           <button class="stab" data-i="3"></button>
           <button class="stab" data-i="4"></button>
+          <button class="stab" data-i="5"></button>
         </div>
         <div class="splash-overlay" id="splashOverlay"><span class="sp-ico" id="spIco">⏸</span><span class="sp-txt" id="spTxt">轻触暂停</span></div>
       </div>
@@ -952,6 +953,7 @@
     $('#termBox').addEventListener('click', function(){ openSheet('term'); });
     // 官网图库：5 张切换（gif + 4 截图）
     var GALLERY = [
+      {src: '../cards/prime-agent/rl-environments.svg', title: 'primeintellect.ai — RL 环境六边形网格', anim: false},
       {src: '../cards/prime-agent/splash.gif', title: 'primeintellect.ai — onboarding 动画', anim: true},
       {src: '../cards/prime-agent/agents-view.jpg', title: 'primeintellect.ai — agents 会话列表', anim: false},
       {src: '../cards/prime-agent/tui-view.jpg', title: 'primeintellect.ai — TUI 界面', anim: false},
