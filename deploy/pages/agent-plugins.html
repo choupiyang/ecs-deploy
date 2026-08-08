@@ -1075,7 +1075,8 @@
       var sub = '你可以用任何AI工具订阅我的博客文章：https://mindresonance.online/youngsinsight/subscribe.html';
       var full = intro + '\n' + url + '\n\n' + sub;
       if(navigator.share){
-        navigator.share({title:'Agent Plugins — AI 组件打包标准', text: full, url: url}).catch(function(){});
+        // 注意：text 已含链接，勿再传 url，否则部分平台会重复追加
+        navigator.share({title:'Agent Plugins — AI 组件打包标准', text: full}).catch(function(){});
       }else if(navigator.clipboard){
         navigator.clipboard.writeText(full).then(function(){
           toast.textContent = '已复制：介绍 + 链接 + 订阅推荐';
