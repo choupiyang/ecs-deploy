@@ -31,8 +31,8 @@
     .stage {
       position: relative;
       aspect-ratio: 9 / 16;
-      height: min(100vh, calc(100vw * 16 / 9));
-      width: min(100vw, calc(100vh * 9 / 16));
+      height: min(100dvh, calc(100vw * 16 / 9));
+      width: min(100vw, calc(100dvh * 9 / 16));
       background: #0B100B;
       overflow: hidden;
       box-shadow: 0 30px 80px rgba(0,0,0,.6);
@@ -42,6 +42,12 @@
       perspective: 1000px;
       transform-style: preserve-3d;
       transition: transform .12s ease-out;
+    }
+    @supports not (height: 100dvh) {
+      .stage {
+        height: min(100vh, calc(100vw * 16 / 9));
+        width: min(100vw, calc(100vh * 9 / 16));
+      }
     }
     .tilt-deep { transform: translateZ(-50px) scale(1.08); }
     .tilt-mid { transform: translateZ(0); }
@@ -374,7 +380,7 @@
     .gallery-img {
       display: block;
       width: 100%;
-      height: 74px;
+      height: 96px;
       object-fit: cover;
       object-position: center top;
       transition: opacity .3s;
@@ -394,6 +400,20 @@
       font-weight: 500;
     }
     .gallery-tabs { display: flex; gap: 3px; margin-top: 3px; flex-wrap: wrap; }
+    .gallery-all {
+      margin-top: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .1em;
+      color: #13F81F;
+      cursor: pointer;
+      text-align: center;
+      padding: 3px 0;
+      border: 1px dashed rgba(19, 248, 31, .25);
+      border-radius: 5px;
+      transition: all .2s;
+    }
+    .gallery-all:active { background: rgba(19, 248, 31, .08); border-color: rgba(19, 248, 31, .5); }
     .gtab {
       font-family: 'JetBrains Mono', monospace;
       font-size: 6.5px;
@@ -582,6 +602,33 @@
       border: 1px solid rgba(19, 248, 31, .2);
       display: block;
     }
+    /* 弹窗内效果图网格 */
+    .sheet-grid {
+      margin-top: 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .sheet-grid img {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid rgba(19, 248, 31, .18);
+      cursor: pointer;
+      transition: all .2s;
+      display: block;
+    }
+    .sheet-grid img:active { transform: scale(.96); border-color: rgba(19, 248, 31, .6); }
+    .sheet-grid-cap {
+      grid-column: 1 / -1;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6.5px;
+      letter-spacing: .12em;
+      color: #5FAF5F;
+      text-align: center;
+      margin-top: 2px;
+    }
     .sheet-points { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
     .sheet-point { display: flex; align-items: flex-start; gap: 8px; font-family: 'Noto Sans SC', sans-serif; font-size: 10px; color: #D0D8D0; line-height: 1.55; }
     .sheet-point::before { content: ''; width: 5px; height: 5px; background: #13F81F; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
@@ -717,6 +764,7 @@
         <button class="gtab" data-g="4">色卡</button>
         <button class="gtab" data-g="5">参考图</button>
       </div>
+      <div class="gallery-all" id="galleryAll">✦ 查看效果图全集 · 13 张 →</div>
     </div>
 
     <!-- Stats -->
@@ -890,6 +938,7 @@
         <div class="sheet-title" id="sheetTitle"></div>
         <div class="sheet-desc" id="sheetDesc"></div>
         <div class="sheet-img" id="sheetImg" style="display:none"></div>
+        <div class="sheet-grid" id="sheetGrid" style="display:none"></div>
         <div class="sheet-code" id="sheetCode" style="display:none"></div>
         <div class="sheet-points" id="sheetPoints"></div>
         <button class="sheet-close" id="sheetClose">CLOSE</button>
@@ -904,7 +953,7 @@
   (function(){
     var $=function(s){return document.querySelector(s)};
     var overlay=$('#overlay'), sheetTitle=$('#sheetTitle'), sheetDesc=$('#sheetDesc'),
-        sheetPoints=$('#sheetPoints'), sheetCode=$('#sheetCode'), sheetImg=$('#sheetImg'),
+        sheetPoints=$('#sheetPoints'), sheetCode=$('#sheetCode'), sheetImg=$('#sheetImg'), sheetGrid=$('#sheetGrid'),
         toast=$('#toast');
 
     // 图库：真实生成效果图
@@ -915,6 +964,21 @@
       {img: '../cards/tait-crt-interface/fendai-a.jpg', cap: '粉黛 · FENDAI', key: 'g-fendai'},
       {img: '../cards/tait-crt-interface/color-card.jpg', cap: '8 套色卡 · COLOR CARD', key: 'g-colorcard'},
       {img: '../cards/tait-crt-interface/ref-01.jpg', cap: '参考图 · SOURCE', key: 'g-ref'}
+    ];
+    var ALL_IMGS = [
+      '../cards/tait-crt-interface/classic-a.jpg',
+      '../cards/tait-crt-interface/classic-b.jpg',
+      '../cards/tait-crt-interface/geek01-a.jpg',
+      '../cards/tait-crt-interface/geek01-b.jpg',
+      '../cards/tait-crt-interface/geek01-c.jpg',
+      '../cards/tait-crt-interface/geek02-a.jpg',
+      '../cards/tait-crt-interface/game01-a.jpg',
+      '../cards/tait-crt-interface/game02-a.jpg',
+      '../cards/tait-crt-interface/game02-b.jpg',
+      '../cards/tait-crt-interface/fendai-a.jpg',
+      '../cards/tait-crt-interface/ref-01.jpg',
+      '../cards/tait-crt-interface/ref-02.jpg',
+      '../cards/tait-crt-interface/ref-03.jpg'
     ];
     var galImg=$('#galImg'), galCap=$('#galCap');
 
@@ -967,25 +1031,29 @@
       },
       g0: {
         title: '经典色卡 <em>· 80 年代绿灰终端</em>',
-        desc: '极简双色：#dee4e0（米白）/ #2e382d（墨绿）。最经典的老 Macintosh 配色——主体剪影 + 棋盘格灰度，像翻开一本 1985 年的电脑杂志。',
-        points: ['#dee4e0 / #2e382d 双色', '米白底 + 墨绿主体', '最接近早期 Mac 的观感', 'polarity：light-field 亮场'
+        desc: '极简双色：#dee4e0（米白）/ #2e382d（墨绿）。最经典的老 Macintosh 配色——主体剪影 + 棋盘格灰度，像翻开一本 1985 年的电脑杂志。下方为该色卡的真实生成效果。',
+        grid: ['../cards/tait-crt-interface/classic-a.jpg', '../cards/tait-crt-interface/classic-b.jpg'],
+        points: ['#dee4e0 / #2e382d 双色', '米白底 + 墨绿主体', '最接近早期 Mac 的观感', 'polarity：light-field 亮场', '竖版海报（classic-b）同样支持'
         ]
       },
       g1: {
         title: '极客01 <em>· 黑客荧光绿</em>',
-        desc: '#13f81f 荧光绿 + 墨绿 #111e16 + 亮白 #f2fcf6 + 灰绿 #485446。最出圈的色卡——那种"深夜机房 CRT 终端"的赛博氛围，生成效果视觉冲击最强。',
-        points: ['#13f81f 荧光绿主色', '#111e16 近黑墨绿', '#485446 灰绿过渡', 'dark-field 暗场，黑客风'
+        desc: '#13f81f 荧光绿 + 墨绿 #111e16 + 亮白 #f2fcf6 + 灰绿 #485446。最出圈的色卡——那种"深夜机房 CRT 终端"的赛博氛围，生成效果视觉冲击最强。下方为该色卡的 3 张真实生成效果。',
+        grid: ['../cards/tait-crt-interface/geek01-a.jpg', '../cards/tait-crt-interface/geek01-b.jpg', '../cards/tait-crt-interface/geek01-c.jpg'],
+        points: ['#13f81f 荧光绿主色', '#111e16 近黑墨绿', '#485446 灰绿过渡', 'dark-field 暗场，黑客风', '单人/双人/构图变体全部保留'
         ]
       },
       g2: {
-        title: '游戏01 <em>· 赛博霓虹</em>',
-        desc: '#22e6da 青 + #fabf37 金 + #e90cbe 品红 + #2a4ac5 宝蓝 + #1d2c6b 深蓝。五色霓虹套装，像 8-bit 街机房的屏幕墙。',
-        points: ['青 + 金 + 品红 + 宝蓝 + 深蓝', '五色霓虹，街机氛围', 'split-local-fields 分区极性', '适合游戏角色主题'
+        title: '游戏01/02 <em>· 赛博霓虹 × 清新粉绿</em>',
+        desc: '#22e6da 青 + #fabf37 金 + #e90cbe 品红 + #2a4ac5 宝蓝 + #1d2c6b 深蓝，五色霓虹套装像 8-bit 街机房的屏幕墙；游戏02 则是 #7bd699 薄荷绿 + #3bc4c4 青的清新组合。下方为游戏色卡的真实生成效果。',
+        grid: ['../cards/tait-crt-interface/game01-a.jpg', '../cards/tait-crt-interface/game02-a.jpg', '../cards/tait-crt-interface/game02-b.jpg'],
+        points: ['游戏01：五色霓虹，街机氛围', '游戏02：#e7f5fe 亮白底 + 薄荷绿', 'split-local-fields 分区极性', '适合游戏角色 / 机甲主题', '游戏02b 展示双人构图变体'
         ]
       },
       g3: {
         title: '粉黛 <em>· 柔粉复古</em>',
-        desc: '#f2d1d7 浅粉 / #7a3f43 深红褐。双色温柔系——像素画里少见的柔美配色，和"粉黛"的名字一样是古风妆面意象。',
+        desc: '#f2d1d7 浅粉 / #7a3f43 深红褐。双色温柔系——像素画里少见的柔美配色，和"粉黛"的名字一样是古风妆面意象。下方为该色卡的真实生成效果。',
+        grid: ['../cards/tait-crt-interface/fendai-a.jpg'],
         points: ['#f2d1d7 浅粉 / #7a3f43 深红褐', '双色，温柔复古', '适合女性人像 / 古风主题', '棋盘格：浅粉+深红褐交替'
         ]
       },
@@ -996,8 +1064,16 @@
       },
       g5: {
         title: '参考图 <em>· 输入 vs 输出</em>',
-        desc: '左边是用户上传的原照片（参考图01），右边是 Skill 生成的 CRT 插画。注意生成结果如何保留发型、姿态等身份锚点，同时完全脱离照片轮廓——这是 source severance 的直观演示：不是滤镜，是重绘。',
+        desc: '上方是用户上传的原照片，下方图库是该 Skill 生成的 CRT 插画。注意生成结果如何保留发型、姿态等身份锚点，同时完全脱离照片轮廓——这是 source severance 的直观演示：不是滤镜，是重绘。',
+        grid: ['../cards/tait-crt-interface/ref-01.jpg', '../cards/tait-crt-interface/ref-02.jpg', '../cards/tait-crt-interface/ref-03.jpg'],
         points: ['原图只提供身份锚点', '轮廓/光影/细节全部丢弃', '新主体不可能靠马赛克得到', '卡通化优先于写实相似度', '多人图：每个角色独立保留'
+        ]
+      },
+      gall: {
+        title: '效果图全集 <em>· 13 张真实生成</em>',
+        desc: '仓库 README 中全部 10 张生成示例 + 3 张参考图输入，覆盖经典 / 极客01 / 极客02 / 游戏01 / 游戏02 / 粉黛 六套色卡。轻触任意缩略图可放大查看细节——扫描线、辉光、桶形畸变与右上角 tait-crt-interface-skill 固定签名。',
+        grid: ALL_IMGS,
+        points: ['经典：2 张（含竖版海报）', '极客01：3 张（单人/双人/构图变体）', '极客02：1 张', '游戏01/02：3 张', '粉黛：1 张', '参考图：3 张（输入对照）', '全部带固定签名，可溯源性'
         ]
       },
       f0: {
@@ -1087,6 +1163,24 @@
       }else{
         sheetImg.style.display = 'none';
       }
+      // 效果图网格（grid = [url, url, ...]）
+      if(d.grid && d.grid.length){
+        sheetGrid.style.display = 'grid';
+        sheetGrid.innerHTML = d.grid.map(function(u){
+          return '<img src="' + u + '" loading="lazy">';
+        }).join('') + '<div class="sheet-grid-cap">轻触放大 · 更多生成效果</div>';
+        // 点缩略图 → 看大图
+        sheetGrid.querySelectorAll('img').forEach(function(im){
+          im.addEventListener('click', function(){
+            sheetImg.style.display = 'block';
+            sheetImg.src = im.src;
+            if(navigator.vibrate) navigator.vibrate(10);
+          });
+        });
+      }else{
+        sheetGrid.style.display = 'none';
+        sheetGrid.innerHTML = '';
+      }
       if(d.code){
         sheetCode.style.display = 'block';
         sheetCode.textContent = d.code;
@@ -1129,6 +1223,11 @@
       sheetPoints.innerHTML = '';
       overlay.classList.add('active');
       if(navigator.vibrate) navigator.vibrate(15);
+    });
+    // 效果图全集入口
+    $('#galleryAll').addEventListener('click', function(){
+      openSheet('gall');
+      if(navigator.vibrate) navigator.vibrate(10);
     });
 
     // 3D 视差倾斜：跟随手指/鼠标
