@@ -31,8 +31,8 @@
     .stage {
       position: relative;
       aspect-ratio: 9 / 16;
-      height: min(100dvh, calc(100vw * 16 / 9));
-      width: min(100vw, calc(100dvh * 9 / 16));
+      height: min(100svh, calc(100vw * 16 / 9));
+      width: min(100vw, calc(100svh * 9 / 16));
       background: #0B100B;
       overflow: hidden;
       box-shadow: 0 30px 80px rgba(0,0,0,.6);
@@ -43,7 +43,7 @@
       transform-style: preserve-3d;
       transition: transform .12s ease-out;
     }
-    @supports not (height: 100dvh) {
+    @supports not (height: 100svh) {
       .stage {
         height: min(100vh, calc(100vw * 16 / 9));
         width: min(100vw, calc(100vh * 9 / 16));
@@ -1298,11 +1298,13 @@
 
     $('#shareBtn').addEventListener('click', function(){
       var url = location.href.split('?')[0];
+      var sub = '你可以用任何AI工具订阅我的博客文章：https://mindresonance.online/youngsinsight/subscribe.html';
+      var full = url + '\n\n' + sub;
       if(navigator.share){
-        navigator.share({title:'TaiT CRT Interface Skill — 人像 × 复古 CRT 插画', url:url}).catch(function(){});
+        navigator.share({title:'TaiT CRT Interface Skill — 人像 × 复古 CRT 插画', text: sub, url: url}).catch(function(){});
       }else if(navigator.clipboard){
-        navigator.clipboard.writeText(url).then(function(){
-          toast.textContent = '链接已复制';
+        navigator.clipboard.writeText(full).then(function(){
+          toast.textContent = '已复制：链接 + 订阅推荐';
           toast.classList.add('show');
           setTimeout(function(){ toast.classList.remove('show'); }, 1800);
         });
