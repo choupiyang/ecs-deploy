@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#08090D">
+<title>收听 · 76%的幻象｜你的企业需不需要CAIO</title>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,700;0,900;1,700;1,900&family=Noto+Serif+SC:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#08090D; --bg-2:#10121A; --bg-3:#181B26;
+  --accent:#E8B931; --accent-dim:#8B6E1E;
+  --text:#E8E4D9; --text-dim:#7A7872; --text-mute:#4A4842;
+  --line:#1E2028;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;overflow-x:hidden}
+.serif{font-family:'Bodoni Moda','Noto Serif SC',serif}
+
+/* ── 顶部返回条 ── */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
+  padding:14px 20px;padding-top:calc(14px + env(safe-area-inset-top));background:rgba(8,9,13,.82);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.topbar a{color:var(--text-dim);text-decoration:none;font-size:13px;display:flex;align-items:center;gap:6px;transition:color .3s}
+.topbar a:hover{color:var(--accent)}
+.topbar .brand{font-size:11px;letter-spacing:.3em;color:var(--text-mute);text-transform:uppercase}
+
+/* ── 封面 ── */
+.cover{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:120px 24px 60px;position:relative;text-align:center}
+.cover .kicker{font-size:11px;letter-spacing:.5em;color:var(--accent);text-transform:uppercase;margin-bottom:28px;animation:fadeUp 1s ease both}
+.cover h1{font-size:clamp(40px,9vw,72px);line-height:1.15;font-weight:900;letter-spacing:.02em;animation:fadeUp 1s ease .15s both}
+.cover h1 .num{color:var(--accent);font-family:'Bodoni Moda',serif;font-style:italic}
+.cover .sub{font-family:'Bodoni Moda','Noto Serif SC',serif;font-style:italic;font-size:clamp(18px,3.6vw,26px);color:var(--text-dim);margin-top:16px;animation:fadeUp 1s ease .3s both}
+.cover .meta{display:flex;gap:24px;margin-top:36px;font-size:12px;color:var(--text-mute);letter-spacing:.15em;animation:fadeUp 1s ease .45s both}
+.cover .scroll-hint{position:absolute;bottom:28px;font-size:10px;letter-spacing:.4em;color:var(--text-mute);animation:bob 2.2s ease-in-out infinite}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+
+/* ── 播放器 ── */
+.player-wrap{max-width:720px;margin:0 auto;padding:40px 20px 20px}
+.player-card{background:var(--bg-2);border:1px solid var(--line);border-radius:24px;padding:28px 24px;position:relative;overflow:hidden}
+.player-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.6}
+.viz{height:88px;display:flex;align-items:flex-end;justify-content:center;gap:3px;margin-bottom:20px}
+.viz i{width:4px;border-radius:2px;background:linear-gradient(180deg,var(--accent),var(--accent-dim));opacity:.35;transition:opacity .15s;animation:none}
+.viz i.on{opacity:1;animation:eq 1.1s ease-in-out infinite}
+.viz i.on:nth-child(2n){animation-delay:.12s}.viz i.on:nth-child(3n){animation-delay:.24s}.viz i.on:nth-child(4n){animation-delay:.36s}.viz i.on:nth-child(5n){animation-delay:.48s}
+@keyframes eq{0%,100%{transform:scaleY(.25)}50%{transform:scaleY(1)}}
+.timerow{display:flex;justify-content:space-between;font-size:11px;color:var(--text-mute);font-variant-numeric:tabular-nums;margin-bottom:6px}
+.timerow .cur{color:var(--accent)}
+.progress{position:relative;height:26px;display:flex;align-items:center;cursor:pointer}
+.progress .track{flex:1;height:4px;border-radius:2px;background:var(--bg-3);position:relative;overflow:visible}
+.progress .fill{position:absolute;left:0;top:0;bottom:0;width:0%;border-radius:2px;background:var(--accent)}
+.progress .knob{position:absolute;top:50%;left:0;width:14px;height:14px;border-radius:50%;background:var(--accent);transform:translate(-50%,-50%);box-shadow:0 0 12px rgba(232,185,49,.5);opacity:0;transition:opacity .2s}
+.progress:hover .knob,.progress.drag .knob{opacity:1}
+.controls{display:flex;align-items:center;justify-content:center;gap:28px;margin-top:18px}
+.ctl{background:none;border:none;color:var(--text-dim);cursor:pointer;transition:color .2s,transform .1s;padding:8px}
+.ctl:hover{color:var(--accent)}
+.ctl:active{transform:scale(.92)}
+.ctl.main{width:72px;height:72px;border-radius:50%;background:var(--accent);color:#08090D;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 32px rgba(232,185,49,.28)}
+.ctl.main:hover{color:#08090D;transform:scale(1.04)}
+.ctl.main:active{transform:scale(.96)}
+.ctl svg{display:block}
+.speedwrap{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:14px}
+.speed{font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid var(--line);color:var(--text-dim);background:none;cursor:pointer;transition:all .2s;font-family:'Noto Sans SC',sans-serif}
+.speed.on{border-color:var(--accent);color:var(--accent);background:rgba(232,185,49,.08)}
+
+/* ── 字幕 ── */
+.subtitle-wrap{max-width:720px;margin:0 auto;padding:30px 20px 10px}
+.subtitle-box{background:var(--bg-2);border:1px solid var(--line);border-radius:20px;padding:26px 24px;min-height:130px;display:flex;align-items:center;justify-content:center}
+.subtitle-box .st{font-size:clamp(15px,3.4vw,19px);line-height:1.9;color:var(--text-dim);text-align:center;transition:color .3s;font-family:'Noto Serif SC',serif}
+.subtitle-box .st.on{color:var(--text)}
+.subtitle-box .st b{color:var(--accent);font-weight:700}
+
+/* ── 章节时间轴 ── */
+.timeline{max-width:720px;margin:0 auto;padding:44px 20px 10px}
+.tl-title{font-size:12px;letter-spacing:.35em;color:var(--text-mute);text-transform:uppercase;margin-bottom:24px;display:flex;align-items:center;gap:14px}
+.tl-title::after{content:'';flex:1;height:1px;background:var(--line)}
+.tl{position:relative;padding-left:28px}
+.tl::before{content:'';position:absolute;left:7px;top:6px;bottom:6px;width:1px;background:var(--line)}
+.tl-item{position:relative;margin-bottom:22px;cursor:pointer;user-select:none}
+.tl-item::before{content:'';position:absolute;left:-28px;top:7px;width:9px;height:9px;border-radius:50%;background:var(--bg-3);border:2px solid var(--text-mute);transition:all .25s}
+.tl-item:hover::before,.tl-item.active::before{background:var(--accent);border-color:var(--accent);box-shadow:0 0 10px rgba(232,185,49,.5)}
+.tl-item .t{font-size:11px;color:var(--accent);font-variant-numeric:tabular-nums;font-family:'Bodoni Moda',serif;letter-spacing:.05em}
+.tl-item .n{font-family:'Bodoni Moda',serif;font-size:22px;color:var(--text);font-weight:700;margin:2px 0}
+.tl-item .d{font-size:12px;color:var(--text-dim);line-height:1.6}
+.tl-item:hover .n{color:var(--accent)}
+
+/* ── 金句墙 ── */
+.quotes{max-width:720px;margin:0 auto;padding:44px 20px 10px}
+.q-title{font-size:12px;letter-spacing:.35em;color:var(--text-mute);text-transform:uppercase;margin-bottom:24px;display:flex;align-items:center;gap:14px}
+.q-title::after{content:'';flex:1;height:1px;background:var(--line)}
+.q-card{background:var(--bg-2);border:1px solid var(--line);border-radius:16px;padding:22px 22px 16px;margin-bottom:14px;position:relative;transition:border-color .25s}
+.q-card:hover{border-color:var(--accent-dim)}
+.q-card .txt{font-family:'Noto Serif SC',serif;font-size:15px;line-height:1.9;color:var(--text)}
+.q-card .txt::before{content:'「';color:var(--accent);font-family:'Bodoni Moda',serif;font-size:22px;vertical-align:-4px}
+.q-card .txt::after{content:'」';color:var(--accent);font-family:'Bodoni Moda',serif;font-size:22px;vertical-align:-4px}
+.q-card .act{display:flex;justify-content:flex-end;gap:16px;margin-top:10px}
+.q-card .act button{background:none;border:none;color:var(--text-mute);font-size:11px;cursor:pointer;transition:color .2s;font-family:'Noto Sans SC',sans-serif;display:flex;align-items:center;gap:4px}
+.q-card .act button:hover{color:var(--accent)}
+.q-card.copied{border-color:var(--accent)}
+
+/* ── 结尾 ── */
+.finale{max-width:720px;margin:0 auto;padding:60px 24px 40px;text-align:center}
+.finale .big{font-family:'Bodoni Moda','Noto Serif SC',serif;font-style:italic;font-size:clamp(22px,5vw,34px);line-height:1.6;color:var(--text)}
+.finale .big b{color:var(--accent);font-weight:700}
+.subscribe{margin-top:36px;display:inline-flex;align-items:center;gap:10px;padding:14px 26px;border-radius:40px;border:1px solid var(--accent-dim);color:var(--accent);text-decoration:none;font-size:13px;letter-spacing:.08em;transition:all .25s;background:rgba(232,185,49,.05)}
+.subscribe:hover{background:var(--accent);color:#08090D}
+.article-link{display:block;margin-top:18px;color:var(--text-dim);font-size:12px;text-decoration:none;transition:color .2s}
+.article-link:hover{color:var(--accent)}
+footer{padding:40px 20px calc(40px + env(safe-area-inset-bottom));text-align:center;font-size:10px;color:var(--text-mute);letter-spacing:.2em;border-top:1px solid var(--line);margin-top:40px}
+
+/* 入场动画 — 仅当 JS 运行时才隐藏（html.js 由脚本添加） */
+html.js .reveal{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s ease}
+html.js .reveal.in{opacity:1;transform:translateY(0)}
+
+/* 播放进度遮罩 */
+.loading-mask{position:fixed;inset:0;background:var(--bg);z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .6s}
+.loading-mask.hide{opacity:0;pointer-events:none}
+.loading-mask .ring{width:44px;height:44px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-mask p{font-size:12px;color:var(--text-mute);letter-spacing:.2em}
+</style>
+</head>
+<body>
+
+<!-- 加载遮罩 -->
+<div class="loading-mask" id="loadingMask">
+  <div class="ring"></div>
+  <p>正在加载声音</p>
+</div>
+
+<!-- 顶部条 -->
+<div class="topbar">
+  <a href="caio-transition-guide.html">← 返回图文版</a>
+  <span class="brand">反共识观察 · Audio</span>
+</div>
+
+<!-- 封面 -->
+<header class="cover">
+  <div class="kicker">反共识观察 · 播客版</div>
+  <h1>76%的<span class="num">幻象</span><br>你的企业<br>真的需要 CAIO 吗</h1>
+  <div class="sub">两位对话者 · 九分钟 · 一层层剥开「AI 焦虑」的洋葱</div>
+  <div class="meta">
+    <span>小谱 × 锤锤</span>
+    <span>09:23</span>
+    <span>VOL.01 / 2026</span>
+  </div>
+  <div class="scroll-hint">▼ SCROLL</div>
+</header>
+
+<!-- 播放器 -->
+<section class="player-wrap">
+  <div class="player-card reveal">
+    <div class="viz" id="viz"></div>
+    <div class="timerow"><span class="cur" id="curTime">00:00</span><span id="durTime">09:23</span></div>
+    <div class="progress" id="progress">
+      <div class="track"><div class="fill" id="fill"></div><div class="knob" id="knob"></div></div>
+    </div>
+    <div class="controls">
+      <button class="ctl" id="btnBack" title="后退10秒" aria-label="后退10秒">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 17l-5-5 5-5"/><path d="M18 17l-5-5 5-5"/><path d="M4 12h1"/></svg>
+      </button>
+      <button class="ctl main" id="btnPlay" aria-label="播放">
+        <svg id="iconPlay" width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        <svg id="iconPause" width="30" height="30" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+      </button>
+      <button class="ctl" id="btnFwd" title="前进10秒" aria-label="前进10秒">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 17l5-5-5-5"/><path d="M6 17l5-5-5-5"/><path d="M20 12h-1"/></svg>
+      </button>
+    </div>
+    <div class="speedwrap">
+      <button class="speed" data-s="1">1.0×</button>
+      <button class="speed" data-s="1.25">1.25×</button>
+      <button class="speed" data-s="1.5">1.5×</button>
+      <button class="speed" data-s="2">2.0×</button>
+    </div>
+  </div>
+</section>
+
+<!-- 滚动字幕 -->
+<section class="subtitle-wrap">
+  <div class="subtitle-box reveal"><div class="st" id="subtitle">点击 ▶ 开始收听 · 声音与文字同步滚动</div></div>
+</section>
+
+<!-- 章节时间轴 -->
+<section class="timeline">
+  <div class="tl-title reveal">Chapter · 章节导航</div>
+  <div class="tl" id="tl"></div>
+</section>
+
+<!-- 金句墙 -->
+<section class="quotes">
+  <div class="q-title reveal">Golden Quotes · 值得记住的句子</div>
+  <div class="q-card reveal"><div class="txt">宣布成本极低，履职成本极高——这催生了商业世界里常见的「头衔通胀」。</div><div class="act"><button onclick="copyQuote(this)">复制金句</button></div></div>
+  <div class="q-card reveal"><div class="txt">数据不会说谎，但数据的解读方式会。高耸的数字背后，往往藏着低廉的成本。</div><div class="act"><button onclick="copyQuote(this)">复制金句</button></div></div>
+  <div class="q-card reveal"><div class="txt">当 AI 成为组织的血液时，它就不再需要一个专门的容器来盛放。</div><div class="act"><button onclick="copyQuote(this)">复制金句</button></div></div>
+  <div class="q-card reveal"><div class="txt">跟风设岗，到底是破局的利刃，还是组织系统性焦虑的安慰剂？</div><div class="act"><button onclick="copyQuote(this)">复制金句</button></div></div>
+  <div class="q-card reveal"><div class="txt">真正 AI 能力强的组织，最高管理层已经内化了 AI 判断力——AI 决策权天然集中在战略中枢。</div><div class="act"><button onclick="copyQuote(this)">复制金句</button></div></div>
+  <div class="q-card reveal"><div class="txt">狂热的浪潮里，最先淹没的是常识。</div><div class="act"><button onclick="copyQuote(this)">复制金句</button></div></div>
+</section>
+
+<!-- 结尾 -->
+<section class="finale">
+  <div class="big reveal">让数字回到数字<br>让常识回到<b>常识</b></div>
+  <a class="subscribe reveal" href="https://mindresonance.online/youngsinsight/subscribe.html">你可以用任何 AI 工具订阅我的博客文章 →</a>
+  <a class="article-link reveal" href="caio-transition-guide.html">← 返回图文版《76%的幻象 · 你的企业需不需要CAIO》</a>
+</section>
+
+<footer>MIND RESONANCE · 反共识观察 · VOL.01 / 2026</footer>
+
+<audio id="audio" preload="metadata" src="/youngsinsight/audio/caio-transition-podcast.mp3"></audio>
+
+<script>
+document.documentElement.className='js';
+(function(){
+'use strict';
+var audio=document.getElementById('audio');
+var btnPlay=document.getElementById('btnPlay');
+var iconPlay=document.getElementById('iconPlay');
+var iconPause=document.getElementById('iconPause');
+var curTime=document.getElementById('curTime');
+var durTime=document.getElementById('durTime');
+var progress=document.getElementById('progress');
+var fill=document.getElementById('fill');
+var knob=document.getElementById('knob');
+var subtitle=document.getElementById('subtitle');
+var viz=document.getElementById('viz');
+var loadingMask=document.getElementById('loadingMask');
+
+/* 可视化柱 */
+var NBAR=48;
+for(var i=0;i<NBAR;i++){var b=document.createElement('i');viz.appendChild(b);}
+var bars=viz.children;
+
+/* 伪频谱动画（无 WebAudio 时用随机跳动，WebAudio 时用真实频谱） */
+var actx=null, analyser=null, dataArr=null;
+try{
+  actx=new (window.AudioContext||window.webkitAudioContext)();
+}catch(e){actx=null;}
+
+function startVisuals(){
+  for(var i=0;i<NBAR;i++){bars[i].style.height=(20+Math.random()*60)+'%';}
+  if(actx && analyser){
+    var draw=function(){
+      if(audio.paused) return;
+      analyser.getByteFrequencyData(dataArr);
+      for(var j=0;j<NBAR;j++){
+        var v=dataArr[Math.floor(j*dataArr.length/NBAR)]/255;
+        bars[j].style.height=Math.max(14,v*95)+'%';
+        bars[j].className=v>0.08?'on':'';
+      }
+      requestAnimationFrame(draw);
+    };
+    requestAnimationFrame(draw);
+  }else{
+    setInterval(function(){
+      if(audio.paused) return;
+      for(var j=0;j<NBAR;j++){
+        bars[j].style.height=(22+Math.random()*70)+'%';
+        bars[j].className='on';
+      }
+    },140);
+  }
+}
+
+/* 字幕数据：33 句（时间点按脚本字数比例估算） */
+var subtitles=[
+[0,'嘿，听众朋友们大家好，欢迎收听今天的「反共识观察」，我是小谱。今天聊一个特别火的话题——被称为「AI战略操盘手」的CAIO职位。最近有个数据特别扎眼：2026年全球76%的企业已经设立了首席人工智能官，一年前才26%。这爆炸性增长背后，到底是真需求还是跟风设岗？'],
+[9,'哎呀，这个数据确实惊人！76%和26%，一年内增长了近三倍，这速度也太夸张了！我身边确实有不少朋友突然就变成了CAIO，头衔是有了，但具体在做什么好像说不清楚。这76%到底是怎么统计出来的？会不会有什么水分？'],
+[22,'问得好！这76%背后其实存在一个「数字幻影」。IBM的报告虽然覆盖了33个国家、2000位CEO，但统计口径可能包含了计划招聘、兼职指派，或者给现有高管加了个抬头的情况。也就是说，宣布「设立」和实际「履职」之间，可能存在巨大的灰度空间。'],
+[42,'哦？所以「宣布成本低，履职成本高」是这个现象的核心？那这些花瓶式CAIO有什么特征呢？怎么判断一个CAIO是不是真的有实权？'],
+[50,'很好判断，看四个信号：是否控制独立预算、是否拥有项目否决权、立项验收是否经过其签批、离职后岗位是否有人接任。很多所谓的CAIO，预算要向CIO或CFO申请，对业务只能提建议不能强制干预，项目后期才参与验收，一旦离职职位就直接取消——这就是典型的「花瓶式CAIO」。'],
+[78,'嚯，这么一说确实一目了然！那在中国情况怎么样？我记得之前微众银行是有专职CAIO的，后来呢？'],
+[84,'中国银行业的专职CAIO数量已经悄然归零了。微众银行前首席人工智能官杨强退休后，该职位无人接任，AI战略改由副行长兼CIO统筹。国有大行由科技副行长或CIO统筹，股份制银行普遍成立AI领导小组作为跨部门协调机制，均未设专职CAIO。'],
+[105,'咦？这和全球76%的数据反差好大！为什么中国的银行业会选择不设专职CAIO呢？是跟不上国际趋势了吗？'],
+[112,'恰恰相反，这是约束下的理性选择。主要有三重原因：薪酬约束——国内银行高管顶薪约400万人民币，与国际CAIO中位数约160万美元存在数倍差距；监管偏好——稳健合规文化下新增高管头衔的审批成本高；协同效率——AI依赖的科技条线已存在完整建制，另设CAIO制造摩擦而非解决问题。'],
+[140,'嗯，有道理。那科技巨头呢？像阿里、腾讯这些公司，他们的AI战略是怎么布局的？'],
+[146,'很有意思，大厂走向CEO集权。阿里巴巴未设专职CAIO。2026年3月成立Alibaba Token Hub、6月成立Token Foundry，这两大核心AI实体均由集团CEO吴泳铭直接负责。集团技术委员会也由CEO任组长。'],
+[170,'哦？所以真正AI能力强的组织，最高管理层已经内化了AI判断力，AI决策权天然集中在战略中枢？新增一个翻译与协调角色只会拉长决策链？'],
+[180,'没错！专职CAIO更可能是组织能力不足时的补偿机制，而非领先者的标配。就像电力普及后，企业从未常设首席电力官一样，当AI成为组织的血液时，它就不再需要一个专门的容器来盛放。'],
+[203,'这个类比太精辟了！那商业世界关于CAIO的必要性，是不是也有不同的观点？我记得好像有支持和反对两派？'],
+[210,'实际上有五派之争。坚定支持派认为每个组织都应该有CAIO；有条件支持派认为设了效果好，取决于角色设计；审慎怀疑派认为大多数组织不需要，优先委员会统筹；明确反对派认为与CDO如出一辙，结果喜忧参半；还有过渡性定位派认为成功的CAIO最终会让自己失业。'],
+[235,'过渡性定位派？这个观点挺有意思的，具体是什么意思呢？'],
+[240,'渣打离职CAIO David Hardoon就直言CAIO是一个过渡性角色，最终应消失。通用汽车首任专职CAIO也证明，在以硬件和传统工程为主导的文化中，专职CAIO缺乏足够的跨部门协调权威，难以推动深层变革。'],
+[262,'嗯，听起来CAIO岗位更像是一个组织实验，而不是长久之计。那这种岗位爆发的背后，除了真实需求，还有没有其他驱动因素？'],
+[270,'当然有。除了真实需求驱动——AI从单点试验进入规模化落地确实需要统筹角色；还有组织焦虑驱动——竞争对手设了我也得设的心理；以及信号传递驱动——设立CAIO是向投资者、董事会与人才市场传递「我们在认真做AI」的低成本信号。'],
+[296,'呵呵，这个信号传递成本确实低，一篇新闻稿就搞定，但实际落地需要的授权和预算才是大头。那如果一个企业真的需要AI战略统筹，除了设专职CAIO，还有哪些替代方案呢？'],
+[306,'主要有六大破局阵法：一是让CEO亲自挂帅，阿里模式，决策链路最短；二是双首席制，CAIO与CIO并列；三是委员会统筹，成立跨部门AI委员会；四是首席数据官兼任；五是咨询顾问外部化；六是数据中台式的基础设施沉淀。不同规模、不同阶段的组织，可以对照自己的情况选择。'],
+[345,'六大阵法，确实各有适用场景。那对于中小企业来说，现在入场做AI是不是已经太晚了？会不会错过窗口期？'],
+[356,'恰恰相反，现在反而是中小企业的生存窗口。大厂在算力和模型上重兵投入，中小企业反而可以轻装上阵，直接调用现成的模型能力。真正要警惕的是「成本陷阱」——为追热点而上马大项目，在没有验证需求前就大规模投入。'],
+[392,'成本陷阱，这个提法很关键。那如果让你用一句话总结，这期节目最想传递的反共识是什么？'],
+[400,'三个醍醐灌顶的反共识。第一个：76%的数字，一半以上可能是幻影；第二个：真正需要CAIO的组织，往往反而不会设；第三个：让AI成为血液，而不是装一个容器。这三点合在一起，指向一个核心判断——不要被名词焦虑绑架，回到业务本身去思考。'],
+[448,'说得太好了。最后，如果听众朋友的公司正在纠结要不要设CAIO，有没有一个现成的决策清单？'],
+[458,'有，给你一个四步决策罗盘。第一步，问自己：AI当前在我们的业务里是「试点」还是「主干」？第二步，算一笔账：设一个CAIO，一年要花多少钱，能撬动多少确定性收益？第三步，看组织：现有CIO、CTO的职责里，有多少已经被AI事务覆盖？第四步，做选择：如果AI是主干，让CEO直接负责；如果是试点，成立委员会即可。四步走完，答案自己会浮现。'],
+[520,'决策罗盘，非常实用。那这期节目到这里就接近尾声了，小谱有没有什么最后的收尾？'],
+[528,'借用文章结尾的一句话：当AI的感知力渗透到组织的每个角落，它就不再需要被「感知」——就像空气，你感知不到它的存在，但它无处不在。这，才是真正的终极融合。感谢收听，我们下期再见！'],
+[563,'— 收听结束 — 欢迎回到图文版继续阅读，或在下方订阅更多反共识观察。']
+];
+
+/* 章节时间轴（10章） */
+var chapters=[
+[0,'引言','狂热的浪潮里，最先淹没的是常识'],
+[58,'01 数字幻影','76%背后的隐秘真相'],
+[130,'02 冷峻反差','中国市场的理性选择'],
+[178,'03 五派之争','支持与反对的完整光谱'],
+[238,'04 大厂集权','CEO内化AI判断力'],
+[300,'05 六大阵法','破局路径与行业图谱'],
+[352,'06 生存窗口','成本陷阱与入场时机'],
+[398,'07 反共识','三个醍醐灌顶的判断'],
+[456,'08 决策罗盘','四步走完，答案浮现'],
+[522,'09 终局','感知不到的存在，才是终极融合']
+];
+
+/* 渲染时间轴 */
+var tl=document.getElementById('tl');
+chapters.forEach(function(c,i){
+  var it=document.createElement('div');
+  it.className='tl-item reveal';
+  it.dataset.t=c[0];
+  var mm=String(Math.floor(c[0]/60)).padStart(2,'0');
+  var ss=String(Math.floor(c[0]%60)).padStart(2,'0');
+  it.innerHTML='<div class="t">'+mm+':'+ss+'</div><div class="n">'+c[1]+'</div><div class="d">'+c[2]+'</div>';
+  it.addEventListener('click',function(){audio.currentTime=parseFloat(this.dataset.t);seekVisuals();if(audio.paused){audio.play();}});
+  tl.appendChild(it);
+});
+var tlItems=tl.querySelectorAll('.tl-item');
+
+/* 时间格式化 */
+function fmt(s){
+  s=Math.max(0,Math.floor(s));
+  var m=Math.floor(s/60), ss=s%60;
+  return String(m).padStart(2,'0')+':'+String(ss).padStart(2,'0');
+}
+
+/* 播放/暂停 */
+function setPlaying(p){
+  if(p){
+    iconPlay.style.display='none';iconPause.style.display='block';
+    startVisuals();
+  }else{
+    iconPlay.style.display='block';iconPause.style.display='none';
+    for(var i=0;i<NBAR;i++){bars[i].className='';bars[i].style.height='30%';}
+  }
+}
+btnPlay.addEventListener('click',function(){
+  if(audio.paused){audio.play();}else{audio.pause();}
+  if(actx && actx.state==='suspended'){actx.resume();}
+});
+audio.addEventListener('play',function(){setPlaying(true);});
+audio.addEventListener('pause',function(){setPlaying(false);});
+audio.addEventListener('ended',function(){setPlaying(false);subtitle.innerHTML='收听结束 — <b>欢迎回到图文版继续阅读</b>';});
+
+/* 进度 */
+audio.addEventListener('timeupdate',function(){
+  if(isNaN(audio.duration)) return;
+  var pct=audio.currentTime/audio.duration*100;
+  fill.style.width=pct+'%';
+  knob.style.left=pct+'%';
+  curTime.textContent=fmt(audio.currentTime);
+  /* 字幕高亮 */
+  var ct=audio.currentTime;
+  var txt='';
+  for(var i=subtitles.length-1;i>=0;i--){
+    if(ct>=subtitles[i][0]){txt=subtitles[i][1];break;}
+  }
+  if(txt){
+    subtitle.innerHTML=txt.replace(/CAIO/g,'<b>C A I O</b>');
+    subtitle.className='st on';
+  }
+  /* 章节高亮 */
+  var active=-1;
+  for(var j=chapters.length-1;j>=0;j--){
+    if(ct>=chapters[j][0]){active=j;break;}
+  }
+  for(var k=0;k<tlItems.length;k++){
+    tlItems[k].className='tl-item reveal'+(k===active?' active':'');
+  }
+});
+audio.addEventListener('loadedmetadata',function(){
+  if(!isNaN(audio.duration)){durTime.textContent=fmt(audio.duration);}
+});
+
+/* 进度点击/拖动 */
+var dragging=false;
+progress.addEventListener('pointerdown',function(e){dragging=true;progress.classList.add('drag');seekFromEvent(e);progress.setPointerCapture(e.pointerId);});
+progress.addEventListener('pointermove',function(e){if(dragging)seekFromEvent(e);});
+progress.addEventListener('pointerup',function(e){if(dragging){dragging=false;progress.classList.remove('drag');seekFromEvent(e);}});
+function seekFromEvent(e){
+  var r=progress.getBoundingClientRect();
+  var pct=(e.clientX-r.left)/r.width;
+  pct=Math.max(0,Math.min(1,pct));
+  if(!isNaN(audio.duration)){audio.currentTime=pct*audio.duration;}
+  fill.style.width=pct*100+'%';knob.style.left=pct*100+'%';
+}
+
+/* 快进快退 */
+document.getElementById('btnBack').addEventListener('click',function(){audio.currentTime=Math.max(0,audio.currentTime-10);seekVisuals();});
+document.getElementById('btnFwd').addEventListener('click',function(){if(!isNaN(audio.duration))audio.currentTime=Math.min(audio.duration,audio.currentTime+10);seekVisuals();});
+function seekVisuals(){if(!isNaN(audio.duration)){var p=audio.currentTime/audio.duration*100;fill.style.width=p+'%';knob.style.left=p+'%';}}
+
+/* 倍速 */
+var speeds=document.querySelectorAll('.speed');
+speeds.forEach(function(s){
+  s.addEventListener('click',function(){
+    audio.playbackRate=parseFloat(this.dataset.s);
+    speeds.forEach(function(x){x.classList.remove('on');});
+    this.classList.add('on');
+  });
+});
+speeds[0].classList.add('on');
+
+/* 加载完成 */
+audio.addEventListener('canplay',function(){
+  setTimeout(function(){loadingMask.classList.add('hide');},400);
+});
+audio.addEventListener('error',function(){
+  loadingMask.querySelector('p').textContent='音频加载失败，请检查网络';
+  setTimeout(function(){loadingMask.classList.add('hide');},1500);
+});
+/* 兜底：3.5 秒后无论音频状态如何都隐藏遮罩（本地404/慢网场景） */
+setTimeout(function(){loadingMask.classList.add('hide');},3500);
+if(audio.readyState>=3){setTimeout(function(){loadingMask.classList.add('hide');},400);}
+
+/* 入场滚动动画 */
+var io=new IntersectionObserver(function(es){
+  es.forEach(function(e){
+    if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}
+  });
+},{threshold:.08});
+document.querySelectorAll('.reveal').forEach(function(el){io.observe(el);});
+
+/* 复制金句 */
+window.copyQuote=function(btn){
+  var card=btn.closest('.q-card');
+  var txt=card.querySelector('.txt').textContent;
+  var done=function(){
+    card.classList.add('copied');
+    btn.textContent='✓ 已复制';
+    setTimeout(function(){card.classList.remove('copied');btn.textContent='复制金句';},1600);
+  };
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done).catch(function(){
+      fallbackCopy(txt,done);
+    });
+  }else{fallbackCopy(txt,done);}
+};
+function fallbackCopy(text,cb){
+  var ta=document.createElement('textarea');
+  ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');cb();}catch(e){}
+  document.body.removeChild(ta);
+}
+})();
+</script>
+</body>
+</html>
