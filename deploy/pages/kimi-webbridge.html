@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0A0E1A">
+<title>Kimi WebBridge · 让 Kimi Agent 驾驶你的浏览器</title>
+<style>
+:root{
+  --bg:#0A0E1A; --bg-card:#0F1830; --bg-2:#0D1428;
+  --accent:#00C1FF; --accent-light:#7AD9FF; --accent-glow:rgba(0,193,255,.35);
+  --text:#E8F4FF; --text-dim:#8FA8D8; --text-mute:#4A5A85;
+  --border:#1D2A45; --warn:#FFD93D;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:#05070D;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Noto Sans SC',sans-serif;overflow:hidden;height:100%}
+
+/* ── 9:16 舞台（100svh 稳定）── */
+.stage{
+  position:relative;
+  aspect-ratio:9/16;
+  height:min(100svh, calc(100vw * 16 / 9));
+  width:min(100vw, calc(100svh * 9 / 16));
+  margin:0 auto;
+  background:radial-gradient(120% 80% at 50% 0%, #14203C 0%, var(--bg) 55%);
+  overflow:hidden;
+  perspective:1000px;
+  transform-style:preserve-3d;
+  display:flex;flex-direction:column;
+  user-select:none;
+}
+@supports not (height:100svh){
+  .stage{height:min(100vh, calc(100vw * 16 / 9));}
+}
+
+/* 3D 视差层 */
+.tilt-deep{transform:translateZ(-60px)}
+.tilt-mid{transform:translateZ(0)}
+
+/* ── Topbar ── */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 20px 0;flex-shrink:0;z-index:5;
+}
+.brand{font-family:monospace;font-size:10px;letter-spacing:.3em;color:var(--accent);display:flex;align-items:center;gap:8px}
+.brand .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent-glow);animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.share-btn{background:none;border:1px solid var(--border);color:var(--text-dim);width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;font-size:15px}
+.share-btn:active{transform:scale(.9);border-color:var(--accent);color:var(--accent)}
+
+/* ── Hero（左文字 + 右 3D 特效）── */
+.hero{
+  display:flex;align-items:center;gap:16px;
+  padding:20px 20px 12px;flex-shrink:0;z-index:4;
+}
+.hero-side{flex:1;min-width:0}
+.meta-row{display:flex;justify-content:space-between;align-items:center;font-family:monospace;font-size:8px;letter-spacing:.14em;color:var(--text-mute);margin-bottom:8px}
+.vol{color:var(--accent);letter-spacing:.22em}
+.title-block{display:flex;align-items:flex-start;gap:10px}
+.kb-stamp{
+  width:34px;height:34px;flex-shrink:0;border-radius:10px;
+  background:linear-gradient(135deg,var(--accent),#6B46FF);
+  color:#04121A;font-weight:900;font-size:15px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  box-shadow:0 4px 16px var(--accent-glow);transition:transform .2s;
+}
+.kb-stamp:active{transform:scale(.9) rotate(10deg)}
+.title-text{min-width:0}
+.kb-title{font-size:25px;font-weight:800;letter-spacing:.01em;color:var(--text);line-height:1.1}
+.kb-title .dot{color:var(--accent)}
+.superdesign-line{display:flex;align-items:center;gap:7px;margin-top:4px;flex-wrap:wrap}
+.superdesign{font-size:9px;color:var(--text-mute);letter-spacing:.06em}
+.v-tag{font-family:monospace;font-size:8px;padding:2px 6px;border-radius:4px;background:var(--bg-2);border:1px solid var(--border);color:var(--text-dim)}
+.v-tag.green{color:var(--accent);border-color:rgba(0,193,255,.3)}
+.tagline{font-size:11.5px;color:var(--text-dim);line-height:1.65;margin-top:9px}
+.tagline em{color:var(--accent-light);font-style:normal}
+.hint-badge{font-size:9px;color:var(--text-mute);margin-top:7px;letter-spacing:.04em}
+.hint-badge::before{content:'✦ ';color:var(--accent)}
+
+/* ── 3D 特效：浏览器驾驶核心（导航轨道 + 窗口核）── */
+.kb3d{
+  position:relative;flex-shrink:0;
+  width:108px;height:108px;z-index:2;pointer-events:none;
+  transform-style:preserve-3d;
+}
+.kb3d .grid-rotor{
+  position:absolute;inset:8px;border-radius:50%;
+  border:1px dashed rgba(0,193,255,.35);
+  animation:rotor 18s linear infinite;
+  transform:rotateX(68deg);
+}
+@keyframes rotor{from{transform:rotateX(68deg) rotateZ(0)}to{transform:rotateX(68deg) rotateZ(360deg)}}
+.kb3d .ring{
+  position:absolute;top:50%;left:50%;border-radius:50%;
+  border:1px solid rgba(0,193,255,.5);
+  transform-style:preserve-3d;
+}
+.kb3d .ring.r1{width:86px;height:86px;margin:-43px 0 0 -43px;animation:spinR1 9s linear infinite}
+.kb3d .ring.r2{width:64px;height:64px;margin:-32px 0 0 -32px;border-color:rgba(107,70,255,.4);animation:spinR2 13s linear infinite reverse}
+@keyframes spinR1{from{transform:rotateX(68deg) rotateZ(0)}to{transform:rotateX(68deg) rotateZ(360deg)}}
+@keyframes spinR2{from{transform:rotateX(68deg) rotateZ(0)}to{transform:rotateX(68deg) rotateZ(-360deg)}}
+.kb3d .core{
+  position:absolute;top:50%;left:50%;width:40px;height:48px;margin:-24px 0 0 -20px;
+  border-radius:8px;
+  background:linear-gradient(135deg,#7AD9FF,#00C1FF 55%,#3B2BA8);
+  box-shadow:0 0 24px var(--accent-glow),0 0 60px rgba(0,193,255,.15);
+  animation:coreFloat 3.2s ease-in-out infinite;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;
+}
+@keyframes coreFloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-4px) rotate(2deg)}}
+.core .tab{display:block;width:18px;height:4px;border-radius:2px;background:#0A0E1A;opacity:.85;margin-bottom:2px}
+.core .ln{display:block;width:16px;height:2px;border-radius:1px;background:#0A0E1A;opacity:.7}
+.core .ln.l2{width:12px;opacity:.5}
+.core .ln.l3{width:15px;opacity:.65}
+.kb3d .drive-dot{
+  position:absolute;top:50%;left:50%;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;
+  border-radius:50%;background:#FFD93D;
+  box-shadow:0 0 12px rgba(255,217,61,.8);
+  animation:driveOrbit 5.5s linear infinite;
+}
+.kb3d .drive-dot::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:1px dashed rgba(255,217,61,.4);}
+@keyframes driveOrbit{0%{transform:rotateX(68deg) rotateZ(0) translateX(43px)}100%{transform:rotateX(68deg) rotateZ(360deg) translateX(43px)}}
+.kb3d .waypoint{
+  position:absolute;top:50%;left:50%;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;
+  border-radius:50%;background:var(--accent);
+  box-shadow:0 0 8px var(--accent-glow);
+}
+.kb3d .waypoint.w1{animation:wpOrbit1 8s linear infinite}
+.kb3d .waypoint.w2{animation:wpOrbit2 10s linear infinite}
+@keyframes wpOrbit1{0%{transform:rotateX(68deg) rotateZ(0) translateX(32px)}100%{transform:rotateX(68deg) rotateZ(-360deg) translateX(32px)}}
+@keyframes wpOrbit2{0%{transform:rotateX(68deg) rotateZ(0) translateX(43px)}100%{transform:rotateX(68deg) rotateZ(360deg) translateX(43px)}}
+
+/* ── 核心展示区：命令行/提示词窗口（flex 弹性撑满）── */
+.showcase{
+  flex:1 1 auto;display:flex;flex-direction:column;
+  padding:4px 20px 10px;min-height:0;z-index:3;position:relative;
+}
+.prompt-box{
+  flex:1 1 auto;min-height:0;
+  background:rgba(13,20,40,.85);border:1px solid var(--border);border-radius:12px;
+  overflow:hidden;cursor:pointer;display:flex;flex-direction:column;
+  transition:border-color .25s;position:relative;
+}
+.prompt-box:active{border-color:var(--accent)}
+.prompt-head{display:flex;align-items:center;gap:6px;padding:9px 12px;border-bottom:1px solid var(--border);flex-shrink:0;background:rgba(15,24,48,.6)}
+.prompt-head .td{width:8px;height:8px;border-radius:50%;background:#1D2A45}
+.prompt-head .td.r{background:#F87171}.prompt-head .td.y{background:#FBBF24}.prompt-head .td.g{background:#34D399}
+.prompt-head .tname{font-family:monospace;font-size:8px;color:var(--text-mute);margin-left:6px;letter-spacing:.05em}
+.prompt-head .wb-tag{margin-left:auto;font-family:monospace;font-size:7px;color:var(--accent);border:1px solid rgba(0,193,255,.3);padding:1px 5px;border-radius:3px}
+.prompt-body{
+  flex:1;padding:10px 14px;overflow:hidden;font-family:'SF Mono',Consolas,monospace;font-size:9px;line-height:1.75;
+  color:#9FB4E8;
+}
+.prompt-body .cmt{color:#4A5A85}
+.prompt-body .kw{color:#00C1FF}
+.prompt-body .fn{color:#FFD93D}
+.prompt-body .str{color:#7AD9FF}
+.prompt-body .cursor{display:inline-block;width:6px;height:11px;background:var(--accent);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+.prompt-hint{position:absolute;bottom:8px;right:10px;font-family:monospace;font-size:7.5px;color:var(--accent);opacity:.8;letter-spacing:.08em;animation:blink 2.5s ease-in-out infinite}
+
+/* ── Stats ── */
+.stats{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+  padding:0 20px 8px;flex-shrink:0;z-index:3;
+}
+.stat-card{
+  background:var(--bg-2);border:1px solid var(--border);border-radius:10px;
+  padding:8px 6px;text-align:center;cursor:pointer;
+  transition:all .2s;position:relative;overflow:hidden;
+}
+.stat-card:active{transform:scale(.94);border-color:var(--accent)}
+.stat-card::before{content:'';position:absolute;left:0;right:0;top:0;height:2px;background:var(--accent);opacity:.4}
+.stat-num{font-size:13px;font-weight:800;color:var(--text);font-family:monospace;letter-spacing:-.02em}
+.stat-num .accent{color:var(--accent)}
+.stat-label{font-size:7.5px;color:var(--text-mute);margin-top:3px;letter-spacing:.02em}
+
+/* ── Flow ── */
+.flow{padding:0 20px 8px;flex-shrink:0;z-index:3}
+.flow svg{display:block;width:100%;height:auto}
+.flow-node{cursor:pointer;transition:opacity .2s}
+.flow-node:hover{opacity:.75}
+.flow-node text{font-size:7px;fill:var(--text-dim);font-family:monospace}
+.flow-node .ic{fill:var(--bg-2);stroke:var(--accent);stroke-width:1}
+.flow-line{stroke:var(--border);stroke-width:1;fill:none}
+
+/* ── Features ── */
+.features{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:7px;
+  padding:0 20px 8px;flex-shrink:0;z-index:3;
+}
+.feature{
+  background:var(--bg-2);border:1px solid var(--border);border-radius:10px;
+  padding:8px 10px;cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;gap:8px;min-width:0;
+}
+.feature:active{transform:scale(.95);border-color:var(--accent)}
+.feature .ficon{width:22px;height:22px;flex-shrink:0;border-radius:6px;background:rgba(0,193,255,.1);display:flex;align-items:center;justify-content:center;font-size:11px}
+.feature .ftxt{min-width:0}
+.feature .ft{font-size:10.5px;color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.feature .fd{font-size:8px;color:var(--text-mute);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── Tech Pills ── */
+.tech{
+  display:flex;flex-wrap:wrap;gap:6px;align-items:center;
+  padding:0 20px 10px;flex-shrink:0;z-index:3;max-width:100%;
+}
+.tech-pill{
+  font-family:monospace;font-size:8px;color:var(--text-dim);
+  border:1px solid var(--border);border-radius:20px;padding:3px 9px;cursor:pointer;
+  transition:all .2s;background:var(--bg-2);max-width:100%;box-sizing:border-box;
+}
+.tech-pill:active{transform:scale(.92);color:var(--accent);border-color:var(--accent)}
+
+/* ── Bottom Bar ── */
+.bottombar{
+  display:flex;gap:10px;padding:0 20px 16px;flex-shrink:0;z-index:3;
+}
+.bbtn{
+  flex:1;text-align:center;padding:10px 8px;border-radius:10px;font-size:10.5px;font-weight:600;
+  text-decoration:none;transition:all .2s;letter-spacing:.03em;
+}
+.bbtn:active{transform:scale(.95)}
+.bbtn.gh{background:var(--bg-2);color:var(--text);border:1px solid var(--border)}
+.bbtn.gh:active{border-color:var(--accent)}
+.bbtn.site{background:linear-gradient(135deg,var(--accent),#6B46FF);color:#04121A;box-shadow:0 4px 18px var(--accent-glow)}
+
+/* ── Overlay / Sheet ── */
+.overlay{
+  position:absolute;inset:0;background:rgba(3,6,12,.6);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  opacity:0;pointer-events:none;transition:opacity .35s;z-index:20;display:flex;align-items:flex-end;
+}
+.overlay.active{opacity:1;pointer-events:auto}
+.sheet{
+  width:100%;background:var(--bg-card);border-top:1px solid var(--border);
+  border-radius:20px 20px 0 0;padding:12px 22px 30px;
+  transform:translateY(100%);transition:transform .45s cubic-bezier(.7,0,.3,1);
+  max-height:78%;overflow-y:auto;position:relative;
+}
+.overlay.active .sheet{transform:translateY(0)}
+.sheet-handle{width:36px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 14px}
+.sheet-title{font-size:16px;font-weight:800;color:var(--text);line-height:1.4;margin-bottom:10px}
+.sheet-title em{color:var(--accent);font-style:normal}
+.sheet-desc{font-size:12px;color:var(--text-dim);line-height:1.8;margin-bottom:12px}
+.sheet-points{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.sheet-point{
+  font-size:11px;color:var(--text-dim);line-height:1.6;
+  padding-left:14px;position:relative;
+}
+.sheet-point::before{content:'▸';position:absolute;left:0;color:var(--accent)}
+.sheet-code{
+  font-family:'SF Mono',Consolas,monospace;font-size:9.5px;line-height:1.7;color:#BDEBFF;
+  background:#0A1120;border:1px solid var(--border);border-radius:10px;
+  padding:12px 14px;margin-bottom:14px;white-space:pre-wrap;word-break:break-all;
+}
+.sheet-close{
+  width:100%;padding:12px;border-radius:10px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,var(--accent),#6B46FF);color:#04121A;
+  font-size:12px;font-weight:800;letter-spacing:.2em;transition:transform .15s;
+}
+.sheet-close:active{transform:scale(.97)}
+
+/* ── Toast ── */
+.toast{
+  position:absolute;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);
+  background:rgba(10,14,26,.95);border:1px solid var(--border);color:var(--text);
+  font-size:11px;padding:10px 18px;border-radius:30px;
+  opacity:0;transition:all .35s cubic-bezier(.7,0,.3,1);z-index:30;white-space:nowrap;pointer-events:none;
+  box-shadow:0 8px 30px rgba(0,0,0,.5);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── 小屏压缩 ── */
+@media (max-height:730px){
+  .hero{padding-top:12px;padding-bottom:8px;gap:12px}
+  .kb3d{width:88px;height:88px}
+  .kb3d .ring.r1{width:70px;height:70px;margin:-35px 0 0 -35px}
+  .kb3d .ring.r2{width:52px;height:52px;margin:-26px 0 0 -26px}
+  .kb3d .drive-dot{animation-duration:4.5s}
+  @keyframes driveOrbitS{0%{transform:rotateX(68deg) rotateZ(0) translateX(35px)}100%{transform:rotateX(68deg) rotateZ(360deg) translateX(35px)}}
+  .kb3d .drive-dot{animation:driveOrbitS 4.5s linear infinite}
+  .kb-title{font-size:21px}
+  .tagline{font-size:10.5px}
+  .stat-num{font-size:12px}
+  .feature .ft{font-size:9.5px}
+  .features{padding:0 20px 6px;gap:5px}
+  .feature{padding:6px 8px}
+  .stats{padding-bottom:6px}
+  .flow{padding-bottom:6px}
+  .showcase{padding-top:2px}
+}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+
+  <!-- Topbar -->
+  <div class="topbar tilt-mid">
+    <div class="brand"><span class="dot"></span>KIMI WEBBRIDGE</div>
+    <button class="share-btn" id="shareBtn" aria-label="分享">↗</button>
+  </div>
+
+  <!-- Hero：左文字 + 右 3D 特效 -->
+  <div class="hero reveal">
+    <div class="hero-side tilt-mid">
+      <div class="meta-row">
+        <span class="vol">AGENT DRIVES BROWSER</span>
+        <span>2026.08.10</span>
+      </div>
+      <div class="title-block">
+        <div class="kb-stamp" id="stamp">🧭</div>
+        <div class="title-text">
+          <div class="kb-title">WebBridge<span class="dot">.</span></div>
+          <div class="superdesign-line">
+            <span class="superdesign">Moonshot AI · 月之暗面</span>
+            <span class="v-tag green">Kimi Work</span>
+          </div>
+        </div>
+      </div>
+      <div class="tagline">让 Kimi Agent <em>驾驶你的浏览器</em>——登录你的 Chrome/Edge，自主导航、点击、截图、读页，一切<em>本地运行</em>不泄露</div>
+      <div class="hint-badge">轻触任何元素探索 · 拖动卡片看 3D 视差</div>
+    </div>
+    <div class="kb3d tilt-deep" id="kb3d">
+      <div class="grid-rotor"></div>
+      <div class="ring r1"></div>
+      <div class="ring r2"></div>
+      <div class="waypoint w1"></div>
+      <div class="waypoint w2"></div>
+      <div class="core">
+        <span class="tab"></span>
+        <span class="ln l1"></span><span class="ln l2"></span><span class="ln l3"></span>
+      </div>
+      <div class="drive-dot"></div>
+    </div>
+  </div>
+
+  <!-- 核心展示区：提示词窗口（flex 弹性撑满） -->
+  <div class="showcase tilt-mid">
+    <div class="prompt-box" id="promptShow" data-sheet="prompt">
+      <div class="prompt-head">
+        <span class="td r"></span><span class="td y"></span><span class="td g"></span>
+        <span class="tname">Kimi Work — 给我一个任务</span>
+        <span class="wb-tag">WebBridge 已连接</span>
+      </div>
+      <div class="prompt-body">
+        <span class="cmt"># 打开 Kimi Desktop → Kimi Work 模式 → 输入：</span><br>
+        <span class="str">"Browse Amazon for a mechanical</span><br>
+        <span class="str">&nbsp;&nbsp;keyboard under $150 with 4.5+ stars"</span><br>
+        <span class="cmt"># Kimi 驾驶浏览器：搜索 → 筛选 → 对比 → 下单</span><br>
+        <span class="kw">⛳ 连接中...</span> <span class="fn">导航 amazon.com</span> <span class="cursor"></span>
+      </div>
+      <div class="prompt-hint">▲ 点击查看完整流程</div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats tilt-mid">
+    <div class="stat-card" data-sheet="local">
+      <div class="stat-num"><span class="accent">100%</span></div>
+      <div class="stat-label">本地运行</div>
+    </div>
+    <div class="stat-card" data-sheet="install">
+      <div class="stat-num"><span class="accent">1min</span></div>
+      <div class="stat-label">安装耗时</div>
+    </div>
+    <div class="stat-card" data-sheet="browsers">
+      <div class="stat-num"><span class="accent">2</span></div>
+      <div class="stat-label">Chrome/Edge</div>
+    </div>
+    <div class="stat-card" data-sheet="cases">
+      <div class="stat-num"><span class="accent">3+</span></div>
+      <div class="stat-label">典型用例</div>
+    </div>
+  </div>
+
+  <!-- Flow -->
+  <div class="flow tilt-mid">
+    <svg viewBox="0 0 330 44" fill="none">
+      <line class="flow-line" x1="55" y1="22" x2="100" y2="22"/>
+      <path class="flow-line" d="M100 22 L108 18 V26 Z" fill="var(--accent)"/>
+      <line class="flow-line" x1="140" y1="22" x2="185" y2="22"/>
+      <path class="flow-line" d="M185 22 L193 18 V26 Z" fill="var(--accent)"/>
+      <line class="flow-line" x1="225" y1="22" x2="270" y2="22"/>
+      <path class="flow-line" d="M270 22 L278 18 V26 Z" fill="var(--accent)"/>
+      <g class="flow-node" data-sheet="f1">
+        <rect class="ic" x="5" y="8" width="50" height="28" rx="8"/>
+        <text x="30" y="26" text-anchor="middle">下指令</text>
+      </g>
+      <g class="flow-node" data-sheet="f2">
+        <rect class="ic" x="110" y="8" width="30" height="28" rx="8"/>
+        <text x="125" y="26" text-anchor="middle">CDP 驱动</text>
+      </g>
+      <g class="flow-node" data-sheet="f3">
+        <rect class="ic" x="195" y="8" width="30" height="28" rx="8"/>
+        <text x="210" y="26" text-anchor="middle">读页执行</text>
+      </g>
+      <g class="flow-node" data-sheet="f4">
+        <rect class="ic" x="280" y="8" width="45" height="28" rx="8" stroke="#FFD93D"/>
+        <text x="302" y="26" text-anchor="middle">回传结果</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- Features -->
+  <div class="features tilt-mid">
+    <div class="feature" data-sheet="privacy">
+      <div class="ficon">🔒</div>
+      <div class="ftxt"><div class="ft">隐私本地化</div><div class="fd">登录态/页面内容不出设备</div></div>
+    </div>
+    <div class="feature" data-sheet="cdp">
+      <div class="ficon">🛰️</div>
+      <div class="ftxt"><div class="ft">CDP 驾驶</div><div class="fd">导航/点击/截图/读页</div></div>
+    </div>
+    <div class="feature" data-sheet="gsheets">
+      <div class="ficon">📊</div>
+      <div class="ftxt"><div class="ft">Build Google Sheets</div><div class="fd">跨站数据进表格</div></div>
+    </div>
+    <div class="feature" data-sheet="skill">
+      <div class="ficon">🔄</div>
+      <div class="ftxt"><div class="ft">Workflow → Skill</div><div class="fd">把流程固化成技能</div></div>
+    </div>
+  </div>
+
+  <!-- Tech Pills -->
+  <div class="tech tilt-mid">
+    <span class="tech-pill" data-sheet="chrome">Chrome</span>
+    <span class="tech-pill" data-sheet="edge">Edge</span>
+    <span class="tech-pill" data-sheet="desktop">Kimi Desktop</span>
+    <span class="tech-pill" data-sheet="work">Kimi Work 模式</span>
+    <span class="tech-pill" data-sheet="cdp2">CDP 协议</span>
+    <span class="tech-pill" data-sheet="local2">纯本地</span>
+  </div>
+
+  <!-- Bottom Bar -->
+  <div class="bottombar tilt-mid">
+    <a class="bbtn gh" href="https://www.kimi.com/features/webbridge" target="_blank" rel="noopener">产品页</a>
+    <a class="bbtn site" href="https://www.kimi.com/" target="_blank" rel="noopener">Kimi 官网</a>
+  </div>
+
+  <!-- Overlay / Sheet -->
+  <div class="overlay" id="overlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" id="sheetTitle"></div>
+      <div class="sheet-desc" id="sheetDesc"></div>
+      <div class="sheet-code" id="sheetCode" style="display:none"></div>
+      <div class="sheet-points" id="sheetPoints"></div>
+      <button class="sheet-close" id="sheetClose">CLOSE</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var $=function(s){return document.querySelector(s)};
+  var stage=$('#stage'), overlay=$('#overlay'), sheetTitle=$('#sheetTitle'),
+      sheetDesc=$('#sheetDesc'), sheetPoints=$('#sheetPoints'), sheetCode=$('#sheetCode'),
+      toast=$('#toast');
+
+  var DATA={
+    story:{
+      title:'Moonshot AI <em>· 月之暗面的浏览器驾驶</em>',
+      desc:'Kimi WebBridge 是月之暗面（Moonshot AI）推出的浏览器扩展，与 Kimi Desktop / Kimi Work 联动。它的卖点不是"帮你搜索"，而是把 AI 变成"能替你操作浏览器的人"——用你已登录的浏览器完成真实操作，同时守住隐私底线。',
+      points:['月之暗面 Moonshot AI 出品','Kimi 产品矩阵一员（K3 / Work / Code / Claw）','浏览器扩展 + 本地服务组合','定位：AI Agent 与现实网页的桥梁','2026 年随 Kimi Desktop 生态推出']
+    },
+    local:{
+      title:'100% 本地 <em>· 隐私是卖点</em>',
+      desc:'WebBridge 的架构核心：一个本地服务 + 一个浏览器扩展。Agent 发命令给本地服务，服务通过 Chrome DevTools Protocol 操作你的浏览器——全程在你的设备上完成，登录会话和页面内容永远不会离开设备。',
+      points:['本地服务 + 浏览器扩展双组件','CDP 协议驱动现有浏览器','登录态不出设备','页面内容不出设备','无需云渲染/无中间服务器']
+    },
+    install:{
+      title:'1 分钟安装 <em>· 三步上手</em>',
+      desc:'官方教程视频标注 "Install Kimi WebBridge in 1 minute"。三步：① 安装 Kimi Desktop App ② 装浏览器扩展（商店或手动）③ 切到 Kimi Work 模式发指令。',
+      points:['Step 1: 安装 Kimi Desktop','Step 2: 扩展商店或手动安装','Step 3: Kimi Work 模式发指令','官方演示视频 01:18','macOS 官方下载']
+    },
+    browsers:{
+      title:'Chrome / Edge <em>· 复用现有浏览器</em>',
+      desc:'不是自带浏览器内核，而是驱动你已安装的 Chrome 或 Edge——这意味着你的登录态、Cookie、收藏夹全部可用，AI 以"你"的身份操作真实网站。',
+      points:['支持 Chrome','支持 Edge','复用现有登录态','无需单独配置账号','浏览器池 CDP 连接']
+    },
+    cases:{
+      title:'3+ 典型用例 <em>· 官方演示</em>',
+      desc:'官方首页展示三个核心场景：Build Google Sheets（把跨站数据构建成表格）、Cross-Site Search（跨网站搜索整合）、Convert Workflow to Skill（把重复工作流固化成技能）。',
+      points:['Build Google Sheets: 跨站数据进表','Cross-Site Search: 多站搜索整合','Convert Workflow to Skill: 流程技能化','示例: Amazon 键盘比价筛选','复杂任务交给 Agent 自主完成']
+    },
+    prompt:{
+      title:'一句话 <em>· 让 AI 干活</em>',
+      desc:'典型用法：在 Kimi Work 发一条自然语言指令，WebBridge 接管浏览器执行。官方示例指令："Browse Amazon for a mechanical keyboard under $150 with 4.5+ stars"——搜索、筛选、对比、最终给出推荐。',
+      points:['自然语言指令驱动','Amazon 比价示例（$150 内 4.5+ 星）','AI 自主导航/点击/筛选','完成后回传结果','复杂流程可转成 Skill 复用'],
+      code:'# 在 Kimi Work 中输入：\nBrowse Amazon for a mechanical keyboard under $150 with 4.5+ stars\n\n# WebBridge 执行：\n1. 打开 amazon.com\n2. 搜索 "mechanical keyboard"\n3. 按价格 < $150 筛选\n4. 按评分 4.5+ 筛选\n5. 对比候选商品\n6. 返回推荐结果列表'
+    },
+    privacy:{title:'隐私本地化 <em>· 核心设计原则</em>',desc:'登录会话和页面内容全程留在设备本地，避免 AI 云服务截获你的真实浏览数据。这是 WebBridge 与云端抓取方案的本质区别。',points:['登录态本地保留','页面内容不出设备','无云渲染中间层','隐私优先架构']},
+    cdp:{title:'CDP 驾驶 <em>· 完整浏览器控制</em>',desc:'通过 Chrome DevTools Protocol，AI 能导航、点击、截图、读取页面——几乎人能做的一切浏览器操作。',points:['导航 navigate','点击 click','截图 screenshot','读页内容','结果回传 Agent']},
+    gsheets:{title:'Build Google Sheets <em>· 数据进表</em>',desc:'让 AI 跨多个网站收集数据，自动构建成 Google Sheets 表格——调研、比价、信息整理一条龙。',points:['跨站数据采集','自动结构化','直接写入 Google Sheets','调研/比价/竞品分析场景']},
+    skill:{title:'Workflow → Skill <em>· 流程固化</em>',desc:'把一次成功的 Agent 操作流程保存为 Skill（技能），下次一句话即可重复执行——从"做一次"到"随时做"。',points:['流程录制固化','一键复用','团队共享潜力','减少重复操作']},
+    f1:{title:'Step 1 · <em>下指令</em>',desc:'在 Kimi Work 用自然语言描述任务目标。',points:['自然语言指令','支持复杂多步任务','官方示例: Amazon 比价']},
+    f2:{title:'Step 2 · <em>CDP 驱动</em>',desc:'本地服务通过 Chrome DevTools Protocol 连接你的浏览器。',points:['本地服务中转','CDP 协议控制','Chrome/Edge 双支持']},
+    f3:{title:'Step 3 · <em>读页执行</em>',desc:'AI 读取页面内容、执行点击导航、截图确认状态，像真人一样操作。',points:['页面读取','点击/导航执行','截图验证','循环决策']},
+    f4:{title:'Step 4 · <em>回传结果</em>',desc:'操作完成后把结果返回 Kimi Work，继续对话或生成交付物。',points:['结果回传','可与 Workflow 串联','可转 Skill 复用']},
+    chrome:{title:'Chrome 支持',desc:'驱动你现有的 Chrome 浏览器，复用登录态。',points:['Chrome 扩展','登录态复用','CDP 连接']},
+    edge:{title:'Edge 支持',desc:'同时支持 Edge 浏览器。',points:['Edge 扩展','CDP 连接','与 Chrome 同架构']},
+    desktop:{title:'Kimi Desktop',desc:'需要安装 Kimi 桌面应用，WebBridge 是它的浏览器驾驶组件。',points:['桌面应用配套','macOS/Windows','与 Kimi Work 联动']},
+    work:{title:'Kimi Work 模式',desc:'WebBridge 在 Kimi Work 模式下使用，是桌面端知识工作代理的浏览器扩展。',points:['桌面知识工作代理','发指令给浏览器','Agent 任务执行']},
+    cdp2:{title:'CDP 协议',desc:'Chrome DevTools Protocol——浏览器远程控制的标准协议。',points:['行业标准','导航/点击/截图/读页','本地连接']},
+    local2:{title:'纯本地',desc:'所有操作在设备本地完成，无云端中间层。',points:['数据不出设备','隐私优先','无云渲染']}
+  };
+
+  // 打开弹窗
+  function openSheet(key){
+    var d=DATA[key]; if(!d) return;
+    sheetTitle.innerHTML=d.title;
+    sheetDesc.textContent=d.desc;
+    if(d.code){sheetCode.style.display='block';sheetCode.textContent=d.code;}
+    else{sheetCode.style.display='none';}
+    sheetPoints.innerHTML=d.points.map(function(p){return '<div class="sheet-point">'+p+'</div>';}).join('');
+    overlay.classList.add('active');
+    if(navigator.vibrate) navigator.vibrate(15);
+  }
+  function closeSheet(){overlay.classList.remove('active');}
+
+  // 绑定所有 data-sheet 元素
+  document.querySelectorAll('[data-sheet]').forEach(function(el){
+    el.addEventListener('click',function(){openSheet(this.getAttribute('data-sheet'));});
+  });
+  $('#sheetClose').addEventListener('click',closeSheet);
+  overlay.addEventListener('click',function(e){if(e.target===overlay) closeSheet();});
+  $('#stamp').addEventListener('click',function(){openSheet('story');});
+
+  // 分享（三段式）
+  var shareBtn=$('#shareBtn');
+  function shareText(){
+    return 'Kimi WebBridge：让 Kimi Agent 驾驶你的浏览器——用你已登录的 Chrome/Edge 自主导航、点击、读页，一切本地运行，登录态和页面内容不出设备。\nhttps://mindresonance.online/youngsinsight/pages/kimi-webbridge.html\n\n你可以用任何AI工具订阅我的博客文章：https://mindresonance.online/youngsinsight/subscribe.html';
+  }
+  function showToast(msg){
+    toast.textContent=msg;
+    toast.classList.add('show');
+    setTimeout(function(){toast.classList.remove('show');},2200);
+  }
+  shareBtn.addEventListener('click',function(){
+    var text=shareText();
+    if(navigator.share){
+      navigator.share({title:'Kimi WebBridge · 让 Kimi Agent 驾驶浏览器',text:text}).catch(function(){});
+    }else if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){showToast('已复制：介绍 + 链接 + 订阅推荐');});
+    }else{
+      var ta=document.createElement('textarea');
+      ta.value=text;document.body.appendChild(ta);ta.select();
+      try{document.execCommand('copy');showToast('已复制：介绍 + 链接 + 订阅推荐');}catch(e){}
+      document.body.removeChild(ta);
+    }
+  });
+
+  // 3D 视差倾斜
+  var tiltRaf=null;
+  function onTilt(x,y){
+    if(tiltRaf) return;
+    tiltRaf=requestAnimationFrame(function(){
+      var w=stage.clientWidth,h=stage.clientHeight;
+      var nx=(x/w)*2-1, ny=(y/h)*2-1;
+      stage.style.transform='rotateX('+(-ny*6)+'deg) rotateY('+(nx*6)+'deg)';
+      tiltRaf=null;
+    });
+  }
+  stage.addEventListener('mousemove',function(e){
+    var r=stage.getBoundingClientRect();
+    onTilt(e.clientX-r.left,e.clientY-r.top);
+  });
+  stage.addEventListener('touchmove',function(e){
+    var t=e.touches[0];if(!t)return;
+    var r=stage.getBoundingClientRect();
+    onTilt(t.clientX-r.left,t.clientY-r.top);
+  },{passive:true});
+  stage.addEventListener('mouseleave',function(){stage.style.transform='rotateX(0) rotateY(0)';});
+
+  // 彩蛋：stamp 连点 5 次
+  var stampCount=0;
+  $('#stamp').addEventListener('click',function(){
+    stampCount++;
+    if(stampCount>=5){
+      stampCount=0;
+      var spin=0, iv=setInterval(function(){
+        spin+=18;
+        var s=$('#stamp');
+        s.style.transform='rotate('+spin+'deg) scale(1.2)';
+        if(spin>=360){clearInterval(iv);s.style.transform='';}
+      },16);
+      showToast('🧭 WebBridge 已接管浏览器！');
+      if(navigator.vibrate) navigator.vibrate([20,40,20]);
+    }
+  });
+
+  // 自动呼吸提示
+  setTimeout(function(){
+    var el=document.querySelector('.prompt-hint');
+    if(el){el.style.animation='none';el.style.opacity='1';}
+  },4000);
+})();
+</script>
+</body>
+</html>

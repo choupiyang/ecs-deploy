@@ -1,10 +1,17 @@
 {
-  "id": "clickup",
-  "title": "ClickUp",
-  "subtitle": "一个应用替代所有软件 · 工作 OS · Brain AI + Super Agents · 5M+ 团队 · $4B",
-  "image": "cards/clickup-cover.svg",
-  "page": "pages/clickup.html",
-  "tags": ["工作管理", "Work OS", "项目管理", "AI Agent", "SaaS", "5M+ teams"],
+  "id": "kimi-webbridge",
+  "title": "Kimi WebBridge",
+  "subtitle": "让 Kimi Agent 驾驶你的浏览器 · 本地运行隐私优先 · Moonshot AI",
+  "image": "cards/kimi-webbridge-cover.svg",
+  "page": "pages/kimi-webbridge.html",
+  "tags": [
+    "浏览器扩展",
+    "AI Agent",
+    "CDP",
+    "隐私",
+    "Moonshot AI",
+    "Kimi"
+  ],
   "date": "2026-08-10",
   "type": "recommendation"
 }
