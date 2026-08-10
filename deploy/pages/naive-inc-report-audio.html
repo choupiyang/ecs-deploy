@@ -360,7 +360,7 @@ audio.addEventListener('timeupdate',function(){
     if(ct>=chapters[j][0]){active=j;break;}
   }
   for(var k=0;k<tlItems.length;k++){
-    tlItems[k].className='tl-item reveal'+(k===active?' active':'');
+    tlItems[k].classList.toggle('active',k===active);
   }
 });
 audio.addEventListener('loadedmetadata',function(){
