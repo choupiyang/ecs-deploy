@@ -1,10 +1,10 @@
 {
-  "id": "prime-agent",
-  "title": "Prime Agent",
-  "subtitle": "自改进 RLM 编码 Agent · 8818★ · MIT",
-  "image": "cards/prime-agent-cover.svg",
-  "page": "pages/prime-agent.html",
-  "tags": ["RLM", "AI Agent", "自改进", "开源", "TypeScript", "8818★"],
-  "date": "2026-08-08",
+  "id": "crawl4ai",
+  "title": "Crawl4AI",
+  "subtitle": "开源 LLM 友好爬虫 · AI 自动理解网页结构 · 77.6K★",
+  "image": "cards/crawl4ai-cover.svg",
+  "page": "pages/crawl4ai.html",
+  "tags": ["爬虫", "Web Scraper", "LLM 数据管道", "开源", "Python", "77.6K★"],
+  "date": "2026-08-10",
   "type": "recommendation"
 }
