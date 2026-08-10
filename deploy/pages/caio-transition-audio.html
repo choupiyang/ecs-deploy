@@ -235,7 +235,13 @@ var bars=viz.children;
 var actx=null, analyser=null, dataArr=null;
 try{
   actx=new (window.AudioContext||window.webkitAudioContext)();
-}catch(e){actx=null;}
+  analyser=actx.createAnalyser();
+  analyser.fftSize=128;
+  dataArr=new Uint8Array(analyser.frequencyBinCount);
+  var src=actx.createMediaElementSource(audio);
+  src.connect(analyser);
+  analyser.connect(actx.destination);
+}catch(e){actx=null;analyser=null;dataArr=null;}
 
 function startVisuals(){
   for(var i=0;i<NBAR;i++){bars[i].style.height=(20+Math.random()*60)+'%';}

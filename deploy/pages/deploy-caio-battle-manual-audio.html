@@ -239,8 +239,17 @@ var NBAR=48;
 for(var i=0;i<NBAR;i++){var b=document.createElement('i');viz.appendChild(b);}
 var bars=viz.children;
 
-var actx=null;
-try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){actx=null;}
+/* 伪频谱动画（无 WebAudio 时用随机跳动，WebAudio 时用真实频谱） */
+var actx=null, analyser=null, dataArr=null;
+try{
+  actx=new (window.AudioContext||window.webkitAudioContext)();
+  analyser=actx.createAnalyser();
+  analyser.fftSize=128;
+  dataArr=new Uint8Array(analyser.frequencyBinCount);
+  var src=actx.createMediaElementSource(audio);
+  src.connect(analyser);
+  analyser.connect(actx.destination);
+}catch(e){actx=null;analyser=null;dataArr=null;}
 
 function startVisuals(){
   for(var i=0;i<NBAR;i++){bars[i].style.height=(20+Math.random()*60)+'%';}
