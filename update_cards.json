@@ -1,16 +1,16 @@
 {
-  "id": "kimi-webbridge",
-  "title": "Kimi WebBridge",
-  "subtitle": "让 Kimi Agent 驾驶你的浏览器 · 本地运行隐私优先 · Moonshot AI",
-  "image": "cards/kimi-webbridge-cover.svg",
-  "page": "pages/kimi-webbridge.html",
+  "id": "scrapling",
+  "title": "Scrapling",
+  "subtitle": "自适应网页抓取框架 · 隐身绕过 Cloudflare · 解析快过 Selectolax 99 倍",
+  "image": "cards/scrapling-cover.svg",
+  "page": "pages/scrapling.html",
   "tags": [
-    "浏览器扩展",
-    "AI Agent",
-    "CDP",
-    "隐私",
-    "Moonshot AI",
-    "Kimi"
+    "爬虫",
+    "Web Scraping",
+    "反爬绕过",
+    "Python",
+    "MCP",
+    "开源"
   ],
   "date": "2026-08-10",
   "type": "recommendation"

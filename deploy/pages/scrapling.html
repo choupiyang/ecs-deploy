@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#07130F">
+<title>Scrapling · 自适应网页抓取框架</title>
+<style>
+:root{
+  --bg:#07130F; --bg-card:#0B1D15; --bg-2:#091710;
+  --accent:#34D399; --accent-light:#6EE7B7; --accent-glow:rgba(52,211,153,.35);
+  --text:#D1FAE5; --text-dim:#8FB8A5; --text-mute:#3D6B57;
+  --border:#16352A; --warn:#38BDF8;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:#040A07;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Noto Sans SC',sans-serif;overflow:hidden;height:100%}
+
+/* ── 9:16 舞台（100svh 稳定）── */
+.stage{
+  position:relative;
+  aspect-ratio:9/16;
+  height:min(100svh, calc(100vw * 16 / 9));
+  width:min(100vw, calc(100svh * 9 / 16));
+  margin:0 auto;
+  background:radial-gradient(120% 80% at 50% 0%, #0F2B1E 0%, var(--bg) 55%);
+  overflow:hidden;
+  perspective:1000px;
+  transform-style:preserve-3d;
+  display:flex;flex-direction:column;
+  user-select:none;
+}
+@supports not (height:100svh){
+  .stage{height:min(100vh, calc(100vw * 16 / 9));}
+}
+
+/* 3D 视差层 */
+.tilt-deep{transform:translateZ(-60px)}
+.tilt-mid{transform:translateZ(0)}
+
+/* ── Topbar ── */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 20px 0;flex-shrink:0;z-index:5;
+}
+.brand{font-family:monospace;font-size:10px;letter-spacing:.3em;color:var(--accent);display:flex;align-items:center;gap:8px}
+.brand .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent-glow);animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.share-btn{background:none;border:1px solid var(--border);color:var(--text-dim);width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;font-size:15px}
+.share-btn:active{transform:scale(.9);border-color:var(--accent);color:var(--accent)}
+
+/* ── Hero（左文字 + 右 3D）── */
+.hero{
+  display:flex;align-items:center;gap:16px;
+  padding:20px 20px 12px;flex-shrink:0;z-index:4;
+}
+.hero-side{flex:1;min-width:0}
+.meta-row{display:flex;justify-content:space-between;align-items:center;font-family:monospace;font-size:8px;letter-spacing:.14em;color:var(--text-mute);margin-bottom:8px}
+.vol{color:var(--accent);letter-spacing:.22em}
+.title-block{display:flex;align-items:flex-start;gap:10px}
+.sp-stamp{
+  width:34px;height:34px;flex-shrink:0;border-radius:10px;
+  background:linear-gradient(135deg,var(--accent),#0EA5E9);
+  color:#04120C;font-weight:900;font-size:15px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  box-shadow:0 4px 16px var(--accent-glow);transition:transform .2s;
+}
+.sp-stamp:active{transform:scale(.9) rotate(10deg)}
+.title-text{min-width:0}
+.sp-title{font-size:25px;font-weight:800;letter-spacing:.01em;color:var(--text);line-height:1.1}
+.sp-title .dot{color:var(--accent)}
+.superdesign-line{display:flex;align-items:center;gap:7px;margin-top:4px;flex-wrap:wrap}
+.superdesign{font-size:9px;color:var(--text-mute);letter-spacing:.06em}
+.v-tag{font-family:monospace;font-size:8px;padding:2px 6px;border-radius:4px;background:var(--bg-2);border:1px solid var(--border);color:var(--text-dim)}
+.v-tag.green{color:var(--accent);border-color:rgba(52,211,153,.3)}
+.tagline{font-size:11.5px;color:var(--text-dim);line-height:1.65;margin-top:9px}
+.tagline em{color:var(--accent-light);font-style:normal}
+.hint-badge{font-size:9px;color:var(--text-mute);margin-top:7px;letter-spacing:.04em}
+.hint-badge::before{content:'✦ ';color:var(--accent)}
+
+/* ── 3D 特效：自适应蜘蛛抓取核 ── */
+.sp3d{
+  position:relative;flex-shrink:0;
+  width:108px;height:108px;z-index:2;pointer-events:none;
+  transform-style:preserve-3d;
+}
+.sp3d .grid-rotor{
+  position:absolute;inset:8px;border-radius:50%;
+  border:1px dashed rgba(52,211,153,.35);
+  animation:rotor 18s linear infinite;
+  transform:rotateX(68deg);
+}
+@keyframes rotor{from{transform:rotateX(68deg) rotateZ(0)}to{transform:rotateX(68deg) rotateZ(360deg)}}
+.sp3d .ring{
+  position:absolute;top:50%;left:50%;border-radius:50%;
+  border:1px solid rgba(52,211,153,.5);
+  transform-style:preserve-3d;
+}
+.sp3d .ring.r1{width:86px;height:86px;margin:-43px 0 0 -43px;animation:spinR1 9s linear infinite}
+.sp3d .ring.r2{width:64px;height:64px;margin:-32px 0 0 -32px;border-color:rgba(14,165,233,.4);animation:spinR2 13s linear infinite reverse}
+@keyframes spinR1{from{transform:rotateX(68deg) rotateZ(0)}to{transform:rotateX(68deg) rotateZ(360deg)}}
+@keyframes spinR2{from{transform:rotateX(68deg) rotateZ(0)}to{transform:rotateX(68deg) rotateZ(-360deg)}}
+.sp3d .core{
+  position:absolute;top:50%;left:50%;width:42px;height:42px;margin:-21px 0 0 -21px;
+  border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#6EE7B7,#10B981 55%,#0B5E3A);
+  box-shadow:0 0 24px var(--accent-glow),0 0 60px rgba(52,211,153,.15);
+  animation:corePulse 2.8s ease-in-out infinite;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;
+}
+@keyframes corePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.core .eyes{display:flex;gap:7px;margin-bottom:4px}
+.core .eye{width:5px;height:5px;border-radius:50%;background:#07130F;position:relative}
+.core .eye::after{content:'';position:absolute;top:1.5px;left:1.5px;width:2px;height:2px;border-radius:50%;background:#6EE7B7;animation:eyeBlink 1.6s ease-in-out infinite}
+.core .eye.e2::after{animation-delay:.3s}
+@keyframes eyeBlink{0%,100%{opacity:1}50%{opacity:.2}}
+.core .leg{display:block;width:16px;height:1.6px;border-radius:1px;background:#07130F;opacity:.75;margin-bottom:1.5px}
+.sp3d .probe{
+  position:absolute;top:50%;left:50%;width:8px;height:8px;margin:-4px 0 0 -4px;
+  border-radius:50%;background:#38BDF8;
+  box-shadow:0 0 10px rgba(56,189,248,.7);
+  animation:probeOrbit 5.5s linear infinite;
+}
+@keyframes probeOrbit{0%{transform:rotateX(68deg) rotateZ(0) translateX(43px)}100%{transform:rotateX(68deg) rotateZ(360deg) translateX(43px)}}
+.sp3d .trace{
+  position:absolute;top:50%;left:50%;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;
+  border-radius:50%;background:var(--accent);
+  box-shadow:0 0 8px var(--accent-glow);
+}
+.sp3d .trace.t1{animation:trOrbit1 8s linear infinite}
+.sp3d .trace.t2{animation:trOrbit2 10s linear infinite}
+@keyframes trOrbit1{0%{transform:rotateX(68deg) rotateZ(0) translateX(32px)}100%{transform:rotateX(68deg) rotateZ(-360deg) translateX(32px)}}
+@keyframes trOrbit2{0%{transform:rotateX(68deg) rotateZ(0) translateX(43px)}100%{transform:rotateX(68deg) rotateZ(360deg) translateX(43px)}}
+
+/* ── 核心展示区：代码窗口（flex 弹性撑满）── */
+.showcase{
+  flex:1 1 auto;display:flex;flex-direction:column;
+  padding:4px 20px 10px;min-height:0;z-index:3;position:relative;
+}
+.code-box{
+  flex:1 1 auto;min-height:0;
+  background:rgba(9,23,16,.85);border:1px solid var(--border);border-radius:12px;
+  overflow:hidden;cursor:pointer;display:flex;flex-direction:column;
+  transition:border-color .25s;position:relative;
+}
+.code-box:active{border-color:var(--accent)}
+.code-head{display:flex;align-items:center;gap:6px;padding:9px 12px;border-bottom:1px solid var(--border);flex-shrink:0;background:rgba(11,29,21,.6)}
+.code-head .td{width:8px;height:8px;border-radius:50%;background:#16352A}
+.code-head .td.r{background:#F87171}.code-head .td.y{background:#FBBF24}.code-head .td.g{background:#34D399}
+.code-head .tname{font-family:monospace;font-size:8px;color:var(--text-mute);margin-left:6px;letter-spacing:.05em}
+.code-head .sp-tag{margin-left:auto;font-family:monospace;font-size:7px;color:var(--accent);border:1px solid rgba(52,211,153,.3);padding:1px 5px;border-radius:3px}
+.code-body{
+  flex:1;padding:10px 14px;overflow:hidden;font-family:'SF Mono',Consolas,monospace;font-size:9px;line-height:1.75;
+  color:#A7CBB8;
+}
+.code-body .cmt{color:#3D6B57}
+.code-body .kw{color:#34D399}
+.code-body .fn{color:#38BDF8}
+.code-body .str{color:#6EE7B7}
+.code-body .cursor{display:inline-block;width:6px;height:11px;background:var(--accent);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+.code-hint{position:absolute;bottom:8px;right:10px;font-family:monospace;font-size:7.5px;color:var(--accent);opacity:.8;letter-spacing:.08em;animation:blink 2.5s ease-in-out infinite}
+
+/* ── Stats ── */
+.stats{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+  padding:0 20px 8px;flex-shrink:0;z-index:3;
+}
+.stat-card{
+  background:var(--bg-2);border:1px solid var(--border);border-radius:10px;
+  padding:8px 6px;text-align:center;cursor:pointer;
+  transition:all .2s;position:relative;overflow:hidden;
+}
+.stat-card:active{transform:scale(.94);border-color:var(--accent)}
+.stat-card::before{content:'';position:absolute;left:0;right:0;top:0;height:2px;background:var(--accent);opacity:.4}
+.stat-num{font-size:13px;font-weight:800;color:var(--text);font-family:monospace;letter-spacing:-.02em}
+.stat-num .accent{color:var(--accent)}
+.stat-label{font-size:7.5px;color:var(--text-mute);margin-top:3px;letter-spacing:.02em}
+
+/* ── Flow ── */
+.flow{padding:0 20px 8px;flex-shrink:0;z-index:3}
+.flow svg{display:block;width:100%;height:auto}
+.flow-node{cursor:pointer;transition:opacity .2s}
+.flow-node:hover{opacity:.75}
+.flow-node text{font-size:7px;fill:var(--text-dim);font-family:monospace}
+.flow-node .ic{fill:var(--bg-2);stroke:var(--accent);stroke-width:1}
+.flow-line{stroke:var(--border);stroke-width:1;fill:none}
+
+/* ── Features ── */
+.features{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:7px;
+  padding:0 20px 8px;flex-shrink:0;z-index:3;
+}
+.feature{
+  background:var(--bg-2);border:1px solid var(--border);border-radius:10px;
+  padding:8px 10px;cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;gap:8px;min-width:0;
+}
+.feature:active{transform:scale(.95);border-color:var(--accent)}
+.feature .ficon{width:22px;height:22px;flex-shrink:0;border-radius:6px;background:rgba(52,211,153,.1);display:flex;align-items:center;justify-content:center;font-size:11px}
+.feature .ftxt{min-width:0}
+.feature .ft{font-size:10.5px;color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.feature .fd{font-size:8px;color:var(--text-mute);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── Tech Pills ── */
+.tech{
+  display:flex;flex-wrap:wrap;gap:6px;align-items:center;
+  padding:0 20px 10px;flex-shrink:0;z-index:3;max-width:100%;
+}
+.tech-pill{
+  font-family:monospace;font-size:8px;color:var(--text-dim);
+  border:1px solid var(--border);border-radius:20px;padding:3px 9px;cursor:pointer;
+  transition:all .2s;background:var(--bg-2);max-width:100%;box-sizing:border-box;
+}
+.tech-pill:active{transform:scale(.92);color:var(--accent);border-color:var(--accent)}
+
+/* ── Bottom Bar ── */
+.bottombar{
+  display:flex;gap:10px;padding:0 20px 16px;flex-shrink:0;z-index:3;
+}
+.bbtn{
+  flex:1;text-align:center;padding:10px 8px;border-radius:10px;font-size:10.5px;font-weight:600;
+  text-decoration:none;transition:all .2s;letter-spacing:.03em;
+}
+.bbtn:active{transform:scale(.95)}
+.bbtn.gh{background:var(--bg-2);color:var(--text);border:1px solid var(--border)}
+.bbtn.gh:active{border-color:var(--accent)}
+.bbtn.site{background:linear-gradient(135deg,var(--accent),#0EA5E9);color:#04120C;box-shadow:0 4px 18px var(--accent-glow)}
+
+/* ── Overlay / Sheet ── */
+.overlay{
+  position:absolute;inset:0;background:rgba(2,6,4,.6);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  opacity:0;pointer-events:none;transition:opacity .35s;z-index:20;display:flex;align-items:flex-end;
+}
+.overlay.active{opacity:1;pointer-events:auto}
+.sheet{
+  width:100%;background:var(--bg-card);border-top:1px solid var(--border);
+  border-radius:20px 20px 0 0;padding:12px 22px 30px;
+  transform:translateY(100%);transition:transform .45s cubic-bezier(.7,0,.3,1);
+  max-height:78%;overflow-y:auto;position:relative;
+}
+.overlay.active .sheet{transform:translateY(0)}
+.sheet-handle{width:36px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 14px}
+.sheet-title{font-size:16px;font-weight:800;color:var(--text);line-height:1.4;margin-bottom:10px}
+.sheet-title em{color:var(--accent);font-style:normal}
+.sheet-desc{font-size:12px;color:var(--text-dim);line-height:1.8;margin-bottom:12px}
+.sheet-points{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.sheet-point{
+  font-size:11px;color:var(--text-dim);line-height:1.6;
+  padding-left:14px;position:relative;
+}
+.sheet-point::before{content:'▸';position:absolute;left:0;color:var(--accent)}
+.sheet-code{
+  font-family:'SF Mono',Consolas,monospace;font-size:9.5px;line-height:1.7;color:#A7F3D0;
+  background:#06130C;border:1px solid var(--border);border-radius:10px;
+  padding:12px 14px;margin-bottom:14px;white-space:pre-wrap;word-break:break-all;
+}
+.sheet-close{
+  width:100%;padding:12px;border-radius:10px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,var(--accent),#0EA5E9);color:#04120C;
+  font-size:12px;font-weight:800;letter-spacing:.2em;transition:transform .15s;
+}
+.sheet-close:active{transform:scale(.97)}
+
+/* ── Toast ── */
+.toast{
+  position:absolute;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);
+  background:rgba(7,19,15,.95);border:1px solid var(--border);color:var(--text);
+  font-size:11px;padding:10px 18px;border-radius:30px;
+  opacity:0;transition:all .35s cubic-bezier(.7,0,.3,1);z-index:30;white-space:nowrap;pointer-events:none;
+  box-shadow:0 8px 30px rgba(0,0,0,.5);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── 小屏压缩 ── */
+@media (max-height:730px){
+  .hero{padding-top:12px;padding-bottom:8px;gap:12px}
+  .sp3d{width:88px;height:88px}
+  .sp3d .ring.r1{width:70px;height:70px;margin:-35px 0 0 -35px}
+  .sp3d .ring.r2{width:52px;height:52px;margin:-26px 0 0 -26px}
+  .sp3d .probe{animation-duration:4.5s}
+  @keyframes probeOrbitS{0%{transform:rotateX(68deg) rotateZ(0) translateX(35px)}100%{transform:rotateX(68deg) rotateZ(360deg) translateX(35px)}}
+  .sp3d .probe{animation:probeOrbitS 4.5s linear infinite}
+  .sp-title{font-size:21px}
+  .tagline{font-size:10.5px}
+  .stat-num{font-size:12px}
+  .feature .ft{font-size:9.5px}
+  .features{padding:0 20px 6px;gap:5px}
+  .feature{padding:6px 8px}
+  .stats{padding-bottom:6px}
+  .flow{padding-bottom:6px}
+  .showcase{padding-top:2px}
+}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+
+  <!-- Topbar -->
+  <div class="topbar tilt-mid">
+    <div class="brand"><span class="dot"></span>SCRAPLING</div>
+    <button class="share-btn" id="shareBtn" aria-label="分享">↗</button>
+  </div>
+
+  <!-- Hero：左文字 + 右 3D -->
+  <div class="hero reveal">
+    <div class="hero-side tilt-mid">
+      <div class="meta-row">
+        <span class="vol">ADAPTIVE WEB SCRAPING</span>
+        <span>2026.08.10</span>
+      </div>
+      <div class="title-block">
+        <div class="sp-stamp" id="stamp">🕷</div>
+        <div class="title-text">
+          <div class="sp-title">Scrapling<span class="dot">.</span></div>
+          <div class="superdesign-line">
+            <span class="superdesign">D4Vinci · open source</span>
+            <span class="v-tag green">73.3K★</span>
+          </div>
+        </div>
+      </div>
+      <div class="tagline">自适应网页抓取框架——从单请求到全站爬取，<em>隐身绕过反爬</em>，解析快过 Selectolax <em>99 倍</em></div>
+      <div class="hint-badge">轻触任何元素探索 · 拖动卡片看 3D 视差</div>
+    </div>
+    <div class="sp3d tilt-deep" id="sp3d">
+      <div class="grid-rotor"></div>
+      <div class="ring r1"></div>
+      <div class="ring r2"></div>
+      <div class="trace t1"></div>
+      <div class="trace t2"></div>
+      <div class="core">
+        <div class="eyes"><span class="eye e1"></span><span class="eye e2"></span></div>
+        <span class="leg"></span><span class="leg"></span>
+      </div>
+      <div class="probe"></div>
+    </div>
+  </div>
+
+  <!-- 核心展示区：代码窗口（flex 弹性撑满） -->
+  <div class="showcase tilt-mid">
+    <div class="code-box" id="codeShow" data-sheet="code">
+      <div class="code-head">
+        <span class="td r"></span><span class="td y"></span><span class="td g"></span>
+        <span class="tname">scrapling — 三行抓取</span>
+        <span class="sp-tag">v 自适应</span>
+      </div>
+      <div class="code-body">
+        <span class="cmt"># 安装：</span><br>
+        <span class="kw">$ pip install scrapling</span><br>
+        <span class="cmt"># 隐身抓取（绕过 Cloudflare）：</span><br>
+        <span class="kw">from</span> scrapling.fetchers <span class="kw">import</span> Fetcher<br>
+        page = Fetcher.<span class="fn">get</span>(<span class="str">"https://example.com"</span>)<br>
+        quotes = page.<span class="fn">css</span>(<span class="str">".quote .text::text"</span>).<span class="fn">getall</span>() <span class="cursor"></span>
+      </div>
+      <div class="code-hint">▲ 点击查看完整示例</div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats tilt-mid">
+    <div class="stat-card" data-sheet="stars">
+      <div class="stat-num"><span class="accent">73.3K</span></div>
+      <div class="stat-label">Stars</div>
+    </div>
+    <div class="stat-card" data-sheet="perf">
+      <div class="stat-num"><span class="accent">1.99ms</span></div>
+      <div class="stat-label">解析 5000 元素</div>
+    </div>
+    <div class="stat-card" data-sheet="speed">
+      <div class="stat-num"><span class="accent">99x</span></div>
+      <div class="stat-label">快过 Selectolax</div>
+    </div>
+    <div class="stat-card" data-sheet="since">
+      <div class="stat-num"><span class="accent">2024</span></div>
+      <div class="stat-label">创建年份</div>
+    </div>
+  </div>
+
+  <!-- Flow -->
+  <div class="flow tilt-mid">
+    <svg viewBox="0 0 330 44" fill="none">
+      <line class="flow-line" x1="55" y1="22" x2="100" y2="22"/>
+      <path class="flow-line" d="M100 22 L108 18 V26 Z" fill="var(--accent)"/>
+      <line class="flow-line" x1="140" y1="22" x2="185" y2="22"/>
+      <path class="flow-line" d="M185 22 L193 18 V26 Z" fill="var(--accent)"/>
+      <line class="flow-line" x1="225" y1="22" x2="270" y2="22"/>
+      <path class="flow-line" d="M270 22 L278 18 V26 Z" fill="var(--accent)"/>
+      <g class="flow-node" data-sheet="f1">
+        <rect class="ic" x="5" y="8" width="50" height="28" rx="8"/>
+        <text x="30" y="26" text-anchor="middle">抓取</text>
+      </g>
+      <g class="flow-node" data-sheet="f2">
+        <rect class="ic" x="110" y="8" width="30" height="28" rx="8"/>
+        <text x="125" y="26" text-anchor="middle">隐身</text>
+      </g>
+      <g class="flow-node" data-sheet="f3">
+        <rect class="ic" x="195" y="8" width="30" height="28" rx="8"/>
+        <text x="210" y="26" text-anchor="middle">自适应</text>
+      </g>
+      <g class="flow-node" data-sheet="f4">
+        <rect class="ic" x="280" y="8" width="45" height="28" rx="8" stroke="#38BDF8"/>
+        <text x="302" y="26" text-anchor="middle">喂给 AI</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- Features -->
+  <div class="features tilt-mid">
+    <div class="feature" data-sheet="fetcher">
+      <div class="ficon">⚡</div>
+      <div class="ftxt"><div class="ft">Fetcher</div><div class="fd">TLS 伪装 · HTTP/3</div></div>
+    </div>
+    <div class="feature" data-sheet="stealthy">
+      <div class="ficon">🕶️</div>
+      <div class="ftxt"><div class="ft">StealthyFetcher</div><div class="fd">绕过 Cloudflare 验证</div></div>
+    </div>
+    <div class="feature" data-sheet="spider">
+      <div class="ficon">🕸️</div>
+      <div class="ftxt"><div class="ft">Spiders</div><div class="fd">断点续爬 · AutoThrottle</div></div>
+    </div>
+    <div class="feature" data-sheet="mcp">
+      <div class="ficon">🤖</div>
+      <div class="ftxt"><div class="ft">MCP Server</div><div class="fd">AI 辅助抓取 · 省 token</div></div>
+    </div>
+  </div>
+
+  <!-- Tech Pills -->
+  <div class="tech tilt-mid">
+    <span class="tech-pill" data-sheet="py">Python 3.10+</span>
+    <span class="tech-pill" data-sheet="playwright">Playwright</span>
+    <span class="tech-pill" data-sheet="bsd">BSD-3-Clause</span>
+    <span class="tech-pill" data-sheet="cli">CLI + Shell</span>
+    <span class="tech-pill" data-sheet="docker">Docker</span>
+    <span class="tech-pill" data-sheet="mcp2">MCP</span>
+  </div>
+
+  <!-- Bottom Bar -->
+  <div class="bottombar tilt-mid">
+    <a class="bbtn gh" href="https://github.com/D4Vinci/Scrapling" target="_blank" rel="noopener">GitHub ↗</a>
+    <a class="bbtn site" href="https://scrapling.readthedocs.io/en/latest/" target="_blank" rel="noopener">文档 docs</a>
+  </div>
+
+  <!-- Overlay / Sheet -->
+  <div class="overlay" id="overlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" id="sheetTitle"></div>
+      <div class="sheet-desc" id="sheetDesc"></div>
+      <div class="sheet-code" id="sheetCode" style="display:none"></div>
+      <div class="sheet-points" id="sheetPoints"></div>
+      <button class="sheet-close" id="sheetClose">CLOSE</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var $=function(s){return document.querySelector(s)};
+  var stage=$('#stage'), overlay=$('#overlay'), sheetTitle=$('#sheetTitle'),
+      sheetDesc=$('#sheetDesc'), sheetPoints=$('#sheetPoints'), sheetCode=$('#sheetCode'),
+      toast=$('#toast');
+
+  var DATA={
+    story:{
+      title:'D4Vinci <em>· 安全研究者的爬虫野心</em>',
+      desc:'Scrapling 由安全研究者 D4Vinci 打造——"自适应抓取框架，从单请求到全站爬取"。2024-10 开源，一年多冲到 73K stars，成为爬虫赛道最快的黑马之一。它的哲学：抓取不该是维护选择器的苦差事，而应是"让框架自适应网页变化"。',
+      points:['作者 D4Vinci（安全研究者）','2024-10-13 创建','73,309 ★ / 7,312 forks','BSD-3-Clause 开源','与 Crawl4AI 并列爬虫顶流']
+    },
+    stars:{
+      title:'73.3K Stars <em>· 一年半的爆发</em>',
+      desc:'2024-10 建仓到 2026-08，73,309 星、7,312 forks。速度是核心卖点——解析 5000 个嵌套元素只要 1.99ms，比 Selectolax 快 99 倍、比 BeautifulSoup 快 785 倍。',
+      points:['73,309 ★ / 7,312 forks','2024-10-13 创建 · Python 3.10+','BSD-3-Clause 协议','2026-08-09 仍在高频推送','文档: scrapling.readthedocs.io']
+    },
+    perf:{
+      title:'1.99ms <em>· 5000 嵌套元素</em>',
+      desc:'官方 benchmark：解析 5000 个嵌套元素的文本提取只要 1.99ms。对比：Parsel/Scrapy 2.06ms、raw lxml 2.56ms、PyQuery 23.98ms、Selectolax 197ms、BS4+lxml 1562ms。',
+      points:['Scrapling: 1.99ms (1.0x)','Parsel/Scrapy: 2.06ms (1.035x)','Selectolax: 197ms (~99x 慢)','MechanicalSoup: 1545ms (~776x)','BS4+lxml: 1562ms (~785x)','BS4+html5lib: 3413ms (~1715x)','100+ 次运行取平均']
+    },
+    speed:{
+      title:'99x <em>· 快过 Selectolax</em>',
+      desc:'不只是解析快——自适应元素查找也比 AutoScraper 快 5.5 倍（2.3ms vs 12.58ms）。性能 + 自适应的组合，让它能处理"网站改版"这种传统爬虫的噩梦。',
+      points:['解析: Selectolax 的 99 倍','自适应查找: AutoScraper 的 5.5 倍','基准: 100+ 次运行平均','benchmarks.py 可复现']
+    },
+    since:{
+      title:'2024 <em>· 一年半登顶</em>',
+      desc:'从 2024-10 到 2026-08 不到两年，73K stars 的增速在爬虫工具里是现象级的——踩中 AI 数据饥渴 + 反爬升级的双重风口。',
+      points:['2024-10-13 创建','73K stars 增速惊人','与 Crawl4AI 同期爆发','AI Agent 数据管道标配']
+    },
+    code:{
+      title:'三行抓取 <em>· 隐身 + 快速</em>',
+      desc:'Fetcher 类伪装 Chrome 的 TLS 指纹和请求头，StealthyFetcher 更进一步——自动求解 Cloudflare 的 Turnstile 验证码。选择器 API 兼容 Scrapy 生态（css/xpath/getall），上手零成本。',
+      points:['Fetcher: TLS 指纹伪装 + HTTP/3','StealthyFetcher: 自动过 Cloudflare','DynamicFetcher: Playwright 浏览器自动化','css/xpath 选择器 + getall','与 Scrapy 生态兼容'],
+      code:'# 安装\npip install scrapling\n\n# 基础抓取（带会话）\nfrom scrapling.fetchers import Fetcher, FetcherSession\n\nwith FetcherSession(impersonate=\'chrome\') as session:\n    page = session.get(\'https://quotes.toscrape.com/\', stealthy_headers=True)\n    quotes = page.css(\'.quote .text::text\').getall()\n\n# 隐身模式（自动过 Cloudflare）\nfrom scrapling.fetchers import StealthyFetcher\n\npage = StealthyFetcher.fetch(\n    \'https://nopecha.com/demo/cloudflare\',\n    headless=True, solve_cloudflare=True\n)\ndata = page.css(\'#padded_content\').text'
+    },
+    fetcher:{title:'Fetcher <em>· 隐身 HTTP 请求</em>',desc:'快速且隐身的 HTTP 请求类。可伪装浏览器 TLS 指纹、请求头，支持 HTTP/3——从协议层降低被识别风险。',points:['TLS 指纹伪装','HTTP/3 支持','stealthy_headers 隐身头','一次性请求或会话复用']},
+    stealthy:{title:'StealthyFetcher <em>· 反爬克星</em>',desc:'高级隐身能力 + 指纹伪装，能自动绕过 Cloudflare Turnstile/Interstitial 等验证。爬虫界的"隐形战机"。',points:['自动求解 Cloudflare Turnstile','指纹伪造防识别','headless 无头模式','浏览器自动化']},
+    spider:{title:'Spiders <em>· 全站爬取框架</em>',desc:'Scrapy 风格的完整爬虫框架：start_urls + async parse 回调，支持并发、断点续爬、流式输出、AutoThrottle 自适应限速。',points:['Scrapy 风格 API','并发 + 每域限速','Ctrl+C 优雅停机断点续爬','流式输出 async for','AutoThrottle 自适应延迟','robots.txt 合规开关','CrawlSpider/SitemapSpider 模板','ShopifySpider 一键抓商店']},
+    mcp:{title:'MCP Server <em>· AI 辅助抓取</em>',desc:'内置 MCP Server，让 Claude/Cursor 等 AI 直接调用 Scrapling 抓取——先把目标内容提取出来再喂给 AI，大幅降低 token 消耗。',points:['Claude/Cursor 等 AI 直接调用','预提取内容省 token','跨调用保持浏览器会话','页面截图能力','CDP 驱动远程浏览器']},
+    f1:{title:'Step 1 · <em>抓取</em>',desc:'Fetcher 发请求或 DynamicFetcher 开浏览器，支持会话复用。',points:['HTTP/3 + TLS 伪装','浏览器自动化','会话管理']},
+    f2:{title:'Step 2 · <em>隐身</em>',desc:'StealthyFetcher 绕过反爬验证，指纹伪装防识别。',points:['Cloudflare 自动过验证','指纹伪装','反爬策略']},
+    f3:{title:'Step 3 · <em>自适应</em>',desc:'智能元素追踪——网站改版后自动重新定位元素，不用改代码。',points:['相似度算法重定位','CSS/XPath/文本/正则选择','元素相似查找']},
+    f4:{title:'Step 4 · <em>喂给 AI</em>',desc:'MCP Server 把提取结果直接给 AI 使用，省 token 提速。',points:['MCP 协议','预提取省 token','Agent Skill 一键安装']},
+    py:{title:'Python 3.10+',desc:'现代 Python 特性，pip 一键安装。',points:['Python 3.10+','pip install scrapling','核心解析器零依赖']},
+    playwright:{title:'Playwright',desc:'DynamicFetcher 基于 Playwright Chromium，也支持 Google Chrome。',points:['Playwright Chromium','Google Chrome','浏览器自动化']},
+    bsd:{title:'BSD-3-Clause',desc:'宽松开源协议，可商用。',points:['BSD-3-Clause','商用友好','引用规范']},
+    cli:{title:'CLI + Shell',desc:'命令行 + 交互式 Shell，快速试验。',points:['CLI 命令','交互式 Shell','快速原型']},
+    docker:{title:'Docker',desc:'容器化部署，环境隔离。',points:['Docker 支持','一键容器','生产部署']},
+    mcp2:{title:'MCP',desc:'Model Context Protocol——AI 工具调用的开放标准。',points:['MCP Server 内置','AI 原生集成','Agent Skill']}
+  };
+
+  // 打开弹窗
+  function openSheet(key){
+    var d=DATA[key]; if(!d) return;
+    sheetTitle.innerHTML=d.title;
+    sheetDesc.textContent=d.desc;
+    if(d.code){sheetCode.style.display='block';sheetCode.textContent=d.code;}
+    else{sheetCode.style.display='none';}
+    sheetPoints.innerHTML=d.points.map(function(p){return '<div class="sheet-point">'+p+'</div>';}).join('');
+    overlay.classList.add('active');
+    if(navigator.vibrate) navigator.vibrate(15);
+  }
+  function closeSheet(){overlay.classList.remove('active');}
+
+  // 绑定所有 data-sheet 元素
+  document.querySelectorAll('[data-sheet]').forEach(function(el){
+    el.addEventListener('click',function(){openSheet(this.getAttribute('data-sheet'));});
+  });
+  $('#sheetClose').addEventListener('click',closeSheet);
+  overlay.addEventListener('click',function(e){if(e.target===overlay) closeSheet();});
+  $('#stamp').addEventListener('click',function(){openSheet('story');});
+
+  // 分享（三段式）
+  var shareBtn=$('#shareBtn');
+  function shareText(){
+    return 'Scrapling：自适应网页抓取框架——TLS 指纹伪装 + 自动过 Cloudflare + 解析比 Selectolax 快 99 倍（1.99ms/5000 元素），73.3K★ 开源。\nhttps://mindresonance.online/youngsinsight/pages/scrapling.html\n\n你可以用任何AI工具订阅我的博客文章：https://mindresonance.online/youngsinsight/subscribe.html';
+  }
+  function showToast(msg){
+    toast.textContent=msg;
+    toast.classList.add('show');
+    setTimeout(function(){toast.classList.remove('show');},2200);
+  }
+  shareBtn.addEventListener('click',function(){
+    var text=shareText();
+    if(navigator.share){
+      navigator.share({title:'Scrapling · 自适应网页抓取框架',text:text}).catch(function(){});
+    }else if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){showToast('已复制：介绍 + 链接 + 订阅推荐');});
+    }else{
+      var ta=document.createElement('textarea');
+      ta.value=text;document.body.appendChild(ta);ta.select();
+      try{document.execCommand('copy');showToast('已复制：介绍 + 链接 + 订阅推荐');}catch(e){}
+      document.body.removeChild(ta);
+    }
+  });
+
+  // 3D 视差倾斜
+  var tiltRaf=null;
+  function onTilt(x,y){
+    if(tiltRaf) return;
+    tiltRaf=requestAnimationFrame(function(){
+      var w=stage.clientWidth,h=stage.clientHeight;
+      var nx=(x/w)*2-1, ny=(y/h)*2-1;
+      stage.style.transform='rotateX('+(-ny*6)+'deg) rotateY('+(nx*6)+'deg)';
+      tiltRaf=null;
+    });
+  }
+  stage.addEventListener('mousemove',function(e){
+    var r=stage.getBoundingClientRect();
+    onTilt(e.clientX-r.left,e.clientY-r.top);
+  });
+  stage.addEventListener('touchmove',function(e){
+    var t=e.touches[0];if(!t)return;
+    var r=stage.getBoundingClientRect();
+    onTilt(t.clientX-r.left,t.clientY-r.top);
+  },{passive:true});
+  stage.addEventListener('mouseleave',function(){stage.style.transform='rotateX(0) rotateY(0)';});
+
+  // 彩蛋：stamp 连点 5 次
+  var stampCount=0;
+  $('#stamp').addEventListener('click',function(){
+    stampCount++;
+    if(stampCount>=5){
+      stampCount=0;
+      var spin=0, iv=setInterval(function(){
+        spin+=18;
+        var s=$('#stamp');
+        s.style.transform='rotate('+spin+'deg) scale(1.2)';
+        if(spin>=360){clearInterval(iv);s.style.transform='';}
+      },16);
+      showToast('🕷 隐身模式：Cloudflare 已绕过！');
+      if(navigator.vibrate) navigator.vibrate([20,40,20]);
+    }
+  });
+
+  // 自动呼吸提示
+  setTimeout(function(){
+    var el=document.querySelector('.code-hint');
+    if(el){el.style.animation='none';el.style.opacity='1';}
+  },4000);
+})();
+</script>
+</body>
+</html>
