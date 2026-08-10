@@ -138,10 +138,10 @@ html,body{background:#05070A;font-family:-apple-system,BlinkMacSystemFont,'PingF
 /* ── 核心展示区：终端窗口（flex 弹性填充）── */
 .showcase{
   flex:1 1 auto;display:flex;flex-direction:column;
-  padding:4px 20px 12px;min-height:0;z-index:3;
+  padding:2px 20px 8px;min-height:0;z-index:3;
 }
 .term{
-  flex:1 1 auto;min-height:60px;
+  flex:1 1 auto;max-height:118px;min-height:64px;
   background:rgba(10,17,24,.85);border:1px solid var(--border);border-radius:12px;
   overflow:hidden;cursor:pointer;display:flex;flex-direction:column;
   transition:border-color .25s;position:relative;
@@ -153,8 +153,8 @@ html,body{background:#05070A;font-family:-apple-system,BlinkMacSystemFont,'PingF
 .term-head .tname{font-family:monospace;font-size:8px;color:var(--text-mute);margin-left:6px;letter-spacing:.05em}
 .term-head .crawl-tag{margin-left:auto;font-family:monospace;font-size:7px;color:var(--accent);border:1px solid rgba(34,211,238,.3);padding:1px 5px;border-radius:3px}
 .term-body{
-  flex:1;padding:10px 14px;overflow:hidden;font-family:'SF Mono',Consolas,monospace;font-size:9.5px;line-height:1.75;
-  color:#94A3B8;
+  flex:1;padding:8px 14px;overflow:hidden;font-family:'SF Mono',Consolas,monospace;font-size:9px;line-height:1.7;
+  color:#94A3B8;mask-image:linear-gradient(180deg,#000 60%,transparent);-webkit-mask-image:linear-gradient(180deg,#000 60%,transparent);
 }
 .term-body .cmt{color:#475569}
 .term-body .kw{color:#22D3EE}
@@ -208,12 +208,12 @@ html,body{background:#05070A;font-family:-apple-system,BlinkMacSystemFont,'PingF
 /* ── Tech Pills ── */
 .tech{
   display:flex;flex-wrap:wrap;gap:6px;align-items:center;
-  padding:0 20px 12px;flex-shrink:0;z-index:3;
+  padding:0 20px 12px;flex-shrink:0;z-index:3;max-width:100%;
 }
 .tech-pill{
   font-family:monospace;font-size:8px;color:var(--text-dim);
   border:1px solid var(--border);border-radius:20px;padding:3px 9px;cursor:pointer;
-  transition:all .2s;background:var(--bg-2);
+  transition:all .2s;background:var(--bg-2);max-width:100%;box-sizing:border-box;
 }
 .tech-pill:active{transform:scale(.92);color:var(--accent);border-color:var(--accent)}
 
@@ -303,16 +303,6 @@ html,body{background:#05070A;font-family:-apple-system,BlinkMacSystemFont,'PingF
 
   <!-- Hero：左 3D 特效 + 右标题 -->
   <div class="hero reveal">
-    <div class="crawl3d tilt-deep" id="crawl3d">
-      <div class="grid-rotor"></div>
-      <div class="ring r1"></div>
-      <div class="ring r2"></div>
-      <div class="beam"></div>
-      <div class="core">
-        <span class="ln l1"></span><span class="ln l2"></span><span class="ln l3"></span>
-      </div>
-      <div class="spider"></div>
-    </div>
     <div class="hero-side tilt-mid">
       <div class="meta-row">
         <span class="vol">LLM-FRIENDLY CRAWLER</span>
@@ -331,9 +321,17 @@ html,body{background:#05070A;font-family:-apple-system,BlinkMacSystemFont,'PingF
       <div class="tagline">开源 LLM 友好爬虫——AI 自动理解页面结构，把杂乱网页变成<em>干净的 Markdown / JSON</em>，专为 RAG 与微调而生</div>
       <div class="hint-badge">轻触任何元素探索 · 拖动卡片看 3D 视差</div>
     </div>
-  </div>
-
-  <!-- 核心展示区：终端（flex 弹性填充） -->
+  <div class="crawl3d tilt-deep" id="crawl3d">
+      <div class="grid-rotor"></div>
+      <div class="ring r1"></div>
+      <div class="ring r2"></div>
+      <div class="beam"></div>
+      <div class="core">
+        <span class="ln l1"></span><span class="ln l2"></span><span class="ln l3"></span>
+      </div>
+      <div class="spider"></div>
+    </div>
+  </div><!-- 核心展示区：终端（flex 弹性填充） -->
   <div class="showcase tilt-mid">
     <div class="term" id="termShow" data-sheet="code">
       <div class="term-head">
@@ -424,7 +422,7 @@ html,body{background:#05070A;font-family:-apple-system,BlinkMacSystemFont,'PingF
   </div>
 
   <!-- Tech Pills -->
-  <div class="tech tilt-front">
+  <div class="tech tilt-mid">
     <span class="tech-pill" data-sheet="py">Python 3.10+</span>
     <span class="tech-pill" data-sheet="docker">Docker</span>
     <span class="tech-pill" data-sheet="llm">Any LLM</span>
