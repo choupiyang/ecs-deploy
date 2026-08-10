@@ -138,10 +138,10 @@ html,body{background:#05070A;font-family:-apple-system,BlinkMacSystemFont,'PingF
 /* ── 核心展示区：终端窗口（flex 弹性填充）── */
 .showcase{
   flex:1 1 auto;display:flex;flex-direction:column;
-  padding:2px 20px 8px;min-height:0;z-index:3;
+  padding:4px 20px 10px;min-height:0;z-index:3;
 }
 .term{
-  flex:1 1 auto;max-height:118px;min-height:64px;
+  flex:1 1 auto;min-height:0;
   background:rgba(10,17,24,.85);border:1px solid var(--border);border-radius:12px;
   overflow:hidden;cursor:pointer;display:flex;flex-direction:column;
   transition:border-color .25s;position:relative;
@@ -289,7 +289,13 @@ html,body{background:#05070A;font-family:-apple-system,BlinkMacSystemFont,'PingF
   .stat-num{font-size:12.5px}
   .term-body{font-size:8.5px}
   .feature .ft{font-size:9.5px}
-}
+
+  .hero{padding-top:10px;padding-bottom:8px}
+  .features{padding:0 20px 6px;gap:5px}
+  .feature{padding:6px 8px}
+  .stats{padding-bottom:6px}
+  .flow{padding-bottom:6px}
+  .showcase{padding-top:2px}}
 </style>
 </head>
 <body>

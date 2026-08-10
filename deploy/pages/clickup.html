@@ -136,11 +136,11 @@ html,body{background:#05040A;font-family:-apple-system,BlinkMacSystemFont,'PingF
 /* ── 核心展示区：产品应用墙（flex 弹性）── */
 .showcase{
   flex:1 1 auto;display:flex;flex-direction:column;
-  padding:2px 20px 8px;min-height:0;z-index:3;
+  padding:4px 20px 10px;min-height:0;z-index:3;
 }
 .appwall{
-  flex:1 1 auto;max-height:110px;min-height:60px;
-  display:grid;grid-template-columns:repeat(4,1fr);gap:6px;
+  flex:1 1 auto;min-height:0;
+  display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:7px;
 }
 .app-card{
   background:rgba(17,13,38,.85);border:1px solid var(--border);border-radius:10px;
@@ -148,8 +148,9 @@ html,body{background:#05040A;font-family:-apple-system,BlinkMacSystemFont,'PingF
   cursor:pointer;transition:all .2s;overflow:hidden;position:relative;min-height:0;
 }
 .app-card:active{transform:scale(.94);border-color:var(--accent)}
-.app-card .aic{font-size:16px;line-height:1}
-.app-card .an{font-size:7.5px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90%}
+.app-card .aic{font-size:22px;line-height:1}
+.app-card .an{font-size:9px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:92%;font-weight:600}
+.app-card .an em{color:var(--accent);font-style:normal}
 .app-card .an em{color:var(--accent);font-style:normal}
 .appwall-hint{position:absolute;bottom:6px;right:8px;font-family:monospace;font-size:7px;color:var(--accent);opacity:.75;letter-spacing:.06em;animation:blink 2.5s ease-in-out infinite;z-index:4}
 .showcase{position:relative}
@@ -285,7 +286,13 @@ html,body{background:#05040A;font-family:-apple-system,BlinkMacSystemFont,'PingF
   .tagline{font-size:10.5px}
   .stat-num{font-size:12px}
   .feature .ft{font-size:9.5px}
-}
+
+  .hero{padding-top:10px;padding-bottom:8px}
+  .features{padding:0 20px 6px;gap:5px}
+  .feature{padding:6px 8px}
+  .stats{padding-bottom:6px}
+  .flow{padding-bottom:6px}
+  .showcase{padding-top:2px}}
 </style>
 </head>
 <body>
