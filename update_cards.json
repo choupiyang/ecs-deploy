@@ -1,10 +1,10 @@
 {
-  "id": "crawl4ai",
-  "title": "Crawl4AI",
-  "subtitle": "开源 LLM 友好爬虫 · AI 自动理解网页结构 · 77.6K★",
-  "image": "cards/crawl4ai-cover.svg",
-  "page": "pages/crawl4ai.html",
-  "tags": ["爬虫", "Web Scraper", "LLM 数据管道", "开源", "Python", "77.6K★"],
+  "id": "clickup",
+  "title": "ClickUp",
+  "subtitle": "一个应用替代所有软件 · 工作 OS · Brain AI + Super Agents · 5M+ 团队 · $4B",
+  "image": "cards/clickup-cover.svg",
+  "page": "pages/clickup.html",
+  "tags": ["工作管理", "Work OS", "项目管理", "AI Agent", "SaaS", "5M+ teams"],
   "date": "2026-08-10",
   "type": "recommendation"
 }
