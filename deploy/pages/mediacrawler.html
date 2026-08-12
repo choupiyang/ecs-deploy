@@ -54,37 +54,65 @@ html,body{background:#03060B;font-family:-apple-system,BlinkMacSystemFont,'PingF
 .tagline em{color:var(--accent-light);font-style:normal;font-weight:600}
 .hint-badge{display:inline-block;margin-top:6px;font-size:8px;color:var(--text-mute);letter-spacing:.06em;border:1px dashed var(--border);border-radius:20px;padding:3px 9px}
 
-/* 3D 蜘蛛网抓取核（主题：多平台数据抓取） */
+/* 3D 爬虫爬窗抓取（主题：爬虫在浏览器上采集数据） */
 .spider3d{width:118px;height:118px;flex-shrink:0;position:relative;transform-style:preserve-3d;animation:gfloat 5s ease-in-out infinite}
-@keyframes gfloat{0%,100%{transform:rotateX(10deg) rotateY(-14deg)}50%{transform:rotateX(10deg) rotateY(14deg)}}
-.spider3d .core{position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;
-  background:radial-gradient(circle at 35% 30%,#7DF5DC,var(--accent) 55%,#0A5A48);box-shadow:0 0 22px var(--glow),0 0 55px rgba(0,229,160,.22);animation:corePulse 2.2s ease-in-out infinite;z-index:3}
-@keyframes corePulse{0%,100%{box-shadow:0 0 16px var(--glow),0 0 40px rgba(0,229,160,.18)}50%{box-shadow:0 0 28px var(--glow),0 0 75px rgba(0,229,160,.38)}}
-.spider3d .ring{position:absolute;left:50%;top:50%;border-radius:50%;border:1px solid rgba(0,229,160,.3);transform-style:preserve-3d}
-.spider3d .ring.r1{width:74px;height:74px;margin:-37px 0 0 -37px;animation:ringSpin1 11s linear infinite}
-.spider3d .ring.r2{width:88px;height:88px;margin:-44px 0 0 -44px;border-color:rgba(255,197,61,.24);animation:ringSpin2 17s linear infinite}
-.spider3d .ring.r3{width:102px;height:102px;margin:-51px 0 0 -51px;border-style:dashed;border-color:rgba(143,168,200,.28);animation:ringSpin1 23s linear infinite reverse}
-@keyframes ringSpin1{from{transform:rotateX(68deg) rotateZ(0)}to{transform:rotateX(68deg) rotateZ(360deg)}}
-@keyframes ringSpin2{from{transform:rotateX(68deg) rotateZ(360deg)}to{transform:rotateX(68deg) rotateZ(0)}}
-.spider3d .node{position:absolute;width:9px;height:9px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFF0C2,var(--gold) 60%,#8a6d00);box-shadow:0 0 8px rgba(255,197,61,.45);transform-style:preserve-3d;z-index:4}
-.spider3d .node.n1{animation:orbit1 11s linear infinite}
-.spider3d .node.n2{animation:orbit2 17s linear infinite}
-.spider3d .node.n3{animation:orbit1 15s linear infinite reverse}
-.spider3d .node.n4{animation:orbit2 21s linear infinite reverse}
-.spider3d .node.n5{animation:orbit1 19s linear infinite}
-.spider3d .node.pink{background:radial-gradient(circle at 35% 30%,#FFD6E8,#FF2E6E 60%,#8a0a30);box-shadow:0 0 8px rgba(255,46,110,.5)}
-.spider3d .node.blue{background:radial-gradient(circle at 35% 30%,#D6E8FF,#2E7BFF 60%,#0a2e8a);box-shadow:0 0 8px rgba(46,123,255,.5)}
-.spider3d .node.orange{background:radial-gradient(circle at 35% 30%,#FFE8D6,#FF7B2E 60%,#8a3a0a);box-shadow:0 0 8px rgba(255,123,46,.5)}
-.spider3d .node.violet{background:radial-gradient(circle at 35% 30%,#E8D6FF,#8B2EFF 60%,#2e0a8a);box-shadow:0 0 8px rgba(139,46,255,.5)}
-@keyframes orbit1{from{transform:rotate(0deg) translateX(37px) rotate(0deg)}to{transform:rotate(360deg) translateX(37px) rotate(-360deg)}}
-@keyframes orbit2{from{transform:rotate(0deg) translateX(44px) rotate(0deg)}to{transform:rotate(-360deg) translateX(44px) rotate(360deg)}}
-.spider3d .packet{position:absolute;left:50%;top:50%;width:5px;height:5px;border-radius:50%;background:var(--accent-light);box-shadow:0 0 8px var(--accent);opacity:0;z-index:5}
-.spider3d .packet.p1{animation:packet1 2.8s ease-in-out infinite}
-.spider3d .packet.p2{animation:packet2 3.6s ease-in-out infinite}
-.spider3d .packet.p3{animation:packet3 4.2s ease-in-out infinite}
-@keyframes packet1{0%{opacity:0;transform:translateX(0)}15%{opacity:1}50%{transform:translateX(48px) scale(1.4);opacity:1}85%{opacity:0}100%{transform:translateX(48px);opacity:0}}
-@keyframes packet2{0%{opacity:0;transform:translateX(0)}15%{opacity:1}50%{transform:translateX(-44px) scale(1.4);opacity:1}85%{opacity:0}100%{transform:translateX(-44px);opacity:0}}
-@keyframes packet3{0%{opacity:0;transform:translateY(0)}15%{opacity:1}50%{transform:translateY(-52px) scale(1.4);opacity:1}85%{opacity:0}100%{transform:translateY(-52px);opacity:0}}
+@keyframes gfloat{0%,100%{transform:rotateX(6deg) rotateY(-8deg)}50%{transform:rotateX(6deg) rotateY(8deg)}}
+/* 浏览器窗口 */
+.spider3d .win{position:absolute;left:9px;top:14px;width:100px;height:92px;border:1.5px solid rgba(0,229,160,.45);border-radius:10px;background:rgba(13,26,20,.85);box-shadow:0 0 16px rgba(0,229,160,.12),inset 0 0 20px rgba(0,229,160,.04);z-index:1}
+.spider3d .win-bar{height:15px;border-bottom:1px solid rgba(0,229,160,.2);display:flex;align-items:center;gap:3.5px;padding:0 7px;background:rgba(0,229,160,.06);border-radius:9px 9px 0 0}
+.spider3d .win-bar i{width:4.5px;height:4.5px;border-radius:50%;display:block}
+.spider3d .win-bar i:nth-child(1){background:#FF5F56}
+.spider3d .win-bar i:nth-child(2){background:#FFBD2E}
+.spider3d .win-bar i:nth-child(3){background:#27C93F}
+.spider3d .win-bar i:nth-child(4){flex:1;height:3px;border-radius:2px;background:rgba(0,229,160,.25);margin-left:3px}
+.spider3d .win-line{position:absolute;left:12px;height:2.5px;border-radius:2px;background:rgba(143,168,200,.22)}
+.spider3d .win-line.wl1{top:30px;width:64px}
+.spider3d .win-line.wl2{top:41px;width:76px}
+.spider3d .win-line.wl3{top:52px;width:52px}
+.spider3d .win-line.wl4{top:63px;width:68px}
+.spider3d .win-line.wl5{top:74px;width:42px}
+/* 内容行被点亮（蜘蛛抓取到数据） */
+.spider3d .win-line.lit{background:var(--accent);box-shadow:0 0 8px var(--accent);animation:litPulse 1.6s ease-in-out infinite}
+@keyframes litPulse{0%,100%{opacity:.35}50%{opacity:1}}
+/* 蜘蛛本体（沿窗口顶边爬行） */
+.spider3d .spider{position:absolute;left:50%;top:8px;width:26px;height:20px;margin-left:-13px;z-index:4;animation:crawl 7s ease-in-out infinite}
+@keyframes crawl{
+  0%,100%{transform:translateX(-32px) translateY(0) scaleX(1)}
+  18%{transform:translateX(-32px) translateY(3px)}
+  25%{transform:translateX(-16px) translateY(0)}
+  45%{transform:translateX(0) translateY(2px)}
+  50%{transform:translateX(16px) translateY(0) scaleX(1)}
+  68%{transform:translateX(16px) translateY(3px)}
+  75%{transform:translateX(0) translateY(0)}
+  95%{transform:translateX(-16px) translateY(2px)}
+}
+.spider3d .s-body{position:absolute;left:8px;top:6px;width:11px;height:9px;border-radius:55% 55% 50% 50%;background:radial-gradient(circle at 35% 30%,#7DF5DC,var(--accent) 60%,#0A5A48);box-shadow:0 0 8px var(--glow);z-index:2}
+.spider3d .s-head{position:absolute;left:17px;top:7px;width:6px;height:7px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#5CFFC4,var(--accent) 70%,#0A5A48);z-index:2}
+.spider3d .s-head::after{content:'';position:absolute;left:4px;top:1px;width:1.5px;height:1.5px;border-radius:50%;background:#fff;box-shadow:0 0 3px #fff}
+/* 8 条腿：左右各4，摆动模拟爬行 */
+.spider3d .leg{position:absolute;width:9px;height:1.6px;background:var(--accent);border-radius:2px;transform-origin:right center;z-index:1;opacity:.9}
+.spider3d .leg::after{content:'';position:absolute;left:-1.5px;top:0;width:1.6px;height:1.6px;border-radius:50%;background:var(--accent-light)}
+.spider3d .leg.l1{left:7px;top:5px;animation:legA .45s ease-in-out infinite alternate}
+.spider3d .leg.l2{left:7px;top:9px;animation:legB .45s ease-in-out infinite alternate}
+.spider3d .leg.l3{left:7px;top:13px;animation:legA .45s ease-in-out infinite alternate-reverse}
+.spider3d .leg.l4{left:7px;top:17px;animation:legB .45s ease-in-out infinite alternate-reverse}
+.spider3d .leg.r1{left:14px;top:5px;animation:legB .45s ease-in-out infinite alternate}
+.spider3d .leg.r2{left:14px;top:9px;animation:legA .45s ease-in-out infinite alternate}
+.spider3d .leg.r3{left:14px;top:13px;animation:legB .45s ease-in-out infinite alternate-reverse}
+.spider3d .leg.r4{left:14px;top:17px;animation:legA .45s ease-in-out infinite alternate-reverse}
+@keyframes legA{from{transform:rotate(35deg)}to{transform:rotate(-30deg)}}
+@keyframes legB{from{transform:rotate(-35deg)}to{transform:rotate(30deg)}}
+/* 尾部拖丝 + 数据包下落 */
+.spider3d .silk{position:absolute;left:50%;top:26px;width:1.5px;height:6px;background:linear-gradient(var(--accent),transparent);z-index:1;animation:silkDrop 2.2s ease-in infinite;opacity:.7}
+@keyframes silkDrop{0%{height:4px;opacity:.1}40%{height:16px;opacity:.8}100%{height:30px;opacity:0}}
+.spider3d .dp{position:absolute;left:50%;width:5px;height:5px;border-radius:50%;background:var(--accent-light);box-shadow:0 0 7px var(--accent);opacity:0;z-index:3}
+.spider3d .dp.d1{top:24px;margin-left:-8px;animation:drop1 2.6s ease-in infinite}
+.spider3d .dp.d2{top:24px;margin-left:4px;animation:drop2 3.1s ease-in infinite}
+@keyframes drop1{0%{transform:translateY(0) scale(.7);opacity:0}12%{opacity:1}55%{transform:translateY(38px) scale(1.2);opacity:.9}100%{transform:translateY(56px) scale(.5);opacity:0}}
+@keyframes drop2{0%{transform:translateY(0) scale(.7);opacity:0}12%{opacity:1}55%{transform:translateY(30px) scale(1.2);opacity:.9}100%{transform:translateY(52px) scale(.5);opacity:0}}
+/* 底部平台色标签（爬虫正在抓的平台） */
+.spider3d .ptag{position:absolute;bottom:8px;font-family:monospace;font-size:6px;letter-spacing:.14em;color:var(--text-mute);z-index:2;width:100%;text-align:center;animation:ptagShift 7s ease-in-out infinite}
+@keyframes ptagShift{0%,20%{opacity:.9}25%,45%{opacity:.25}50%,70%{opacity:.9}75%,95%{opacity:.25}}
 
 /* 核心展示区：终端 */
 .showcase{position:relative;z-index:3;flex:1 1 auto;display:flex;flex-direction:column;padding:6px 20px;min-height:0}
@@ -174,7 +202,9 @@ html,body{background:#03060B;font-family:-apple-system,BlinkMacSystemFont,'PingF
 @media (max-height:730px){
   .hero{padding-top:8px;padding-bottom:6px;gap:10px}
   .spider3d{width:92px;height:92px}
-  .spider3d .ring.r3{display:none}
+  .spider3d .win{left:7px;top:12px;width:78px;height:70px}
+  .spider3d .win-line.wl5{display:none}
+  .spider3d .spider{top:6px;transform:scale(.85)}
   .sp-title{font-size:19px}
   .tagline{font-size:9.5px;-webkit-line-clamp:2}
   .code-body{font-size:7.8px;line-height:1.7}
@@ -217,18 +247,26 @@ html,body{background:#03060B;font-family:-apple-system,BlinkMacSystemFont,'PingF
       <div class="hint-badge">轻触任何元素探索 · 拖动卡片看 3D 视差</div>
     </div>
     <div class="spider3d tilt-deep" id="spider3d">
-      <div class="ring r1"></div>
-      <div class="ring r2"></div>
-      <div class="ring r3"></div>
-      <div class="node n1 pink"></div>
-      <div class="node n2 blue"></div>
-      <div class="node n3 orange"></div>
-      <div class="node n4 violet"></div>
-      <div class="node n5"></div>
-      <div class="packet p1"></div>
-      <div class="packet p2"></div>
-      <div class="packet p3"></div>
-      <div class="core"></div>
+      <div class="win">
+        <div class="win-bar"><i></i><i></i><i></i><i></i></div>
+        <div class="win-line wl1 lit"></div>
+        <div class="win-line wl2"></div>
+        <div class="win-line wl3 lit" style="animation-delay:.8s"></div>
+        <div class="win-line wl4"></div>
+        <div class="win-line wl5 lit" style="animation-delay:1.4s"></div>
+      </div>
+      <div class="spider">
+        <div class="leg l1"></div><div class="leg l2"></div>
+        <div class="leg l3"></div><div class="leg l4"></div>
+        <div class="leg r1"></div><div class="leg r2"></div>
+        <div class="leg r3"></div><div class="leg r4"></div>
+        <div class="s-body"></div>
+        <div class="s-head"></div>
+      </div>
+      <div class="silk"></div>
+      <div class="dp d1"></div>
+      <div class="dp d2"></div>
+      <div class="ptag" id="ptag">XHS · DY · KS · BILI · WB</div>
     </div>
   </div>
 
@@ -497,20 +535,23 @@ html,body{background:#03060B;font-family:-apple-system,BlinkMacSystemFont,'PingF
   },{passive:true});
   stage.addEventListener('mouseleave',function(){stage.style.transform='rotateX(0) rotateY(0)';});
 
-  // 彩蛋：stamp 连点 5 次 → 蜘蛛网爆发抓取
+  // 彩蛋：stamp 连点 5 次 → 蜘蛛加速狂爬，全部内容行点亮
   var stampCount=0;
   $('#stamp').addEventListener('click',function(){
     stampCount++;
     if(stampCount>=5){
       stampCount=0;
-      var g=$('#spider3d');
-      g.style.animation='none';
-      var t=0, iv=setInterval(function(){
-        t+=20;
-        g.style.transform='rotate('+t+'deg) scale('+(1+t/200)+')';
-        if(t>=400){clearInterval(iv);g.style.transform='';g.style.animation='';}
-      },16);
-      showToast('🕷️ 蜘蛛网爆发：7 平台同时抓取！');
+      var s=$('.spider3d .spider');
+      var lines=document.querySelectorAll('.spider3d .win-line');
+      s.style.animation='crawl .9s ease-in-out infinite';
+      lines.forEach(function(l){l.classList.add('lit');});
+      var pt=$('#ptag');
+      pt.textContent='🔥 全平台火力全开';
+      setTimeout(function(){
+        s.style.animation='';
+        pt.textContent='XHS · DY · KS · BILI · WB';
+      },4000);
+      showToast('🕷️ 爬虫加速：7 平台同时抓取中！');
       if(navigator.vibrate) navigator.vibrate([20,40,20]);
     }
   });
