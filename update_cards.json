@@ -1,17 +1,17 @@
 {
-  "id": "scrapling",
-  "title": "Scrapling",
-  "subtitle": "自适应网页抓取框架 · 隐身绕过 Cloudflare · 解析快过 Selectolax 99 倍",
-  "image": "cards/scrapling-cover.svg",
-  "page": "pages/scrapling.html",
+  "id": "semantica",
+  "title": "Semantica",
+  "subtitle": "AI Agent 的开源 Palantir · 图原生基础设施 · 决策可审计可解释 · 节点搜索快 6000×",
+  "image": "cards/semantica-cover.svg",
+  "page": "pages/semantica.html",
   "tags": [
-    "爬虫",
-    "Web Scraping",
-    "反爬绕过",
-    "Python",
-    "MCP",
+    "知识图谱",
+    "AI治理",
+    "决策溯源",
+    "GraphRAG",
+    "PROV-O",
     "开源"
   ],
-  "date": "2026-08-10",
+  "date": "2026-08-12",
   "type": "recommendation"
 }
