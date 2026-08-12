@@ -1,17 +1,18 @@
 {
-  "id": "omniroute",
-  "title": "OmniRoute",
-  "subtitle": "免费 AI 网关 · 一个端点聚合 291 家提供商（90+ 免费层）· 配额用完自动降级 · 12 引擎压缩省 89% token",
-  "image": "cards/omniroute-cover.svg",
-  "page": "pages/omniroute.html",
+  "id": "mediacrawler",
+  "title": "MediaCrawler",
+  "subtitle": "7 大平台爬虫 · 免 JS 逆向（Playwright 桥接签名）· 登录态缓存复用 · IP 代理池 + 评论词云 · 6 种存储",
+  "image": "cards/mediacrawler-cover.svg",
+  "page": "pages/mediacrawler.html",
   "tags": [
-    "AI网关",
-    "免费AI",
-    "Claude Code",
-    "路由",
-    "token节省",
+    "爬虫",
+    "小红书",
+    "抖音",
+    "Python",
+    "Playwright",
+    "数据采集",
     "开源"
   ],
-  "date": "2026-08-12",
+  "date": "2026-08-13",
   "type": "recommendation"
 }

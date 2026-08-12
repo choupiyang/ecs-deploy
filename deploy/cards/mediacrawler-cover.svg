@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="356" viewBox="0 0 200 356">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#08100C"/>
+      <stop offset="1" stop-color="#0D1B2A"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#00E5A0"/>
+      <stop offset="1" stop-color="#5CFFC4"/>
+    </linearGradient>
+    <radialGradient id="coreGrad" cx="0.35" cy="0.3" r="1">
+      <stop offset="0" stop-color="#7DF5DC"/>
+      <stop offset="0.5" stop-color="#00E5A0"/>
+      <stop offset="1" stop-color="#0A5A48"/>
+    </radialGradient>
+    <radialGradient id="nodeGrad" cx="0.35" cy="0.3" r="1">
+      <stop offset="0" stop-color="#FFF0C2"/>
+      <stop offset="1" stop-color="#FFC53D"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <pattern id="grid" width="16" height="16" patternUnits="userSpaceOnUse">
+      <path d="M16 0H0V16" fill="none" stroke="#123048" stroke-width="0.5"/>
+    </pattern>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="200" height="356" fill="url(#bg)"/>
+  <rect width="200" height="356" fill="url(#grid)" opacity="0.5"/>
+
+  <!-- 顶部栏 -->
+  <rect x="0" y="0" width="200" height="2" fill="url(#accentGrad)" opacity="0.8"/>
+  <text x="16" y="24" font-family="monospace" font-size="7" fill="#4A5C7E" letter-spacing="2">MEDIACRAWLER</text>
+  <text x="184" y="24" font-family="monospace" font-size="7" fill="#FFC53D" text-anchor="end">61.9K★</text>
+
+  <!-- 中心: 蜘蛛网抓取核 + 平台节点轨道 -->
+  <g transform="translate(100,130)">
+    <!-- 三层轨道 -->
+    <circle r="58" fill="none" stroke="#00E5A0" stroke-width="0.8" stroke-dasharray="3 5" opacity="0.5">
+      <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="14s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="44" fill="none" stroke="#FFC53D" stroke-width="0.7" stroke-dasharray="2 4" opacity="0.4">
+      <animateTransform attributeName="transform" type="rotate" from="360 0 0" to="0 0 0" dur="20s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="70" fill="none" stroke="#8FA8C8" stroke-width="0.6" stroke-dasharray="1 6" opacity="0.3">
+      <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="26s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- 平台节点（小红书粉/抖音蓝/快手橙/B站紫/微博金） -->
+    <g>
+      <circle cx="0" cy="-58" r="5" fill="#FF2E6E" filter="url(#glow)">
+        <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="14s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+    <g>
+      <circle cx="44" cy="0" r="4" fill="#2E7BFF" filter="url(#glow)">
+        <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="-360 0 0" dur="20s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+    <g>
+      <circle cx="0" cy="44" r="4.5" fill="#FF7B2E" filter="url(#glow)" opacity="0.9">
+        <animateTransform attributeName="transform" type="rotate" from="360 0 0" to="0 0 0" dur="17s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+    <g>
+      <circle cx="-44" cy="0" r="3.5" fill="#8B2EFF" filter="url(#glow)" opacity="0.85">
+        <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="11s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+    <g>
+      <circle cx="70" cy="0" r="3" fill="#FFC53D" filter="url(#glow)" opacity="0.8">
+        <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="-360 0 0" dur="26s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+
+    <!-- 数据包脉冲 -->
+    <circle cx="0" cy="0" r="3" fill="#5CFFC4" opacity="0">
+      <animate attributeName="cx" values="0;48;48" dur="3s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;0" dur="3s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- 连接线 -->
+    <line x1="0" y1="0" x2="0" y2="-58" stroke="#00E5A0" stroke-width="0.6" opacity="0.3"/>
+    <line x1="0" y1="0" x2="44" y2="0" stroke="#FFC53D" stroke-width="0.6" opacity="0.3"/>
+    <line x1="0" y1="0" x2="0" y2="44" stroke="#00E5A0" stroke-width="0.6" opacity="0.3"/>
+    <line x1="0" y1="0" x2="-44" y2="0" stroke="#5CFFC4" stroke-width="0.6" opacity="0.3"/>
+
+    <!-- 核心 -->
+    <circle r="17" fill="url(#coreGrad)" filter="url(#glow)">
+      <animate attributeName="r" values="15;18;15" dur="2.2s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="17" fill="none" stroke="#7DF5DC" stroke-width="0.8" opacity="0.6">
+      <animate attributeName="r" values="17;26;17" dur="2.2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.6;0;0.6" dur="2.2s" repeatCount="indefinite"/>
+    </circle>
+    <!-- 核内蜘蛛/抓取 -->
+    <path d="M-6 -8 L2 -8 L2 -4 L8 -10 L2 -16 L2 -12 L-6 -12 Z" fill="#0A5A48" opacity="0.9">
+      <animate attributeName="opacity" values="0.5;1;0.5" dur="1.6s" repeatCount="indefinite"/>
+    </path>
+  </g>
+
+  <!-- 标题区 -->
+  <text x="100" y="236" text-anchor="middle" font-family="Georgia,serif" font-size="24" font-weight="bold" fill="#E8F6F1">MediaCrawler</text>
+  <text x="100" y="252" text-anchor="middle" font-family="monospace" font-size="7" fill="#00E5A0" letter-spacing="1.5">SOCIAL CRAWLER · 免 JS 逆向</text>
+  <text x="100" y="268" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#8FA8C8">7 平台 · 登录态缓存 · IP 代理池</text>
+
+  <!-- 数据条 -->
+  <rect x="24" y="288" width="152" height="24" rx="12" fill="#0D1A14" stroke="#1E2C4A" stroke-width="0.8"/>
+  <text x="100" y="304" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#E8F6F1">Playwright 桥接 · 6 种存储</text>
+
+  <!-- 底部 -->
+  <text x="100" y="338" text-anchor="middle" font-family="monospace" font-size="6.5" fill="#4A5C7E" letter-spacing="1">MIND RESONANCE · 反共识观察</text>
+</svg>
