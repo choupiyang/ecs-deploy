@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#070B14">
+<title>OmniRoute · 免费AI网关</title>
+<style>
+:root{
+  --bg:#070B14; --bg-2:#0D1424; --bg-3:#16203A;
+  --accent:#00D4AA; --accent-light:#5EF0D0; --glow:rgba(0,212,170,.35);
+  --gold:#FFC53D;
+  --text:#E8F6F1; --text-dim:#8FA8C8; --text-mute:#4A5C7E;
+  --border:#1E2C4A;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:#03060B;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Noto Sans SC',sans-serif;overflow:hidden;height:100%}
+.stage{
+  aspect-ratio:9/16;height:min(100svh,calc(100vw*16/9));width:min(100vw,calc(100svh*9/16));
+  margin:0 auto;position:relative;overflow:hidden;background:var(--bg);
+  perspective:1000px;transform-style:preserve-3d;display:flex;flex-direction:column;
+}
+@supports not (height:100svh){.stage{height:min(100vh,calc(100vw*16/9))}}
+.stage::before{content:'';position:absolute;inset:0;background:
+  radial-gradient(ellipse 80% 50% at 50% -10%,rgba(0,212,170,.12),transparent 60%),
+  radial-gradient(ellipse 60% 40% at 85% 110%,rgba(255,197,61,.07),transparent 60%);pointer-events:none}
+.stage::after{content:'';position:absolute;inset:0;background-image:
+  linear-gradient(rgba(0,212,170,.04) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(0,212,170,.04) 1px,transparent 1px);
+  background-size:22px 22px;pointer-events:none}
+
+.topbar{position:relative;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:14px 20px 6px;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:7px;font-size:10px;letter-spacing:.32em;color:var(--text-dim);font-family:monospace}
+.brand .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+.share-btn{width:32px;height:32px;border-radius:10px;border:1px solid var(--border);background:var(--bg-2);color:var(--text-dim);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.share-btn:active{transform:scale(.9);border-color:var(--accent);color:var(--accent)}
+
+.hero{position:relative;z-index:3;display:flex;align-items:center;gap:14px;padding:10px 20px 8px;flex-shrink:0}
+.hero-side{flex:1;min-width:0}
+.meta-row{display:flex;align-items:center;justify-content:space-between;font-size:8px;color:var(--text-mute);letter-spacing:.18em;font-family:monospace;margin-bottom:6px}
+.meta-row .vol{color:var(--accent)}
+.title-block{display:flex;align-items:center;gap:10px}
+.sp-stamp{width:38px;height:38px;border-radius:12px;background:var(--bg-2);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:19px;cursor:pointer;transition:all .2s;box-shadow:0 0 14px var(--glow);flex-shrink:0}
+.sp-stamp:active{transform:scale(.9) rotate(10deg)}
+.title-text{min-width:0}
+.sp-title{font-size:22px;font-weight:800;letter-spacing:.01em;color:var(--text);font-family:'Georgia','Noto Serif SC',serif}
+.sp-title .dot{color:var(--gold)}
+.superdesign-line{display:flex;align-items:center;gap:8px;margin-top:2px}
+.superdesign{font-size:8.5px;color:var(--text-mute);letter-spacing:.08em}
+.v-tag{padding:2px 8px;border-radius:20px;font-size:8.5px;font-weight:700;letter-spacing:.04em}
+.v-tag.gold{background:rgba(255,197,61,.12);color:var(--gold);border:1px solid rgba(255,197,61,.3)}
+.tagline{font-size:10.5px;line-height:1.55;color:var(--text-dim);margin-top:6px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.tagline em{color:var(--accent-light);font-style:normal;font-weight:600}
+.hint-badge{display:inline-block;margin-top:6px;font-size:8px;color:var(--text-mute);letter-spacing:.06em;border:1px dashed var(--border);border-radius:20px;padding:3px 9px}
+
+/* 3D 多路路由网关（主题：流量分发） */
+.gate3d{width:118px;height:118px;flex-shrink:0;position:relative;transform-style:preserve-3d;animation:gfloat 5s ease-in-out infinite}
+@keyframes gfloat{0%,100%{transform:rotateX(10deg) rotateY(-14deg)}50%{transform:rotateX(10deg) rotateY(14deg)}}
+.gate3d .core{position:absolute;left:50%;top:50%;width:28px;height:28px;margin:-14px 0 0 -14px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#7DF5DC,var(--accent) 55%,#0A5A48);box-shadow:0 0 22px var(--glow),0 0 55px rgba(0,212,170,.22);animation:corePulse 2.2s ease-in-out infinite;z-index:3}
+@keyframes corePulse{0%,100%{box-shadow:0 0 16px var(--glow),0 0 40px rgba(0,212,170,.18)}50%{box-shadow:0 0 28px var(--glow),0 0 75px rgba(0,212,170,.38)}}
+.gate3d .ring{position:absolute;left:50%;top:50%;border-radius:50%;border:1px solid rgba(0,212,170,.3);transform-style:preserve-3d}
+.gate3d .ring.r1{width:74px;height:74px;margin:-37px 0 0 -37px;animation:ringSpin1 11s linear infinite}
+.gate3d .ring.r2{width:88px;height:88px;margin:-44px 0 0 -44px;border-color:rgba(255,197,61,.24);animation:ringSpin2 17s linear infinite}
+.gate3d .ring.r3{width:102px;height:102px;margin:-51px 0 0 -51px;border-style:dashed;border-color:rgba(143,168,200,.28);animation:ringSpin1 23s linear infinite reverse}
+@keyframes ringSpin1{from{transform:rotateX(68deg) rotateZ(0)}to{transform:rotateX(68deg) rotateZ(360deg)}}
+@keyframes ringSpin2{from{transform:rotateX(68deg) rotateZ(360deg)}to{transform:rotateX(68deg) rotateZ(0)}}
+.gate3d .node{position:absolute;width:9px;height:9px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFF0C2,var(--gold) 60%,#8a6d00);box-shadow:0 0 8px rgba(255,197,61,.45);transform-style:preserve-3d;z-index:4}
+.gate3d .node.n1{animation:orbit1 11s linear infinite}
+.gate3d .node.n2{animation:orbit2 17s linear infinite}
+.gate3d .node.n3{animation:orbit1 15s linear infinite reverse}
+.gate3d .node.n4{animation:orbit2 21s linear infinite reverse}
+.gate3d .node.n5{animation:orbit1 19s linear infinite}
+@keyframes orbit1{from{transform:rotate(0deg) translateX(37px) rotate(0deg)}to{transform:rotate(360deg) translateX(37px) rotate(-360deg)}}
+@keyframes orbit2{from{transform:rotate(0deg) translateX(44px) rotate(0deg)}to{transform:rotate(-360deg) translateX(44px) rotate(360deg)}}
+.gate3d .packet{position:absolute;left:50%;top:50%;width:5px;height:5px;border-radius:50%;background:var(--accent-light);box-shadow:0 0 8px var(--accent);opacity:0;z-index:5}
+.gate3d .packet.p1{animation:packet1 2.8s ease-in-out infinite}
+.gate3d .packet.p2{animation:packet2 3.6s ease-in-out infinite}
+.gate3d .packet.p3{animation:packet3 4.2s ease-in-out infinite}
+@keyframes packet1{0%{opacity:0;transform:translateX(0)}15%{opacity:1}50%{transform:translateX(48px) scale(1.4);opacity:1}85%{opacity:0}100%{transform:translateX(48px);opacity:0}}
+@keyframes packet2{0%{opacity:0;transform:translateX(0)}15%{opacity:1}50%{transform:translateX(-44px) scale(1.4);opacity:1}85%{opacity:0}100%{transform:translateX(-44px);opacity:0}}
+@keyframes packet3{0%{opacity:0;transform:translateY(0)}15%{opacity:1}50%{transform:translateY(-52px) scale(1.4);opacity:1}85%{opacity:0}100%{transform:translateY(-52px);opacity:0}}
+
+/* 核心展示区：终端 */
+.showcase{position:relative;z-index:3;flex:1 1 auto;display:flex;flex-direction:column;padding:6px 20px;min-height:0}
+.code-box{flex:1 1 auto;min-height:0;background:var(--bg-2);border:1px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;transition:border-color .25s,box-shadow .25s}
+.code-box:active{border-color:var(--accent);box-shadow:0 0 20px var(--glow)}
+.code-head{display:flex;align-items:center;gap:5px;padding:7px 12px;background:var(--bg-3);border-bottom:1px solid var(--border);flex-shrink:0}
+.td{width:7px;height:7px;border-radius:50%}
+.td.r{background:#FF5F56}.td.y{background:#FFBD2E}.td.g{background:#27C93F}
+.tname{flex:1;font-size:8.5px;color:var(--text-mute);font-family:monospace;letter-spacing:.05em;text-align:center}
+.sp-tag{font-size:7.5px;color:var(--accent);border:1px solid var(--accent);border-radius:10px;padding:1px 6px;font-family:monospace}
+.code-body{flex:1 1 auto;min-height:0;padding:10px 14px;overflow:hidden;font-family:'SF Mono',Consolas,monospace;font-size:8.6px;line-height:1.8;color:#9FB8D8}
+.code-body .cmt{color:#4A5C7E}
+.code-body .kw{color:#5EF0D0}
+.code-body .fn{color:#7DD3FC}
+.code-body .str{color:#FFC53D}
+.code-body .ac{color:var(--gold)}
+.cursor{display:inline-block;width:5px;height:10px;background:var(--accent-light);vertical-align:middle;animation:blink 1s step-end infinite}
+@keyframes blink{50%{opacity:0}}
+.code-hint{flex-shrink:0;text-align:center;font-size:8px;color:var(--text-mute);padding:5px 0 8px;letter-spacing:.1em}
+
+/* Stats */
+.stats{position:relative;z-index:3;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 20px 8px;flex-shrink:0}
+.stat-card{background:var(--bg-2);border:1px solid var(--border);border-radius:11px;padding:7px 4px;text-align:center;cursor:pointer;transition:all .2s}
+.stat-card:active{transform:scale(.93);border-color:var(--accent)}
+.stat-num{font-size:14px;font-weight:800;font-family:'Georgia','Noto Serif SC',serif}
+.stat-num .accent{color:var(--accent)}
+.stat-num .gold{color:var(--gold)}
+.stat-label{font-size:7.5px;color:var(--text-mute);margin-top:2px;letter-spacing:.04em}
+
+/* Flow */
+.flow{padding:0 20px 7px;flex-shrink:0;z-index:3}
+.flow svg{display:block;width:100%;height:auto}
+.flow-node{cursor:pointer;transition:opacity .2s}
+.flow-node:hover{opacity:.7}
+.flow-node text{font-size:6.8px;fill:var(--text-dim);font-family:monospace}
+.flow-node .ic{fill:var(--bg-2);stroke:var(--accent);stroke-width:1}
+.flow-node.hot .ic{stroke:var(--gold)}
+.flow-node.hot text{fill:var(--gold)}
+.flow-line{stroke:var(--border);stroke-width:1;fill:none}
+
+/* Features */
+.features{position:relative;z-index:3;display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 20px 8px;flex-shrink:0}
+.feature{display:flex;align-items:center;gap:8px;background:var(--bg-2);border:1px solid var(--border);border-radius:11px;padding:6px 9px;cursor:pointer;transition:all .2s;min-width:0}
+.feature:active{transform:scale(.95);border-color:var(--accent)}
+.ficon{font-size:13px;flex-shrink:0}
+.ftxt{min-width:0}
+.ft{font-size:9.5px;color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fd{font-size:7.3px;color:var(--text-mute);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Tech */
+.tech{position:relative;z-index:3;display:flex;flex-wrap:wrap;gap:5px;padding:0 20px 8px;flex-shrink:0}
+.tech-pill{font-size:8px;padding:3px 9px;border-radius:20px;border:1px solid var(--border);color:var(--text-dim);background:var(--bg-2);cursor:pointer;transition:all .2s;font-family:monospace}
+.tech-pill:active{transform:scale(.92);color:var(--accent);border-color:var(--accent)}
+
+/* Bottom Bar */
+.bottombar{position:relative;z-index:3;display:flex;gap:8px;padding:0 20px calc(14px + env(safe-area-inset-bottom));flex-shrink:0}
+.bbtn{flex:1;text-align:center;padding:9px 0;border-radius:11px;font-size:10px;font-weight:600;text-decoration:none;transition:all .2s;letter-spacing:.06em}
+.bbtn:active{transform:scale(.96)}
+.bbtn.gh{background:var(--bg-2);border:1px solid var(--border);color:var(--text)}
+.bbtn.site{background:linear-gradient(135deg,#00B892,#0A5A48);color:#fff;border:1px solid transparent}
+.bbtn.site:active{box-shadow:0 0 18px var(--glow)}
+
+/* Overlay Sheet */
+.overlay{position:absolute;inset:0;z-index:20;background:rgba(3,6,11,.74);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);opacity:0;visibility:hidden;transition:opacity .3s;display:flex;align-items:flex-end}
+.overlay.active{opacity:1;visibility:visible}
+.sheet{width:100%;max-height:78%;overflow-y:auto;background:var(--bg-2);border-top:1px solid var(--accent);border-radius:20px 20px 0 0;padding:10px 22px 26px;transform:translateY(100%);transition:transform .5s cubic-bezier(.7,0,.3,1);position:relative}
+.overlay.active .sheet{transform:translateY(0)}
+.sheet-handle{width:36px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 14px}
+.sheet-title{font-size:16px;font-weight:700;color:var(--text);font-family:'Georgia','Noto Serif SC',serif;margin-bottom:8px}
+.sheet-title em{color:var(--accent);font-style:normal}
+.sheet-desc{font-size:11.5px;line-height:1.75;color:var(--text-dim);margin-bottom:12px}
+.sheet-code{background:#081120;border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-family:'SF Mono',Consolas,monospace;font-size:9.5px;line-height:1.7;color:#9FB8D8;white-space:pre-wrap;margin-bottom:12px}
+.sheet-points{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.sheet-point{font-size:10.5px;color:var(--text);padding:7px 11px;background:var(--bg-3);border-radius:8px;border-left:2px solid var(--accent)}
+.sheet-point.warn{border-left-color:var(--gold)}
+.sheet-close{width:100%;padding:12px 0;border-radius:11px;border:1px solid var(--accent);background:transparent;color:var(--accent);font-size:11px;font-weight:700;letter-spacing:.2em;cursor:pointer;transition:all .2s}
+.sheet-close:active{background:var(--accent);color:#fff}
+
+/* Toast */
+.toast{position:absolute;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:var(--bg-3);border:1px solid var(--accent);color:var(--text);font-size:10px;padding:8px 16px;border-radius:20px;opacity:0;transition:all .3s;z-index:30;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.reveal{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* 小屏压缩 */
+@media (max-height:730px){
+  .hero{padding-top:8px;padding-bottom:6px;gap:10px}
+  .gate3d{width:92px;height:92px}
+  .gate3d .ring.r3{display:none}
+  .sp-title{font-size:19px}
+  .tagline{font-size:9.5px;-webkit-line-clamp:2}
+  .code-body{font-size:7.8px;line-height:1.7}
+  .stats{gap:5px;padding-bottom:6px}
+  .feature{padding:5px 8px}
+  .ft{font-size:8.5px}
+  .tech{padding-bottom:6px}
+  .bottombar{padding-bottom:10px}
+  .bbtn{padding:7px 0}
+}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+
+  <!-- Topbar -->
+  <div class="topbar tilt-mid">
+    <div class="brand"><span class="dot"></span>OMNIROUTE</div>
+    <button class="share-btn" id="shareBtn" aria-label="分享">↗</button>
+  </div>
+
+  <!-- Hero：左文字 + 右 3D 路由网关 -->
+  <div class="hero reveal">
+    <div class="hero-side tilt-mid">
+      <div class="meta-row">
+        <span class="vol">FREE AI GATEWAY</span>
+        <span>2026.08.12</span>
+      </div>
+      <div class="title-block">
+        <div class="sp-stamp" id="stamp">🚦</div>
+        <div class="title-text">
+          <div class="sp-title">OmniRoute<span class="dot">.</span></div>
+          <div class="superdesign-line">
+            <span class="superdesign">diegosouzapw · MIT</span>
+            <span class="v-tag gold">46.2K★</span>
+          </div>
+        </div>
+      </div>
+      <div class="tagline">Never stop coding——<em>一个端点</em>聚合 291 家提供商，90+ 免费层，配额用完<em>自动降级</em>不断线</div>
+      <div class="hint-badge">轻触任何元素探索 · 拖动卡片看 3D 视差</div>
+    </div>
+    <div class="gate3d tilt-deep" id="gate3d">
+      <div class="ring r1"></div>
+      <div class="ring r2"></div>
+      <div class="ring r3"></div>
+      <div class="node n1"></div>
+      <div class="node n2"></div>
+      <div class="node n3"></div>
+      <div class="node n4"></div>
+      <div class="node n5"></div>
+      <div class="packet p1"></div>
+      <div class="packet p2"></div>
+      <div class="packet p3"></div>
+      <div class="core"></div>
+    </div>
+  </div>
+
+  <!-- 核心展示区：终端 -->
+  <div class="showcase tilt-mid">
+    <div class="code-box" id="codeShow" data-sheet="code">
+      <div class="code-head">
+        <span class="td r"></span><span class="td y"></span><span class="td g"></span>
+        <span class="tname">omniroute — 一个端点连所有 AI</span>
+        <span class="sp-tag">v 3.8.50</span>
+      </div>
+      <div class="code-body">
+        <span class="cmt"># 安装（30 秒）：</span><br>
+        <span class="kw">$ npm install -g omniroute</span><br>
+        <span class="cmt"># 启动 → localhost:20128/v1</span><br>
+        <span class="kw">$ omniroute</span><br>
+        <span class="cmt"># 任何 OpenAI 兼容工具直接指向它</span><br>
+        <span class="cmt"># Claude Code:</span><br>
+        <span class="kw">$ ANTHROPIC_BASE_URL=</span>http://localhost:20128 claude<br>
+        <span class="cmt"># 零配置免费用——model 填 auto 即可</span><br>
+        <span class="kw">$ curl</span> http://localhost:20128/v1/chat/completions \<br>
+        &nbsp;&nbsp;-d <span class="str">'{"model":"auto","messages":[{"role":"user","content":"Hello!"}]}'</span> <span class="cursor"></span>
+      </div>
+      <div class="code-hint">▲ 点击查看完整示例</div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats tilt-mid">
+    <div class="stat-card" data-sheet="stars">
+      <div class="stat-num"><span class="accent">46.2K</span></div>
+      <div class="stat-label">Stars · 6.2K forks</div>
+    </div>
+    <div class="stat-card" data-sheet="prov">
+      <div class="stat-num"><span class="gold">291</span></div>
+      <div class="stat-label">AI 提供商</div>
+    </div>
+    <div class="stat-card" data-sheet="free">
+      <div class="stat-num"><span class="accent">90+</span></div>
+      <div class="stat-label">免费层 · $0 起</div>
+    </div>
+    <div class="stat-card" data-sheet="save">
+      <div class="stat-num"><span class="gold">89%</span></div>
+      <div class="stat-label">平均省 token</div>
+    </div>
+  </div>
+
+  <!-- Flow -->
+  <div class="flow tilt-mid">
+    <svg viewBox="0 0 330 42" fill="none">
+      <line class="flow-line" x1="55" y1="21" x2="100" y2="21"/>
+      <path class="flow-line" d="M100 21 L108 17 V25 Z" fill="var(--accent)"/>
+      <line class="flow-line" x1="140" y1="21" x2="185" y2="21"/>
+      <path class="flow-line" d="M185 21 L193 17 V25 Z" fill="var(--accent)"/>
+      <line class="flow-line" x1="225" y1="21" x2="270" y2="21"/>
+      <path class="flow-line" d="M270 21 L278 17 V25 Z" fill="var(--gold)"/>
+      <g class="flow-node" data-sheet="f1">
+        <rect class="ic" x="5" y="7" width="50" height="28" rx="8"/>
+        <text x="30" y="25" text-anchor="middle">一个端点</text>
+      </g>
+      <g class="flow-node" data-sheet="f2">
+        <rect class="ic" x="110" y="7" width="30" height="28" rx="8"/>
+        <text x="125" y="25" text-anchor="middle">路由</text>
+      </g>
+      <g class="flow-node" data-sheet="f3">
+        <rect class="ic" x="195" y="7" width="30" height="28" rx="8"/>
+        <text x="210" y="25" text-anchor="middle">压缩</text>
+      </g>
+      <g class="flow-node hot" data-sheet="f4">
+        <rect class="ic" x="280" y="7" width="45" height="28" rx="8"/>
+        <text x="302" y="25" text-anchor="middle">自动降级</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- Features -->
+  <div class="features tilt-mid">
+    <div class="feature" data-sheet="combo">
+      <div class="ficon">🔀</div>
+      <div class="ftxt"><div class="ft">Combo 组合</div><div class="fd">19 种路由策略</div></div>
+    </div>
+    <div class="feature" data-sheet="compress">
+      <div class="ficon">🗜️</div>
+      <div class="ftxt"><div class="ft">12 引擎压缩</div><div class="fd">RTK + Caveman</div></div>
+    </div>
+    <div class="feature" data-sheet="zero">
+      <div class="ficon">🆓</div>
+      <div class="ftxt"><div class="ft">$0 免费栈</div><div class="fd">40+ 永久免费</div></div>
+    </div>
+    <div class="feature" data-sheet="mcp">
+      <div class="ficon">🤖</div>
+      <div class="ftxt"><div class="ft">MCP + A2A</div><div class="fd">105 个 MCP 工具</div></div>
+    </div>
+    <div class="feature" data-sheet="local">
+      <div class="ficon">🔒</div>
+      <div class="ftxt"><div class="ft">本地优先</div><div class="fd">AES-256-GCM 加密</div></div>
+    </div>
+    <div class="feature" data-sheet="reddit">
+      <div class="ficon">💬</div>
+      <div class="ftxt"><div class="ft">Reddit 口碑</div><div class="fd">"一直在用"实测</div></div>
+    </div>
+  </div>
+
+  <!-- Tech Pills -->
+  <div class="tech tilt-mid">
+    <span class="tech-pill" data-sheet="ts">TypeScript</span>
+    <span class="tech-pill" data-sheet="cli">33 个编码工具</span>
+    <span class="tech-pill" data-sheet="docker">Docker</span>
+    <span class="tech-pill" data-sheet="desktop">Desktop/PWA</span>
+    <span class="tech-pill" data-sheet="test">25K+ 测试</span>
+    <span class="tech-pill" data-sheet="mit">MIT License</span>
+  </div>
+
+  <!-- Bottom Bar -->
+  <div class="bottombar tilt-mid">
+    <a class="bbtn gh" href="https://github.com/diegosouzapw/OmniRoute" target="_blank" rel="noopener">GitHub ↗</a>
+    <a class="bbtn site" href="https://omniroute.online" target="_blank" rel="noopener">官网 omniroute.online</a>
+  </div>
+
+  <!-- Overlay / Sheet -->
+  <div class="overlay" id="overlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" id="sheetTitle"></div>
+      <div class="sheet-desc" id="sheetDesc"></div>
+      <div class="sheet-code" id="sheetCode" style="display:none"></div>
+      <div class="sheet-points" id="sheetPoints"></div>
+      <button class="sheet-close" id="sheetClose">CLOSE</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var $=function(s){return document.querySelector(s)};
+  var stage=$('#stage'), overlay=$('#overlay'), sheetTitle=$('#sheetTitle'),
+      sheetDesc=$('#sheetDesc'), sheetPoints=$('#sheetPoints'), sheetCode=$('#sheetCode'),
+      toast=$('#toast');
+
+  var DATA={
+    story:{
+      title:'OmniRoute <em>· 6 个月冲到 46K stars 的免费 AI 网关</em>',
+      desc:'由 diegosouzapw（Diego Souza）创建于 2026-02，定位"Never stop coding"——把开发者被 AI 配额墙打断的痛苦变成历史。核心洞察：人人都在手动堆叠免费层——几十个 SDK、几十个限速、不知道还剩多少额度。OmniRoute 把 43 个提供商池/516 个模型的文档化免费层聚合成一个诚实数字，实时显示在 dashboard 上。Reddit 上它被评价为"Claude Code 配额 20x 用完后的救星"。',
+      points:['作者 diegosouzapw（Diego Souza）','2026-02-13 创建 · 6 个月','46,185 ★ / 6,216 forks / 263 watchers','500+ 贡献者','MIT 开源 · TypeScript 全栈','趋势榜 Trendshift 收录','社区: Discord/Telegram/WhatsApp 全球+巴西']
+    },
+    stars:{
+      title:'46.2K Stars <em>· 6 个月的现象级爆发</em>',
+      desc:'2026-02 建仓到 2026-08 仅 6 个月，46,185 星、6,216 forks。增速在开发者工具里是现象级的——踩中 AI 配额焦虑 + 免费模型供给过剩的双重风口。2026-08-12 仍在高频推送（v3.8.50，默认分支 release/v3.8.50）。',
+      points:['46,185 ★ / 6,216 forks','2026-02-13 创建 · 6 个月','263 watchers · 401 open issues','500+ contributors','npm: omniroute + Docker Hub + Electron','2026-08-12 仍每日推送']
+    },
+    prov:{
+      title:'291 家提供商 <em>· 最全的开源路由目录</em>',
+      desc:'README 声称"任何开源路由器最完整的目录"：291 家提供商、90+ 有免费层、40+ 永久免费。覆盖所有主流实验室：OpenAI/Anthropic/Gemini/xAI/DeepSeek/Mistral/Qwen/Meta/Groq/NVIDIA/MiniMax/Cohere/Perplexity/HuggingFace/Cloudflare/百度 等 220+ 家。',
+      points:['291 家提供商','90+ 有免费层 · 40+ 永久免费','43 个提供商池 / 516 个模型','~1.53B 免费 tokens/月','每月两次重新审计，数字双向变动','诚实数学：池去重（全量计数会读作 10B）']
+    },
+    free:{
+      title:'90+ 免费层 <em>· $0 起，无需信用卡</em>',
+      desc:'这是 OmniRoute 的核心卖点：聚合所有"文档化"的免费层。Kiro 免费用 Claude Sonnet/Haiku/Opus（AWS Builder ID 登录）、Qoder 免费 Kimi K2/DeepSeek R1（Google OAuth）、Pollinations 免 key 用 GPT-5、LongCat 每天 50M tokens、Qwen 设备码登录无限量。',
+      points:['Kiro: Claude Sonnet/Haiku/Opus $0 无限（最多10账号）','Qoder: Kimi-K2/DeepSeek-R1 $0 无限','Pollinations: GPT-5 免 key 零摩擦','LongCat: 50M tokens/天','Qwen: qwen3-coder 无限量','Gemini CLI: 180K/月 · Cloudflare: 10K/天','NVIDIA NIM: 40 RPM 永久免费']
+    },
+    save:{
+      title:'89% <em>· 平均 token 节省</em>',
+      desc:'12 引擎压缩流水线：Session-Dedup/CCR/Lite/RTK/Responses Tool Output/Headroom/Relevance/Caveman/Aggressive/LLMLingua-2/Ultra/OmniGlyph。默认叠加 RTK→Caveman：combined = 1-(1-0.80)×(1-0.46) = 89.2%，范围 78.4-94.6%。代码块/URL/JSON 永远字节级保留。',
+      points:['RTK→Caveman 叠加: 平均 89.2%','范围 78.4–94.6%（最多 95%）','12 个可独立开关的引擎','代码/URL/JSON 字节级保护','预设: Lite 15% / Standard 30% / Aggressive 50% / Ultra 75%','示例: 69 tokens → 19 tokens（React useMemo 解释）','工具输出场景 RTK 60-90%']
+    },
+    code:{
+      title:'30 秒上手 <em>· 零配置免费用</em>',
+      desc:'npm 全局安装，服务器启动在 localhost:20128。任何 OpenAI 兼容工具（Claude Code/Cursor/Cline/Codex）指向这个端点即可。model 填 auto——预接好的免费提供商 OpenCode Free 和 Felo 直接响应，无需 API key、无需注册。Reddit 用户实测：Claude Code 里跑 Codex GPT-5.4，一切照常工作。',
+      points:['npm install -g omniroute','默认端口 localhost:20128','auto 组合预接 OpenCode Free + Felo','Claude Code: ANTHROPIC_BASE_URL=http://localhost:20128','Codex: OPENAI_BASE_URL=http://localhost:20128/v1','Cursor: 设置→Models→OpenAI-compatible','33 个编码工具兼容','Python/Node/PHP/cURL 快速上手脚本'],
+      code:'# 安装（30 秒）\nnpm install -g omniroute\nomniroute\n\n# 零配置免费用——auto 已预接免费提供商\ncurl http://localhost:20128/v1/chat/completions \\\n  -H "Content-Type: application/json" \\\n  -d \'{"model":"auto","messages":[{"role":"user","content":"Hello!"}]}\'\n\n# Claude Code 接入\nANTHROPIC_BASE_URL=http://localhost:20128 claude\n\n# Codex CLI 接入\nOPENAI_BASE_URL=http://localhost:20128/v1 codex\n\n# 体检\nomniroute --help   # ingest/parse/kg/reason/decision 等命令组'
+    },
+    combo:{title:'Combo 组合 <em>· 核心创新</em>',desc:'Combo 是 OmniRoute 的杀手锏：一个命名模型链，带路由策略。请求到达 → 先试节点1（如 Kiro 免费 Claude）→ 节流/超时立即降到节点2（Qoder）→ 依此类推直到成功。你的工具只看到"一个成功的响应"，不知道背后试了 3 家提供商。',points:['19 种路由策略（README 称 17+）','Priority: 按序降级','Round Robin: 轮询 + 粘性限制','Fill First: 榨干免费层','Fusion: 多模型融合查询','每个请求实时决策 + 熔断器','dashboard 可视化路由路径']},
+    compress:{title:'12 引擎压缩 <em>· 透明省 token</em>',desc:'每个请求透明经过压缩流水线，客户端零改动。RTK 过滤命令输出（60-90%）、Caveman 规则压缩散文（65-75%）、LLMLingua-2 用 MobileBERT ONNX 做 ML 语义剪枝。代码块/URL/JSON/结构化数据永远字节级保留。',points:['RTK: 命令输出 60-90%','Caveman: 散文压缩 65-75%','LLMLingua-2: ML 语义剪枝（MobileBERT ONNX）','Session-Dedup: 跨轮去重','CCR: 大块归档按需取回','Headroom: JSON 数组无损压缩 ~30%','OmniGlyph: 上下文转图像（实验性）','Reddit: "有人做过压缩的全面测试"']},
+    zero:{title:'$0 免费栈 <em>· 永不停止</em>',desc:'旗舰玩法：连上免费提供商，创建一个 combo，一分钱不花永远编码。Reddit 高票帖（57 votes）详细列出了 11 家 $0 提供商和 5 节点免费 combo 配置。Pollinations 被形容为"疯狂"——不注册、不填 key、零摩擦。',points:['Kiro: Claude 全系免费（最多10账号）','Qoder: Kimi/DeepSeek/Qwen 免费','Pollinations: GPT-5 免 key','LongCat: 50M tokens/天','Qwen: 无限量设备码登录','Groq: 14.4K 请求/天 · Cerebras: 1M/天','5 节点免费 combo 每月成本 $0']},
+    mcp:{title:'MCP + A2A <em>· Agent 原生</em>',desc:'内置 MCP Server（105 个工具/30 个 scope，stdio/SSE/HTTP 三种传输）和 A2A v0.3 协议。Agent 能查询提供商、切换 combo、读取自己剩余配额、生成路由报告、设置预算护栏。Reddit 确认"Works with Hermes"。',points:['105 个 MCP 工具 · 30 scopes','3 种传输: stdio/SSE/Streamable HTTP','A2A v0.3 (JSON-RPC 2.0 + SSE)','omniroute_switch_combo 会话中切换','omniroute_check_quota 剩余配额查询','omniroute_cost_report 实时花费','omniroute_simulate_route 路由模拟','Reddit 确认: "Can confirm it works" with Hermes']},
+    local:{title:'本地优先 <em>· 密钥不出机器</em>',desc:'AES-256-GCM 静态加密所有密钥。支持本地运行（绑定 127.0.0.1:20128）、远程模式（VPS + 限域 token）、Cloud Sync（可选，Reddit 有争议）。默认零配置本地模式，密钥只在你机器上。',points:['AES-256-GCM 静态加密','本地绑定 127.0.0.1:20128','远程模式: VPS + scoped token','Cloud Sync: 可选（有争议，见 Reddit）','3 层弹性: 熔断器/密钥冷却/模型锁定','TLS 指纹伪装（wreq-js）','Reddit 警告: 不开 Cloud Sync 就无风险']},
+    reddit:{title:'Reddit 口碑 <em>· 真实用户实测</em>',desc:'挖了 6 个 Reddit 讨论帖：r/opencodeCLI 57 票深度评测、r/ClaudeCode 真实使用反馈、r/openclaw 省 token 讨论、r/hermesagent 起源争议、r/coolgithubprojects 推荐帖。总体口碑正面，有 1 个安全质疑帖被社区反驳。',points:['r/opencodeCLI: 57 votes · 45 comments 深度评测','r/ClaudeCode: "用 ChatGPT Plus 订阅在 Claude Code 跑 GPT-5.4，一切照常工作"','"Claude Max 20x 配额用完了，正在试 OmniRoute"','r/openclaw: "我用 omniroute，但没深挖压缩"','r/hermesagent: 起源争议（9Router fork→TS 重写）','r/coolgithubprojects: "Can confirm it works" with Hermes','争议: Cloud Sync 上传密钥风险（被反驳"本地用不开就行"）','"gemini 3.1 flash lite 在 antigravity 上不工作，其他正常"']},
+    f1:{title:'Step 1 · <em>一个端点</em>',desc:'localhost:20128/v1，OpenAI 兼容。任何工具指向它即可，不用改工具配置。',points:['OpenAI 兼容协议','33 个编码工具兼容','零配置自动可用']},
+    f2:{title:'Step 2 · <em>智能路由</em>',desc:'Combo 系统按策略在提供商间自动选择：优先订阅→API Key→便宜→免费，配额用完毫秒级降级。',points:['19 种路由策略','4 层降级: Subscription→API→Cheap→Free','熔断器 + 密钥冷却','融合模式多模型查询']},
+    f3:{title:'Step 3 · <em>压缩</em>',desc:'12 引擎透明压缩流水线，代码/JSON 字节级保留，平均省 89% token。',points:['RTK + Caveman 叠加','LLMLingua-2 语义剪枝','代码/URL/JSON 保护','每个 combo 独立配置']},
+    f4:{title:'Step 4 · <em>自动降级</em>',desc:'配额耗尽、限速、地区封锁——全部自动处理。你的工具永远得到一个成功响应。',points:['毫秒级降级','永不中断','reddit 实测: "it works :))))"','dashboard 实时可视化']},
+    ts:{title:'TypeScript',desc:'TypeScript 6.0，100% TS（core 零 any）。',points:['TypeScript 6.0','100% TS（src + open-sse）','zero any in core 自 v2.0','Node.js 22/24 LTS']},
+    cli:{title:'33 个编码工具',desc:'Claude Code/Codex/Cursor/Cline/Copilot/OpenCode/Kiro 等 33 个工具全兼容。',points:['Claude Code + Codex + Cursor','Cline/Continue/Kilo Code/OpenClaw','GitHub Copilot/Antigravity','14 CLI agents + 更多']},
+    docker:{title:'Docker',desc:'多架构镜像 AMD64 + ARM64，一键部署。',points:['AMD64 + ARM64','docker run diegosouzapw/omniroute','Compose profiles + Caddy HTTPS']},
+    desktop:{title:'Desktop/PWA',desc:'Electron 桌面应用（Win/macOS/Linux）+ 手机 Termux + 浏览器 PWA。',points:['Electron 桌面（系统托盘）','Android Termux','PWA 任意浏览器','43 个 i18n UI 语言']},
+    test:{title:'25K+ 测试',desc:'Node test runner + Vitest，25,000+ 测试用例跨 3,300+ 文件。',points:['25,000+ test cases','3,300+ 文件','单元/集成/E2E/安全/生态','GitHub Actions CI']},
+    mit:{title:'MIT License',desc:'宽松开源协议，可商用可自托管。',points:['MIT 开源','可商用','零 vendor lock-in','自托管或云']}
+  };
+
+  // 打开弹窗
+  function openSheet(key){
+    var d=DATA[key]; if(!d) return;
+    sheetTitle.innerHTML=d.title;
+    sheetDesc.textContent=d.desc;
+    if(d.code){sheetCode.style.display='block';sheetCode.textContent=d.code;}
+    else{sheetCode.style.display='none';}
+    sheetPoints.innerHTML=d.points.map(function(p){return '<div class="sheet-point">'+p+'</div>';}).join('');
+    overlay.classList.add('active');
+    if(navigator.vibrate) navigator.vibrate(15);
+  }
+  function closeSheet(){overlay.classList.remove('active');}
+
+  // 绑定所有 data-sheet 元素
+  document.querySelectorAll('[data-sheet]').forEach(function(el){
+    el.addEventListener('click',function(){openSheet(this.getAttribute('data-sheet'));});
+  });
+  $('#sheetClose').addEventListener('click',closeSheet);
+  overlay.addEventListener('click',function(e){if(e.target===overlay) closeSheet();});
+  $('#stamp').addEventListener('click',function(){openSheet('story');});
+
+  // 分享（三段式）
+  var shareBtn=$('#shareBtn');
+  function shareText(){
+    return 'OmniRoute：免费 AI 网关——一个端点聚合 291 家提供商（90+ 免费层），配额用完自动降级不断线，12 引擎压缩平均省 89% token，Claude Code/Codex/Cursor 全兼容（46.2K★ MIT）。\nhttps://mindresonance.online/youngsinsight/pages/omniroute.html\n\n你可以用任何AI工具订阅我的博客文章：https://mindresonance.online/youngsinsight/subscribe.html';
+  }
+  function showToast(msg){
+    toast.textContent=msg;
+    toast.classList.add('show');
+    setTimeout(function(){toast.classList.remove('show');},2200);
+  }
+  shareBtn.addEventListener('click',function(){
+    var text=shareText();
+    if(navigator.share){
+      navigator.share({title:'OmniRoute · 免费AI网关',text:text}).catch(function(){});
+    }else if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){showToast('已复制：介绍 + 链接 + 订阅推荐');});
+    }else{
+      var ta=document.createElement('textarea');
+      ta.value=text;document.body.appendChild(ta);ta.select();
+      try{document.execCommand('copy');showToast('已复制：介绍 + 链接 + 订阅推荐');}catch(e){}
+      document.body.removeChild(ta);
+    }
+  });
+
+  // 3D 视差倾斜
+  var tiltRaf=null;
+  function onTilt(x,y){
+    if(tiltRaf) return;
+    tiltRaf=requestAnimationFrame(function(){
+      var w=stage.clientWidth,h=stage.clientHeight;
+      var nx=(x/w)*2-1, ny=(y/h)*2-1;
+      stage.style.transform='rotateX('+(-ny*6)+'deg) rotateY('+(nx*6)+'deg)';
+      tiltRaf=null;
+    });
+  }
+  stage.addEventListener('mousemove',function(e){
+    var r=stage.getBoundingClientRect();
+    onTilt(e.clientX-r.left,e.clientY-r.top);
+  });
+  stage.addEventListener('touchmove',function(e){
+    var t=e.touches[0];if(!t)return;
+    var r=stage.getBoundingClientRect();
+    onTilt(t.clientX-r.left,t.clientY-r.top);
+  },{passive:true});
+  stage.addEventListener('mouseleave',function(){stage.style.transform='rotateX(0) rotateY(0)';});
+
+  // 彩蛋：stamp 连点 5 次 → 路由流量爆发
+  var stampCount=0;
+  $('#stamp').addEventListener('click',function(){
+    stampCount++;
+    if(stampCount>=5){
+      stampCount=0;
+      var g=$('#gate3d');
+      g.style.animation='none';
+      var t=0, iv=setInterval(function(){
+        t+=20;
+        g.style.transform='rotate('+t+'deg) scale('+(1+t/200)+')';
+        if(t>=400){clearInterval(iv);g.style.transform='';g.style.animation='';}
+      },16);
+      showToast('🚦 路由爆发：请求已分发到所有提供商！');
+      if(navigator.vibrate) navigator.vibrate([20,40,20]);
+    }
+  });
+
+  // 自动呼吸提示
+  setTimeout(function(){
+    var el=document.querySelector('.code-hint');
+    if(el){el.style.animation='none';el.style.opacity='1';}
+  },4000);
+
+  // reveal 入场
+  setTimeout(function(){
+    document.querySelectorAll('.reveal').forEach(function(el,i){
+      setTimeout(function(){el.classList.add('visible');},i*90);
+    });
+  },100);
+})();
+</script>
+</body>
+</html>
