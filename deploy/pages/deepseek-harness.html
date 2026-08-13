@@ -38,12 +38,23 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'PingFang
 /* 3D 插件拼装核（主题：Everything is a plugin） */
 .sp3d{width:118px;height:118px;flex-shrink:0;position:relative;transform-style:preserve-3d;animation:gfloat 6s ease-in-out infinite}
 @keyframes gfloat{0%,100%{transform:rotateX(12deg) rotateY(-8deg)}50%{transform:rotateX(12deg) rotateY(8deg)}}
-/* 中心插件核 */
-.sp3d .plugcore{position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:7px;
-  background:linear-gradient(145deg,#8EC3FF,var(--accent) 55%,#1d5ab5);
-  box-shadow:0 0 18px rgba(77,155,255,.6),inset 0 0 6px rgba(255,255,255,.25);z-index:3;animation:plugPulse 2.2s ease-in-out infinite}
-.sp3d .plugcore::after{content:'';position:absolute;left:50%;top:50%;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:3px;background:#0B1A35;border:1.5px solid var(--accent-light)}
-@keyframes plugPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+/* 中心海豚（DeepSeek logo 意象） */
+.sp3d .dolphin{position:absolute;left:50%;top:50%;width:46px;height:30px;margin:-15px 0 0 -23px;z-index:3;animation:dolphinSwim 3.2s ease-in-out infinite;filter:drop-shadow(0 0 10px rgba(77,155,255,.55))}
+@keyframes dolphinSwim{
+  0%,100%{transform:translateY(0) rotate(-2deg)}
+  30%{transform:translateY(-3px) rotate(1deg)}
+  60%{transform:translateY(1px) rotate(-1deg)}
+}
+.sp3d .dolphin svg{width:100%;height:100%;overflow:visible}
+/* 海豚尾鳍摆动（叠加在身体上） */
+.sp3d .dolphin .tail{transform-origin:85% 50%;animation:tailWag 1.6s ease-in-out infinite}
+@keyframes tailWag{0%,100%{transform:rotate(0deg)}50%{transform:rotate(-14deg)}}
+/* 水面波纹 */
+.sp3d .wave{position:absolute;left:50%;bottom:14px;width:64px;height:10px;margin-left:-32px;z-index:1;opacity:.5}
+.sp3d .wave svg{width:100%;height:100%;overflow:visible}
+.sp3d .wave .w1{animation:waveMove 3s linear infinite}
+.sp3d .wave .w2{animation:waveMove 3s linear infinite reverse;animation-delay:.5s}
+@keyframes waveMove{from{transform:translateX(0)}to{transform:translateX(-14px)}}
 /* 环绕拼装积木块（可替换部件） */
 .sp3d .blk{position:absolute;left:50%;top:50%;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:3px;z-index:4;
   border:1px solid rgba(255,255,255,.35);font-size:5.5px;font-weight:800;display:flex;align-items:center;justify-content:center;
@@ -100,12 +111,12 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'PingFang
   .quick{padding:5px 14px 2px;gap:4px}
   .qitem{padding:5px 8px}
   .qitem span{font-size:6.5px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
-  .term{max-height:120px}
+  .term-body{font-size:7px;line-height:1.55;padding:6px 9px;gap:1px}
 }
 
 /* 核心展示区：dsh 终端 */
 .showcase{position:relative;z-index:3;flex:0 1 auto;display:flex;flex-direction:column;padding:4px 16px;min-height:0}
-.term{flex:0 1 auto;display:flex;flex-direction:column;border:1px solid var(--border);border-radius:12px;background:rgba(12,22,38,.6);overflow:hidden;min-height:70px;max-height:150px;box-shadow:0 8px 30px rgba(0,0,0,.35),inset 0 0 40px rgba(77,155,255,.03);cursor:pointer;transition:transform .15s}
+.term{flex:0 0 auto;display:flex;flex-direction:column;border:1px solid var(--border);border-radius:12px;background:rgba(12,22,38,.6);overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.35),inset 0 0 40px rgba(77,155,255,.03);cursor:pointer;transition:transform .15s}
 .term:active{transform:scale(.985)}
 .term-bar{display:flex;align-items:center;gap:5px;padding:7px 11px;border-bottom:1px solid var(--border);background:rgba(18,32,54,.5);flex-shrink:0}
 .term-bar i{width:7px;height:7px;border-radius:50%;display:block}
@@ -113,7 +124,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'PingFang
 .term-bar i:nth-child(2){background:#FFBD2E}
 .term-bar i:nth-child(3){background:#27C93F}
 .term-bar span{margin-left:6px;font-family:monospace;font-size:8px;color:var(--text-mute);letter-spacing:.06em}
-.term-body{flex:1 1 auto;padding:10px 12px;font-family:monospace;font-size:8px;line-height:1.75;color:#8FA3C8;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+.term-body{flex:0 0 auto;padding:10px 12px;font-family:monospace;font-size:8px;line-height:1.75;color:#8FA3C8;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
 .term-body .ln{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;animation:lnIn .5s ease both}
 .term-body .ln .k{color:var(--accent)}
 .term-body .ln .g{color:#7DD4A8}
@@ -206,7 +217,38 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'PingFang
 
   <div class="hero">
     <div class="sp3d tilt-deep" id="sp3d">
-      <div class="plugcore"></div>
+      <div class="dolphin">
+        <svg viewBox="0 0 92 60" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="dolBody" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#A8D4FF"/>
+              <stop offset="0.55" stop-color="#4D9BFF"/>
+              <stop offset="1" stop-color="#1D5AB5"/>
+            </linearGradient>
+          </defs>
+          <!-- 身体：流线型海豚（向左游动） -->
+          <path d="M4 30 C12 18 30 13 46 15 C60 17 74 22 80 27 L86 21 L88 30 L86 39 L80 33 C72 38 58 41 44 40 C28 39 14 34 6 31 Z" fill="url(#dolBody)"/>
+          <!-- 背鳍 -->
+          <path d="M42 14 C44 6 50 3 53 7 C50 10 48 13 47 15 Z" fill="#2E6FD6"/>
+          <!-- 胸鳍 -->
+          <path d="M30 32 C26 36 22 38 18 36 C24 33 27 31 30 32 Z" fill="#3A7BE0"/>
+          <!-- 尾鳍（独立class摆动） -->
+          <g class="tail">
+            <path d="M82 27 L92 17 L92 37 Z" fill="#3A7BE0"/>
+          </g>
+          <!-- 眼睛 -->
+          <circle cx="12" cy="28" r="2.2" fill="#0A1A3A"/>
+          <circle cx="12.8" cy="27.4" r="0.8" fill="#fff"/>
+          <!-- 嘴线 -->
+          <path d="M4 31 C8 32 12 32.5 16 32" stroke="#1D5AB5" stroke-width="1" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="wave">
+        <svg viewBox="0 0 64 10" xmlns="http://www.w3.org/2000/svg">
+          <path class="w1" d="M0 6 Q4 2 8 6 T16 6 T24 6 T32 6 T40 6 T48 6 T56 6 T64 6" stroke="#4D9BFF" stroke-width="1.3" fill="none" opacity="0.7"/>
+          <path class="w2" d="M-8 9 Q-4 5 0 9 T8 9 T16 9 T24 9 T32 9 T40 9 T48 9 T56 9 T64 9 T72 9" stroke="#8EC3FF" stroke-width="1" fill="none" opacity="0.45"/>
+        </svg>
+      </div>
       <div class="blk b1">模</div>
       <div class="blk b2">具</div>
       <div class="blk b3">策</div>
@@ -390,21 +432,21 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'PingFang
     }
   });
 
-  /* 彩蛋：stamp 连点 5 次 → 插件爆发 */
+  /* 彩蛋：stamp 连点 5 次 → 海豚跃出水面 + 插件爆发 */
   var stampCount=0;
   $('#stamp').addEventListener('click',function(){
     stampCount++;
     if(stampCount>=5){
       stampCount=0;
-      var core=$('#sp3d .plugcore');
-      core.style.animation='none';
+      var dol=$('#sp3d .dolphin');
+      dol.style.animation='none';
       var t=0,iv=setInterval(function(){
-        t+=20;core.style.transform='scale('+(1+t/200)+') rotate('+t+'deg)';
-        if(t>=600){clearInterval(iv);core.style.transform='';core.style.animation='';}
+        t+=20;dol.style.transform='translateY('+(-t/18)+'px) scale('+(1+t/400)+') rotate('+(t/10)+'deg)';
+        if(t>=560){clearInterval(iv);dol.style.transform='';dol.style.animation='';}
       },16);
       var blks=document.querySelectorAll('#sp3d .blk');
       blks.forEach(function(b){b.style.animationDuration='1.5s'});
-      showToast('🔌 插件爆发：300+ 社区插件全开！');
+      showToast('🐬 海豚跃起：300+ 社区插件全开！');
       if(navigator.vibrate)navigator.vibrate([20,40,20]);
       setTimeout(function(){blks.forEach(function(b){b.style.animationDuration=''})},3500);
     }
