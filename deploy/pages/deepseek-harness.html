@@ -115,7 +115,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'PingFang
 }
 
 /* 核心展示区：dsh 终端 */
-.showcase{position:relative;z-index:3;flex:0 1 auto;display:flex;flex-direction:column;padding:4px 16px;min-height:0}
+.showcase{position:relative;z-index:3;flex:0 0 auto;display:flex;flex-direction:column;padding:4px 16px;min-height:0}
 .term{flex:0 0 auto;display:flex;flex-direction:column;border:1px solid var(--border);border-radius:12px;background:rgba(12,22,38,.6);overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.35),inset 0 0 40px rgba(77,155,255,.03);cursor:pointer;transition:transform .15s}
 .term:active{transform:scale(.985)}
 .term-bar{display:flex;align-items:center;gap:5px;padding:7px 11px;border-bottom:1px solid var(--border);background:rgba(18,32,54,.5);flex-shrink:0}
@@ -135,7 +135,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'PingFang
 @keyframes lnIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
 
 /* 核心亮点速览（填充终端下方空间） */
-.quick{position:relative;z-index:3;flex:1 1 auto;display:flex;flex-direction:column;gap:6px;padding:8px 16px 4px;min-height:0}
+.quick{position:relative;z-index:3;flex:1 1 auto;display:flex;flex-direction:column;gap:6px;padding:8px 16px 4px;min-height:0;overflow-y:auto}
 .qitem{background:var(--bg-2);border:1px solid var(--border);border-radius:9px;padding:7px 10px;cursor:pointer;transition:transform .15s,box-shadow .2s;display:flex;align-items:flex-start;gap:8px}
 .qitem:active{transform:scale(.97)}
 .qitem i{font-style:normal;font-size:12px;flex-shrink:0;margin-top:1px}
