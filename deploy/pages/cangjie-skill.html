@@ -16,7 +16,9 @@
 html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'PingFang SC','Noto Sans SC',system-ui,sans-serif;user-select:none}
 .stage{
   aspect-ratio:9/16;height:min(100svh,calc(100vw*16/9));width:min(100vw,calc(100svh*9/16));
-  margin:0 auto;position:relative;overflow:hidden;perspective:1000px;background:
+  margin:0 auto;position:relative;overflow:hidden;perspective:1000px;
+  display:flex;flex-direction:column;
+  background:
   radial-gradient(120% 80% at 80% -10%,rgba(232,185,49,.09),transparent 55%),
   radial-gradient(100% 70% at 10% 110%,rgba(64,96,255,.08),transparent 60%),var(--bg);
 }
@@ -25,7 +27,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'PingFang
   linear-gradient(rgba(232,185,49,.04) 1px,transparent 1px),
   linear-gradient(90deg,rgba(232,185,49,.04) 1px,transparent 1px);
   background-size:26px 26px;transform:translateZ(-60px);pointer-events:none}
-.topbar{position:relative;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:10px 14px 0}
+.topbar{position:relative;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:10px 14px 0;flex-shrink:0}
 .brand{display:flex;align-items:center;gap:6px;font-size:9px;color:var(--text-mute);letter-spacing:.14em}
 .brand i{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--glow);animation:bdot 2.4s ease-in-out infinite}
 @keyframes bdot{0%,100%{opacity:.5}50%{opacity:1}}
@@ -79,17 +81,28 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'PingFang
 .tagline em{color:var(--accent-light);font-style:normal;font-weight:600}
 .hint-badge{display:inline-block;margin-top:5px;font-size:8px;color:var(--text-mute);letter-spacing:.06em;border:1px dashed var(--border);border-radius:20px;padding:3px 9px}
 
-.hero{position:relative;z-index:3;display:flex;align-items:center;gap:14px;padding:12px 16px 10px}
+.hero{position:relative;z-index:3;display:flex;align-items:center;gap:14px;padding:12px 16px 10px;flex-shrink:0}
 @media (max-height:730px){
-  .hero{padding-top:8px;padding-bottom:6px;gap:10px}
-  .sp3d{width:92px;height:92px}
-  .sp-title{font-size:19px}
-  .tagline{font-size:9.5px;-webkit-line-clamp:2}
+  .hero{padding-top:6px;padding-bottom:4px;gap:10px}
+  .sp3d{width:88px;height:88px}
+  .sp-title{font-size:18px}
+  .tagline{font-size:9px;-webkit-line-clamp:2}
+  .stats{padding:6px 14px 2px;gap:4px}
+  .stat b{font-size:12px}
+  .flow{padding:5px 14px 0}
+  .fnode i{font-size:11px}
+  .fnode b{font-size:7px}
+  .feats{padding:5px 14px 2px;gap:4px}
+  .feat{padding:5px 7px}
+  .tech{padding:5px 14px 2px;gap:4px}
+  .bottombar{padding:7px 14px 9px}
+  .term-body{font-size:7.5px;line-height:1.6;padding:7px 10px}
+  .showcase{padding:3px 14px}
 }
 
-/* 核心展示区：蒸馏流水线终端 */
+/* 核心展示区：蒸馏流水线终端（flex弹性填充剩余空间） */
 .showcase{position:relative;z-index:3;flex:1 1 auto;display:flex;flex-direction:column;padding:4px 16px;min-height:0}
-.term{flex:1 1 auto;display:flex;flex-direction:column;border:1px solid var(--border);border-radius:12px;background:rgba(17,23,48,.6);overflow:hidden;min-height:90px;box-shadow:0 8px 30px rgba(0,0,0,.35),inset 0 0 40px rgba(232,185,49,.03);cursor:pointer;transition:transform .15s}
+.term{flex:1 1 auto;display:flex;flex-direction:column;border:1px solid var(--border);border-radius:12px;background:rgba(17,23,48,.6);overflow:hidden;min-height:70px;box-shadow:0 8px 30px rgba(0,0,0,.35),inset 0 0 40px rgba(232,185,49,.03);cursor:pointer;transition:transform .15s}
 .term:active{transform:scale(.985)}
 .term-bar{display:flex;align-items:center;gap:5px;padding:7px 11px;border-bottom:1px solid var(--border);background:rgba(26,33,64,.5);flex-shrink:0}
 .term-bar i{width:7px;height:7px;border-radius:50%;display:block}
@@ -97,7 +110,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'PingFang
 .term-bar i:nth-child(2){background:#FFBD2E}
 .term-bar i:nth-child(3){background:#27C93F}
 .term-bar span{margin-left:6px;font-family:monospace;font-size:8px;color:var(--text-mute);letter-spacing:.06em}
-.term-body{flex:1 1 auto;padding:10px 12px;font-family:monospace;font-size:8px;line-height:1.75;color:#9FA8C8;overflow:hidden;display:flex;flex-direction:column;gap:2px}
+.term-body{flex:1 1 auto;padding:10px 12px;font-family:monospace;font-size:8px;line-height:1.75;color:#9FA8C8;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
 .term-body .ln{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;animation:lnIn .5s ease both}
 .term-body .ln .k{color:var(--accent)}
 .term-body .ln .g{color:#7DD4A8}
@@ -273,13 +286,17 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'PingFang
   /* 终端打字效果 */
   var LINES=[
     {t:'$ cangjie --distill <穷查理宝典>',c:''},
-    {t:'→ Adler 整书理解',c:'g'}, {t:'→ 5 提取器并行扫描',c:'g'},
-    {t:'→ 候选单元 42 → 三重验证通过 17',c:'y'},
-    {t:'→ RIA++ 构造 12 skills',c:'g'},
-    {t:'→ Zettelkasten 链接 INDEX.md',c:'g'},
-    {t:'→ 压力测试 诱饵题 11/12 通过',c:'y'},
+    {t:'→ Adler 整书理解 → BOOK_OVERVIEW.md',c:'g'},
+    {t:'→ 5 提取器并行：框架/原则/案例/反例/术语',c:'g'},
+    {t:'→ 候选单元 42 个进入三重验证',c:'g'},
+    {t:'→ 跨域佐证 ✓ 预测力 ✓ 独特性 ✓',c:'y'},
+    {t:'→ 通过 17 个（通过率 40%）',c:'y'},
+    {t:'→ RIA++ 构造 12 个原子 skills',c:'g'},
+    {t:'→ Zettelkasten 链接 → INDEX.md',c:'g'},
+    {t:'→ 压力测试：诱饵题 11/12 通过',c:'y'},
+    {t:'→ 1 个回炉重做（边界盲点缺失）',c:'g'},
     {t:'→ DIGEST.md 精华长文已生成',c:'g'},
-    {t:'✓ 12 skills 已安装 → 可调用',c:'g'}
+    {t:'✓ 12 skills 已安装 → 可直接调用',c:'g'}
   ];
   var termBody=$('#termBody');
   function typeTerm(){
