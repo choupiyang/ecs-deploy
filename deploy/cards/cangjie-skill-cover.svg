@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="356" viewBox="0 0 200 356">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0A0E1A"/>
+      <stop offset="1" stop-color="#111730"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFD75E"/>
+      <stop offset="0.5" stop-color="#E8B931"/>
+      <stop offset="1" stop-color="#C8941F"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#E8B931" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#E8B931" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft">
+      <feGaussianBlur stdDeviation="2.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <pattern id="grid" width="16" height="16" patternUnits="userSpaceOnUse">
+      <path d="M16 0H0V16" fill="none" stroke="#E8B931" stroke-width="0.4" opacity="0.14"/>
+    </pattern>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="200" height="356" fill="url(#bg)"/>
+  <rect width="200" height="356" fill="url(#grid)"/>
+  <circle cx="100" cy="120" r="90" fill="url(#glow)"/>
+
+  <!-- 顶部栏 -->
+  <rect x="0" y="0" width="200" height="2" fill="url(#gold)" opacity="0.8"/>
+  <text x="14" y="22" font-family="monospace" font-size="7" fill="#8A90A8" letter-spacing="2">CANGJIE SKILL</text>
+  <text x="186" y="22" font-family="monospace" font-size="7" fill="#FFD75E" text-anchor="end">7.6K★</text>
+
+  <!-- 蒸馏瓶 -->
+  <g transform="translate(100,128)">
+    <!-- 瓶口 -->
+    <ellipse cx="0" cy="-58" rx="12" ry="3.5" fill="none" stroke="#E8B931" stroke-width="1.2" opacity="0.6"/>
+    <!-- 瓶颈 -->
+    <path d="M-9 -56 V-42 H9 V-56" fill="none" stroke="#E8B931" stroke-width="1.2" opacity="0.5"/>
+    <!-- 瓶身 -->
+    <path d="M-9 -42 C-9 -20 -44 -8 -44 12 C-44 38 -22 54 0 54 C22 54 44 38 44 12 C44 -8 9 -20 9 -42 Z"
+      fill="rgba(232,185,49,0.08)" stroke="#E8B931" stroke-width="1.4" opacity="0.75"/>
+    <!-- 液面 -->
+    <ellipse cx="0" cy="30" rx="36" ry="7" fill="url(#gold)" opacity="0.28">
+      <animate attributeName="opacity" values="0.18;0.4;0.18" dur="2.2s" repeatCount="indefinite"/>
+    </ellipse>
+    <!-- 上升粒子 -->
+    <circle r="3" fill="#FFD75E" opacity="0">
+      <animate attributeName="cy" values="26;-50" dur="2.6s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.95;0" dur="2.6s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="-14" r="2.5" fill="#E8B931" opacity="0">
+      <animate attributeName="cy" values="22;-48" dur="3.1s" begin="0.5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.9;0" dur="3.1s" begin="0.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="12" r="2" fill="#FFC53D" opacity="0">
+      <animate attributeName="cy" values="24;-46" dur="2.9s" begin="1s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.85;0" dur="2.9s" begin="1s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="-6" r="2.5" fill="#FFD75E" opacity="0">
+      <animate attributeName="cy" values="20;-44" dur="3.4s" begin="1.6s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.8;0" dur="3.4s" begin="1.6s" repeatCount="indefinite"/>
+    </circle>
+    <!-- 弹出的 skill 方块 -->
+    <g>
+      <animateTransform attributeName="transform" type="translate" values="0,0;0,-10;0,-24;0,-34" dur="3.2s" repeatCount="indefinite"/>
+      <rect x="-8" y="-74" width="16" height="16" rx="3" fill="url(#gold)" filter="url(#soft)" opacity="0"/>
+      <animate attributeName="opacity" values="0;0.95;0.7;0" dur="3.2s" repeatCount="indefinite"/>
+      <text x="0" y="-62" text-anchor="middle" font-size="8" font-family="monospace" fill="#1a1400" opacity="0">S</text>
+    </g>
+    <g>
+      <animateTransform attributeName="transform" type="translate" values="0,0;0,-9;0,-20;0,-30" dur="3.7s" begin="0.8s" repeatCount="indefinite"/>
+      <rect x="6" y="-72" width="14" height="14" rx="3" fill="#FFC53D" opacity="0"/>
+      <animate attributeName="opacity" values="0;0.9;0.6;0" dur="3.7s" begin="0.8s" repeatCount="indefinite"/>
+    </g>
+  </g>
+
+  <!-- 标题区 -->
+  <text x="100" y="236" text-anchor="middle" font-family="Georgia,serif" font-size="22" font-weight="bold" fill="#E8E4D9">Cangjie Skill</text>
+  <text x="100" y="252" text-anchor="middle" font-family="monospace" font-size="7" fill="#FFD75E" letter-spacing="1.5">内容蒸馏引擎 · RIA-TV++</text>
+  <text x="100" y="268" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#8A90A8">书 · 长视频 · 播客 → 可调用 Skills</text>
+
+  <!-- 数据条 -->
+  <rect x="24" y="286" width="152" height="24" rx="12" fill="#0D1226" stroke="#E8B931" stroke-width="0.7" opacity="0.8"/>
+  <text x="100" y="302" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#E8E4D9">21+ Packs · 280+ Skills</text>
+
+  <!-- 底部 -->
+  <text x="100" y="336" text-anchor="middle" font-family="monospace" font-size="6.5" fill="#5A6078" letter-spacing="1">MIND RESONANCE · 反共识观察</text>
+</svg>
