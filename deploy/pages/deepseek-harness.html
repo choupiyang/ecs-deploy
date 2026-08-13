@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#070D1A">
+<title>DeepSeek Harness · Agent 运行时</title>
+<style>
+:root{
+  --bg:#070D1A; --bg-2:#0C1626; --bg-3:#122036;
+  --accent:#4D9BFF; --accent-light:#8EC3FF; --plugin:#37D3B8;
+  --text:#E8ECF4; --text-mute:#7E8AA3; --border:rgba(77,155,255,.22);
+  --glow:rgba(77,155,255,.5);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'PingFang SC','Noto Sans SC',system-ui,sans-serif;user-select:none}
+.stage{
+  aspect-ratio:9/16;height:min(100svh,calc(100vw*16/9));width:min(100vw,calc(100svh*9/16));
+  margin:0 auto;position:relative;overflow:hidden;perspective:1000px;
+  display:flex;flex-direction:column;
+  background:
+  radial-gradient(120% 80% at 80% -10%,rgba(77,155,255,.09),transparent 55%),
+  radial-gradient(100% 70% at 10% 110%,rgba(55,211,184,.06),transparent 60%),var(--bg);
+}
+@supports not (height:100svh){.stage{height:min(100vh,calc(100vw*16/9))}}
+.stage::before{content:'';position:absolute;inset:0;background:
+  linear-gradient(rgba(77,155,255,.04) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(77,155,255,.04) 1px,transparent 1px);
+  background-size:26px 26px;transform:translateZ(-60px);pointer-events:none}
+.topbar{position:relative;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:10px 14px 0;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:6px;font-size:9px;color:var(--text-mute);letter-spacing:.14em}
+.brand i{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--glow);animation:bdot 2.4s ease-in-out infinite}
+@keyframes bdot{0%,100%{opacity:.5}50%{opacity:1}}
+.share{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--bg-2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s}
+.share:active{transform:scale(.92)}
+.share svg{width:13px;height:13px;fill:var(--accent)}
+
+/* 3D 插件拼装核（主题：Everything is a plugin） */
+.sp3d{width:118px;height:118px;flex-shrink:0;position:relative;transform-style:preserve-3d;animation:gfloat 6s ease-in-out infinite}
+@keyframes gfloat{0%,100%{transform:rotateX(12deg) rotateY(-8deg)}50%{transform:rotateX(12deg) rotateY(8deg)}}
+/* 中心插件核 */
+.sp3d .plugcore{position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:7px;
+  background:linear-gradient(145deg,#8EC3FF,var(--accent) 55%,#1d5ab5);
+  box-shadow:0 0 18px rgba(77,155,255,.6),inset 0 0 6px rgba(255,255,255,.25);z-index:3;animation:plugPulse 2.2s ease-in-out infinite}
+.sp3d .plugcore::after{content:'';position:absolute;left:50%;top:50%;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:3px;background:#0B1A35;border:1.5px solid var(--accent-light)}
+@keyframes plugPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+/* 环绕拼装积木块（可替换部件） */
+.sp3d .blk{position:absolute;left:50%;top:50%;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:3px;z-index:4;
+  border:1px solid rgba(255,255,255,.35);font-size:5.5px;font-weight:800;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 7px rgba(77,155,255,.3)}
+.sp3d .blk.b1{background:#0B2A5C;border-color:var(--accent);color:var(--accent-light);animation:blk1 9s linear infinite}
+.sp3d .blk.b2{background:#0B3D4A;border-color:var(--plugin);color:#8CF5E0;animation:blk2 9s linear infinite}
+.sp3d .blk.b3{background:#5C2A0B;border-color:#FF9E4F;color:#FFC58A;animation:blk3 9s linear infinite}
+.sp3d .blk.b4{background:#2A2166;border-color:#8B7DFF;color:#C4BBFF;animation:blk4 9s linear infinite}
+.sp3d .blk.b5{background:#5C4A0B;border-color:#FFD75E;color:#FFE9A8;animation:blk5 9s linear infinite}
+.sp3d .blk.b6{background:#3B1A5C;border-color:#D38BFF;color:#E9C9FF;animation:blk6 9s linear infinite}
+@keyframes blk1{from{transform:rotate(0deg) translateX(42px) rotate(0deg)}to{transform:rotate(360deg) translateX(42px) rotate(-360deg)}}
+@keyframes blk2{from{transform:rotate(60deg) translateX(42px) rotate(-60deg)}to{transform:rotate(420deg) translateX(42px) rotate(-420deg)}}
+@keyframes blk3{from{transform:rotate(120deg) translateX(42px) rotate(-120deg)}to{transform:rotate(480deg) translateX(42px) rotate(-480deg)}}
+@keyframes blk4{from{transform:rotate(180deg) translateX(42px) rotate(-180deg)}to{transform:rotate(540deg) translateX(42px) rotate(-540deg)}}
+@keyframes blk5{from{transform:rotate(240deg) translateX(42px) rotate(-240deg)}to{transform:rotate(600deg) translateX(42px) rotate(-600deg)}}
+@keyframes blk6{from{transform:rotate(300deg) translateX(42px) rotate(-300deg)}to{transform:rotate(660deg) translateX(42px) rotate(-660deg)}}
+/* 拼装连接光点 */
+.sp3d .jdot{position:absolute;left:50%;top:50%;width:3.5px;height:3.5px;border-radius:50%;background:#fff;box-shadow:0 0 6px var(--accent);z-index:2;animation:jdotOrbit 2.8s linear infinite}
+.sp3d .jdot.j1{animation-delay:0s}.sp3d .jdot.j2{animation-delay:1.4s}
+@keyframes jdotOrbit{0%{transform:rotate(0deg) translateX(42px);opacity:0}15%{opacity:1}85%{opacity:1}100%{transform:rotate(360deg) translateX(42px);opacity:0}}
+/* 底部标签 */
+.sp3d .seal{position:absolute;bottom:5px;left:0;right:0;text-align:center;font-family:monospace;font-size:6px;letter-spacing:.13em;color:var(--text-mute);z-index:5;animation:sealGlow 3s ease-in-out infinite}
+@keyframes sealGlow{0%,100%{opacity:.7}50%{opacity:1;color:var(--accent-light)}}
+
+/* Hero 右侧 */
+.hero-side{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:5px;position:relative;z-index:3}
+.stamp{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;background:radial-gradient(circle at 35% 30%,rgba(77,155,255,.2),var(--bg-2));box-shadow:0 0 12px rgba(77,155,255,.15);cursor:pointer;transition:transform .15s;animation:stampSpin 12s linear infinite}
+.stamp:active{transform:scale(.9)}
+@keyframes stampSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.sp-title{font-size:22px;font-weight:800;color:var(--text);letter-spacing:.01em;line-height:1.15}
+.sp-title em{font-style:normal;color:var(--accent-light);text-shadow:0 0 18px rgba(77,155,255,.35)}
+.tagline{font-size:10px;color:var(--text-mute);line-height:1.55;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.tagline em{color:var(--accent-light);font-style:normal;font-weight:600}
+.hint-badge{display:inline-block;margin-top:5px;font-size:8px;color:var(--text-mute);letter-spacing:.06em;border:1px dashed var(--border);border-radius:20px;padding:3px 9px}
+
+.hero{position:relative;z-index:3;display:flex;align-items:center;gap:14px;padding:12px 16px 10px;flex-shrink:0}
+@media (max-height:730px){
+  .hero{padding-top:6px;padding-bottom:4px;gap:10px}
+  .sp3d{width:88px;height:88px}
+  .sp3d .blk{transform:scale(.9)}
+  .sp-title{font-size:18px}
+  .tagline{font-size:9px;-webkit-line-clamp:2}
+  .stats{padding:6px 14px 2px;gap:4px}
+  .stat b{font-size:12px}
+  .flow{padding:5px 14px 0}
+  .fnode i{font-size:11px}
+  .fnode b{font-size:7px}
+  .feats{padding:5px 14px 2px;gap:4px}
+  .feat{padding:5px 7px}
+  .tech{padding:5px 14px 2px;gap:4px}
+  .bottombar{padding:7px 14px 9px}
+  .term-body{font-size:7.5px;line-height:1.6;padding:7px 10px}
+  .showcase{padding:3px 14px}
+}
+
+/* 核心展示区：dsh 终端 */
+.showcase{position:relative;z-index:3;flex:1 1 auto;display:flex;flex-direction:column;padding:4px 16px;min-height:0}
+.term{flex:1 1 auto;display:flex;flex-direction:column;border:1px solid var(--border);border-radius:12px;background:rgba(12,22,38,.6);overflow:hidden;min-height:70px;box-shadow:0 8px 30px rgba(0,0,0,.35),inset 0 0 40px rgba(77,155,255,.03);cursor:pointer;transition:transform .15s}
+.term:active{transform:scale(.985)}
+.term-bar{display:flex;align-items:center;gap:5px;padding:7px 11px;border-bottom:1px solid var(--border);background:rgba(18,32,54,.5);flex-shrink:0}
+.term-bar i{width:7px;height:7px;border-radius:50%;display:block}
+.term-bar i:nth-child(1){background:#FF5F56}
+.term-bar i:nth-child(2){background:#FFBD2E}
+.term-bar i:nth-child(3){background:#27C93F}
+.term-bar span{margin-left:6px;font-family:monospace;font-size:8px;color:var(--text-mute);letter-spacing:.06em}
+.term-body{flex:1 1 auto;padding:10px 12px;font-family:monospace;font-size:8px;line-height:1.75;color:#8FA3C8;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+.term-body .ln{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;animation:lnIn .5s ease both}
+.term-body .ln .k{color:var(--accent)}
+.term-body .ln .g{color:#7DD4A8}
+.term-body .ln .b{color:var(--plugin)}
+.term-body .ln .y{color:var(--accent-light)}
+.term-body .ln.cursor::after{content:'▍';color:var(--accent);animation:cur 1s steps(2) infinite}
+@keyframes cur{0%,49%{opacity:1}50%,100%{opacity:0}}
+@keyframes lnIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+
+/* Stats */
+.stats{position:relative;z-index:3;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:10px 16px 4px;flex-shrink:0}
+.stat{background:var(--bg-2);border:1px solid var(--border);border-radius:9px;padding:7px 4px 6px;text-align:center;cursor:pointer;transition:transform .15s,box-shadow .2s}
+.stat:active{transform:scale(.94)}
+.stat b{display:block;font-size:13px;color:var(--accent-light);font-family:monospace;letter-spacing:.02em}
+.stat span{display:block;font-size:7px;color:var(--text-mute);margin-top:2px;letter-spacing:.04em}
+
+/* Flow */
+.flow{position:relative;z-index:3;padding:8px 16px 2px;flex-shrink:0}
+.flow-row{display:flex;align-items:center;gap:3px}
+.fnode{flex:1;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;padding:6px 2px;text-align:center;cursor:pointer;transition:transform .15s,background .2s}
+.fnode:active{transform:scale(.92)}
+.fnode i{display:block;font-style:normal;font-size:12px;margin-bottom:2px}
+.fnode b{display:block;font-size:7.5px;color:var(--text);font-weight:600}
+.fnode span{display:block;font-size:6px;color:var(--text-mute);margin-top:1px}
+.fnode.hot{border-color:rgba(77,155,255,.5);background:linear-gradient(160deg,rgba(77,155,255,.12),var(--bg-2));animation:fhot 2s ease-in-out infinite}
+@keyframes fhot{0%,100%{box-shadow:0 0 6px rgba(77,155,255,.1)}50%{box-shadow:0 0 14px rgba(77,155,255,.3)}}
+.farrow{color:var(--accent);font-size:9px;flex-shrink:0;opacity:.7}
+
+/* Features */
+.feats{position:relative;z-index:3;display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px 16px 4px;flex-shrink:0}
+.feat{background:var(--bg-2);border:1px solid var(--border);border-radius:9px;padding:7px 9px;cursor:pointer;transition:transform .15s,box-shadow .2s;display:flex;align-items:center;gap:7px}
+.feat:active{transform:scale(.95)}
+.feat i{font-style:normal;font-size:13px;flex-shrink:0}
+.feat div{min-width:0}
+.feat b{display:block;font-size:8.5px;color:var(--text)}
+.feat span{display:block;font-size:6.8px;color:var(--text-mute);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Tech */
+.tech{position:relative;z-index:3;display:flex;flex-wrap:wrap;gap:5px;padding:8px 16px 4px;flex-shrink:0}
+.pill{font-size:7.5px;color:var(--text-mute);border:1px solid var(--border);background:var(--bg-2);border-radius:20px;padding:3.5px 9px;cursor:pointer;transition:all .15s;letter-spacing:.03em}
+.pill:active{transform:scale(.93);background:rgba(77,155,255,.12);color:var(--accent-light)}
+
+/* Bottom */
+.bottombar{position:relative;z-index:3;display:flex;align-items:center;gap:8px;padding:10px 16px 12px;flex-shrink:0}
+.btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 0;border-radius:10px;font-size:9px;font-weight:600;cursor:pointer;transition:transform .15s,filter .2s;text-decoration:none;letter-spacing:.05em}
+.btn:active{transform:scale(.95)}
+.btn.primary{background:linear-gradient(135deg,var(--accent),#1d5ab5);color:#04101f;box-shadow:0 4px 16px rgba(77,155,255,.25)}
+.btn.ghost{border:1px solid var(--border);color:var(--text);background:var(--bg-2)}
+.btn svg{width:12px;height:12px;fill:currentColor}
+
+/* Overlay */
+.overlay{position:fixed;inset:0;background:rgba(4,8,16,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);opacity:0;pointer-events:none;transition:opacity .35s;z-index:40}
+.overlay.show{opacity:1;pointer-events:auto}
+.sheet{position:absolute;bottom:0;left:50%;transform:translate(-50%,105%);width:min(94vw,calc(100svh*9/16*0.94));max-height:78svh;background:linear-gradient(180deg,#0F1C33,#0A1322);border:1px solid rgba(77,155,255,.25);border-bottom:none;border-radius:20px 20px 0 0;padding:18px 20px 26px;transition:transform .45s cubic-bezier(.7,0,.3,1);z-index:50;overflow-y:auto;box-shadow:0 -12px 50px rgba(0,0,0,.5)}
+.sheet.show{transform:translate(-50%,0)}
+.sheet h3{font-size:15px;color:var(--text);margin-bottom:8px;line-height:1.4}
+.sheet h3 em{font-style:normal;color:var(--accent-light)}
+.sheet p{font-size:11px;color:#B0BCD8;line-height:1.75;margin-bottom:10px}
+.sheet ul{list-style:none;margin-bottom:10px}
+.sheet ul li{font-size:10.5px;color:#9EA8C4;line-height:1.7;padding-left:14px;position:relative;margin-bottom:3px}
+.sheet ul li::before{content:'◆';position:absolute;left:0;top:1px;font-size:7px;color:var(--accent)}
+.sheet pre{background:rgba(6,12,24,.8);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:monospace;font-size:9.5px;color:#8FA3C8;line-height:1.7;overflow-x:auto;margin-bottom:10px;white-space:pre-wrap;word-break:break-all}
+.sheet .close{display:block;width:100%;padding:10px 0;border:none;border-radius:10px;background:linear-gradient(135deg,var(--accent),#1d5ab5);color:#04101f;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.08em}
+.sheet .close:active{transform:scale(.97)}
+.sheet::-webkit-scrollbar{width:3px}
+.sheet::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+.toast{position:fixed;top:44px;left:50%;transform:translate(-50%,-16px);background:var(--bg-3);border:1px solid var(--border);color:var(--text);font-size:10px;padding:7px 14px;border-radius:20px;opacity:0;pointer-events:none;transition:all .3s;z-index:60;box-shadow:0 6px 20px rgba(0,0,0,.4);white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <div class="topbar">
+    <div class="brand"><i></i>DEEPSEEK HARNESS · dsh</div>
+    <div class="share" id="shareBtn">
+      <svg viewBox="0 0 24 24"><path d="M18 16.1c-.8 0-1.5.3-2.1.8l-7.1-4.2c.1-.2.1-.4.1-.7s0-.5-.1-.7l7.1-4.2c.6.5 1.4.8 2.1.8 1.9 0 3.4-1.5 3.4-3.4S19.9 3.1 18 3.1s-3.4 1.5-3.4 3.4c0 .2 0 .5.1.7l-7.1 4.2c-.6-.5-1.4-.8-2.1-.8-1.9 0-3.4 1.5-3.4 3.4s1.5 3.4 3.4 3.4c.8 0 1.5-.3 2.1-.8l7.1 4.2c-.1.2-.1.4-.1.7 0 1.9 1.5 3.4 3.4 3.4s3.4-3.4 3.4-3.4z"/></svg>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="sp3d tilt-deep" id="sp3d">
+      <div class="plugcore"></div>
+      <div class="blk b1">模</div>
+      <div class="blk b2">具</div>
+      <div class="blk b3">策</div>
+      <div class="blk b4">存</div>
+      <div class="blk b5">文</div>
+      <div class="blk b6">界</div>
+      <div class="jdot j1"></div>
+      <div class="jdot j2"></div>
+      <div class="seal" id="seal">EVERYTHING IS A PLUGIN</div>
+    </div>
+    <div class="hero-side">
+      <div class="stamp" id="stamp">🔌</div>
+      <div class="sp-title">DeepSeek Harness<br><em>组装 Agent 的运行时</em></div>
+      <div class="tagline">DeepSeek 首款 Agent 产品 · <em>一切皆插件</em> · 4 种预设 · 300+ 社区插件——不想做下一个 Codex</div>
+      <div class="hint-badge">轻触任何元素探索 · 拖动卡片看 3D 视差</div>
+    </div>
+  </div>
+
+  <div class="showcase">
+    <div class="term" id="termShow">
+      <div class="term-bar"><i></i><i></i><i></i><span>npx @deepseek-ai/dsh web</span></div>
+      <div class="term-body" id="termBody"></div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat" data-k="stars"><b>3.8K</b><span>★ 发布数小时</span></div>
+    <div class="stat" data-k="plugins"><b>300+</b><span>社区插件</span></div>
+    <div class="stat" data-k="presets"><b>4</b><span>Agent 预设</span></div>
+    <div class="stat" data-k="providers"><b>40</b><span>模型厂商</span></div>
+  </div>
+
+  <div class="flow">
+    <div class="flow-row">
+      <div class="fnode" data-k="f1"><i>🔌</i><b>Plugins</b><span>一切皆插件</span></div>
+      <div class="farrow">›</div>
+      <div class="fnode" data-k="f2"><i>🧩</i><b>Profiles</b><span>进程级组装</span></div>
+      <div class="farrow">›</div>
+      <div class="fnode" data-k="f3"><i>🦾</i><b>Presets</b><span>会话级岗位</span></div>
+      <div class="farrow">›</div>
+      <div class="fnode hot" data-k="f4"><i>🌲</i><b>UI 插件树</b><span>界面也能重组</span></div>
+    </div>
+  </div>
+
+  <div class="feats">
+    <div class="feat" data-k="fe1"><i>🧠</i><div><b>4 种 Agent 预设</b><span>minimal/standard/code/cordis</span></div></div>
+    <div class="feat" data-k="fe2"><i>📜</i><div><b>完整事件流</b><span>模型可见⇔已记录</span></div></div>
+    <div class="feat" data-k="fe3"><i>🔧</i><div><b>工具共用内核</b><span>TS 编排多工具调用</span></div></div>
+    <div class="feat" data-k="fe4"><i>🖥️</i><div><b>界面可改</b><span>皮肤/侧栏/桌面宠物</span></div></div>
+  </div>
+
+  <div class="tech">
+    <div class="pill" data-k="t1">Cordis</div>
+    <div class="pill" data-k="t2">TypeScript</div>
+    <div class="pill" data-k="t3">npx 一键启动</div>
+    <div class="pill" data-k="t4">336 docs</div>
+    <div class="pill" data-k="t5">8617 文件</div>
+    <div class="pill" data-k="t6">MCP 兼容</div>
+    <div class="pill" data-k="t7">Developer Preview</div>
+    <div class="pill" data-k="t8">MIT</div>
+  </div>
+
+  <div class="bottombar">
+    <a class="btn primary" id="ghBtn" target="_blank"><svg viewBox="0 0 24 24"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.6 18.3 5 18.3 5c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"/></svg>GitHub</a>
+    <a class="btn ghost" id="wxBtn" target="_blank"><svg viewBox="0 0 24 24"><path d="M14 3h7v7h-2V6.4l-9.3 9.3-1.4-1.4L17.6 5H14V3zM5 5h6v2H5v12h12v-6h2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>首发评测</a>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+  <div class="sheet" id="sheet">
+    <h3 id="sTitle"></h3>
+    <div id="sBody"></div>
+    <button class="close" id="sClose">CLOSE ✕</button>
+  </div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+(function(){
+  var $=function(s){return document.querySelector(s)};
+  document.documentElement.className='js';
+  var html=document.documentElement;
+  html.className='js';
+
+  /* 终端打字效果 */
+  var LINES=[
+    {t:'$ npx @deepseek-ai/dsh web',c:''},
+    {t:'→ Web UI 启动 @ 127.0.0.1:3080',c:'g'},
+    {t:'→ Profile: web · Preset: standard',c:'g'},
+    {t:'→ 插件树挂载：模型/工具/存储/UI',c:'b'},
+    {t:'→ 会话事件流已开始记录',c:'b'},
+    {t:'→ 写作 Agent + 编码 Agent 并存',c:'y'},
+    {t:'→ 每个 Agent 看到不同工具集',c:'y'},
+    {t:'✓ Everything is a plugin',c:'g'}
+  ];
+  var termBody=$('#termBody');
+  function typeTerm(){
+    termBody.innerHTML='';
+    LINES.forEach(function(l,i){
+      var d=document.createElement('div');
+      d.className='ln'+(i===LINES.length-1?' cursor':'');
+      var s=l.c.indexOf('g')>-1?'g':l.c.indexOf('b')>-1?'b':l.c.indexOf('y')>-1?'y':'k';
+      d.innerHTML='<span class="'+s+'">'+l.t+'</span>';
+      d.style.animationDelay=(i*0.35)+'s';
+      termBody.appendChild(d);
+    });
+  }
+  typeTerm();
+
+  /* 弹窗数据 */
+  var DATA={
+    stars:{t:'3.8K★ <em>发布数小时</em>',d:'2026-08-13 11:56 UTC 创建，当天冲到 3,829★ / 211 forks——DeepSeek 首款 Agent 产品的号召力。发布即引爆：GitHub Discussions 12:54 开放、Reddit r/DeepSeek 21 小时前就有"coming soon"帖（源自官方微信群）、HN 同步两条帖子。',p:['3,829★ / 211 forks / 0 issues（当天）','TypeScript · MIT · 8,617 文件','336 个 docs 文档（中英双语）','V4 Flash 正式版已用它跑 benchmark','Discord 社区开放']},
+    plugins:{t:'300+ <em>社区插件</em>',d:'内测短短几天，参与内测的用户已开发约 300 个插件。有的改整个工作界面、有的像 Codex 一样接桌面宠物、有的实现"跨会话长期记忆+后台自我进化"——记忆不用向量库+RAG，而是本地文件持久化+分层上下文注入+LLM 自我整理。',p:['几天内 300+ 插件（内测）','记忆插件：文件持久化+分层注入+LLM 整理','皮肤插件：改整个 UI','桌面宠物插件','dsh-plugin topic 可被发现']},
+    presets:{t:'4 <em>Agent 预设</em>',d:'minimal（极简，V4 Flash 评测用）/ standard（标准，日常写码修bug）/ code（代码，大批量搜索并行处理）/ cordis（创造，开发新预设和插件）。预设=会话 Agent 的插件组装：身份、长期规则、可用工具、工作方式都由它决定。',p:['minimal：无压缩/搜索/Skill/计划/子Agent','standard：默认，日常写码修bug','code：批量搜索+并行读取+多步自动处理','cordis：创造模式，开发新预设/插件','预设=岗位+工作环境']},
+    providers:{t:'40 <em>模型厂商</em>',d:'默认提供方包括 Kimi、OpenAI、Anthropic、Google 等将近 40 家大模型厂商——不锁死 DeepSeek 自家模型。模型=大脑，Skill=操作手册，Tool/插件=软件和权限，Agent 预设=岗位+工作环境。',p:['Kimi/OpenAI/Anthropic/Google 等 ~40 家','模型是 Agent 的一个部件','可切换不同第三方模型','DASHSCOPE 键历史沿用','V4 Flash / V4 Pro 实测']},
+    f1:{t:'🔌 <em>Plugins 插件</em>',d:'Everything is a plugin——每个工具、模型适配器、策略、提示词、存储、UI 区域都可以是插件。没有需要打补丁的特权内核：扩展方式是把插件挂载到其他插件旁边，注册是副作用，插件卸载时自动撤销。',p:['模型/工具/策略/存储/上下文/界面全可替换','无特权内核','注册=副作用，卸载自动撤销','比 VS Code 插件更深入：加大脑/工具箱/规则/界面','dsh-plugin topic 生态入口']},
+    f2:{t:'🧩 <em>Profiles 组合</em>',d:'Profile 决定整个 dsh 进程怎么运行：Web、Headless、安装哪些 Bundle。运行中的 dsh 是一棵插件树，由启动时按序叠加的各层组合而成——本质是有顺序的 cordis.patch.yml 配置层。',p:['web / headless 模板随发行版交付','profile 列出组合包+树外插件','dsh-base 是第一层（模型/工具/持久化/沙箱/审批）','dsh-web-app 加浏览器应用','dsh --profile web --dump-config 看配置树']},
+    f3:{t:'🦾 <em>Presets 预设</em>',d:'Agent 预设决定某会话 Agent 能看到哪些工具、提示词、Skill、子 Agent 和工作流。作用域按 agent → preset → global 解析——同一进程可同时运行写作/编码/研究 Agent，各自看不同工具，不必启动四套服务。',p:['预设=系统提示词+工具+压缩+多Agent 组合','作用域：agent → preset → global','同一进程多 Agent 并存','复制预设改自己的，或用 cordis 模式创建','写作工作台可含文件夹+Skills']},
+    f4:{t:'🌲 <em>UI 插件树</em>',d:'DSH 不是传统"固定前端+后端插件"——界面本身也是第二棵插件树。应用启动后挂载机制加载一组 UI 插件，页面声明侧边栏/对话区/输入区/设置区等标准挂载位，各插件把组件注册进去。',p:['界面=第二棵插件树','标准挂载位：侧边栏/对话区/输入区/设置区','插件注册组件进挂载位','DSH-better-sidebar：多侧边栏 UI','皮肤/广告/桌面宠物全可实现']},
+    fe1:{t:'🧠 <em>4 种预设实测</em>',d:'APPSO 实测：让 V4 Flash 在 DSH/Reasonix/Codex 中完成同一 Three.js 滑沙游戏。Harness 版"金黄、快速、阳光明媚"沉浸感最强；Codex 干净工作区版有 Codex 感但更简单；Reasonix 版最粗糙。',p:['V4 Flash + Harness：基本无 Bug','V4 Pro 用时更长表现反而一般','Codex 受污染上下文组：金字塔不像金字塔','Reasonix：画面简陋不像 3D 游戏','单次案例：Harness 工具/提示词/上下文组织显著改变产物']},
+    fe2:{t:'📜 <em>模型可见⇔已记录</em>',d:'普通聊天工具只保存最终消息；DSH 保存完整事件流：turn/start、step/start、用户消息、实际请求用的模型、系统提示词、工具定义、原始流式。上下文压缩也不删原始历史，只用 replacement 事件改变模型看到的"表面"。',p:['完整事件流持久化','turn/step 粒度记录','模型+提示词+工具定义全保存','压缩不删历史，只换表面','会话可重建（可回放）']},
+    fe3:{t:'🔧 <em>共用执行内核</em>',d:'"先记录意图，再执行副作用"的 Agent Loop；所有工具共用一条执行内核。模型可写一段 TypeScript 把多个工具调用编排成程序，中间数据留在运行环境，只有最终结果进入模型上下文。',p:['意图先记录，副作用后执行','工具共用一条执行内核','TS 编排多工具调用','中间数据留运行时','只有最终结果进模型上下文']},
+    fe4:{t:'🖥️ <em>界面可改</em>',d:'嫌 DeepSeek 官方界面太简洁？内测用户已做出改界面的插件。记忆插件、皮肤插件、桌面宠物……都只是插件能力的冰山一角。插件能在 Agent 的大脑、工具箱、规则和界面里加能力——更深入、更自由。',p:['皮肤插件改整个 UI','记忆插件：跨会话长期记忆+自我进化','桌面宠物（Codex 式）','界面=第二棵插件树','最自由的一档插件']},
+    t1:{t:'Cordis <em>底层框架</em>',d:'DSH 由 Cordis 驱动：插件向共享上下文贡献服务、类型化事件和可逆副作用。产品每一部分都是插件——包括模型适配器、工具注册表、会话日志、agent loop 本身，每部分都可从配置替换。',p:['插件贡献服务+事件+副作用','产品每一部分都是插件','agent loop 本身也是插件','设计见《Spatiotemporal Composability》论文','无特权内核']},
+    t2:{t:'TypeScript <em>技术栈</em>',d:'全 TypeScript 仓库（8,617 文件）。模型可写 TS 编排工具调用，工具共用一条执行内核。',p:['全 TS 仓库','npx @deepseek-ai/dsh 直接跑','pnpm 构建','8617 文件 / 336 docs']},
+    t3:{t:'npx <em>一键启动</em>',d:'npx @deepseek-ai/dsh web 一条命令启动 Web UI（默认 127.0.0.1:3080），零安装门槛。',p:['npx @deepseek-ai/dsh web','默认 127.0.0.1:3080','headless 模式无服务器','源码跑：pnpm install + build']},
+    t4:{t:'336 <em>docs 文档</em>',d:'发布即带 336 个中英双语开发文档：architecture、agent-lifecycle、api-gateway、config-catalog、cookbook（加工具/加包/加会话节点）、cordis-primer、tutorial 系列。',p:['architecture 架构文档','agent-lifecycle 生命周期','config-catalog 配置目录','cookbook：adding-a-tool 等','i18n 中英双语']},
+    t5:{t:'8617 <em>文件仓库</em>',d:'仓库 8,617 个文件——DeepSeek 首款 Agent 产品直接全量开源，没有藏着掖着。',p:['8,617 文件','packages/ 多包结构','bundle: base/web-app/headless','boot: app-boot','全部 MIT']},
+    t6:{t:'MCP <em>兼容</em>',d:'支持接入外部 MCP——写作插件可以增加网页检索或外部 MCP 服务。',p:['外部 MCP 支持','写作插件可接检索','工具可扩展','生态标准兼容']},
+    t7:{t:'Developer Preview <em>早期预览</em>',d:'官方明确标注：开发者预览版，快速迭代中，"会有破坏性变更"。Discord 社区 + GitHub Discussions 已开放反馈。',p:['开发者预览版','THERE WILL BE BREAKING CHANGES','Discord: discord.gg/Ycq5dCaS4','Discussions 开放反馈','AGENTS.md 指导 agent 贡献']},
+    t8:{t:'MIT <em>协议</em>',d:'MIT 开源协议。第三方依赖协议披露在 THIRD_PARTY_NOTICES.md。',p:['MIT 宽松许可','THIRD_PARTY_NOTICES.md','DeepSeek AI 官方出品','完全开源']}
+  };
+  DATA.stamp={t:'🔌 <em>发布时刻</em>',d:'2026-08-13，DeepSeek 正式发布首款 Agent 产品 DeepSeek Harness。其实预告早埋在 V4 Flash 更新日志里：「正式版 DeepSeek-V4-Flash 使用 DeepSeek Harness 极简模式（即将发布）作为框架进行测试。」——他们用自家 Harness 评测自家模型。发布 3 小时 3.8K★，Reddit 21 小时前已有人从官方微信群带来"coming soon"消息，HN 称它 "DeepSeek 版 Claude Code"。但 APPSO 首发评测的结论更准：它不想做下一个 Codex——"Codex 交付拿来即用的 Agent；DSH 更像一套组装 Agent 的运行时。以前我们挑 Agent 挑的是产品；现在 Agent 和模型同样是基础设施，你可以创造出无数个 Codex。"',p:['V4 Flash 更新日志早埋预告','3 小时 3.8K★ / 211 forks','Reddit 提前 21h 爆料','HN: DeepSeek 版 Claude Code','APPSO 结论：不想做下一个 Codex']};
+
+  /* 弹窗系统 */
+  var overlay=$('#overlay'),sheet=$('#sheet');
+  function openSheet(key){
+    var d=DATA[key];if(!d)return;
+    $('#sTitle').innerHTML=d.t;
+    var body='<p>'+d.d+'</p>';
+    if(d.p&&d.p.length){body+='<ul>';d.p.forEach(function(x){body+='<li>'+x+'</li>'});body+='</ul>';}
+    $('#sBody').innerHTML=body;
+    sheet.classList.add('show');overlay.classList.add('show');
+  }
+  function closeSheet(){sheet.classList.remove('show');overlay.classList.remove('show')}
+  $('#sClose').addEventListener('click',closeSheet);
+  overlay.addEventListener('click',closeSheet);
+  document.querySelectorAll('[data-k]').forEach(function(el){
+    el.addEventListener('click',function(){openSheet(el.getAttribute('data-k'))});
+  });
+  $('#termShow').addEventListener('click',function(){openSheet('stamp')});
+  $('#stamp').addEventListener('click',function(){openSheet('stamp')});
+
+  /* toast */
+  var toastTimer;
+  function showToast(msg){
+    var t=$('#toast');t.textContent=msg;t.classList.add('show');
+    clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.classList.remove('show')},2200);
+  }
+
+  /* 分享 */
+  var SHARE_TEXT='DeepSeek 首款 Agent 产品 DeepSeek Harness：一切皆插件，4 种 Agent 预设，300+ 社区插件\nhttps://mindresonance.online/youngsinsight/pages/deepseek-harness.html\n\n你可以用任何AI工具订阅我的博客文章：https://mindresonance.online/youngsinsight/subscribe.html';
+  $('#shareBtn').addEventListener('click',function(){
+    if(navigator.share){navigator.share({title:'DeepSeek Harness · 组装Agent的运行时',text:SHARE_TEXT}).catch(function(){})}
+    else{
+      var ta=document.createElement('textarea');ta.value=SHARE_TEXT;document.body.appendChild(ta);ta.select();
+      try{document.execCommand('copy');showToast('已复制：介绍 + 链接 + 订阅推荐')}catch(e){}
+      document.body.removeChild(ta);
+    }
+  });
+
+  /* 彩蛋：stamp 连点 5 次 → 插件爆发 */
+  var stampCount=0;
+  $('#stamp').addEventListener('click',function(){
+    stampCount++;
+    if(stampCount>=5){
+      stampCount=0;
+      var core=$('#sp3d .plugcore');
+      core.style.animation='none';
+      var t=0,iv=setInterval(function(){
+        t+=20;core.style.transform='scale('+(1+t/200)+') rotate('+t+'deg)';
+        if(t>=600){clearInterval(iv);core.style.transform='';core.style.animation='';}
+      },16);
+      var blks=document.querySelectorAll('#sp3d .blk');
+      blks.forEach(function(b){b.style.animationDuration='1.5s'});
+      showToast('🔌 插件爆发：300+ 社区插件全开！');
+      if(navigator.vibrate)navigator.vibrate([20,40,20]);
+      setTimeout(function(){blks.forEach(function(b){b.style.animationDuration=''})},3500);
+    }
+  });
+
+  /* 3D 视差 tilt */
+  var stage=$('#stage');
+  var tiltEls=document.querySelectorAll('.tilt-deep');
+  var last=0;
+  function applyTilt(x,y){
+    var r=stage.getBoundingClientRect();
+    var dx=(x-r.left)/r.width-0.5,dy=(y-r.top)/r.height-0.5;
+    tiltEls.forEach(function(el){
+      el.style.transform='rotateX('+(-dy*10)+'deg) rotateY('+(dx*12)+'deg)';
+    });
+  }
+  stage.addEventListener('touchmove',function(e){
+    var t=e.touches[0],now=performance.now();
+    if(now-last<16)return;last=now;
+    applyTilt(t.clientX,t.clientY);
+  },{passive:true});
+  stage.addEventListener('mousemove',function(e){
+    var now=performance.now();
+    if(now-last<16)return;last=now;
+    applyTilt(e.clientX,e.clientY);
+  });
+  stage.addEventListener('mouseleave',function(){
+    tiltEls.forEach(function(el){el.style.transform=''});
+  });
+
+  /* 外链 */
+  $('#ghBtn').href='https://github.com/deepseek-ai/deepseek-harness';
+  $('#wxBtn').href='https://mp.weixin.qq.com/s/foAKf0UU_CEtZLNpEmyqpA';
+
+  /* reveal 入场 */
+  setTimeout(function(){
+    document.querySelectorAll('.reveal').forEach(function(el,i){
+      setTimeout(function(){el.classList.add('visible')},i*90);
+    });
+  },100);
+})();
+</script>
+</body>
+</html>
