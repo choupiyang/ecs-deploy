@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="356" viewBox="0 0 200 356">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#070D1A"/>
+      <stop offset="1" stop-color="#0C1626"/>
+    </linearGradient>
+    <linearGradient id="core" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8EC3FF"/>
+      <stop offset="0.5" stop-color="#4D9BFF"/>
+      <stop offset="1" stop-color="#1D5AB5"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#4D9BFF" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#4D9BFF" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="16" height="16" patternUnits="userSpaceOnUse">
+      <path d="M16 0H0V16" fill="none" stroke="#4D9BFF" stroke-width="0.4" opacity="0.12"/>
+    </pattern>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="200" height="356" fill="url(#bg)"/>
+  <rect width="200" height="356" fill="url(#grid)"/>
+  <circle cx="100" cy="118" r="88" fill="url(#glow)"/>
+
+  <!-- 顶部栏 -->
+  <rect x="0" y="0" width="200" height="2" fill="#4D9BFF" opacity="0.8"/>
+  <text x="14" y="22" font-family="monospace" font-size="7" fill="#7E8AA3" letter-spacing="2">DEEPSEEK HARNESS</text>
+  <text x="186" y="22" font-family="monospace" font-size="7" fill="#8EC3FF" text-anchor="end">3.8K★</text>
+
+  <!-- 插件拼装核 -->
+  <g transform="translate(100,120)">
+    <!-- 中心插件核 -->
+    <rect x="-14" y="-14" width="28" height="28" rx="7" fill="url(#core)">
+      <animate attributeName="width" values="28;31;28" dur="2.2s" repeatCount="indefinite"/>
+      <animate attributeName="height" values="28;31;28" dur="2.2s" repeatCount="indefinite"/>
+      <animate attributeName="x" values="-14;-15.5;-14" dur="2.2s" repeatCount="indefinite"/>
+      <animate attributeName="y" values="-14;-15.5;-14" dur="2.2s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="-5" y="-5" width="10" height="10" rx="3" fill="#0B1A35" stroke="#8EC3FF" stroke-width="1.2"/>
+    <!-- 6 个拼装积木 -->
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="9s" repeatCount="indefinite"/>
+      <rect x="-6" y="-50" width="12" height="12" rx="3" fill="#0B2A5C" stroke="#4D9BFF" stroke-width="1"/>
+      <text x="0" y="-42" text-anchor="middle" font-size="5.5" font-family="sans-serif" fill="#8EC3FF">模</text>
+    </g>
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="60" to="420" dur="9s" repeatCount="indefinite"/>
+      <rect x="-6" y="-50" width="12" height="12" rx="3" fill="#0B3D4A" stroke="#37D3B8" stroke-width="1"/>
+      <text x="0" y="-42" text-anchor="middle" font-size="5.5" font-family="sans-serif" fill="#8CF5E0">具</text>
+    </g>
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="120" to="480" dur="9s" repeatCount="indefinite"/>
+      <rect x="-6" y="-50" width="12" height="12" rx="3" fill="#5C2A0B" stroke="#FF9E4F" stroke-width="1"/>
+      <text x="0" y="-42" text-anchor="middle" font-size="5.5" font-family="sans-serif" fill="#FFC58A">策</text>
+    </g>
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="180" to="540" dur="9s" repeatCount="indefinite"/>
+      <rect x="-6" y="-50" width="12" height="12" rx="3" fill="#2A2166" stroke="#8B7DFF" stroke-width="1"/>
+      <text x="0" y="-42" text-anchor="middle" font-size="5.5" font-family="sans-serif" fill="#C4BBFF">存</text>
+    </g>
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="240" to="600" dur="9s" repeatCount="indefinite"/>
+      <rect x="-6" y="-50" width="12" height="12" rx="3" fill="#5C4A0B" stroke="#FFD75E" stroke-width="1"/>
+      <text x="0" y="-42" text-anchor="middle" font-size="5.5" font-family="sans-serif" fill="#FFE9A8">文</text>
+    </g>
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="300" to="660" dur="9s" repeatCount="indefinite"/>
+      <rect x="-6" y="-50" width="12" height="12" rx="3" fill="#3B1A5C" stroke="#D38BFF" stroke-width="1"/>
+      <text x="0" y="-42" text-anchor="middle" font-size="5.5" font-family="sans-serif" fill="#E9C9FF">界</text>
+    </g>
+  </g>
+
+  <!-- 标题区 -->
+  <text x="100" y="226" text-anchor="middle" font-family="Georgia,serif" font-size="21" font-weight="bold" fill="#E8ECF4">DeepSeek Harness</text>
+  <text x="100" y="246" text-anchor="middle" font-family="monospace" font-size="7" fill="#8EC3FF" letter-spacing="1.5">EVERYTHING IS A PLUGIN</text>
+  <text x="100" y="266" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#7E8AA3">组装 Agent 的运行时</text>
+
+  <!-- 数据条 -->
+  <rect x="30" y="284" width="140" height="22" rx="11" fill="#0A1322" stroke="#4D9BFF" stroke-width="0.7" opacity="0.8"/>
+  <text x="100" y="298" text-anchor="middle" font-family="monospace" font-size="7" fill="#E8ECF4">4 Presets · 300+ Plugins</text>
+
+  <!-- 底部 -->
+  <text x="100" y="338" text-anchor="middle" font-family="monospace" font-size="6.5" fill="#4A5570" letter-spacing="1">MIND RESONANCE · 反共识观察</text>
+</svg>
