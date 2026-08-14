@@ -1,17 +1,17 @@
 {
-  "id": "scrapling",
-  "title": "Scrapling",
-  "subtitle": "自适应网页抓取框架 · 隐身绕过 Cloudflare · 解析快过 Selectolax 99 倍",
-  "image": "cards/scrapling-cover.svg",
-  "page": "pages/scrapling.html",
+  "id": "holaos",
+  "title": "holaOS",
+  "subtitle": "开源 Agent 电脑：Claude Code/Codex/holaOS 同住一台电脑共享一份记忆 · 100+ 集成 + MCP · 1.0 发布登顶 GitHub Trending #1",
+  "image": "cards/holaos-cover.svg",
+  "page": "pages/holaos.html",
   "tags": [
-    "爬虫",
-    "Web Scraping",
-    "反爬绕过",
-    "Python",
-    "MCP",
-    "开源"
+    "AI Agent",
+    "Agent OS",
+    "开源",
+    "共享记忆",
+    "Electron",
+    "MCP"
   ],
-  "date": "2026-08-10",
+  "date": "2026-08-14",
   "type": "recommendation"
 }
