@@ -17,6 +17,7 @@
     <filter id="neon"><feGaussianBlur stdDeviation="2.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
   </defs>
   <rect width="200" height="356" fill="url(#bg)" rx="4"/>
+  <!-- Grid -->
   <g opacity=".07" stroke="#4FC3F7" stroke-width=".3">
     <line x1="0" y1="70" x2="200" y2="70"/><line x1="0" y1="96" x2="200" y2="96"/>
     <line x1="0" y1="122" x2="200" y2="122"/><line x1="0" y1="148" x2="200" y2="148"/>
@@ -24,40 +25,52 @@
     <line x1="40" y1="50" x2="40" y2="210"/><line x1="80" y1="50" x2="80" y2="210"/>
     <line x1="120" y1="50" x2="120" y2="210"/><line x1="160" y1="50" x2="160" y2="210"/>
   </g>
-  <g transform="translate(66,40)">
-    <ellipse cx="34" cy="118" rx="30" ry="12" fill="#4FC3F7" opacity=".15"/>
-    <path d="M34 6 C12 6 4 26 4 52 C4 78 14 104 34 104 C54 104 64 78 64 52 C64 26 56 6 34 6 Z" fill="#12283E" stroke="#4FC3F7" stroke-width="1.2"/>
-    <path d="M34 22 C20 22 14 38 14 54 C14 74 22 96 34 96 C46 96 54 74 54 54 C54 38 48 22 34 22 Z" fill="url(#belly)"/>
-    <circle cx="24" cy="42" r="4" fill="#FFFFFF"/>
-    <circle cx="44" cy="42" r="4" fill="#FFFFFF"/>
-    <circle cx="24" cy="42" r="1.8" fill="#0A1420"/>
-    <circle cx="44" cy="42" r="1.8" fill="#0A1420"/>
-    <path d="M28 50 q6 6 12 0" stroke="#7BA7C9" stroke-width="1.4" fill="none" stroke-linecap="round"/>
-    <path d="M14 62 q20 8 40 0 l-3 8 q-17 6 -34 0 z" fill="#1F6FEB"/>
-    <path d="M46 66 l4 16 l-7 -3 l-1 -10 z" fill="#4FC3F7" opacity=".85"/>
-    <path d="M6 52 q-8 16 -2 34 l10 -8 q-2 -14 0 -24 z" fill="#0D1B2E" stroke="#4FC3F7" stroke-width=".8" opacity=".9"/>
-    <path d="M62 52 q8 16 2 34 l-10 -8 q2 -14 0 -24 z" fill="#0D1B2E" stroke="#4FC3F7" stroke-width=".8" opacity=".9"/>
+  <!-- 企鹅 -->
+  <g transform="translate(66,36)">
+    <ellipse cx="34" cy="112" rx="28" ry="11" fill="#4FC3F7" opacity=".15"/>
+    <path d="M34 4 C12 4 4 24 4 50 C4 76 14 100 34 100 C54 100 64 76 64 50 C64 24 56 4 34 4 Z" fill="#12283E" stroke="#4FC3F7" stroke-width="1.2"/>
+    <path d="M34 20 C20 20 14 36 14 52 C14 71 22 92 34 92 C46 92 54 71 54 52 C54 36 48 20 34 20 Z" fill="url(#belly)"/>
+    <circle cx="24" cy="40" r="4" fill="#FFFFFF"/>
+    <circle cx="44" cy="40" r="4" fill="#FFFFFF"/>
+    <circle cx="24" cy="40" r="1.8" fill="#0A1420"/>
+    <circle cx="44" cy="40" r="1.8" fill="#0A1420"/>
+    <path d="M28 48 q6 6 12 0" stroke="#7BA7C9" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+    <!-- 围巾 -->
+    <path d="M14 60 q20 8 40 0 l-3 8 q-17 6 -34 0 z" fill="#1F6FEB"/>
+    <path d="M46 64 l4 16 l-7 -3 l-1 -10 z" fill="#4FC3F7" opacity=".85"/>
+    <!-- 翅膀 -->
+    <path d="M6 50 q-8 16 -2 32 l10 -8 q-2 -14 0 -22 z" fill="#0D1B2E" stroke="#4FC3F7" stroke-width=".8" opacity=".9"/>
+    <path d="M62 50 q8 16 2 32 l-10 -8 q2 -14 0 -22 z" fill="#0D1B2E" stroke="#4FC3F7" stroke-width=".8" opacity=".9"/>
   </g>
-  <g transform="translate(24,140)">
-    <rect x="0" y="0" width="152" height="52" rx="4" fill="#0A1420" stroke="#4FC3F7" stroke-opacity=".45" stroke-width=".9"/>
-    <rect x="0" y="0" width="152" height="13" rx="4" fill="#4FC3F7" opacity=".12"/>
-    <circle cx="8" cy="6.5" r="2" fill="#FF5F57"/><circle cx="15" cy="6.5" r="2" fill="#FFB020"/><circle cx="22" cy="6.5" r="2" fill="#28C840"/>
+  <!-- 代码窗口 -->
+  <g transform="translate(24,152)">
+    <rect x="0" y="0" width="152" height="46" rx="4" fill="#0A1420" stroke="#4FC3F7" stroke-opacity=".45" stroke-width=".9"/>
+    <rect x="0" y="0" width="152" height="12" rx="4" fill="#4FC3F7" opacity=".12"/>
+    <circle cx="8" cy="6" r="2" fill="#FF5F57"/><circle cx="15" cy="6" r="2" fill="#FFB020"/><circle cx="22" cy="6" r="2" fill="#28C840"/>
     <g font-family="monospace">
-      <text x="9" y="30" font-size="6.5" fill="#8FB8D8">$ curl -fsSL penguin.ooo/install.sh | sh</text>
-      <text x="9" y="42" font-size="6.5" fill="#4FC3F7">$ penguin web</text>
-      <rect x="74" y="37" width="8" height="9" fill="#4FC3F7" opacity=".9"/>
+      <text x="9" y="27" font-size="6.5" fill="#8FB8D8">$ curl -fsSL penguin.ooo/install.sh | sh</text>
+      <text x="9" y="39" font-size="6.5" fill="#4FC3F7">$ penguin web</text>
+      <rect x="74" y="34" width="8" height="9" fill="#4FC3F7" opacity=".9"/>
     </g>
   </g>
-  <g transform="translate(30,186)" opacity=".85">
-    <rect x="0" y="0" width="56" height="18" rx="9" fill="none" stroke="#4FC3F7" stroke-width=".9"/>
-    <path d="M60 9 L74 9" stroke="#4FC3F7" stroke-width="1" marker-end="none"/>
-    <path d="M70 5 l6 4 l-6 4 z" fill="#4FC3F7"/>
-    <rect x="80" y="0" width="76" height="18" rx="9" fill="#4FC3F7" opacity=".15" stroke="#4FC3F7" stroke-width=".9"/>
-    <text x="118" y="12" text-anchor="middle" font-family="system-ui,sans-serif" font-size="6" fill="#D6EDFF">完整 Agent 应用</text>
+  <!-- 构建箭头 (一句话 → 应用) -->
+  <g transform="translate(30,214)" opacity=".85">
+    <rect x="0" y="0" width="56" height="16" rx="8" fill="none" stroke="#4FC3F7" stroke-width=".9"/>
+    <text x="28" y="11" text-anchor="middle" font-family="system-ui,sans-serif" font-size="5.5" fill="#8FB8D8">一句话描述</text>
+    <path d="M60 8 L74 8" stroke="#4FC3F7" stroke-width="1"/>
+    <path d="M70 4 l6 4 l-6 4 z" fill="#4FC3F7"/>
+    <rect x="80" y="0" width="76" height="16" rx="8" fill="#4FC3F7" opacity=".15" stroke="#4FC3F7" stroke-width=".9"/>
+    <text x="118" y="11" text-anchor="middle" font-family="system-ui,sans-serif" font-size="5.5" fill="#D6EDFF">完整 Agent 应用</text>
   </g>
-  <path d="M100 274 q28 0 28 14 q0 14 -28 14 q-28 0 -28 -14 q0 -6 6 -9" fill="none" stroke="#1F6FEB" stroke-width="1" stroke-dasharray="3 3" opacity=".6"/>
-  <path d="M104 280 l-4 -4 l-5 3" fill="#1F6FEB" opacity=".7"/>
-  <rect x="60" y="325" width="80" height="2" rx="1" fill="url(#ice)" opacity=".7"/>
+  <!-- Title (Codex QQ Skin 样式) -->
+  <text x="100" y="248" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" font-weight="800" fill="#4FC3F7" letter-spacing="-.4" filter="url(#neon)">PenguinHarness</text>
+  <text x="100" y="264" text-anchor="middle" font-family="system-ui,sans-serif" font-size="6.5" fill="#94A3B8" letter-spacing=".25">AUTOMATED AGENT BUILDER</text>
+  <text x="100" y="276" text-anchor="middle" font-family="system-ui,sans-serif" font-size="6.5" fill="#64748B" letter-spacing=".2">一句话 · 自动构建完整应用</text>
+  <rect x="60" y="288" width="80" height="2" rx="1" fill="url(#ice)" opacity=".7"/>
+  <!-- Bottom tags -->
   <g font-family="system-ui,sans-serif" font-size="5.5" fill="#475569" text-anchor="middle">
+    <text x="50" y="308">490★</text><circle cx="50" cy="314" r="1.2" fill="#4FC3F7" opacity=".8"/>
+    <text x="100" y="308">$0.02/构建</text><circle cx="100" cy="314" r="1.2" fill="#1F6FEB" opacity=".8"/>
+    <text x="152" y="308">APACHE-2.0</text><circle cx="152" cy="314" r="1.2" fill="#4FC3F7" opacity=".8"/>
   </g>
 </svg>

@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#080B16">
+<title>收听 · C A I O的财务账本与资产折旧底牌</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@200;400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080B16; --bg-2:#0F1424; --bg-3:#1A2138;
+  --accent:#D4A843; --accent-dim:#8A6A1E;
+  --text:#E8E4D9; --text-dim:#9AA3B5; --text-mute:#5A6273;
+  --gold:#D4A843; --line:#1E293B;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.serif{font-family:'Noto Serif SC',serif}
+
+/* ── 顶部返回条 ── */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
+  padding:14px 20px;padding-top:calc(14px + env(safe-area-inset-top));background:rgba(10,10,10,.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.topbar a{color:var(--text-dim);text-decoration:none;font-size:13px;display:flex;align-items:center;gap:6px;transition:color .3s}
+.topbar a:hover{color:var(--accent)}
+.topbar .brand{font-size:11px;letter-spacing:.3em;color:var(--text-mute);text-transform:uppercase}
+
+/* ── 封面 ── */
+.cover{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:120px 24px 60px;position:relative;text-align:center}
+.cover .kicker{font-size:10px;letter-spacing:.4em;color:var(--accent);text-transform:uppercase;margin-bottom:24px;animation:fadeUp 1s ease both}
+.cover .kicker .dot{color:var(--gold)}
+.cover h1{font-size:clamp(38px,8.5vw,68px);line-height:1.2;font-weight:900;letter-spacing:.02em;animation:fadeUp 1s ease .15s both;font-family:'Noto Serif SC',serif}
+.cover h1 .num{color:var(--accent);font-style:italic}
+.cover .sub{font-family:'Noto Serif SC',serif;font-weight:200;font-size:clamp(17px,3.4vw,25px);color:var(--text-dim);margin-top:14px;animation:fadeUp 1s ease .3s both}
+.cover .statline{display:flex;gap:32px;margin-top:34px;animation:fadeUp 1s ease .45s both}
+.cover .statline .s{text-align:center}
+.cover .statline .v{font-family:'Noto Serif SC',serif;font-size:26px;font-weight:900;color:var(--gold)}
+.cover .statline .l{font-size:10px;color:var(--text-mute);letter-spacing:.12em;margin-top:4px}
+.cover .meta{display:flex;gap:20px;margin-top:28px;font-size:11px;color:var(--text-mute);letter-spacing:.15em;animation:fadeUp 1s ease .6s both}
+.cover .scroll-hint{position:absolute;bottom:28px;font-size:10px;letter-spacing:.4em;color:var(--text-mute);animation:bob 2.2s ease-in-out infinite}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+
+/* ── 播放器 ── */
+.player-wrap{max-width:720px;margin:0 auto;padding:40px 20px 20px}
+.player-card{background:var(--bg-2);border:1px solid var(--line);border-radius:20px;padding:28px 24px;position:relative;overflow:hidden}
+.player-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.7}
+.viz{height:88px;display:flex;align-items:flex-end;justify-content:center;gap:3px;margin-bottom:20px}
+.viz i{width:4px;border-radius:1px;background:linear-gradient(180deg,var(--accent),var(--accent-dim));opacity:.35;transition:opacity .15s}
+.viz i.on{opacity:1;animation:eq 1.1s ease-in-out infinite}
+.viz i.on:nth-child(2n){animation-delay:.12s}.viz i.on:nth-child(3n){animation-delay:.24s}.viz i.on:nth-child(4n){animation-delay:.36s}.viz i.on:nth-child(5n){animation-delay:.48s}
+@keyframes eq{0%,100%{transform:scaleY(.25)}50%{transform:scaleY(1)}}
+.timerow{display:flex;justify-content:space-between;font-size:11px;color:var(--text-mute);font-variant-numeric:tabular-nums;margin-bottom:6px}
+.timerow .cur{color:var(--accent)}
+.progress{position:relative;height:26px;display:flex;align-items:center;cursor:pointer}
+.progress .track{flex:1;height:4px;border-radius:2px;background:var(--bg-3);position:relative}
+.progress .fill{position:absolute;left:0;top:0;bottom:0;width:0%;border-radius:2px;background:var(--accent)}
+.progress .knob{position:absolute;top:50%;left:0;width:14px;height:14px;border-radius:50%;background:var(--accent);transform:translate(-50%,-50%);box-shadow:0 0 12px rgba(255,59,0,.5);opacity:0;transition:opacity .2s}
+.progress:hover .knob,.progress.drag .knob{opacity:1}
+.controls{display:flex;align-items:center;justify-content:center;gap:28px;margin-top:18px}
+.ctl{background:none;border:none;color:var(--text-dim);cursor:pointer;transition:color .2s,transform .1s;padding:8px}
+.ctl:hover{color:var(--accent)}
+.ctl:active{transform:scale(.92)}
+.ctl.main{width:72px;height:72px;border-radius:50%;background:var(--accent);color:#0A0A0A;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 32px rgba(255,59,0,.28)}
+.ctl.main:hover{color:#0A0A0A;transform:scale(1.04)}
+.ctl.main:active{transform:scale(.96)}
+.ctl svg{display:block}
+.speedwrap{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:14px}
+.speed{font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid var(--line);color:var(--text-dim);background:none;cursor:pointer;transition:all .2s;font-family:'Noto Sans SC',sans-serif}
+.speed.on{border-color:var(--accent);color:var(--accent);background:rgba(255,59,0,.08)}
+
+/* ── 字幕 ── */
+.subtitle-wrap{max-width:720px;margin:0 auto;padding:30px 20px 10px}
+.subtitle-box{background:var(--bg-2);border:1px solid var(--line);border-radius:16px;padding:26px 24px;min-height:130px;display:flex;align-items:center;justify-content:center}
+.subtitle-box .st{font-size:clamp(15px,3.4vw,19px);line-height:1.9;color:var(--text-dim);text-align:center;transition:color .3s;font-family:'Noto Serif SC',serif}
+.subtitle-box .st.on{color:var(--text)}
+.subtitle-box .st b{color:var(--accent);font-weight:700}
+
+/* ── 章节时间轴 ── */
+.timeline{max-width:720px;margin:0 auto;padding:44px 20px 10px}
+.tl-title{font-size:11px;letter-spacing:.35em;color:var(--text-mute);text-transform:uppercase;margin-bottom:24px;display:flex;align-items:center;gap:14px}
+.tl-title::after{content:'';flex:1;height:1px;background:var(--line)}
+.tl{position:relative;padding-left:28px}
+.tl::before{content:'';position:absolute;left:7px;top:6px;bottom:6px;width:1px;background:var(--line)}
+.tl-item{position:relative;margin-bottom:22px;cursor:pointer;user-select:none}
+.tl-item::before{content:'';position:absolute;left:-28px;top:7px;width:9px;height:9px;border-radius:50%;background:var(--bg-3);border:2px solid var(--text-mute);transition:all .25s}
+.tl-item:hover::before,.tl-item.active::before{background:var(--accent);border-color:var(--accent);box-shadow:0 0 10px rgba(255,59,0,.5)}
+.tl-item .t{font-size:11px;color:var(--gold);font-variant-numeric:tabular-nums;letter-spacing:.05em}
+.tl-item .n{font-size:19px;color:var(--text);font-weight:700;margin:2px 0}
+.tl-item .d{font-size:12px;color:var(--text-dim);line-height:1.6}
+.tl-item:hover .n{color:var(--accent)}
+
+/* ── 金句墙 ── */
+.quotes{max-width:720px;margin:0 auto;padding:44px 20px 10px}
+.q-title{font-size:11px;letter-spacing:.35em;color:var(--text-mute);text-transform:uppercase;margin-bottom:24px;display:flex;align-items:center;gap:14px}
+.q-title::after{content:'';flex:1;height:1px;background:var(--line)}
+.q-card{background:var(--bg-2);border:1px solid var(--line);border-radius:14px;padding:22px 22px 16px;margin-bottom:14px;position:relative;transition:border-color .25s;border-left:3px solid var(--accent)}
+.q-card:hover{border-color:var(--accent-dim)}
+.q-card .txt{font-family:'Noto Serif SC',serif;font-size:15px;line-height:1.9;color:var(--text)}
+.q-card .txt::before{content:'「';color:var(--gold);font-size:20px;vertical-align:-4px}
+.q-card .txt::after{content:'」';color:var(--gold);font-size:20px;vertical-align:-4px}
+.q-card .act{display:flex;justify-content:flex-end;gap:16px;margin-top:10px}
+.q-card .act button{background:none;border:none;color:var(--text-mute);font-size:11px;cursor:pointer;transition:color .2s;font-family:'Noto Sans SC',sans-serif;display:flex;align-items:center;gap:4px}
+.q-card .act button:hover{color:var(--accent)}
+.q-card.copied{border-color:var(--accent)}
+
+/* ── 结尾 ── */
+.finale{max-width:720px;margin:0 auto;padding:60px 24px 40px;text-align:center}
+.finale .big{font-family:'Noto Serif SC',serif;font-size:clamp(22px,5vw,34px);line-height:1.6;color:var(--text);font-weight:900}
+.finale .big b{color:var(--accent);font-weight:900}
+.subscribe{margin-top:36px;display:inline-flex;align-items:center;gap:10px;padding:14px 26px;border-radius:40px;border:1px solid var(--accent-dim);color:var(--accent);text-decoration:none;font-size:13px;letter-spacing:.08em;transition:all .25s;background:rgba(255,59,0,.05)}
+.subscribe:hover{background:var(--accent);color:#0A0A0A}
+.article-link{display:block;margin-top:18px;color:var(--text-dim);font-size:12px;text-decoration:none;transition:color .2s}
+.article-link:hover{color:var(--accent)}
+footer{padding:40px 20px calc(40px + env(safe-area-inset-bottom));text-align:center;font-size:10px;color:var(--text-mute);letter-spacing:.2em;border-top:1px solid var(--line);margin-top:40px}
+
+/* 入场动画 — 仅当 JS 运行时才隐藏（html.js 由脚本添加） */
+html.js .reveal{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s ease}
+html.js .reveal.in{opacity:1;transform:translateY(0)}
+
+/* 播放进度遮罩 */
+.loading-mask{position:fixed;inset:0;background:var(--bg);z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .6s}
+.loading-mask.hide{opacity:0;pointer-events:none}
+.loading-mask .ring{width:44px;height:44px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-mask p{font-size:12px;color:var(--text-mute);letter-spacing:.2em}
+</style>
+</head>
+<body>
+
+<!-- 加载遮罩 -->
+<div class="loading-mask" id="loadingMask">
+  <div class="ring"></div>
+  <p>正在加载声音</p>
+</div>
+
+<!-- 顶部条 -->
+<div class="topbar">
+  <a href="../caio-05-financial-ledger.html">← 返回图文版</a>
+  <span class="brand">财务账本 · Audio</span>
+</div>
+
+<!-- 封面 -->
+<header class="cover">
+  <div class="kicker">Finance<span class="dot">.</span> Assets<span class="dot">.</span> Depreciation<span class="dot">.</span></div>
+  <h1>C A I O的<br><span class="num">财务账本</span></h1>
+  <div class="sub">洋哥 × 小颖 · 六分钟 · 当试验田变成主航道，每一滴油都必须转化为推力</div>
+  <div class="statline">
+    <div class="s"><div class="v">25→7%</div><div class="l">创新预算占比</div></div>
+    <div class="s"><div class="v">20:1</div><div class="l">知识资产ROI</div></div>
+    <div class="s"><div class="v">3–36月</div><div class="l">AI资产半衰期</div></div>
+  </div>
+  <div class="meta"><span>洋哥 × 小颖</span><span>06:21</span><span>VOL.05 / 2026</span></div>
+  <div class="scroll-hint">▼ SCROLL</div>
+</header>
+
+<!-- 播放器 -->
+<section class="player-wrap">
+  <div class="player-card reveal">
+    <div class="viz" id="viz"></div>
+    <div class="timerow"><span class="cur" id="curTime">00:00</span><span id="durTime">06:21</span></div>
+    <div class="progress" id="progress">
+      <div class="track"><div class="fill" id="fill"></div><div class="knob" id="knob"></div></div>
+    </div>
+    <div class="controls">
+      <button class="ctl" id="btnBack" aria-label="后退10秒">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 17l-5-5 5-5"/><path d="M18 17l-5-5 5-5"/><path d="M4 12h1"/></svg>
+      </button>
+      <button class="ctl main" id="btnPlay" aria-label="播放">
+        <svg id="iconPlay" width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        <svg id="iconPause" width="30" height="30" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+      </button>
+      <button class="ctl" id="btnFwd" aria-label="前进10秒">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 17l5-5-5-5"/><path d="M6 17l5-5-5-5"/><path d="M20 12h-1"/></svg>
+      </button>
+    </div>
+    <div class="speedwrap">
+      <button class="speed" data-s="1">1.0×</button>
+      <button class="speed" data-s="1.25">1.25×</button>
+      <button class="speed" data-s="1.5">1.5×</button>
+      <button class="speed" data-s="2">2.0×</button>
+    </div>
+  </div>
+</section>
+
+<!-- 滚动字幕 -->
+<section class="subtitle-wrap">
+  <div class="subtitle-box reveal"><div class="st" id="subtitle">点击 ▶ 开始收听 · 声音与文字同步滚动</div></div>
+</section>
+
+<!-- 章节时间轴 -->
+<section class="timeline">
+  <div class="tl-title reveal">Chapter · 章节导航</div>
+  <div class="tl" id="tl"></div>
+</section>
+
+<!-- 金句墙 -->
+<section class="quotes">
+  <div class="q-title reveal">Golden Quotes · 值得记住的句子</div>
+  <div class="q-card reveal"><div class="txt">把AI当成可容忍失败的创新实验，是财务和组织自杀的开始。</div><div class="act"><button onclick="copyQuote(this)">复制金句</button></div></div>
+  <div class="q-card reveal"><div class="txt">创新预算的退潮，意味着AI不再是可容忍失败的研发项目，而是像电费和房租一样的刚性运营成本。</div><div class="act"><button onclick="copyQuote(this)">复制金句</button></div></div>
+  <div class="q-card reveal"><div class="txt">算力买不来智慧，数据汇聚填不满知识黑洞。</div><div class="act"><button onclick="copyQuote(this)">复制金句</button></div></div>
+  <div class="q-card reveal"><div class="txt">服务器的折旧按年算，AI模型的折旧按月算，停止进化的智能就是昂贵的技术垃圾。</div><div class="act"><button onclick="copyQuote(this)">复制金句</button></div></div>
+  <div class="q-card reveal"><div class="txt">好的交付物不是文档堆砌，而是决策工具。不能触发决策的数据全是废纸。</div><div class="act"><button onclick="copyQuote(this)">复制金句</button></div></div>
+  <div class="q-card reveal"><div class="txt">AI转型不是一场冲动的技术消费，而是一场缜密的财务与资产重构。</div><div class="act"><button onclick="copyQuote(this)">复制金句</button></div></div>
+</section>
+
+<!-- 结尾 -->
+<section class="finale">
+  <div class="big reveal">让AI资产<br>持续<b>生息</b></div>
+  <a class="subscribe reveal" href="https://mindresonance.online/youngsinsight/subscribe.html">你可以用任何 AI 工具订阅我的博客文章 →</a>
+  <a class="article-link reveal" href="../caio-first-month.html">← 返回图文版《C A I O首月：不点火的艺术》</a>
+</section>
+
+<footer>MIND RESONANCE · 财务账本与资产折旧 · VOL.05 / 2026</footer>
+
+<audio id="audio" preload="metadata" src="/youngsinsight/audio/caio-05-financial-ledger.mp3?v=2"></audio>
+
+<script>
+document.documentElement.className='js';
+(function(){
+'use strict';
+var audio=document.getElementById('audio');
+var btnPlay=document.getElementById('btnPlay');
+var iconPlay=document.getElementById('iconPlay');
+var iconPause=document.getElementById('iconPause');
+var curTime=document.getElementById('curTime');
+var durTime=document.getElementById('durTime');
+var progress=document.getElementById('progress');
+var fill=document.getElementById('fill');
+var knob=document.getElementById('knob');
+var subtitle=document.getElementById('subtitle');
+var viz=document.getElementById('viz');
+var loadingMask=document.getElementById('loadingMask');
+
+var NBAR=48;
+for(var i=0;i<NBAR;i++){var b=document.createElement('i');viz.appendChild(b);}
+var bars=viz.children;
+
+/* 伪频谱动画（无 WebAudio 时用随机跳动，WebAudio 时用真实频谱） */
+var actx=null, analyser=null, dataArr=null;
+try{
+  actx=new (window.AudioContext||window.webkitAudioContext)();
+  analyser=actx.createAnalyser();
+  analyser.fftSize=128;
+  dataArr=new Uint8Array(analyser.frequencyBinCount);
+  var src=actx.createMediaElementSource(audio);
+  src.connect(analyser);
+  analyser.connect(actx.destination);
+}catch(e){actx=null;analyser=null;dataArr=null;}
+
+function startVisuals(){
+  for(var i=0;i<NBAR;i++){bars[i].style.height=(20+Math.random()*60)+'%';}
+  if(actx && analyser){
+    var draw=function(){
+      if(audio.paused) return;
+      analyser.getByteFrequencyData(dataArr);
+      for(var j=0;j<NBAR;j++){
+        var v=dataArr[Math.floor(j*dataArr.length/NBAR)]/255;
+        bars[j].style.height=Math.max(14,v*95)+'%';
+        bars[j].className=v>0.08?'on':'';
+      }
+      requestAnimationFrame(draw);
+    };
+    requestAnimationFrame(draw);
+  }else{
+    setInterval(function(){
+      if(audio.paused) return;
+      for(var j=0;j<NBAR;j++){
+        bars[j].style.height=(22+Math.random()*70)+'%';
+        bars[j].className='on';
+      }
+    },140);
+  }
+}
+
+/* 字幕数据：29 句（时间点按脚本字数比例估算，总长 357s） */
+var subtitles=[
+[0,'欢迎收听《反共识观察》，我是洋哥，《反共识观察》的主理人。'],
+[5,'我是小颖，洋哥的"十万个为什么"担当！今天咱们聊什么？咦，听起来跟A I财务有关呀？'],
+[13,'没错。现在企业A I正经历一个残酷转变：从"创新预算"跌入"常设IT预算"，2023年还有25%的A I支出属于可自由裁量的试验性"创新预算"，到2025年已经断崖式下跌到仅剩7%。'],
+[30,'哇！这么大的变化嘛？为什么呀？人家不是很看好A I吗？'],
+[36,'因为资本市场宽容度消退了。A I不再是边缘的"试验田"，已经变成了主航道的"发动机"，每一滴油都必须转化为真实的推力。'],
+[47,'哦...就像家里买冰箱和买冰淇淋的区别？买冰箱是必需品，不能随便换；买冰淇淋是可以尝试的甜品嘛！那企业现在买A I，是不是像必须付的电费一样？'],
+[60,'精确。财务视角完全变了。C F O会要求每一分钱都要有明确的产出对应，像考核一条流水线一样考核A I系统。如果拿不出R O I的项目，连买站票的资格都没有。'],
+[73,'哼，那企业A I转型是不是也有个时间表呀？一年两年三年都不一样？'],
+[79,'是的。企业A I转型通常经历三年投资曲线：Y1投资基础建设与试点，R O I区间是-30%到0%；Y2规模化与资产化，R O I区间0%到50%；Y3生态化与优化，R O I区间50%到150%。'],
+[99,'哎呀，第一年还亏钱呢！那企业怎么熬过去呀？我猜如果分钱不对，肯定会倒在Y1吧？'],
+[106,'没错。很多企业倒在Y1，是因为他们把40%的钱砸在基础设施上，却指望试点项目立刻填补利润表。健康预算分配应该是：A I项目开发35%，基础设施25%，人才建设20%，数据治理10%，组织变革管理5%，预留/应急5%。'],
+[129,'等等，组织变革管理要占5%？听起来不是技术相关的嘛！为什么还要单独花钱？'],
+[136,'因为这是最容易被忽视的关键环节。很多企业抠出这部分钱去买服务器，结果系统上线，员工抵触，系统沦为摆设。变革管理不是请客吃饭，是实打实的成本支出。'],
+[150,'原来如此！就像买健身器材，但家里人不配合，器材就成晾衣架啦！那知识资产化是不是更重要？'],
+[158,'是的。算力买不来智慧，数据汇聚填不满知识黑洞。企业常常花巨资建设"数据中台"，结果A I回答的问题要么是正确的废话，要么是严重的幻觉。'],
+[171,'啊，为什么？我不是很懂呢...是不是就像图书馆里有很多书，但没人知道怎么找到需要的书？'],
+[178,'比喻恰当。大多数企业的知识管理停留在"文档级"，一份50页的报告存在共享盘里，员工搜"低温抗压"，如果报告里写的是"寒冷环境下的承压能力"，他就找不到。A I需要的是"知识点级"的知识颗粒度。'],
+[193,'哦！就像把一本厚字典拆成一个个独立的小卡片，还要标明它们之间的关系嘛！那这样效率能提升多少呀？'],
+[201,'复用效率将从基准值飙升到5到10倍。对于1000人规模的企业，投入约300万建设A I知识管理平台，每年能带来约6000万的等效收益，R O I高达20:1。'],
+[214,'哇！这么高！那A I资产是不是也有不同的种类和保质期？'],
+[219,'没错。A I资产分为三类：模型资产半衰期3-12个月，知识资产半衰期6-18个月，流程资产半衰期12-36个月。'],
+[230,'咦？A I资产不像普通资产那样能用很久嘛？听起来像是生鲜食品一样容易过期？'],
+[237,'确实如此。A I资产不是永久资产，不建立折旧管理机制，企业很快就会被一堆"过期"的模型拖垮。比如一个风控模型上线第一周准确率95%，半年后可能掉到70%，这就是"模型漂移"。'],
+[253,'哦...那企业应该怎么管理这些"过期"资产呢？就像家里定期清理冰箱一样吗？'],
+[259,'企业需要建立A I资产负债表，特别要关注"无效Agent"。很多业务部门开发了一堆只会回答简单问题的智能体，上线新鲜感过后，连续90天无人调用，这些必须果断下线。'],
+[274,'嚯！听起来要像园丁一样定期修剪枝叶才行！那C A I O怎么向老板汇报这些复杂内容呢？'],
+[283,'最忌讳的做法是写一份50页的PPT。C A I O应该展示"A I经营驾驶舱"，它回答的不是"发生了什么"，而是"风险在哪里、下一步该做什么"。'],
+[293,'就像汽车的仪表盘一样！看到红灯就提醒刹车，看到绿灯就可以加速对吧？那国际标准重要吗？'],
+[301,'重要。C A I O必须熟练掌握两大硬通货：NIST A I RMF和ISO/IEC 42001:2023。同时必须设立A I审查委员会，任何模型要获准上线，必须跨过8道门槛，缺一不可。'],
+[319,'哇，感觉好严格呀！就像给A I产品上了多重保险嘛！那最后，作为企业掌舵人，该怎么判断A I项目是不是真的值得投入？'],
+[331,'问三个问题：这个项目的半衰期是几个月？半年后谁来负责重训模型？沉淀下来的知识资产，在"五可标准"里能拿几分？如果A I工具明天停止服务，核心业务流程会受阻吗？如果答不上来，那大概率又是一个披着创新外衣的沉没成本。'],
+[350,'嗯嗯，听起来很有道理！我明白了，A I转型不是冲动的技术消费，而是缜密的财务与资产重构！'],
+[358,'如果你喜欢《反共识观察》的视角，欢迎在播放页下方订阅《见洋知新》，我们下期见。'],
+[365,'对对，订阅《见洋知新》，一起看透真相！洋哥讲得真好，人家学到了好多！'],
+];
+// 共 34 段, 总长 379.0s
+// 共 34 段, 总长 381.0s
+
+/* 章节时间轴（7章） */
+var chapters=[
+[0,'00 开场','试验田变主航道，创新预算 25%→7%'],
+[13,'01 财务视角','CFO 考核流水线，三年投资曲线'],
+[56,'02 预算分配','35/25/20/10/5/5 健康切分'],
+[128,'03 组织变革','被抠去买服务器的 5%'],
+[157,'04 知识资产化','数据≠知识，六级转换链路'],
+[176,'05 知识点级','文档级→知识点级，复用效率 5-10 倍'],
+[231,'06 资产半衰期','模型/知识/流程三类资产折旧'],
+[278,'07 经营驾驶舱','仪表盘红绿灯 + 国际标准'],
+[331,'08 结语','三问判断 AI 项目真伪']
+];
+
+var tl=document.getElementById('tl');
+chapters.forEach(function(c,i){
+  var it=document.createElement('div');
+  it.className='tl-item reveal';
+  it.dataset.t=c[0];
+  var mm=String(Math.floor(c[0]/60)).padStart(2,'0');
+  var ss=String(Math.floor(c[0]%60)).padStart(2,'0');
+  it.innerHTML='<div class="t">'+mm+':'+ss+'</div><div class="n">'+c[1]+'</div><div class="d">'+c[2]+'</div>';
+  it.addEventListener('click',function(){audio.currentTime=parseFloat(this.dataset.t);seekVisuals();if(audio.paused){audio.play();}});
+  tl.appendChild(it);
+});
+var tlItems=tl.querySelectorAll('.tl-item');
+
+function fmt(s){
+  s=Math.max(0,Math.floor(s));
+  var m=Math.floor(s/60), ss=s%60;
+  return String(m).padStart(2,'0')+':'+String(ss).padStart(2,'0');
+}
+
+function setPlaying(p){
+  if(p){
+    iconPlay.style.display='none';iconPause.style.display='block';
+    startVisuals();
+  }else{
+    iconPlay.style.display='block';iconPause.style.display='none';
+    for(var i=0;i<NBAR;i++){bars[i].className='';bars[i].style.height='30%';}
+  }
+}
+btnPlay.addEventListener('click',function(){
+  if(audio.paused){audio.play();}else{audio.pause();}
+  if(actx && actx.state==='suspended'){actx.resume();}
+});
+audio.addEventListener('play',function(){setPlaying(true);});
+audio.addEventListener('pause',function(){setPlaying(false);});
+audio.addEventListener('ended',function(){setPlaying(false);subtitle.innerHTML='收听结束 — <b>欢迎回到图文版继续阅读</b>';});
+
+audio.addEventListener('timeupdate',function(){
+  if(isNaN(audio.duration)) return;
+  var pct=audio.currentTime/audio.duration*100;
+  fill.style.width=pct+'%';
+  knob.style.left=pct+'%';
+  curTime.textContent=fmt(audio.currentTime);
+  var ct=audio.currentTime;
+  var txt='';
+  for(var i=subtitles.length-1;i>=0;i--){
+    if(ct>=subtitles[i][0]){txt=subtitles[i][1];break;}
+  }
+  if(txt){
+    subtitle.innerHTML=txt.replace(/C A I O/g,'<b>C A I O</b>');
+    subtitle.className='st on';
+  }
+  var active=-1;
+  for(var j=chapters.length-1;j>=0;j--){
+    if(ct>=chapters[j][0]){active=j;break;}
+  }
+  for(var k=0;k<tlItems.length;k++){
+    tlItems[k].classList.toggle('active',k===active);
+  }
+});
+audio.addEventListener('loadedmetadata',function(){
+  if(!isNaN(audio.duration)){durTime.textContent=fmt(audio.duration);}
+});
+
+var dragging=false;
+progress.addEventListener('pointerdown',function(e){dragging=true;progress.classList.add('drag');seekFromEvent(e);progress.setPointerCapture(e.pointerId);});
+progress.addEventListener('pointermove',function(e){if(dragging)seekFromEvent(e);});
+progress.addEventListener('pointerup',function(e){if(dragging){dragging=false;progress.classList.remove('drag');seekFromEvent(e);}});
+function seekFromEvent(e){
+  var r=progress.getBoundingClientRect();
+  var pct=(e.clientX-r.left)/r.width;
+  pct=Math.max(0,Math.min(1,pct));
+  if(!isNaN(audio.duration)){audio.currentTime=pct*audio.duration;}
+  fill.style.width=pct*100+'%';knob.style.left=pct*100+'%';
+}
+
+document.getElementById('btnBack').addEventListener('click',function(){audio.currentTime=Math.max(0,audio.currentTime-10);seekVisuals();});
+document.getElementById('btnFwd').addEventListener('click',function(){if(!isNaN(audio.duration))audio.currentTime=Math.min(audio.duration,audio.currentTime+10);seekVisuals();});
+function seekVisuals(){if(!isNaN(audio.duration)){var p=audio.currentTime/audio.duration*100;fill.style.width=p+'%';knob.style.left=p+'%';}}
+
+var speeds=document.querySelectorAll('.speed');
+speeds.forEach(function(s){
+  s.addEventListener('click',function(){
+    audio.playbackRate=parseFloat(this.dataset.s);
+    speeds.forEach(function(x){x.classList.remove('on');});
+    this.classList.add('on');
+  });
+});
+speeds[0].classList.add('on');
+
+audio.addEventListener('canplay',function(){
+  setTimeout(function(){loadingMask.classList.add('hide');},400);
+});
+audio.addEventListener('error',function(){
+  loadingMask.querySelector('p').textContent='音频加载失败，请检查网络';
+  setTimeout(function(){loadingMask.classList.add('hide');},1500);
+});
+setTimeout(function(){loadingMask.classList.add('hide');},3500);
+if(audio.readyState>=3){setTimeout(function(){loadingMask.classList.add('hide');},400);}
+
+var io=new IntersectionObserver(function(es){
+  es.forEach(function(e){
+    if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}
+  });
+},{threshold:.08});
+document.querySelectorAll('.reveal').forEach(function(el){io.observe(el);});
+
+window.copyQuote=function(btn){
+  var card=btn.closest('.q-card');
+  var txt=card.querySelector('.txt').textContent;
+  var done=function(){
+    card.classList.add('copied');
+    btn.textContent='✓ 已复制';
+    setTimeout(function(){card.classList.remove('copied');btn.textContent='复制金句';},1600);
+  };
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done).catch(function(){
+      fallbackCopy(txt,done);
+    });
+  }else{fallbackCopy(txt,done);}
+};
+function fallbackCopy(text,cb){
+  var ta=document.createElement('textarea');
+  ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');cb();}catch(e){}
+  document.body.removeChild(ta);
+}
+})();
+</script>
+</body>
+</html>

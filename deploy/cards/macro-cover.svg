@@ -21,18 +21,28 @@
       <path d="M16 0H0V16" fill="none" stroke="#A78BFA" stroke-width="0.4" opacity="0.12"/>
     </pattern>
   </defs>
+
+  <!-- 背景 -->
   <rect width="200" height="356" fill="url(#bg)"/>
   <rect width="200" height="356" fill="url(#grid)"/>
   <circle cx="100" cy="140" r="95" fill="url(#glow)"/>
   <circle cx="100" cy="140" r="58" fill="url(#glow2)"/>
+
+  <!-- 顶部栏 -->
   <rect x="0" y="0" width="200" height="2" fill="#A78BFA" opacity="0.8"/>
+  <text x="16" y="24" font-family="monospace" font-size="7" fill="#4A3E68" letter-spacing="2">MACRO</text>
+  <text x="184" y="24" font-family="monospace" font-size="7" fill="#A78BFA" text-anchor="end">2.7K★</text>
+
+  <!-- 中心核 + 六模块（@双向链接意象） -->
   <g transform="translate(100,140)">
+    <!-- 六条连接线 -->
     <line x1="0" y1="0" x2="40" y2="-24" stroke="#A78BFA" stroke-width="0.7" opacity="0.5"/>
     <line x1="0" y1="0" x2="40" y2="24" stroke="#F472B6" stroke-width="0.7" opacity="0.5"/>
     <line x1="0" y1="0" x2="0" y2="46" stroke="#2DD4BF" stroke-width="0.7" opacity="0.5"/>
     <line x1="0" y1="0" x2="-40" y2="24" stroke="#F4A95E" stroke-width="0.7" opacity="0.5"/>
     <line x1="0" y1="0" x2="-40" y2="-24" stroke="#6BB5FF" stroke-width="0.7" opacity="0.5"/>
     <line x1="0" y1="0" x2="0" y2="-46" stroke="#D38BFF" stroke-width="0.7" opacity="0.5"/>
+    <!-- 中心核 -->
     <circle cx="0" cy="0" r="16" fill="url(#core)">
       <animate attributeName="r" values="15;17;15" dur="3.2s" repeatCount="indefinite"/>
     </circle>
@@ -40,6 +50,7 @@
       <animateTransform attributeName="transform" type="rotate" values="0 0 0;360 0 0" dur="12s" repeatCount="indefinite"/>
     </circle>
     <text x="0" y="4" text-anchor="middle" font-family="monospace" font-size="9" font-weight="bold" fill="#0E0A18">@</text>
+    <!-- 六模块 -->
     <g>
       <animateTransform attributeName="transform" type="translate" values="0 0;0 -2;0 0" dur="3.4s" repeatCount="indefinite"/>
       <rect x="28" y="-34" width="24" height="20" rx="5" fill="#1D1140" stroke="#A78BFA" stroke-width="0.8"/>
@@ -71,4 +82,16 @@
       <text x="0" y="-42" text-anchor="middle" font-family="sans-serif" font-size="8">💼</text>
     </g>
   </g>
+
+  <!-- 标题区 (Semantica 式) -->
+  <text x="100" y="236" text-anchor="middle" font-family="Georgia,serif" font-size="24" font-weight="bold" fill="#EDE9F6">Macro</text>
+  <text x="100" y="252" text-anchor="middle" font-family="monospace" font-size="7" fill="#A78BFA" letter-spacing="1.5">TEAM OS · 1.0 · OPEN SOURCE</text>
+  <text x="100" y="268" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#9A92B8">给团队一台 AI 操作系统</text>
+
+  <!-- 数据条 -->
+  <rect x="24" y="288" width="152" height="24" rx="12" fill="#141020" stroke="#2A2342" stroke-width="0.8"/>
+  <text x="100" y="304" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#EDE9F6">2.7K★ · 167 rust · MIT</text>
+
+  <!-- 底部 -->
+  <text x="100" y="338" text-anchor="middle" font-family="monospace" font-size="6.5" fill="#5E5678" letter-spacing="1">MIND RESONANCE · 反共识观察</text>
 </svg>

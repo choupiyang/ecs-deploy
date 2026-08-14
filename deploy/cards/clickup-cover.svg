@@ -21,10 +21,19 @@
       <path d="M16 0H0V16" fill="none" stroke="#2A2150" stroke-width="0.5"/>
     </pattern>
   </defs>
+
+  <!-- 背景 -->
   <rect width="200" height="356" fill="url(#bg)"/>
   <rect width="200" height="356" fill="url(#grid)" opacity="0.5"/>
+
+  <!-- 顶部栏 -->
   <rect x="0" y="0" width="200" height="2" fill="url(#accentGrad)" opacity="0.8"/>
+  <text x="16" y="24" font-family="monospace" font-size="7" fill="#6D5BA8" letter-spacing="2">CLICKUP</text>
+  <text x="184" y="24" font-family="monospace" font-size="7" fill="#9B8CFF" text-anchor="end">5M+ TEAMS</text>
+
+  <!-- 中心: 任务卡片核 + 多视图环绕（看板列/列表/甘特） -->
   <g transform="translate(100,132)">
+    <!-- 双环反向旋转 -->
     <g>
       <circle r="52" fill="none" stroke="#9B8CFF" stroke-width="1" stroke-dasharray="3 6" opacity="0.5">
         <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="18s" repeatCount="indefinite"/>
@@ -35,12 +44,15 @@
         <animateTransform attributeName="transform" type="rotate" from="360 0 0" to="0 0 0" dur="24s" repeatCount="indefinite"/>
       </circle>
     </g>
+    <!-- 径向丝 -->
     <g stroke="#3A2E70" stroke-width="0.7" opacity="0.6">
       <line x1="0" y1="-52" x2="0" y2="52"/>
       <line x1="-52" y1="0" x2="52" y2="0"/>
       <line x1="-37" y1="-37" x2="37" y2="37"/>
       <line x1="37" y1="-37" x2="-37" y2="37"/>
     </g>
+
+    <!-- 环绕视图卡片（三列看板） -->
     <g filter="url(#glow)">
       <g>
         <rect x="-11" y="-13" width="22" height="26" rx="3" fill="#2A2150" stroke="#9B8CFF" stroke-width="0.8"/>
@@ -67,6 +79,8 @@
         <animateMotion dur="16s" repeatCount="indefinite" path="M0,-52 A52,52 0 1,1 -0.01,-52 Z" begin="9.3s"/>
       </g>
     </g>
+
+    <!-- 中心任务卡片核 -->
     <g filter="url(#glow)">
       <rect x="-24" y="-31" width="48" height="62" rx="8" fill="url(#coreGrad)">
         <animate attributeName="y" values="-31;-34;-31" dur="3s" repeatCount="indefinite"/>
@@ -78,6 +92,8 @@
       <circle cx="14" cy="-16" r="5" fill="none" stroke="#0D0A1A" stroke-width="1.5" opacity="0.8"/>
       <path d="M12 -16 L14 -14 L17 -18" stroke="#0D0A1A" stroke-width="1.2" fill="none" opacity="0.9"/>
     </g>
+
+    <!-- AI 数据脉冲 (Brain) -->
     <g>
       <circle r="2.6" fill="#C4B5FD" opacity="0.9">
         <animateMotion dur="7s" repeatCount="indefinite" path="M0,-40 A40,40 0 1,1 -0.01,-40 Z"/>
@@ -89,19 +105,32 @@
       </circle>
     </g>
   </g>
+
+  <!-- 底部数据流（位于图形区内） -->
   <g opacity="0.5">
-    <rect x="40" y="246" width="2" height="12" rx="1" fill="#9B8CFF">
-      <animate attributeName="y" from="246" to="200" dur="2.6s" repeatCount="indefinite"/>
+    <rect x="40" y="212" width="2" height="12" rx="1" fill="#9B8CFF">
+      <animate attributeName="y" from="212" to="170" dur="2.6s" repeatCount="indefinite"/>
       <animate attributeName="opacity" from="0.8" to="0" dur="2.6s" repeatCount="indefinite"/>
     </rect>
-    <rect x="100" y="254" width="2" height="12" rx="1" fill="#7B68EE">
-      <animate attributeName="y" from="254" to="200" dur="3s" repeatCount="indefinite" begin="0.6s"/>
+    <rect x="100" y="218" width="2" height="12" rx="1" fill="#7B68EE">
+      <animate attributeName="y" from="218" to="170" dur="3s" repeatCount="indefinite" begin="0.6s"/>
       <animate attributeName="opacity" from="0.8" to="0" dur="3s" repeatCount="indefinite" begin="0.6s"/>
     </rect>
-    <rect x="160" y="248" width="2" height="12" rx="1" fill="#C4B5FD">
-      <animate attributeName="y" from="248" to="200" dur="2.8s" repeatCount="indefinite" begin="1.2s"/>
+    <rect x="160" y="214" width="2" height="12" rx="1" fill="#C4B5FD">
+      <animate attributeName="y" from="214" to="170" dur="2.8s" repeatCount="indefinite" begin="1.2s"/>
       <animate attributeName="opacity" from="0.8" to="0" dur="2.8s" repeatCount="indefinite" begin="1.2s"/>
     </rect>
   </g>
-  <rect x="156" y="326" width="30" height="17" rx="3" fill="none" stroke="#9B8CFF" stroke-width="1"/>
+
+  <!-- 标题区 (Semantica 式) -->
+  <text x="100" y="236" text-anchor="middle" font-family="Georgia,serif" font-size="24" font-weight="bold" fill="#E2E0FF">ClickUp</text>
+  <text x="100" y="252" text-anchor="middle" font-family="monospace" font-size="7" fill="#9B8CFF" letter-spacing="1.5">ONE APP TO REPLACE THEM ALL · $4B</text>
+  <text x="100" y="268" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#9A90C8">AI 原生项目管理 · 5M+ 团队</text>
+
+  <!-- 数据条 -->
+  <rect x="24" y="288" width="152" height="24" rx="12" fill="#140F28" stroke="#3A2E70" stroke-width="0.8"/>
+  <text x="100" y="304" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#E2E0FF">5M+ TEAMS · Brain AI · $4B 估值</text>
+
+  <!-- 底部 -->
+  <text x="100" y="338" text-anchor="middle" font-family="monospace" font-size="6.5" fill="#6D5BA8" letter-spacing="1">MIND RESONANCE · 反共识观察</text>
 </svg>
