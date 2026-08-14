@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0E0A18">
+<title>Macro · 团队操作系统</title>
+<style>
+:root{
+  --bg:#0E0A18; --bg-2:#191229; --bg-3:#241A3A;
+  --accent:#A78BFA; --accent-light:#D6C8FF; --plugin:#F472B6;
+  --text:#EFEAF7; --text-mute:#8F84A8; --border:rgba(167,139,250,.22);
+  --glow:rgba(167,139,250,.5);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'PingFang SC','Noto Sans SC',system-ui,sans-serif;user-select:none}
+.stage{
+  aspect-ratio:9/16;height:min(100svh,calc(100vw*16/9));width:min(100vw,calc(100svh*9/16));
+  margin:0 auto;position:relative;overflow:hidden;perspective:1000px;
+  display:flex;flex-direction:column;
+  background:
+  radial-gradient(120% 80% at 80% -10%,rgba(167,139,250,.09),transparent 55%),
+  radial-gradient(100% 70% at 10% 110%,rgba(244,114,182,.05),transparent 60%),var(--bg);
+}
+@supports not (height:100svh){.stage{height:min(100vh,calc(100vw*16/9))}}
+.stage::before{content:'';position:absolute;inset:0;background:
+  linear-gradient(rgba(167,139,250,.04) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(167,139,250,.04) 1px,transparent 1px);
+  background-size:26px 26px;transform:translateZ(-60px);pointer-events:none}
+.topbar{position:relative;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:10px 14px 0;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:6px;font-size:9px;color:var(--text-mute);letter-spacing:.14em}
+.brand i{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--glow);animation:bdot 2.4s ease-in-out infinite}
+@keyframes bdot{0%,100%{opacity:.5}50%{opacity:1}}
+.share{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--bg-2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s}
+.share:active{transform:scale(.92)}
+.share svg{width:13px;height:13px;fill:var(--accent)}
+
+/* 3D 六边形网格核：六个模块 @链接 成一个系统（主题：一套工具，双向图） */
+.sp3d{width:118px;height:118px;flex-shrink:0;position:relative;transform-style:preserve-3d;animation:gfloat 6s ease-in-out infinite}
+@keyframes gfloat{0%,100%{transform:rotateX(14deg) rotateY(-10deg)}50%{transform:rotateX(14deg) rotateY(10deg)}}
+/* 中心数据核（双向图） */
+.sp3d .core{position:absolute;left:50%;top:50%;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%;z-index:3;
+  background:radial-gradient(circle at 35% 30%,#E4DBFF,#A78BFA 45%,#5B3FA8 90%);
+  box-shadow:0 0 22px rgba(167,139,250,.55),inset 0 0 12px rgba(255,255,255,.25);animation:corePulse 3.2s ease-in-out infinite;
+  display:flex;align-items:center;justify-content:center;font-size:12px}
+@keyframes corePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.sp3d .core::after{content:'';position:absolute;inset:-6px;border-radius:50%;border:1.5px dashed rgba(214,200,255,.5);animation:ringRot 12s linear infinite}
+@keyframes ringRot{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+/* 六个模块方块（六边形排布） */
+.sp3d .blk{position:absolute;left:50%;top:50%;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:7px;z-index:4;
+  display:flex;align-items:center;justify-content:center;font-size:11px;
+  border:1px solid rgba(255,255,255,.3);box-shadow:0 0 9px rgba(167,139,250,.3);animation:blkFloat 3.4s ease-in-out infinite}
+.sp3d .blk.b1{background:#1D1140;border-color:var(--accent);animation-delay:0s}
+.sp3d .blk.b2{background:#40113A;border-color:var(--plugin);animation-delay:.3s}
+.sp3d .blk.b3{background:#0F3A3A;border-color:#2DD4BF;animation-delay:.6s}
+.sp3d .blk.b4{background:#3A2F0F;border-color:#F4A95E;animation-delay:.9s}
+.sp3d .blk.b5{background:#12304A;border-color:#6BB5FF;animation-delay:1.2s}
+.sp3d .blk.b6{background:#2E1240;border-color:#D38BFF;animation-delay:1.5s}
+@keyframes blkFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+/* 中心到模块的连接线光点 */
+.sp3d .jdot{position:absolute;left:50%;top:50%;width:3.5px;height:3.5px;border-radius:50%;background:#fff;box-shadow:0 0 6px var(--accent);z-index:2;animation:jdotOrbit 3.4s linear infinite}
+.sp3d .jdot.j2{animation-delay:1.7s;background:var(--plugin);box-shadow:0 0 6px var(--plugin)}
+@keyframes jdotOrbit{0%{transform:rotate(0deg) translateX(30px);opacity:0}20%{opacity:1}80%{opacity:1}100%{transform:rotate(360deg) translateX(30px);opacity:0}}
+/* 底部标签 */
+.sp3d .seal{position:absolute;bottom:2px;left:0;right:0;text-align:center;font-family:monospace;font-size:6px;letter-spacing:.13em;color:var(--text-mute);z-index:5;animation:sealGlow 3s ease-in-out infinite}
+@keyframes sealGlow{0%,100%{opacity:.7}50%{opacity:1;color:var(--accent-light)}}
+
+/* Hero 右侧 */
+.hero-side{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:5px;position:relative;z-index:3}
+.stamp{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;background:radial-gradient(circle at 35% 30%,rgba(167,139,250,.2),var(--bg-2));box-shadow:0 0 12px rgba(167,139,250,.15);cursor:pointer;transition:transform .15s;animation:stampSpin 12s linear infinite}
+.stamp:active{transform:scale(.9)}
+@keyframes stampSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.sp-title{font-size:22px;font-weight:800;color:var(--text);letter-spacing:.01em;line-height:1.15}
+.sp-title em{font-style:normal;color:var(--accent-light);text-shadow:0 0 18px rgba(167,139,250,.35)}
+.tagline{font-size:10px;color:var(--text-mute);line-height:1.55;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.tagline em{color:var(--accent-light);font-style:normal;font-weight:600}
+.hint-badge{display:inline-block;margin-top:5px;font-size:8px;color:var(--text-mute);letter-spacing:.06em;border:1px dashed var(--border);border-radius:20px;padding:3px 9px}
+
+.hero{position:relative;z-index:3;display:flex;align-items:center;gap:14px;padding:12px 16px 10px;flex-shrink:0}
+@media (max-height:850px) and (min-height:731px){
+  .hero{padding-top:8px;padding-bottom:6px;gap:11px}
+  .sp3d{width:104px;height:104px}
+  .sp-title{font-size:20px}
+  .tagline{font-size:9.5px}
+  .stats{padding:7px 16px 3px}
+  .flow{padding:6px 16px 1px}
+  .feats{padding:6px 16px 3px}
+  .tech{padding:6px 16px 3px}
+  .term-body{font-size:7.5px;line-height:1.65}
+  .quick{padding:6px 16px 3px;gap:5px}
+}
+@media (max-height:730px){
+  .hero{padding-top:6px;padding-bottom:4px;gap:10px}
+  .sp3d{width:88px;height:88px}
+  .sp3d .core{width:28px;height:28px;margin:-14px 0 0 -14px;font-size:10px}
+  .sp3d .blk{width:20px;height:20px;margin:-10px 0 0 -10px;font-size:9px}
+  .sp-title{font-size:18px}
+  .tagline{font-size:9px;-webkit-line-clamp:2}
+  .stats{padding:6px 14px 2px;gap:4px}
+  .stat b{font-size:12px}
+  .flow{padding:5px 14px 0}
+  .fnode i{font-size:11px}
+  .fnode b{font-size:7px}
+  .feats{padding:5px 14px 2px;gap:4px}
+  .feat{padding:5px 7px}
+  .tech{padding:5px 14px 2px;gap:4px}
+  .bottombar{padding:7px 14px 9px}
+  .term-body{font-size:7px;line-height:1.55;padding:6px 9px;gap:1px}
+  .showcase{padding:3px 14px}
+  .quick{padding:5px 14px 2px;gap:4px}
+  .qitem{padding:5px 8px}
+  .qitem span{font-size:6.5px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+}
+
+/* 核心展示区：Macro MCP 终端（弹性填充） */
+.showcase{position:relative;z-index:3;flex:0 1 auto;display:flex;flex-direction:column;padding:4px 16px;min-height:0}
+.term{flex:0 1 auto;display:flex;flex-direction:column;border:1px solid var(--border);border-radius:12px;background:rgba(25,18,41,.6);overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.35),inset 0 0 40px rgba(167,139,250,.03);cursor:pointer;transition:transform .15s}
+.term:active{transform:scale(.985)}
+.term-bar{display:flex;align-items:center;gap:5px;padding:7px 11px;border-bottom:1px solid var(--border);background:rgba(36,26,58,.5);flex-shrink:0}
+.term-bar i{width:7px;height:7px;border-radius:50%;display:block}
+.term-bar i:nth-child(1){background:#FF5F56}
+.term-bar i:nth-child(2){background:#FFBD2E}
+.term-bar i:nth-child(3){background:#27C93F}
+.term-bar span{margin-left:6px;font-family:monospace;font-size:8px;color:var(--text-mute);letter-spacing:.06em}
+.term-body{flex:1 1 auto;padding:10px 12px;font-family:monospace;font-size:8px;line-height:1.75;color:#A89BC4;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+.term-body .ln{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;animation:lnIn .5s ease both}
+.term-body .ln .k{color:var(--accent)}
+.term-body .ln .g{color:#7DD4A8}
+.term-body .ln .b{color:var(--plugin)}
+.term-body .ln .y{color:var(--accent-light)}
+.term-body .ln.cursor::after{content:'▍';color:var(--accent);animation:cur 1s steps(2) infinite}
+@keyframes cur{0%,49%{opacity:1}50%,100%{opacity:0}}
+@keyframes lnIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+
+/* 社区口碑速览 */
+.quick{position:relative;z-index:3;flex:1 1 auto;display:flex;flex-direction:column;gap:6px;padding:8px 16px 4px;min-height:0;overflow-y:auto}
+.qitem{background:var(--bg-2);border:1px solid var(--border);border-radius:9px;padding:7px 10px;cursor:pointer;transition:transform .15s,box-shadow .2s;display:flex;align-items:center;gap:8px;flex:1 1 auto;min-height:34px}
+.qitem:active{transform:scale(.97)}
+.qitem i{font-style:normal;font-size:12px;flex-shrink:0;margin-top:0}
+.qitem div{min-width:0}
+.qitem b{display:block;font-size:8.5px;color:var(--text)}
+.qitem span{display:block;font-size:7px;color:var(--text-mute);margin-top:1.5px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.qitem.hotq{border-color:rgba(167,139,250,.5);background:linear-gradient(160deg,rgba(167,139,250,.1),var(--bg-2))}
+
+/* Stats */
+.stats{position:relative;z-index:3;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:10px 16px 4px;flex-shrink:0}
+.stat{background:var(--bg-2);border:1px solid var(--border);border-radius:9px;padding:7px 4px 6px;text-align:center;cursor:pointer;transition:transform .15s,box-shadow .2s}
+.stat:active{transform:scale(.94)}
+.stat b{display:block;font-size:13px;color:var(--accent-light);font-family:monospace;letter-spacing:.02em}
+.stat span{display:block;font-size:7px;color:var(--text-mute);margin-top:2px;letter-spacing:.04em}
+
+/* Flow */
+.flow{position:relative;z-index:3;padding:8px 16px 2px;flex-shrink:0}
+.flow-row{display:flex;align-items:center;gap:3px}
+.fnode{flex:1;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;padding:6px 2px;text-align:center;cursor:pointer;transition:transform .15s,background .2s}
+.fnode:active{transform:scale(.92)}
+.fnode i{display:block;font-style:normal;font-size:12px;margin-bottom:2px}
+.fnode b{display:block;font-size:7.5px;color:var(--text);font-weight:600}
+.fnode span{display:block;font-size:6px;color:var(--text-mute);margin-top:1px}
+.fnode.hot{border-color:rgba(167,139,250,.5);background:linear-gradient(160deg,rgba(167,139,250,.12),var(--bg-2));animation:fhot 2s ease-in-out infinite}
+@keyframes fhot{0%,100%{box-shadow:0 0 6px rgba(167,139,250,.1)}50%{box-shadow:0 0 14px rgba(167,139,250,.3)}}
+.farrow{color:var(--accent);font-size:9px;flex-shrink:0;opacity:.7}
+
+/* Features */
+.feats{position:relative;z-index:3;display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px 16px 4px;flex-shrink:0}
+.feat{background:var(--bg-2);border:1px solid var(--border);border-radius:9px;padding:7px 9px;cursor:pointer;transition:transform .15s,box-shadow .2s;display:flex;align-items:center;gap:7px}
+.feat:active{transform:scale(.95)}
+.feat i{font-style:normal;font-size:13px;flex-shrink:0}
+.feat div{min-width:0}
+.feat b{display:block;font-size:8.5px;color:var(--text)}
+.feat span{display:block;font-size:6.8px;color:var(--text-mute);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Tech */
+.tech{position:relative;z-index:3;display:flex;flex-wrap:wrap;gap:5px;padding:8px 16px 4px;flex-shrink:0}
+.pill{font-size:7.5px;color:var(--text-mute);border:1px solid var(--border);background:var(--bg-2);border-radius:20px;padding:3.5px 9px;cursor:pointer;transition:all .15s;letter-spacing:.03em}
+.pill:active{transform:scale(.93);background:rgba(167,139,250,.12);color:var(--accent-light)}
+
+/* Bottom */
+.bottombar{position:relative;z-index:3;display:flex;align-items:center;gap:8px;padding:10px 16px 12px;flex-shrink:0}
+.btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 0;border-radius:10px;font-size:9px;font-weight:600;cursor:pointer;transition:transform .15s,filter .2s;text-decoration:none;letter-spacing:.05em}
+.btn:active{transform:scale(.95)}
+.btn.primary{background:linear-gradient(135deg,var(--accent),#5B3FA8);color:#0E0A18;box-shadow:0 4px 16px rgba(167,139,250,.25)}
+.btn.ghost{border:1px solid var(--border);color:var(--text);background:var(--bg-2)}
+.btn svg{width:12px;height:12px;fill:currentColor}
+
+/* Overlay */
+.overlay{position:fixed;inset:0;background:rgba(8,5,14,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);opacity:0;pointer-events:none;transition:opacity .35s;z-index:40}
+.overlay.show{opacity:1;pointer-events:auto}
+.sheet{position:absolute;bottom:0;left:50%;transform:translate(-50%,105%);width:min(94vw,calc(100svh*9/16*0.94));max-height:78svh;background:linear-gradient(180deg,#2A1D45,#161024);border:1px solid rgba(167,139,250,.25);border-bottom:none;border-radius:20px 20px 0 0;padding:18px 20px 26px;transition:transform .45s cubic-bezier(.7,0,.3,1);z-index:50;overflow-y:auto;box-shadow:0 -12px 50px rgba(0,0,0,.5)}
+.sheet.show{transform:translate(-50%,0)}
+.sheet h3{font-size:15px;color:var(--text);margin-bottom:8px;line-height:1.4}
+.sheet h3 em{font-style:normal;color:var(--accent-light)}
+.sheet p{font-size:11px;color:#C4B8E0;line-height:1.75;margin-bottom:10px}
+.sheet ul{list-style:none;margin-bottom:10px}
+.sheet ul li{font-size:10.5px;color:#B2A6CE;line-height:1.7;padding-left:14px;position:relative;margin-bottom:3px}
+.sheet ul li::before{content:'◆';position:absolute;left:0;top:1px;font-size:7px;color:var(--accent)}
+.sheet pre{background:rgba(10,6,18,.8);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:monospace;font-size:9.5px;color:#A89BC4;line-height:1.7;overflow-x:auto;margin-bottom:10px;white-space:pre-wrap;word-break:break-all}
+.sheet .close{display:block;width:100%;padding:10px 0;border:none;border-radius:10px;background:linear-gradient(135deg,var(--accent),#5B3FA8);color:#0E0A18;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.08em}
+.sheet .close:active{transform:scale(.97)}
+.sheet::-webkit-scrollbar{width:3px}
+.sheet::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+.toast{position:fixed;top:44px;left:50%;transform:translate(-50%,-16px);background:var(--bg-3);border:1px solid var(--border);color:var(--text);font-size:10px;padding:7px 14px;border-radius:20px;opacity:0;pointer-events:none;transition:all .3s;z-index:60;box-shadow:0 6px 20px rgba(0,0,0,.4);white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <div class="topbar">
+    <div class="brand"><i></i>MACRO · TEAM OS</div>
+    <div class="share" id="shareBtn">
+      <svg viewBox="0 0 24 24"><path d="M18 16.1c-.8 0-1.5.3-2.1.8l-7.1-4.2c.1-.2.1-.4.1-.7s0-.5-.1-.7l7.1-4.2c.6.5 1.4.8 2.1.8 1.9 0 3.4-1.5 3.4-3.4S19.9 3.1 18 3.1s-3.4 1.5-3.4 3.4c0 .2 0 .5.1.7l-7.1 4.2c-.6-.5-1.4-.8-2.1-.8-1.9 0-3.4 1.5-3.4 3.4s1.5 3.4 3.4 3.4c.8 0 1.5-.3 2.1-.8l7.1 4.2c-.1.2-.1.4-.1.7 0 1.9 1.5 3.4 3.4 3.4s3.4-3.4 3.4-3.4z"/></svg>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="sp3d tilt-deep" id="sp3d">
+      <div class="core">⌘</div>
+      <div class="blk b1" style="transform:translate(32px,0)">✉️</div>
+      <div class="blk b2" style="transform:translate(16px,28px)">💬</div>
+      <div class="blk b3" style="transform:translate(-16px,28px)">📋</div>
+      <div class="blk b4" style="transform:translate(-32px,0)">📄</div>
+      <div class="blk b5" style="transform:translate(-16px,-28px)">🤖</div>
+      <div class="blk b6" style="transform:translate(16px,-28px)">💼</div>
+      <div class="jdot j1"></div>
+      <div class="jdot j2"></div>
+      <div class="seal" id="seal">@LINKED · BIDIRECTIONAL GRAPH</div>
+    </div>
+    <div class="hero-side">
+      <div class="stamp" id="stamp">🧩</div>
+      <div class="sp-title">Macro<br><em>一套工具，一个团队</em></div>
+      <div class="tagline">开源团队工作系统：<em>邮件+聊天+文档+任务+CRM+Agent</em> 合一，@双向链接——Slack+Notion+Linear+HubSpot+Superhuman 的替代品，AGPLv3 完全开源</div>
+      <div class="hint-badge">轻触任何元素探索 · 拖动卡片看 3D 视差</div>
+    </div>
+  </div>
+
+  <div class="showcase">
+    <div class="term" id="termShow">
+      <div class="term-bar"><i></i><i></i><i></i><span>Macro · unified workspace</span></div>
+      <div class="term-body" id="termBody"></div>
+    </div>
+  </div>
+
+  <div class="quick">
+    <div class="qitem hotq" data-k="q1"><i>🔥</i><div><b>1.0 发布 48h · GitHub Trending #1</b><span>官方 X：「Holy cow. We are overwhelmed… with support and feature requests.」13 人工程师团队全职响应，8 月架构升级 REST → local-first（WASM GQL cache）</span></div></div>
+    <div class="qitem" data-k="q2"><i>🏦</i><div><b>a16z 投资背书 · SOC 2 Type II</b><span>「Backed by @a16z」+ ISO 27001 + SOC 2 Type II 认证、模型提供商零数据留存——企业级安全声明开源项目罕见</span></div></div>
+    <div class="qitem" data-k="q3"><i>📡</i><div><b>社区双面声</b><span>LinkedIn 70+ 回应热帖 + devtools.fm #175 播客好评；同时用户真实需求涌入 GitHub（GitLab 支持 / MCP 认证 / self-hosting 文档）</span></div></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat" data-k="stars"><b>2.7K</b><span>★ GitHub</span></div>
+    <div class="stat" data-k="rust"><b>167</b><span>Rust 库</span></div>
+    <div class="stat" data-k="blocks"><b>10</b><span>功能模块</span></div>
+    <div class="stat" data-k="a16z"><b>a16z</b><span>投资背书</span></div>
+  </div>
+
+  <div class="flow">
+    <div class="flow-row">
+      <div class="fnode" data-k="f1"><i>📥</i><b>All Inbox</b><span>邮件/消息/任务合一</span></div>
+      <div class="farrow">›</div>
+      <div class="fnode" data-k="f2"><i>🔗</i><b>@Link</b><span>双向图连接一切</span></div>
+      <div class="farrow">›</div>
+      <div class="fnode" data-k="f3"><i>🧠</i><b>Team Memory</b><span>每日 cron 合成记忆</span></div>
+      <div class="farrow">›</div>
+      <div class="fnode hot" data-k="f4"><i>🤖</i><b>Agents</b><span>MCP 接管操作</span></div>
+    </div>
+  </div>
+
+  <div class="feats">
+    <div class="feat" data-k="fe1"><i>✉️</i><div><b>多账号邮件</b><span>Superhuman 式键盘流</span></div></div>
+    <div class="feat" data-k="fe2"><i>💬</i><div><b>专注式聊天</b><span>线程默认折叠不刷屏</span></div></div>
+    <div class="feat" data-k="fe3"><i>📋</i><div><b>任务绑定上下文</b><span>从对话里长出来</span></div></div>
+    <div class="feat" data-k="fe4"><i>💼</i><div><b>CRM 自动更新</b><span>@提及即双向链接</span></div></div>
+  </div>
+
+  <div class="tech">
+    <div class="pill" data-k="t1">SolidJS</div>
+    <div class="pill" data-k="t2">Rust ×167</div>
+    <div class="pill" data-k="t3">CRDT (Loro)</div>
+    <div class="pill" data-k="t4">MCP</div>
+    <div class="pill" data-k="t5">Pulumi + Durable Objects</div>
+    <div class="pill" data-k="t6">AGPLv3</div>
+  </div>
+
+  <div class="bottombar">
+    <a class="btn primary" id="ghBtn" target="_blank"><svg viewBox="0 0 24 24"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.6 18.3 5 18.3 5c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"/></svg>GitHub</a>
+    <a class="btn ghost" id="siteBtn" target="_blank"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm7.9 9h-3.4a15.9 15.9 0 0 0-2.9-6.6A8 8 0 0 1 19.9 11zM12 4c1.6 1.9 2.7 4.2 3 7H9c.3-2.8 1.4-5.1 3-7zM4.1 11h3.4a15.9 15.9 0 0 1 2.9-6.6A8 8 0 0 0 4.1 11zm0 2a8 8 0 0 0 6.4 6.6A15.9 15.9 0 0 1 7.5 13H4.1zM9.7 15h4.6c-.4 2.6-1.5 4.8-3.3 6.6A15.3 15.3 0 0 1 9.7 15zm5.9 0h3.5a8 8 0 0 1-6.6 6.6A15.3 15.3 0 0 0 15.6 15z"/></svg>macro.com</a>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+  <div class="sheet" id="sheet">
+    <h3 id="sTitle"></h3>
+    <div id="sBody"></div>
+    <button class="close" id="sClose">CLOSE ✕</button>
+  </div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+(function(){
+  var $=function(s){return document.querySelector(s)};
+  var html=document.documentElement;
+  html.className='js';
+
+  /* 终端打字效果 */
+  var LINES=[
+    {t:'$ claude mcp add --transport http macro https://mcp-server.macro.com/mcp',c:''},
+    {t:'→ Claude Code 已接入 Macro 工作区',c:'g'},
+    {t:'→ 团队记忆：昨日 cron 已合成（邮件+消息+任务）',c:'b'},
+    {t:'→ All Inbox：3 封邮件 · 5 条消息 · 2 个任务',c:'y'},
+    {t:'→ @acme.com 客户记录：12 封邮件自动聚合',c:'b'},
+    {t:'→ 从客服邮件创建任务 → 双向链接已建立',c:'y'},
+    {t:'→ 编码 Agent：创建任务 / 发邮件 / 更新 CRM',c:'b'},
+    {t:'→ CRDT 实时协作：文档编辑 ~ 即时同步',c:'y'},
+    {t:'→ 记忆明文存储 markdown，可导出',c:'b'},
+    {t:'→ 自托管：docker-compose / nix',c:'y'},
+    {t:'✓ The company is computable',c:'g'}
+  ];
+  var termBody=$('#termBody');
+  function typeTerm(){
+    termBody.innerHTML='';
+    LINES.forEach(function(l,i){
+      var d=document.createElement('div');
+      d.className='ln'+(i===LINES.length-1?' cursor':'');
+      var s=l.c.indexOf('g')>-1?'g':l.c.indexOf('b')>-1?'b':l.c.indexOf('y')>-1?'y':'k';
+      d.innerHTML='<span class="'+s+'">'+l.t+'</span>';
+      d.style.animationDelay=(i*0.35)+'s';
+      termBody.appendChild(d);
+    });
+  }
+  typeTerm();
+
+  /* 弹窗数据 */
+  var DATA={
+    stars:{t:'2.7K★ <em>GitHub Stars</em>',d:'macro-inc/macro 于 2025-11-08 创建，2026-08-10 1.0 发布后引爆：官方 X「We\'re trending on GitHub! For a moment yesterday we were even at the #1 spot.」2,711★ / 282 forks / 51 open issues。README 底部有 star-history 图（发布到 1,698★ 的曲线），a16z 投资的 AGPL 全开源项目里热度第一梯队。',p:['2,711★ / 282 forks / 44 watchers','2025-11-08 创建 · Rust','2026-08-10 1.0 发布','GitHub Trending #1（曾短暂登顶）','51 open issues（大量真实需求涌入）']},
+    rust:{t:'167 <em>Rust 库</em>',d:'仓库结构：apps/web（SolidJS 客户端：浏览器/Tauri 桌面/iOS）+ services/（42 个可部署服务、worker、Lambda）+ crates/（167 个 Rust 库：领域逻辑、模型、db 客户端）+ packages/（共享 TS：协作、lexical-core、loro-mirror）+ infra/（Pulumi）+ docker/（本地 Compose）+ nix/。六边形架构：入站适配器 + 领域核心 + 出站适配器。',p:['167 crates：领域逻辑/模型/db 客户端','42 个可部署服务 + Lambda','SolidJS 前端（apps/web）','Pulumi 基础设施定义','六边形架构 + STYLE_GUIDE']},
+    blocks:{t:'10 <em>功能模块</em>',d:'Macro 由 blocks 组成，像乐高：Email（多账号统一收件箱）、Messages（面向技术讨论的频道）、Tasks（Linear 启发，紧耦合对话）、Docs（Markdown 原生 + CRDT 实时协作）、Canvas（2D 板嵌 @链接）、Agents（团队级记忆）、Calls（录音转写进记忆）、文件存储（邮件/频道自动导入）、Pull requests（关联任务）、CRM（客户对象 + 邮件同步 + 富化）。每个 surface 共享同一后端——交叉引用原生存为双向图。',p:['Email / Messages / Tasks / Docs','Canvas / Agents / Calls / 文件存储','PR / CRM 共 10 大模块','每个模块研究过最佳前身（prior art）','全部共享同一后端 + 双向图']},
+    a16z:{t:'a16z <em>投资背书</em>',d:'官方 X 简介：「Backed by @a16z // hiring in NYC!」——Andreessen Horowitz 投资。创始人 Jacob Beckerman（CEO，纽约，前 AI researcher，Jerome Fisher M&T Program）在 devtools.fm #175 播客（2026-07-30）详解了产品哲学。团队 15 人（13 工程师），dogfood 两年后开源。',p:['a16z 投资（官方 bio 背书）','CEO Jacob Beckerman · 纽约','团队 ~15 人 · 13 工程师','自用两年后开源','devtools.fm #175 播客（7-30）']},
+    f1:{t:'📥 <em>All Inbox 合一收件箱</em>',d:'邮件、消息、@提及、待办任务全在一个列表，用 j/k/e 键盘流导航。多账号：所有 Google 账号一个收件箱统一 triage，或单独看。Signal/Noise 拆分——这不是「又一个邮箱」，是「所有需要你回应的事」的总入口。',p:['邮件+消息+任务+@提及合一列表','j/k/e 键盘导航（Superhuman 式）','多 Google 账号统一收件箱','Signal / Noise 拆分','窗口管理器：3+ 分屏并行']},
+    f2:{t:'💬 <em>专注式聊天</em>',d:'Macro Chat 比 Slack 更聚焦：前几条回复内联显示，其余折叠进线程，繁忙频道保持可读。线程按权限隔离，可复制链接跨频道分享。双向图让任务 @link 到创建它的消息、客服邮件连到支持频道、CRM 记录在讨论时自动更新——「消息是中心，任务/邮件/文档围绕它轻量构建」。',p:['首几条内联 + 其余折叠','线程 severally 权限隔离','@link 双向绑定','Agent 是一等公民','“Messaging is the centerpiece”']},
+    f3:{t:'📋 <em>任务从对话里长出来</em>',d:'Linear 说 issue tracking 已死，Macro 认同但更进一步：它从未真正工作过。解法不是放弃追踪，而是「轻量 issue 紧耦合频道和 DM」——追踪自然发生在对话发生的地方。从邮件、任意处 c t、markdown 文档 /task、- [ ] 列表、@Macro、Agent chat、外部 MCP 都能创建任务。',p:['任务 ↔ 创建上下文双向链接','从邮件/消息/文档直接创建','c t 快捷创建 / /task / - [ ] 列表','@Macro 在任何频道创建任务','“Why are we doing this” 全程可审计']},
+    f4:{t:'💼 <em>CRM 自动更新</em>',d:'独立 CRM 的核心问题：永远过时。Macro 把 CRM 与团队聊天和邮件同置一处：@提及公司记录，团队点击即看最新；@提及自动建立消息↔记录双向链接，事后可从记录回溯所有对话。「这不是你的错，是 CRM 的错！」Kanban 板、自定义阶段、列表/保存视图；每个 deal 自动拥有一个频道，钉在记录上。',p:['CRM 与聊天/邮件同置','@提及公司/联系人 → 双向链接','Kanban + 自定义阶段 + 保存视图','每个 deal 自动一个频道','邮件按公司/联系人自动聚合']},
+    q1:{t:'🔥 <em>1.0 发布 48h · Trending #1</em>',d:'8-10 官方 X 发布「Macro 1.0 — a new office suite for the intelligence age」（4.2K views）。8-12：「Holy cow. We are overwhelmed… with emotion but mostly with support and feature requests. We need to hire more engineers!」（1.3K views）。8-13：「We\'ve had an influx of new users, PRs, and feature requests over the past 48 hours. Our core team of 13 engineers is working full time on your requests」+ 宣布 8 月架构升级 REST → local-first（WASM GQL cache）。',p:['1.0 发布帖 4.2K views（8-10）','“Overwhelmed with support”帖 1.3K（8-12）','48h 用户/PR/需求涌入（8-13）','REST → local-first（WASM GQL cache）','GitHub Trending #1（曾短暂登顶）']},
+    q2:{t:'🏦 <em>a16z + 企业级安全</em>',d:'官方 bio「Backed by @a16z」；README 安全章节：ISO 27001 + SOC 2 Type II 双认证、与模型提供商零数据留存（不用你的数据训练）、安全报告有赏金。创始人 LinkedIn 帖「Macro Open Source: Unified Work System」（70+ 回应）直言：开源让「继续用 Slack/Notion/HubSpot/Linear 组合更难自圆其说」。',p:['a16z 投资背书','ISO 27001 + SOC 2 Type II','模型提供商零数据留存','创始人 LinkedIn 70+ 回应帖','“Why Macro\'s Docs Beat Notion and Obsidian”（20+ 回应）']},
+    q3:{t:'📡 <em>社区双面声</em>',d:'好评面：devtools.fm #175 播客专题、LinkedIn 70+ 回应热帖、SourceForge/Slashdot 收录对比页（Macro vs Notion/Linear）。真实需求面：GitHub open issues 涌入 GitLab 支持（#5561）、MCP Connector 认证 token/header（#5465）、MCP 服务器无 DCR 连接问题（#5598）、self-hosting quickstart（#5640）、Reply-To 头被忽略（#5586）——「48h influx」的具体形状。r/SaaS 同主题痛点帖（“We got tired of juggling Notion, Slack, tasks”）也印证了问题普遍性。',p:['devtools.fm #175 播客（7-30）','LinkedIn 70+ 回应（创始人帖）','SourceForge / Slashdot 收录','GitHub：GitLab 支持/MCP 认证/self-hosting 需求','r/SaaS 痛点共鸣帖（同类产品零散生态）']},
+    t1:{t:'SolidJS <em>前端框架</em>',d:'前端用 SolidJS（不是 React）——细粒度响应式，性能对标原生。apps/web 覆盖浏览器、Tauri 桌面、iOS（App Store 已上架，Android 即将）。',p:['SolidJS 细粒度响应式','浏览器 / Tauri 桌面 / iOS','React 之外的性能派选择','App Store：Macro App 已上架']},
+    t2:{t:'Rust ×167 <em>后端主力</em>',d:'167 个 Rust 库承载领域逻辑、模型、数据库客户端；42 个可部署服务/worker/Lambda。Rust 的选择理由：速度 + 可靠性（README 原话「Built in SolidJS and Rust for speed and reliability」）。',p:['167 crates 领域逻辑','42 services + Lambda','“speed and reliability”','六边形架构']},
+    t3:{t:'CRDT (Loro) <em>实时协作</em>',d:'Docs 用 CRDT（Loro）实时协作 + Cloudflare Durable Objects——编辑像在同一台电脑上，~ 即时同步而非 Google Docs 的 ka-chunk。支持离线编辑与对账、历史与 fork、Agent 作为 CRDT 协作系统的对等体编辑文档。',p:['Loro CRDT + Durable Objects','~ 即时同步（对比 GDocs ka-chunk）','离线编辑 + 对账','Agent 作为对等体编辑','冲突由 CRDT 原生处理']},
+    t4:{t:'MCP <em>Agent 接口</em>',d:'claude mcp add --transport http macro https://mcp-server.macro.com/mcp——Claude Code、Codex 或任何 MCP 客户端可操作整个工作区：创建任务、发邮件、更新 CRM。MCP 工具面覆盖 Macro UI 近 100% 能力，且无速率限制。',p:['一行接入 Claude Code / Codex','工具面 ~100% UI 覆盖','无 MCP 速率限制','Agent recipes 文档','外部模型（OpenAI/Google/Anthropic）可读团队记忆']},
+    t5:{t:'Pulumi + Durable Objects <em>基础设施</em>',d:'infra/ 用 Pulumi 定义（基础设施即代码）；协作层跑在 Cloudflare Durable Objects 上（CRDT 状态管理）。docker/ 提供本地 Compose 栈，nix/ 固定开发环境。',p:['Pulumi IaC','Cloudflare Durable Objects','docker-compose 本地栈','nix 固定 dev shell','REST → local-first（WASM GQL cache 升级中）']},
+    t6:{t:'AGPLv3 <em>完全开源</em>',d:'「Fully open source — not \"open core\"」——GNU AGPL v3.0。可自托管（FAQ 详解），可商用（联系 licensing@），托管/商业安排走 self-host@。对比：Slack/Notion/Linear/HubSpot 全是封闭 SaaS。',p:['AGPLv3 · 非 open core','docker-compose / nix 自托管','商用许可单独洽谈','“不是 open core”是官方原话','自托管欢迎度：self-host@macro.com']},
+    stamp:{t:'🧩 <em>Macro 的故事</em>',d:'创始人 Jacob Beckerman（CEO，纽约）：「We built Macro because we wanted a single operating system for our startup.」上一家公司 scaling 到 ~20 人时崩了：每个团队各用各的工具，公司靠 MCP 和 Zapier 勉强粘合——「The company was not computable. It was chaotic.」团队在纽约和多伦多设计、~15 人 dogfood 两年，然后 2025-11-08 开源，2026-08-10 发布 1.0。a16z 投资；官方账号 @macrodotcom（1,186 followers）bio：「The open source workspace. Mail, chat, calls, docs, tasks, code and CRM, linked together.」',p:['Jacob Beckerman · CEO · 前 AI researcher','“The company was not computable. It was chaotic.”','纽约 + 多伦多 · ~15 人自用两年','2025-11-08 开源 → 2026-08-10 1.0','a16z 投资 · NYC 招聘中']}
+  };
+
+  /* 弹窗系统 */
+  var overlay=$('#overlay'),sheet=$('#sheet');
+  function openSheet(key){
+    var d=DATA[key];if(!d)return;
+    $('#sTitle').innerHTML=d.t;
+    var body='<p>'+d.d+'</p>';
+    if(d.p&&d.p.length){body+='<ul>';d.p.forEach(function(x){body+='<li>'+x+'</li>'});body+='</ul>';}
+    $('#sBody').innerHTML=body;
+    sheet.classList.add('show');overlay.classList.add('show');
+  }
+  function closeSheet(){sheet.classList.remove('show');overlay.classList.remove('show')}
+  $('#sClose').addEventListener('click',closeSheet);
+  overlay.addEventListener('click',closeSheet);
+  document.querySelectorAll('[data-k]').forEach(function(el){
+    el.addEventListener('click',function(){openSheet(el.getAttribute('data-k'))});
+  });
+  $('#termShow').addEventListener('click',function(){openSheet('stamp')});
+  $('#stamp').addEventListener('click',function(){openSheet('stamp')});
+
+  /* toast */
+  var toastTimer;
+  function showToast(msg){
+    var t=$('#toast');t.textContent=msg;t.classList.add('show');
+    clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.classList.remove('show')},2200);
+  }
+
+  /* 分享 */
+  var SHARE_TEXT='开源团队工作系统 Macro：邮件+聊天+文档+任务+CRM+Agent 合一，@双向链接全打通，167 个 Rust 库，a16z 投资，AGPLv3 完全开源\nhttps://mindresonance.online/youngsinsight/pages/macro.html\n\n你可以用任何AI工具订阅我的博客文章：https://mindresonance.online/youngsinsight/subscribe.html';
+  $('#shareBtn').addEventListener('click',function(){
+    if(navigator.share){navigator.share({title:'Macro · 一套工具，一个团队',text:SHARE_TEXT}).catch(function(){})}
+    else{
+      var ta=document.createElement('textarea');ta.value=SHARE_TEXT;document.body.appendChild(ta);ta.select();
+      try{document.execCommand('copy');showToast('已复制：介绍 + 链接 + 订阅推荐')}catch(e){}
+      document.body.removeChild(ta);
+    }
+  });
+
+  /* 彩蛋：stamp 连点 5 次 → 模块重排 + 全速链接 */
+  var stampCount=0;
+  $('#stamp').addEventListener('click',function(){
+    stampCount++;
+    if(stampCount>=5){
+      stampCount=0;
+      var blks=document.querySelectorAll('#sp3d .blk');
+      blks.forEach(function(b){b.style.animationDuration='0.5s'});
+      var core=$('#sp3d .core');
+      core.style.animation='corePulse 0.5s ease-in-out 4';
+      showToast('🧩 双向图全速链接：Everything @linked');
+      if(navigator.vibrate)navigator.vibrate([20,40,20]);
+      setTimeout(function(){blks.forEach(function(b){b.style.animationDuration=''})},3000);
+    }
+  });
+
+  /* 3D 视差 tilt */
+  var stage=$('#stage');
+  var tiltEls=document.querySelectorAll('.tilt-deep');
+  var last=0;
+  function applyTilt(x,y){
+    var r=stage.getBoundingClientRect();
+    var dx=(x-r.left)/r.width-0.5,dy=(y-r.top)/r.height-0.5;
+    tiltEls.forEach(function(el){
+      el.style.transform='rotateX('+(-dy*10)+'deg) rotateY('+(dx*12)+'deg)';
+    });
+  }
+  stage.addEventListener('touchmove',function(e){
+    var t=e.touches[0],now=performance.now();
+    if(now-last<16)return;last=now;
+    applyTilt(t.clientX,t.clientY);
+  },{passive:true});
+  stage.addEventListener('mousemove',function(e){
+    var now=performance.now();
+    if(now-last<16)return;last=now;
+    applyTilt(e.clientX,e.clientY);
+  });
+  stage.addEventListener('mouseleave',function(){
+    tiltEls.forEach(function(el){el.style.transform=''});
+  });
+
+  /* 外链 */
+  $('#ghBtn').href='https://github.com/macro-inc/macro';
+  $('#siteBtn').href='https://macro.com';
+})();
+</script>
+</body>
+</html>

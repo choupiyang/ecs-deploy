@@ -1,0 +1,513 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="450" height="800" viewBox="0 0 450 800">
+  <!-- ===== 背景：深色 + NVIDIA绿光晕 ===== -->
+  <rect width="450" height="800" fill="#060B08"/>
+  
+  <defs>
+    <!-- NVIDIA绿光晕 -->
+    <radialGradient id="glow1" cx="50%" cy="5%" r="70%">
+      <stop offset="0%" stop-color="#76B900" stop-opacity="0.18"/>
+      <stop offset="50%" stop-color="#76B900" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="#76B900" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="20%" cy="60%" r="50%">
+      <stop offset="0%" stop-color="#76B900" stop-opacity="0.06"/>
+      <stop offset="60%" stop-color="#76B900" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow3" cx="80%" cy="90%" r="40%">
+      <stop offset="0%" stop-color="#4A7A00" stop-opacity="0.08"/>
+      <stop offset="60%" stop-color="#4A7A00" stop-opacity="0"/>
+    </radialGradient>
+    
+    <!-- 监控画面网格纹理 -->
+    <pattern id="cctvGrid" width="60" height="45" patternUnits="userSpaceOnUse">
+      <rect width="60" height="45" fill="none" stroke="#76B900" stroke-opacity="0.04" stroke-width="0.5"/>
+      <!-- 扫描线效果 -->
+      <line x1="0" y1="22" x2="60" y2="22" stroke="#76B900" stroke-opacity="0.02" stroke-width="0.3"/>
+    </pattern>
+    
+    <!-- 视频帧小方块纹理 -->
+    <pattern id="frameGrid" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect width="7" height="7" fill="none" stroke="#76B900" stroke-opacity="0.025" stroke-width="0.3" rx="0.5"/>
+    </pattern>
+    
+    <!-- 管道流动渐变 -->
+    <linearGradient id="pipeFlow1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#76B900" stop-opacity="0"/>
+      <stop offset="30%" stop-color="#76B900" stop-opacity="0.8"/>
+      <stop offset="70%" stop-color="#76B900" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#76B900" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="pipeFlow2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#22C55E" stop-opacity="0"/>
+      <stop offset="30%" stop-color="#22C55E" stop-opacity="0.6"/>
+      <stop offset="70%" stop-color="#22C55E" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#22C55E" stop-opacity="0"/>
+    </linearGradient>
+    
+    <!-- GPU芯片发光 -->
+    <filter id="chipGlow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Banner渐变 -->
+    <linearGradient id="bannerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#76B900" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#4A7A00" stop-opacity="0.06"/>
+    </linearGradient>
+    
+    <!-- FPS数字闪烁 -->
+    <linearGradient id="fpsGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#76B900"/>
+      <stop offset="100%" stop-color="#4A7A00"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- 光晕层 -->
+  <rect width="450" height="800" fill="url(#glow1)"/>
+  <rect width="450" height="800" fill="url(#glow2)"/>
+  <rect width="450" height="800" fill="url(#glow3)"/>
+  
+  <!-- 监控画面网格 -->
+  <rect width="450" height="800" fill="url(#cctvGrid)"/>
+  <rect width="450" height="800" fill="url(#frameGrid)"/>
+  
+  <!-- 扫描线动画（CRT效果） -->
+  <rect x="0" y="0" width="450" height="4" fill="#76B900" opacity="0.03" rx="0">
+    <animate attributeName="y" from="-4" to="800" dur="4s" repeatCount="indefinite"/>
+  </rect>
+  
+  <!-- ===== 顶部：GPU芯片印章 ===== -->
+  <g transform="translate(35, 60)">
+    <!-- 外圈虚线框 -->
+    <rect x="-8" y="-8" width="76" height="76" rx="20" fill="none" stroke="#76B900" stroke-opacity="0.25" stroke-width="1.2" stroke-dasharray="5,3">
+      <animateTransform attributeName="transform" type="rotate" from="0 30 30" to="360 30 30" dur="30s" repeatCount="indefinite"/>
+    </rect>
+    <!-- 芯片主体 -->
+    <rect x="0" y="0" width="60" height="60" rx="14" fill="rgba(118, 185, 0, 0.06)" stroke="#76B900" stroke-width="2"/>
+    <!-- GPU芯片图标 -->
+    <g transform="translate(12, 12)" filter="url(#chipGlow)">
+      <!-- 芯片核心 -->
+      <rect x="6" y="6" width="24" height="24" rx="4" fill="none" stroke="#76B900" stroke-width="1.8"/>
+      <rect x="10" y="10" width="16" height="16" rx="2" fill="#76B900" fill-opacity="0.15" stroke="#76B900" stroke-width="0.8"/>
+      <!-- 芯片引脚 - 上 -->
+      <line x1="12" y1="6" x2="12" y2="0" stroke="#76B900" stroke-width="1.2"/>
+      <line x1="18" y1="6" x2="18" y2="0" stroke="#76B900" stroke-width="1.2"/>
+      <line x1="24" y1="6" x2="24" y2="0" stroke="#76B900" stroke-width="1.2"/>
+      <!-- 芯片引脚 - 下 -->
+      <line x1="12" y1="30" x2="12" y2="36" stroke="#76B900" stroke-width="1.2"/>
+      <line x1="18" y1="30" x2="18" y2="36" stroke="#76B900" stroke-width="1.2"/>
+      <line x1="24" y1="30" x2="24" y2="36" stroke="#76B900" stroke-width="1.2"/>
+      <!-- 芯片引脚 - 左 -->
+      <line x1="6" y1="12" x2="0" y2="12" stroke="#76B900" stroke-width="1.2"/>
+      <line x1="6" y1="18" x2="0" y2="18" stroke="#76B900" stroke-width="1.2"/>
+      <line x1="6" y1="24" x2="0" y2="24" stroke="#76B900" stroke-width="1.2"/>
+      <!-- 芯片引脚 - 右 -->
+      <line x1="30" y1="12" x2="36" y2="12" stroke="#76B900" stroke-width="1.2"/>
+      <line x1="30" y1="18" x2="36" y2="18" stroke="#76B900" stroke-width="1.2"/>
+      <line x1="30" y1="24" x2="36" y2="24" stroke="#76B900" stroke-width="1.2"/>
+      <!-- 核心内GPU标记 -->
+      <text x="18" y="22" font-family="monospace" font-size="6" fill="#76B900" text-anchor="middle" font-weight="bold">GPU</text>
+    </g>
+  </g>
+  
+  <!-- ===== 标题区 ===== -->
+  <text x="110" y="100" font-family="Georgia, serif" font-size="48" font-weight="500" fill="#F0F0F0" letter-spacing="1.5">DeepStream</text>
+  <text x="110" y="140" font-family="monospace" font-size="42" font-weight="700" fill="#76B900" letter-spacing="3">9.1</text>
+  
+  <!-- 副标题 -->
+  <text x="110" y="162" font-family="Noto Serif SC, Georgia, serif" font-size="13" fill="#6B6B7B" letter-spacing="0.5">NVIDIA 视频 AI 分析开源工具包</text>
+  
+  <!-- 标签 -->
+  <rect x="310" y="150" width="80" height="16" rx="3" fill="none" stroke="#22C55E" stroke-width="1"/>
+  <text x="350" y="162" font-family="monospace" font-size="7" fill="#22C55E" text-anchor="middle" letter-spacing="1.5">OPEN SOURCE</text>
+  
+  <!-- Tagline -->
+  <rect x="35" y="185" width="24" height="1.5" fill="#76B900"/>
+  <text x="65" y="190" font-family="Noto Serif SC, serif" font-size="12" fill="#F0F0F0" letter-spacing="1">端到端视频流AI推理框架</text>
+  
+  <!-- ===== FPS 实时计数器 ===== -->
+  <g transform="translate(35, 215)">
+    <rect x="0" y="0" width="379" height="32" rx="6" fill="rgba(10, 20, 12, 0.6)" stroke="#76B900" stroke-opacity="0.15" stroke-width="0.8"/>
+    <!-- FPS指示灯 -->
+    <circle cx="16" cy="16" r="4" fill="#76B900" opacity="0.8">
+      <animate attributeName="opacity" values="0.8;0.3;0.8" dur="0.8s" repeatCount="indefinite"/>
+    </circle>
+    <text x="28" y="20" font-family="monospace" font-size="9" fill="#76B900" letter-spacing="1">LIVE</text>
+    <!-- FPS数字 -->
+    <text x="80" y="21" font-family="monospace" font-size="16" font-weight="700" fill="url(#fpsGrad)">
+      1258
+      <animate attributeName="opacity" values="1;0.7;1" dur="0.5s" repeatCount="indefinite"/>
+    </text>
+    <text x="125" y="21" font-family="monospace" font-size="9" fill="#6B6B7B" letter-spacing="1">FPS</text>
+    <!-- 分隔 -->
+    <line x1="155" y1="6" x2="155" y2="26" stroke="#76B900" stroke-opacity="0.15" stroke-width="0.5"/>
+    <!-- 流数 -->
+    <text x="170" y="21" font-family="monospace" font-size="16" font-weight="700" fill="#F0F0F0">32</text>
+    <text x="195" y="21" font-family="monospace" font-size="9" fill="#6B6B7B" letter-spacing="1">STREAMS</text>
+    <!-- 分隔 -->
+    <line x1="255" y1="6" x2="255" y2="26" stroke="#76B900" stroke-opacity="0.15" stroke-width="0.5"/>
+    <!-- 延迟 -->
+    <text x="270" y="21" font-family="monospace" font-size="16" font-weight="700" fill="#22C55E">8.2</text>
+    <text x="298" y="21" font-family="monospace" font-size="9" fill="#6B6B7B" letter-spacing="1">ms LATENCY</text>
+  </g>
+  
+  <!-- ===== 主视觉：视频管道流动图 ===== -->
+  <g transform="translate(35, 270)">
+    <!-- 管道背景面板 -->
+    <rect x="0" y="0" width="379" height="220" rx="10" fill="rgba(8, 16, 10, 0.5)" stroke="#76B900" stroke-opacity="0.1" stroke-width="0.8"/>
+    
+    <!-- 面板标题 -->
+    <text x="12" y="16" font-family="monospace" font-size="7" fill="#76B900" letter-spacing="2" opacity="0.6">PIPELINE FLOW</text>
+    <line x1="95" y1="12" x2="367" y2="12" stroke="#76B900" stroke-opacity="0.08" stroke-width="0.5"/>
+    
+    <!-- === 多路视频输入（左侧） === -->
+    <g transform="translate(12, 28)">
+      <!-- 视频流1 -->
+      <rect x="0" y="0" width="42" height="28" rx="3" fill="rgba(118, 185, 0, 0.06)" stroke="#76B900" stroke-width="0.8" stroke-opacity="0.4"/>
+      <!-- 小视频帧方块 -->
+      <rect x="3" y="3" width="5" height="5" fill="#76B900" opacity="0.3">
+        <animate attributeName="opacity" values="0.3;0.7;0.3" dur="0.4s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="10" y="3" width="5" height="5" fill="#76B900" opacity="0.2">
+        <animate attributeName="opacity" values="0.2;0.6;0.2" dur="0.4s" begin="0.1s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="17" y="3" width="5" height="5" fill="#76B900" opacity="0.3">
+        <animate attributeName="opacity" values="0.3;0.7;0.3" dur="0.4s" begin="0.2s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="24" y="3" width="5" height="5" fill="#76B900" opacity="0.2">
+        <animate attributeName="opacity" values="0.2;0.6;0.2" dur="0.4s" begin="0.3s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="31" y="3" width="5" height="5" fill="#76B900" opacity="0.3">
+        <animate attributeName="opacity" values="0.3;0.7;0.3" dur="0.4s" begin="0.15s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="3" y="10" width="5" height="5" fill="#76B900" opacity="0.2"/>
+      <rect x="10" y="10" width="5" height="5" fill="#76B900" opacity="0.3"/>
+      <rect x="17" y="10" width="5" height="5" fill="#76B900" opacity="0.2"/>
+      <rect x="24" y="10" width="5" height="5" fill="#76B900" opacity="0.3"/>
+      <rect x="31" y="10" width="5" height="5" fill="#76B900" opacity="0.2"/>
+      <rect x="3" y="17" width="5" height="5" fill="#76B900" opacity="0.3"/>
+      <rect x="10" y="17" width="5" height="5" fill="#76B900" opacity="0.2"/>
+      <rect x="17" y="17" width="5" height="5" fill="#76B900" opacity="0.3"/>
+      <rect x="24" y="17" width="5" height="5" fill="#76B900" opacity="0.2"/>
+      <rect x="31" y="17" width="5" height="5" fill="#76B900" opacity="0.3"/>
+      <text x="21" y="27" font-family="monospace" font-size="4" fill="#6B6B7B" text-anchor="middle">CAM 01</text>
+      
+      <!-- 视频流2 -->
+      <rect x="0" y="34" width="42" height="28" rx="3" fill="rgba(118, 185, 0, 0.06)" stroke="#76B900" stroke-width="0.8" stroke-opacity="0.4"/>
+      <rect x="3" y="37" width="5" height="5" fill="#76B900" opacity="0.25">
+        <animate attributeName="opacity" values="0.25;0.65;0.25" dur="0.35s" begin="0.05s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="10" y="37" width="5" height="5" fill="#76B900" opacity="0.2"/>
+      <rect x="17" y="37" width="5" height="5" fill="#76B900" opacity="0.25"/>
+      <rect x="24" y="37" width="5" height="5" fill="#76B900" opacity="0.2"/>
+      <rect x="31" y="37" width="5" height="5" fill="#76B900" opacity="0.25"/>
+      <rect x="3" y="44" width="5" height="5" fill="#76B900" opacity="0.2"/>
+      <rect x="10" y="44" width="5" height="5" fill="#76B900" opacity="0.25"/>
+      <rect x="17" y="44" width="5" height="5" fill="#76B900" opacity="0.2"/>
+      <rect x="24" y="44" width="5" height="5" fill="#76B900" opacity="0.25"/>
+      <rect x="31" y="44" width="5" height="5" fill="#76B900" opacity="0.2"/>
+      <rect x="3" y="51" width="5" height="5" fill="#76B900" opacity="0.25"/>
+      <rect x="10" y="51" width="5" height="5" fill="#76B900" opacity="0.2"/>
+      <rect x="17" y="51" width="5" height="5" fill="#76B900" opacity="0.25"/>
+      <rect x="24" y="51" width="5" height="5" fill="#76B900" opacity="0.2"/>
+      <rect x="31" y="51" width="5" height="5" fill="#76B900" opacity="0.25"/>
+      <text x="21" y="61" font-family="monospace" font-size="4" fill="#6B6B7B" text-anchor="middle">CAM 02</text>
+      
+      <!-- 视频流3 -->
+      <rect x="0" y="68" width="42" height="28" rx="3" fill="rgba(118, 185, 0, 0.06)" stroke="#76B900" stroke-width="0.8" stroke-opacity="0.4"/>
+      <rect x="3" y="71" width="5" height="5" fill="#76B900" opacity="0.2"/>
+      <rect x="10" y="71" width="5" height="5" fill="#76B900" opacity="0.3"/>
+      <rect x="17" y="71" width="5" height="5" fill="#76B900" opacity="0.2"/>
+      <rect x="24" y="71" width="5" height="5" fill="#76B900" opacity="0.3"/>
+      <rect x="31" y="71" width="5" height="5" fill="#76B900" opacity="0.2"/>
+      <rect x="3" y="78" width="5" height="5" fill="#76B900" opacity="0.3"/>
+      <rect x="10" y="78" width="5" height="5" fill="#76B900" opacity="0.2"/>
+      <rect x="17" y="78" width="5" height="5" fill="#76B900" opacity="0.3"/>
+      <rect x="24" y="78" width="5" height="5" fill="#76B900" opacity="0.2"/>
+      <rect x="31" y="78" width="5" height="5" fill="#76B900" opacity="0.3"/>
+      <rect x="3" y="85" width="5" height="5" fill="#76B900" opacity="0.2"/>
+      <rect x="10" y="85" width="5" height="5" fill="#76B900" opacity="0.3"/>
+      <rect x="17" y="85" width="5" height="5" fill="#76B900" opacity="0.2"/>
+      <rect x="24" y="85" width="5" height="5" fill="#76B900" opacity="0.3"/>
+      <rect x="31" y="85" width="5" height="5" fill="#76B900" opacity="0.2"/>
+      <text x="21" y="95" font-family="monospace" font-size="4" fill="#6B6B7B" text-anchor="middle">CAM 03</text>
+      
+      <!-- 更多流指示 -->
+      <rect x="0" y="102" width="42" height="14" rx="2" fill="rgba(118, 185, 0, 0.03)" stroke="#76B900" stroke-width="0.5" stroke-opacity="0.2" stroke-dasharray="2,2"/>
+      <text x="21" y="112" font-family="monospace" font-size="5" fill="#6B6B7B" text-anchor="middle">+29 MORE</text>
+    </g>
+    
+    <!-- === 流动帧方块（输入→解码） === -->
+    <g transform="translate(58, 55)">
+      <!-- 流动帧1 -->
+      <rect x="0" y="0" width="6" height="6" fill="#76B900" opacity="0.6" rx="1">
+        <animate attributeName="x" from="0" to="30" dur="1.2s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.6;0.2;0.6" dur="1.2s" repeatCount="indefinite"/>
+      </rect>
+      <!-- 流动帧2 -->
+      <rect x="5" y="10" width="6" height="6" fill="#76B900" opacity="0.5" rx="1">
+        <animate attributeName="x" from="0" to="30" dur="1.2s" begin="0.3s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.5;0.15;0.5" dur="1.2s" begin="0.3s" repeatCount="indefinite"/>
+      </rect>
+      <!-- 流动帧3 -->
+      <rect x="10" y="20" width="6" height="6" fill="#76B900" opacity="0.4" rx="1">
+        <animate attributeName="x" from="0" to="30" dur="1.2s" begin="0.6s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.4;0.1;0.4" dur="1.2s" begin="0.6s" repeatCount="indefinite"/>
+      </rect>
+      <!-- 流动帧4 -->
+      <rect x="3" y="30" width="6" height="6" fill="#76B900" opacity="0.5" rx="1">
+        <animate attributeName="x" from="0" to="30" dur="1.2s" begin="0.9s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.5;0.15;0.5" dur="1.2s" begin="0.9s" repeatCount="indefinite"/>
+      </rect>
+    </g>
+    
+    <!-- === 解码节点 === -->
+    <g transform="translate(92, 40)">
+      <rect x="0" y="0" width="56" height="80" rx="6" fill="rgba(118, 185, 0, 0.1)" stroke="#76B900" stroke-width="1.2"/>
+      <!-- NVDEC芯片图标 -->
+      <rect x="14" y="8" width="28" height="20" rx="3" fill="rgba(118, 185, 0, 0.15)" stroke="#76B900" stroke-width="0.8"/>
+      <text x="28" y="22" font-family="monospace" font-size="6" fill="#76B900" text-anchor="middle" font-weight="bold">NVDEC</text>
+      <!-- 引脚装饰 -->
+      <line x1="10" y1="14" x2="14" y2="14" stroke="#76B900" stroke-width="0.6" opacity="0.5"/>
+      <line x1="10" y1="20" x2="14" y2="20" stroke="#76B900" stroke-width="0.6" opacity="0.5"/>
+      <line x1="42" y1="14" x2="46" y2="14" stroke="#76B900" stroke-width="0.6" opacity="0.5"/>
+      <line x1="42" y1="20" x2="46" y2="20" stroke="#76B900" stroke-width="0.6" opacity="0.5"/>
+      <text x="28" y="42" font-family="monospace" font-size="7" fill="#76B900" text-anchor="middle">DECODE</text>
+      <text x="28" y="54" font-family="monospace" font-size="5" fill="#6B6B7B" text-anchor="middle">H.264/H.265</text>
+      <text x="28" y="64" font-family="monospace" font-size="5" fill="#6B6B7B" text-anchor="middle">VP9/AV1</text>
+      <!-- 活动指示 -->
+      <circle cx="48" cy="6" r="2.5" fill="#76B900" opacity="0.6">
+        <animate attributeName="opacity" values="0.6;0.2;0.6" dur="0.6s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+    
+    <!-- === 流动帧方块（解码→推理） === -->
+    <g transform="translate(152, 55)">
+      <rect x="0" y="0" width="6" height="6" fill="#76B900" opacity="0.6" rx="1">
+        <animate attributeName="x" from="0" to="30" dur="0.8s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.6;0.2;0.6" dur="0.8s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="5" y="10" width="6" height="6" fill="#76B900" opacity="0.5" rx="1">
+        <animate attributeName="x" from="0" to="30" dur="0.8s" begin="0.2s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.5;0.15;0.5" dur="0.8s" begin="0.2s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="10" y="20" width="6" height="6" fill="#76B900" opacity="0.4" rx="1">
+        <animate attributeName="x" from="0" to="30" dur="0.8s" begin="0.4s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.4;0.1;0.4" dur="0.8s" begin="0.4s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="3" y="30" width="6" height="6" fill="#76B900" opacity="0.5" rx="1">
+        <animate attributeName="x" from="0" to="30" dur="0.8s" begin="0.6s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.5;0.15;0.5" dur="0.8s" begin="0.6s" repeatCount="indefinite"/>
+      </rect>
+    </g>
+    
+    <!-- === 推理节点（核心，最大） === -->
+    <g transform="translate(186, 28)">
+      <rect x="0" y="0" width="80" height="105" rx="8" fill="rgba(118, 185, 0, 0.14)" stroke="#76B900" stroke-width="1.5"/>
+      <!-- GPU核心图标 -->
+      <rect x="20" y="8" width="40" height="30" rx="4" fill="rgba(118, 185, 0, 0.2)" stroke="#76B900" stroke-width="1"/>
+      <!-- 芯片内部 -->
+      <rect x="26" y="14" width="28" height="18" rx="2" fill="#76B900" fill-opacity="0.1" stroke="#76B900" stroke-width="0.6"/>
+      <text x="40" y="26" font-family="monospace" font-size="7" fill="#76B900" text-anchor="middle" font-weight="bold">GPU</text>
+      <!-- 引脚 -->
+      <line x1="16" y1="16" x2="20" y2="16" stroke="#76B900" stroke-width="0.8" opacity="0.6"/>
+      <line x1="16" y1="24" x2="20" y2="24" stroke="#76B900" stroke-width="0.8" opacity="0.6"/>
+      <line x1="16" y1="32" x2="20" y2="32" stroke="#76B900" stroke-width="0.8" opacity="0.6"/>
+      <line x1="60" y1="16" x2="64" y2="16" stroke="#76B900" stroke-width="0.8" opacity="0.6"/>
+      <line x1="60" y1="24" x2="64" y2="24" stroke="#76B900" stroke-width="0.8" opacity="0.6"/>
+      <line x1="60" y1="32" x2="64" y2="32" stroke="#76B900" stroke-width="0.8" opacity="0.6"/>
+      
+      <text x="40" y="52" font-family="monospace" font-size="8" fill="#76B900" text-anchor="middle" font-weight="bold">INFERENCE</text>
+      <text x="40" y="64" font-family="monospace" font-size="5" fill="#6B6B7B" text-anchor="middle">TensorRT</text>
+      <text x="40" y="74" font-family="monospace" font-size="5" fill="#6B6B7B" text-anchor="middle">Triton IS</text>
+      <text x="40" y="84" font-family="monospace" font-size="5" fill="#6B6B7B" text-anchor="middle">Primary Det</text>
+      <text x="40" y="94" font-family="monospace" font-size="5" fill="#6B6B7B" text-anchor="middle">Secondary Cls</text>
+      <!-- 活动指示 -->
+      <circle cx="72" cy="6" r="3" fill="#76B900" opacity="0.7">
+        <animate attributeName="opacity" values="0.7;0.2;0.7" dur="0.4s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+    
+    <!-- === 流动帧方块（推理→输出） === -->
+    <g transform="translate(270, 55)">
+      <rect x="0" y="0" width="6" height="6" fill="#22C55E" opacity="0.6" rx="1">
+        <animate attributeName="x" from="0" to="28" dur="0.6s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.6;0.2;0.6" dur="0.6s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="5" y="10" width="6" height="6" fill="#22C55E" opacity="0.5" rx="1">
+        <animate attributeName="x" from="0" to="28" dur="0.6s" begin="0.15s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.5;0.15;0.5" dur="0.6s" begin="0.15s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="10" y="20" width="6" height="6" fill="#22C55E" opacity="0.4" rx="1">
+        <animate attributeName="x" from="0" to="28" dur="0.6s" begin="0.3s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.4;0.1;0.4" dur="0.6s" begin="0.3s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="3" y="30" width="6" height="6" fill="#22C55E" opacity="0.5" rx="1">
+        <animate attributeName="x" from="0" to="28" dur="0.6s" begin="0.45s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.5;0.15;0.5" dur="0.6s" begin="0.45s" repeatCount="indefinite"/>
+      </rect>
+    </g>
+    
+    <!-- === 输出节点 === -->
+    <g transform="translate(302, 40)">
+      <rect x="0" y="0" width="56" height="80" rx="6" fill="rgba(34, 197, 94, 0.08)" stroke="#22C55E" stroke-width="1" stroke-opacity="0.6"/>
+      <text x="28" y="18" font-family="monospace" font-size="7" fill="#22C55E" text-anchor="middle" font-weight="bold">OUTPUT</text>
+      <text x="28" y="32" font-family="monospace" font-size="5" fill="#6B6B7B" text-anchor="middle">OSD Sink</text>
+      <text x="28" y="42" font-family="monospace" font-size="5" fill="#6B6B7B" text-anchor="middle">File Save</text>
+      <text x="28" y="52" font-family="monospace" font-size="5" fill="#6B6B7B" text-anchor="middle">RTSP Out</text>
+      <text x="28" y="62" font-family="monospace" font-size="5" fill="#6B6B7B" text-anchor="middle">Msg Broker</text>
+      <!-- Tracker子节点 -->
+      <rect x="6" y="68" width="44" height="10" rx="2" fill="rgba(245, 158, 11, 0.06)" stroke="#F59E0B" stroke-width="0.5" stroke-opacity="0.4"/>
+      <text x="28" y="76" font-family="monospace" font-size="4.5" fill="#F59E0B" text-anchor="middle">NvTracker</text>
+    </g>
+    
+    <!-- === 管道连接线 === -->
+    <!-- 输入→解码 -->
+    <line x1="56" y1="80" x2="92" y2="80" stroke="#76B900" stroke-width="1" stroke-opacity="0.3" stroke-dasharray="3,2"/>
+    <!-- 解码→推理 -->
+    <line x1="148" y1="80" x2="186" y2="80" stroke="#76B900" stroke-width="1.2" stroke-opacity="0.4" stroke-dasharray="3,2"/>
+    <!-- 推理→输出 -->
+    <line x1="266" y1="80" x2="302" y2="80" stroke="#22C55E" stroke-width="1" stroke-opacity="0.3" stroke-dasharray="3,2"/>
+    
+    <!-- === 零拷贝标记 === -->
+    <g transform="translate(150, 140)">
+      <rect x="0" y="0" width="80" height="16" rx="3" fill="rgba(118, 185, 0, 0.06)" stroke="#76B900" stroke-width="0.5" stroke-opacity="0.3"/>
+      <text x="40" y="11" font-family="monospace" font-size="5.5" fill="#76B900" text-anchor="middle" letter-spacing="1">ZERO-COPY</text>
+      <!-- 连接线到管道 -->
+      <line x1="40" y1="0" x2="40" y2="-20" stroke="#76B900" stroke-width="0.5" stroke-opacity="0.2" stroke-dasharray="2,2"/>
+    </g>
+    
+    <!-- === 底部管道状态条 === -->
+    <g transform="translate(12, 170)">
+      <text x="0" y="8" font-family="monospace" font-size="5" fill="#6B6B7B" letter-spacing="1">PIPELINE STATUS</text>
+      <!-- 进度条 -->
+      <rect x="0" y="14" width="355" height="4" rx="2" fill="rgba(118, 185, 0, 0.08)"/>
+      <rect x="0" y="14" width="355" height="4" rx="2" fill="url(#pipeFlow1)">
+        <animate attributeName="width" values="0;355;355;0" dur="3s" repeatCount="indefinite"/>
+      </rect>
+      <!-- 状态标签 -->
+      <text x="0" y="28" font-family="monospace" font-size="5" fill="#76B900" opacity="0.6">SRC</text>
+      
+      
+      
+      
+    </g>
+    
+    <!-- === 角落监控标记 === -->
+    <g transform="translate(340, 4)">
+      <text font-family="monospace" font-size="5" fill="#76B900" opacity="0.4">REC</text>
+      <circle cx="28" cy="-2" r="2.5" fill="#76B900" opacity="0.6">
+        <animate attributeName="opacity" values="0.6;0.1;0.6" dur="1s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+  </g>
+  
+  <!-- ===== 核心功能 ===== -->
+  <g transform="translate(35, 510)">
+    <text x="0" y="0" font-family="monospace" font-size="7" fill="#6B6B7B" letter-spacing="2">CORE CAPABILITIES</text>
+    <line x1="105" y1="-4" x2="379" y2="-4" stroke="#76B900" stroke-opacity="0.06" stroke-width="0.5"/>
+    
+    <!-- 多路视频流 -->
+    <g transform="translate(0, 14)">
+      <rect x="0" y="0" width="379" height="38" rx="8" fill="rgba(10, 20, 12, 0.4)" stroke="#76B900" stroke-opacity="0.08"/>
+      <!-- 视频流图标 -->
+      <g transform="translate(12, 7)">
+        <rect x="0" y="0" width="24" height="24" rx="5" fill="rgba(118, 185, 0, 0.08)"/>
+        <!-- 多屏图标 -->
+        <rect x="4" y="3" width="8" height="6" rx="1" fill="none" stroke="#76B900" stroke-width="1"/>
+        <rect x="13" y="3" width="8" height="6" rx="1" fill="none" stroke="#76B900" stroke-width="1"/>
+        <rect x="4" y="11" width="8" height="6" rx="1" fill="none" stroke="#76B900" stroke-width="1"/>
+        <rect x="13" y="11" width="8" height="6" rx="1" fill="none" stroke="#76B900" stroke-width="1"/>
+      </g>
+      
+      
+      <text x="365" y="22" font-family="monospace" font-size="12" fill="#76B900" fill-opacity="0.4">▶</text>
+    </g>
+    
+    <!-- 零拷贝管道 -->
+    <g transform="translate(0, 58)">
+      <rect x="0" y="0" width="379" height="38" rx="8" fill="rgba(10, 20, 12, 0.4)" stroke="#76B900" stroke-opacity="0.08"/>
+      <g transform="translate(12, 7)">
+        <rect x="0" y="0" width="24" height="24" rx="5" fill="rgba(118, 185, 0, 0.08)"/>
+        <!-- 管道图标 -->
+        <line x1="4" y1="12" x2="20" y2="12" stroke="#76B900" stroke-width="2"/>
+        <circle cx="12" cy="12" r="3" fill="none" stroke="#76B900" stroke-width="1"/>
+        <line x1="4" y1="8" x2="4" y2="16" stroke="#76B900" stroke-width="1.5"/>
+        <line x1="20" y1="8" x2="20" y2="16" stroke="#76B900" stroke-width="1.5"/>
+      </g>
+      
+      
+      <text x="365" y="22" font-family="monospace" font-size="12" fill="#76B900" fill-opacity="0.4">▶</text>
+    </g>
+    
+    <!-- 多模型支持 -->
+    <g transform="translate(0, 102)">
+      <rect x="0" y="0" width="379" height="38" rx="8" fill="rgba(10, 20, 12, 0.4)" stroke="#76B900" stroke-opacity="0.08"/>
+      <g transform="translate(12, 7)">
+        <rect x="0" y="0" width="24" height="24" rx="5" fill="rgba(118, 185, 0, 0.08)"/>
+        <!-- 多模型图标 -->
+        <rect x="3" y="5" width="10" height="8" rx="1.5" fill="none" stroke="#76B900" stroke-width="1"/>
+        <rect x="11" y="9" width="10" height="8" rx="1.5" fill="none" stroke="#76B900" stroke-width="1"/>
+        <circle cx="8" cy="20" r="2" fill="#76B900" opacity="0.4"/>
+        <circle cx="16" cy="20" r="2" fill="#76B900" opacity="0.4"/>
+      </g>
+      
+      
+      <text x="365" y="22" font-family="monospace" font-size="12" fill="#76B900" fill-opacity="0.4">▶</text>
+    </g>
+    
+    <!-- 边缘部署 -->
+    <g transform="translate(0, 146)">
+      <rect x="0" y="0" width="379" height="38" rx="8" fill="rgba(10, 20, 12, 0.4)" stroke="#76B900" stroke-opacity="0.08"/>
+      <g transform="translate(12, 7)">
+        <rect x="0" y="0" width="24" height="24" rx="5" fill="rgba(118, 185, 0, 0.08)"/>
+        <!-- 边缘设备图标 -->
+        <rect x="5" y="4" width="14" height="10" rx="2" fill="none" stroke="#76B900" stroke-width="1"/>
+        <line x1="8" y1="14" x2="16" y2="14" stroke="#76B900" stroke-width="1"/>
+        <rect x="7" y="16" width="10" height="4" rx="1" fill="none" stroke="#76B900" stroke-width="0.8"/>
+        <!-- 信号波 -->
+        <path d="M4 6 A6 6 0 0 0 4 12" fill="none" stroke="#76B900" stroke-width="0.6" opacity="0.5"/>
+        <path d="M2 4 A9 9 0 0 0 2 14" fill="none" stroke="#76B900" stroke-width="0.6" opacity="0.3"/>
+      </g>
+      
+      
+      <text x="365" y="22" font-family="monospace" font-size="12" fill="#76B900" fill-opacity="0.4">▶</text>
+    </g>
+  </g>
+  
+  <!-- ===== Tech Stack ===== -->
+  <g transform="translate(35, 690)">
+    <text x="0" y="0" font-family="monospace" font-size="7" fill="#6B6B7B" letter-spacing="2">TECH STACK</text>
+    <g transform="translate(0, 10)">
+      <rect x="0" y="0" width="40" height="16" rx="8" fill="rgba(10, 20, 12, 0.5)" stroke="rgba(118, 185, 0, 0.3)"/>
+      <text x="20" y="11" font-family="monospace" font-size="7" fill="#8FD020" text-anchor="middle" letter-spacing="1">C++</text>
+      
+      <rect x="46" y="0" width="52" height="16" rx="8" fill="rgba(10, 20, 12, 0.5)" stroke="rgba(240, 240, 240, 0.08)"/>
+      
+      
+      <rect x="104" y="0" width="68" height="16" rx="8" fill="rgba(10, 20, 12, 0.5)" stroke="rgba(240, 240, 240, 0.08)"/>
+      
+      
+      <rect x="178" y="0" width="58" height="16" rx="8" fill="rgba(10, 20, 12, 0.5)" stroke="rgba(240, 240, 240, 0.08)"/>
+      
+      
+      <rect x="242" y="0" width="42" height="16" rx="8" fill="rgba(10, 20, 12, 0.5)" stroke="rgba(240, 240, 240, 0.08)"/>
+      
+    </g>
+  </g>
+  
+  <!-- ===== Banner ===== -->
+  <rect x="35" y="730" width="379" height="45" rx="10" fill="url(#bannerGrad)"/>
+  <rect x="35" y="730" width="379" height="45" rx="10" fill="none" stroke="#76B900" stroke-opacity="0.15"/>
+  
+  <rect x="325" y="743" width="72" height="18" rx="3" fill="none" stroke="#22C55E" stroke-width="1"/>
+  
+  
+  <!-- ===== 底部色条 ===== -->
+  <rect x="0" y="796" width="450" height="4" fill="#76B900"/>
+</svg>

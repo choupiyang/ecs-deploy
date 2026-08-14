@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="450" height="800" viewBox="0 0 450 800">
+  <!-- Background -->
+  <rect width="450" height="800" fill="#0A0A0F"/>
+  
+  <!-- Gradient overlay -->
+  <defs>
+    <radialGradient id="glow1" cx="75%" cy="8%" r="60%">
+      <stop offset="0%" stop-color="#FFB830" stop-opacity="0.15"/>
+      <stop offset="60%" stop-color="#FFB830" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="15%" cy="55%" r="50%">
+      <stop offset="0%" stop-color="#FFB830" stop-opacity="0.08"/>
+      <stop offset="60%" stop-color="#FFB830" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow3" cx="50%" cy="100%" r="70%">
+      <stop offset="0%" stop-color="#22C55E" stop-opacity="0.05"/>
+      <stop offset="60%" stop-color="#22C55E" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="introGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFB830"/>
+      <stop offset="100%" stop-color="#22C55E"/>
+    </linearGradient>
+    <linearGradient id="progressGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFB830"/>
+      <stop offset="100%" stop-color="#22C55E"/>
+    </linearGradient>
+  </defs>
+  
+  <rect width="450" height="800" fill="url(#glow1)"/>
+  <rect width="450" height="800" fill="url(#glow2)"/>
+  <rect width="450" height="800" fill="url(#glow3)"/>
+  
+  <!-- Grid texture -->
+  <g opacity="0.02">
+    <line x1="0" y1="100" x2="450" y2="100" stroke="#F0F0F0" stroke-width="0.5"/>
+    <line x1="0" y1="200" x2="450" y2="200" stroke="#F0F0F0" stroke-width="0.5"/>
+    <line x1="0" y1="300" x2="450" y2="300" stroke="#F0F0F0" stroke-width="0.5"/>
+    <line x1="0" y1="400" x2="450" y2="400" stroke="#F0F0F0" stroke-width="0.5"/>
+    <line x1="0" y1="500" x2="450" y2="500" stroke="#F0F0F0" stroke-width="0.5"/>
+    <line x1="0" y1="600" x2="450" y2="600" stroke="#F0F0F0" stroke-width="0.5"/>
+    <line x1="0" y1="700" x2="450" y2="700" stroke="#F0F0F0" stroke-width="0.5"/>
+    <line x1="100" y1="0" x2="100" y2="800" stroke="#F0F0F0" stroke-width="0.5"/>
+    <line x1="200" y1="0" x2="200" y2="800" stroke="#F0F0F0" stroke-width="0.5"/>
+    <line x1="300" y1="0" x2="300" y2="800" stroke="#F0F0F0" stroke-width="0.5"/>
+    <line x1="350" y1="0" x2="350" y2="800" stroke="#F0F0F0" stroke-width="0.5"/>
+  </g>
+  
+  <!-- Bee stamp -->
+  <g transform="translate(175, 70)">
+    <rect x="0" y="0" width="100" height="100" rx="20" fill="none" stroke="#FFB830" stroke-width="1.5"/>
+    <rect x="-8" y="-8" width="116" height="116" rx="24" fill="none" stroke="#FFB830" stroke-width="1" stroke-dasharray="6 3" opacity="0.4">
+      <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="20s" repeatCount="indefinite"/>
+    </rect>
+    <!-- Bee body -->
+    <ellipse cx="50" cy="58" rx="22" ry="28" fill="#FFB830" opacity="0.9"/>
+    <circle cx="50" cy="35" r="14" fill="#FFB830"/>
+    <!-- Stripes -->
+    <rect x="32" y="50" width="36" height="5" fill="#0A0A0F" rx="2"/>
+    <rect x="32" y="60" width="36" height="5" fill="#0A0A0F" rx="2"/>
+    <rect x="32" y="70" width="36" height="5" fill="#0A0A0F" rx="2"/>
+    <!-- Wings -->
+    <ellipse cx="28" cy="45" rx="14" ry="10" fill="none" stroke="#FFB830" stroke-width="1.5" opacity="0.5"/>
+    <ellipse cx="72" cy="45" rx="14" ry="10" fill="none" stroke="#FFB830" stroke-width="1.5" opacity="0.5"/>
+    <!-- Eyes -->
+    <circle cx="45" cy="33" r="2" fill="#0A0A0F"/>
+    <circle cx="55" cy="33" r="2" fill="#0A0A0F"/>
+  </g>
+  
+  <!-- Title -->
+  <text x="225" y="220" font-family="Georgia, serif" font-size="72" font-weight="500" fill="#F0F0F0" text-anchor="middle">Buzz</text>
+  <text x="305" y="220" font-family="Georgia, serif" font-size="72" font-weight="500" fill="#FFB830" text-anchor="middle">.</text>
+  
+  <!-- Subtitle -->
+  <text x="225" y="255" font-family="Georgia, serif" font-size="16" font-style="italic" fill="#6B6B7B" text-anchor="middle">by Block · Jack Dorsey</text>
+  
+  <!-- Version tag -->
+  <rect x="310" y="242" width="70" height="16" rx="3" fill="none" stroke="#22C55E" stroke-width="1"/>
+  <text x="345" y="253" font-family="monospace" font-size="7" fill="#22C55E" text-anchor="middle" letter-spacing="1">APACHE 2.0</text>
+  
+  <!-- Tagline -->
+  <g transform="translate(80, 285)">
+    <rect x="0" y="0" width="12" height="1" fill="#FFB830"/>
+    <text x="20" y="6" font-family="Noto Serif SC, serif" font-size="12" fill="#F0F0F0">Jack Dorsey 领衔打造的人机协作平台</text>
+  </g>
+  
+  <!-- Intro box -->
+  <g transform="translate(30, 320)">
+    <rect x="0" y="0" width="3" height="50" rx="1" fill="url(#introGrad)"/>
+    <text x="12" y="12" font-family="Noto Sans SC, sans-serif" font-size="10" fill="#B0B0B8">
+      <tspan x="12" dy="0">开源协作平台，让人类与 AI Agent</tspan>
+      <tspan x="12" dy="14">在同一频道协作。基于 Nostr 协议，</tspan>
+      <tspan x="12" dy="14">支持自托管、模型无关、端到端加密。</tspan>
+    </text>
+  </g>
+  
+  <!-- Stats header -->
+  <text x="30" y="400" font-family="monospace" font-size="8" fill="#6B6B7B" letter-spacing="2">METRICS</text>
+  <rect x="90" y="392" width="75" height="14" rx="3" fill="none" stroke="#22C55E" stroke-width="0.8"/>
+  <text x="127" y="402" font-family="monospace" font-size="6" fill="#22C55E" text-anchor="middle" letter-spacing="1">OPEN SOURCE</text>
+  
+  <!-- Stats -->
+  <g transform="translate(30, 420)">
+    <rect width="90" height="55" rx="6" fill="rgba(26,26,36,0.4)" stroke="rgba(240,240,240,0.08)"/>
+    <text x="45" y="26" font-family="monospace" font-size="22" font-weight="600" fill="#F0F0F0" text-anchor="middle"><tspan fill="#FFB830">3</tspan></text>
+    <text x="45" y="42" font-family="monospace" font-size="8" fill="#6B6B7B" text-anchor="middle">PLATFORMS</text>
+  </g>
+  <g transform="translate(130, 420)">
+    <rect width="90" height="55" rx="6" fill="rgba(26,26,36,0.4)" stroke="rgba(240,240,240,0.08)"/>
+    <text x="45" y="26" font-family="monospace" font-size="22" font-weight="600" fill="#F0F0F0" text-anchor="middle"><tspan fill="#FFB830">20</tspan>+</text>
+    
+  </g>
+  <g transform="translate(230, 420)">
+    <rect width="90" height="55" rx="6" fill="rgba(26,26,36,0.4)" stroke="rgba(240,240,240,0.08)"/>
+    <text x="45" y="26" font-family="monospace" font-size="22" font-weight="600" fill="#F0F0F0" text-anchor="middle"><tspan fill="#FFB830">3</tspan>+</text>
+    
+  </g>
+  <g transform="translate(330, 420)">
+    <rect width="90" height="55" rx="6" fill="rgba(26,26,36,0.4)" stroke="rgba(240,240,240,0.08)"/>
+    <text x="45" y="26" font-family="monospace" font-size="22" font-weight="600" fill="#22C55E" text-anchor="middle">A2</text>
+    
+  </g>
+  
+  <!-- Flow header -->
+  <text x="30" y="500" font-family="monospace" font-size="8" fill="#6B6B7B" letter-spacing="2">ARCHITECTURE FLOW</text>
+  <line x1="145" y1="496" x2="420" y2="496" stroke="rgba(240,240,240,0.06)" stroke-width="1"/>
+  
+  <!-- Flow diagram -->
+  <g transform="translate(30, 515)">
+    <rect x="0" y="0" width="390" height="50" rx="8" fill="rgba(26,26,36,0.25)" stroke="rgba(240,240,240,0.05)"/>
+    
+    <!-- Client node -->
+    <rect x="12" y="12" width="65" height="26" rx="5" fill="rgba(255,184,48,0.08)" stroke="#FFB830" stroke-width="1" stroke-opacity="0.4"/>
+    <text x="44" y="29" font-family="monospace" font-size="7" fill="#F0F0F0" text-anchor="middle">CLIENT</text>
+    
+    <!-- Arrow 1 -->
+    <path d="M80 25 L100 25" stroke="#FFB830" stroke-width="1.5" stroke-opacity="0.5"/>
+    <circle cx="90" cy="25" r="2" fill="#FFB830" opacity="0.6">
+      <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
+    </circle>
+    
+    <!-- Relay node -->
+    <rect x="102" y="8" width="80" height="34" rx="6" fill="rgba(255,184,48,0.12)" stroke="#FFB830" stroke-width="1.2"/>
+    
+    
+    
+    <!-- Arrow 2 -->
+    <path d="M185 25 L205 25" stroke="#22C55E" stroke-width="1.5" stroke-opacity="0.5"/>
+    <circle cx="195" cy="25" r="2" fill="#22C55E" opacity="0.6">
+      <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0.5s"/>
+    </circle>
+    
+    <!-- Agent node -->
+    <rect x="207" y="12" width="65" height="26" rx="5" fill="rgba(34,197,94,0.08)" stroke="#22C55E" stroke-width="1" stroke-opacity="0.4"/>
+    
+    
+    <!-- Arrow 3 -->
+    <path d="M275 25 L295 25" stroke="#FFB830" stroke-width="1.5" stroke-opacity="0.5"/>
+    <circle cx="285" cy="25" r="2" fill="#FFB830" opacity="0.6">
+      <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="1s"/>
+    </circle>
+    
+    <!-- Git node -->
+    <rect x="297" y="15" width="50" height="20" rx="4" fill="rgba(255,184,48,0.08)" stroke="#FFB830" stroke-width="0.8" stroke-opacity="0.4"/>
+    
+  </g>
+  
+  <!-- Features -->
+  <g transform="translate(30, 590)" font-family="Noto Sans SC, sans-serif">
+    <g>
+      <circle cx="8" cy="8" r="8" fill="rgba(255,184,48,0.06)"/>
+      <text x="24" y="6" font-size="10" font-weight="500" fill="#F0F0F0">人机同室协作</text>
+      
+    </g>
+    <g transform="translate(0, 32)">
+      <circle cx="8" cy="8" r="8" fill="rgba(255,184,48,0.06)"/>
+      <text x="24" y="6" font-size="10" font-weight="500" fill="#F0F0F0">Nostr 协议</text>
+      
+    </g>
+    <g transform="translate(0, 64)">
+      <circle cx="8" cy="8" r="8" fill="rgba(255,184,48,0.06)"/>
+      <text x="24" y="6" font-size="10" font-weight="500" fill="#F0F0F0">端到端加密</text>
+      
+    </g>
+    <g transform="translate(0, 96)">
+      <circle cx="8" cy="8" r="8" fill="rgba(255,184,48,0.06)"/>
+      <text x="24" y="6" font-size="10" font-weight="500" fill="#F0F0F0">多平台支持</text>
+      
+    </g>
+  </g>
+  
+  <!-- Tech pills -->
+  <g transform="translate(30, 715)" font-family="monospace" font-size="8">
+    <text x="0" y="0" fill="#6B6B7B" letter-spacing="2">TECH STACK</text>
+    <g transform="translate(0, 12)">
+      <rect x="0" y="0" width="38" height="18" rx="9" fill="rgba(26,26,36,0.5)" stroke="#FFB830" stroke-width="0.8"/>
+      <text x="19" y="12" fill="#FFD070" text-anchor="middle">Rust</text>
+      <rect x="43" y="0" width="35" height="18" rx="9" fill="rgba(26,26,36,0.5)" stroke="rgba(240,240,240,0.1)"/>
+      <text x="60" y="12" fill="#B0B0B8" text-anchor="middle">Tauri</text>
+      <rect x="83" y="0" width="35" height="18" rx="9" fill="rgba(26,26,36,0.5)" stroke="rgba(240,240,240,0.1)"/>
+      
+      <rect x="123" y="0" width="52" height="18" rx="9" fill="rgba(26,26,36,0.5)" stroke="rgba(240,240,240,0.1)"/>
+      
+      <rect x="180" y="0" width="35" height="18" rx="9" fill="rgba(26,26,36,0.5)" stroke="rgba(240,240,240,0.1)"/>
+      
+    </g>
+  </g>
+  
+  <!-- Bottom bar -->
+  <line x1="30" y1="760" x2="420" y2="760" stroke="rgba(240,240,240,0.06)"/>
+  <g transform="translate(30, 772)">
+    <text font-family="monospace" font-size="10" fill="#6B6B7B" letter-spacing="1">GITHUB →</text>
+  </g>
+  <g transform="translate(320, 765)">
+    <rect width="95" height="26" rx="6" fill="rgba(255,184,48,0.08)" stroke="rgba(255,184,48,0.25)"/>
+    
+  </g>
+  
+  <!-- Accent bar -->
+  <rect x="0" y="796" width="450" height="4" fill="#FFB830"/>
+</svg>

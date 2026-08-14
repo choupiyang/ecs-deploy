@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#F4F7F4">
+  <title>OpenWiki — Agent Wiki CLI by LangChain</title>
+  <link rel="preconnect" href="https://fonts.googleapis.cn">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.cn/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Noto+Serif+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #F4F7F4;
+      --bg-2: #E8EDE8;
+      --accent: #3D7A5F;
+      --accent-light: #5A9E7A;
+      --accent-pale: #C8DCC8;
+      --text: #2C3E2C;
+      --text-dark: #1A2B1A;
+      --muted: #7A8E7A;
+      --surface: #FFFFFF;
+      --surface-alt: #EDF2ED;
+      --border: #C2D4C2;
+      --border-light: #D8E4D8;
+      --ink: #2C3E2C;
+      --serif: 'Cormorant Garamond', serif;
+      --cn: 'Noto Serif SC', serif;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Noto Sans SC', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; background: #E0E8E0; font-family: 'Noto Sans SC', sans-serif; color: #2C3E2C; -webkit-font-smoothing: antialiased; }
+    body { display: flex; align-items: center; justify-content: center; }
+
+    /* 舞台 */
+    .stage {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      height: min(100vh, calc(100vw * 16 / 9));
+      width: min(100vw, calc(100vh * 9 / 16));
+      background: #F4F7F4;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(44, 62, 44, .12);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 16px 10px;
+    }
+
+    /* 背景树状分支纹理 */
+    .tree-bg {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: .35;
+    }
+
+    /* 顶部条 */
+    .topbar {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .16em;
+      color: #7A8E7A;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #C2D4C2;
+    }
+    .brand { display: flex; align-items: center; gap: 6px; color: #2C3E2C; }
+    .brand-icon {
+      width: 5px; height: 5px; background: #3D7A5F; border-radius: 1px;
+      transform: rotate(45deg);
+      animation: leafPulse 3s ease-in-out infinite;
+    }
+    @keyframes leafPulse { 0%, 100% { opacity: 1; transform: rotate(45deg) scale(1); } 50% { opacity: .5; transform: rotate(45deg) scale(.7); } }
+    .share-btn {
+      background: none;
+      border: 1px solid #C2D4C2;
+      padding: 4px 8px 3px;
+      font: inherit;
+      color: #2C3E2C;
+      cursor: pointer;
+      letter-spacing: .12em;
+      transition: all .3s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 7.5px;
+    }
+    .share-btn:active { background: #3D7A5F; color: #F4F7F4; border-color: #3D7A5F; }
+    .share-btn .arr { color: #3D7A5F; transition: transform .3s; }
+    .share-btn:active .arr { color: #F4F7F4; transform: translate(2px, -2px); }
+
+    /* Hero */
+    .hero { position: relative; z-index: 5; flex-shrink: 0; margin-top: 10px; }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #7A8E7A;
+      text-transform: uppercase;
+      padding-bottom: 6px;
+    }
+    .meta-row .vol { color: #3D7A5F; font-weight: 500; position: relative; }
+    .meta-row .vol::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; background: #3D7A5F; }
+
+    .title-block { position: relative; margin-top: 4px; display: flex; align-items: flex-start; gap: 6px; }
+
+    /* 书本印章 */
+    .book-stamp {
+      position: relative;
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+      margin-top: 2px;
+      border: 1.5px solid #3D7A5F;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform .4s cubic-bezier(.7, 0, .3, 1);
+      background: rgba(61, 122, 95, .06);
+    }
+    .book-stamp:active { transform: rotate(-8deg) scale(.92); }
+    .book-stamp::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border: 1px dashed rgba(61, 122, 95, .25);
+      border-radius: 6px;
+      animation: spin 25s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .book-stamp svg { width: 20px; height: 20px; stroke: #3D7A5F; fill: none; stroke-width: 1.5; }
+
+    .title-text { flex: 1; min-width: 0; }
+    .wiki-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 600;
+      font-size: 34px;
+      line-height: .95;
+      letter-spacing: .02em;
+      color: #1A2B1A;
+    }
+    .wiki-title .dot { color: #3D7A5F; }
+    .langchain-line {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-top: 1px;
+    }
+    .langchain {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 400;
+      font-style: italic;
+      font-size: 13px;
+      color: #7A8E7A;
+      letter-spacing: .04em;
+    }
+    .v-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      color: #3D7A5F;
+      border: 1px solid #3D7A5F;
+      padding: 1px 4px;
+      letter-spacing: .1em;
+    }
+
+    .tagline {
+      margin-top: 5px;
+      font-family: 'Noto Serif SC', serif;
+      font-weight: 300;
+      font-size: 10px;
+      color: #2C3E2C;
+      letter-spacing: .05em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tagline::before { content: ''; width: 12px; height: 1px; background: #3D7A5F; flex-shrink: 0; }
+    .tagline em { font-style: normal; color: #3D7A5F; font-weight: 500; }
+
+    /* 知识树主视觉 */
+    .knowledge-tree-section {
+      position: relative;
+      z-index: 5;
+      margin-top: 10px;
+      flex-shrink: 0;
+    }
+    .tree-header {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #7A8E7A;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tree-header::after { content: ''; flex: 1; height: 1px; background: #D8E4D8; }
+
+    .tree-container {
+      background: #FFFFFF;
+      border: 1px solid #D8E4D8;
+      border-radius: 8px;
+      padding: 10px 8px;
+      position: relative;
+      box-shadow: 0 2px 8px rgba(44, 62, 44, .04);
+    }
+    .tree-svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* 树节点交互 */
+    .tree-node { cursor: pointer; transition: transform .2s; }
+    .tree-node:active { transform: scale(.96); }
+    .tree-branch {
+      stroke-dasharray: 200;
+      stroke-dashoffset: 200;
+      animation: branchGrow .8s ease-out forwards;
+    }
+    .tree-branch-delay1 { animation-delay: .2s; }
+    .tree-branch-delay2 { animation-delay: .4s; }
+    .tree-branch-delay3 { animation-delay: .6s; }
+    @keyframes branchGrow {
+      to { stroke-dashoffset: 0; }
+    }
+    .tree-node-circle {
+      opacity: 0;
+      animation: nodeAppear .4s ease-out forwards;
+    }
+    .tree-node-delay1 { animation-delay: .3s; }
+    .tree-node-delay2 { animation-delay: .5s; }
+    .tree-node-delay3 { animation-delay: .7s; }
+    .tree-node-delay4 { animation-delay: .9s; }
+    @keyframes nodeAppear {
+      from { opacity: 0; transform: scale(0); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .tree-leaf {
+      opacity: 0;
+      animation: leafAppear .5s ease-out forwards;
+    }
+    .leaf-delay1 { animation-delay: 1s; }
+    .leaf-delay2 { animation-delay: 1.1s; }
+    .leaf-delay3 { animation-delay: 1.2s; }
+    .leaf-delay4 { animation-delay: 1.3s; }
+    .leaf-delay5 { animation-delay: 1.4s; }
+    .leaf-delay6 { animation-delay: 1.5s; }
+    @keyframes leafAppear {
+      from { opacity: 0; transform: scale(.5); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* 子节点展开区域 */
+    .tree-children {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height .4s cubic-bezier(.4, 0, .2, 1);
+    }
+    .tree-children.expanded {
+      max-height: 120px;
+    }
+    .tree-child-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 0 3px 28px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      color: #7A8E7A;
+      letter-spacing: .05em;
+      opacity: 0;
+      transform: translateY(-4px);
+      transition: all .3s;
+    }
+    .tree-children.expanded .tree-child-row {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .tree-child-row:nth-child(2) { transition-delay: .05s; }
+    .tree-child-row:nth-child(3) { transition-delay: .1s; }
+    .tree-child-row:nth-child(4) { transition-delay: .15s; }
+    .tree-child-dot {
+      width: 4px; height: 4px; border-radius: 50%; background: #C8DCC8; flex-shrink: 0;
+    }
+    .tree-child-dot.active { background: #3D7A5F; }
+    .tree-child-connector {
+      width: 8px; height: 1px; background: #D8E4D8; flex-shrink: 0;
+    }
+
+    /* Intro */
+    .intro { position: relative; z-index: 5; margin-top: 8px; flex-shrink: 0; }
+    .intro-inner {
+      display: flex;
+      gap: 8px;
+      padding: 8px 10px;
+      background: #FFFFFF;
+      border-radius: 6px;
+      border: 1px solid #D8E4D8;
+      box-shadow: 0 1px 4px rgba(44, 62, 44, .03);
+    }
+    .intro-line { width: 2px; background: linear-gradient(180deg, #3D7A5F, #5A9E7A); border-radius: 1px; flex-shrink: 0; }
+    .intro-text {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 9px;
+      line-height: 1.65;
+      color: #5A6E5A;
+      letter-spacing: .02em;
+    }
+    .intro-text strong { color: #1A2B1A; font-weight: 500; }
+
+    /* Features - 学术卡片风格 */
+    .features {
+      position: relative;
+      z-index: 5;
+      margin-top: 8px;
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+    }
+    .feature {
+      background: #FFFFFF;
+      border: 1px solid #D8E4D8;
+      border-radius: 6px;
+      padding: 8px 8px 6px;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      transition: all .25s;
+      position: relative;
+      box-shadow: 0 1px 3px rgba(44, 62, 44, .03);
+    }
+    .feature:active { background: #EDF2ED; border-color: #3D7A5F; box-shadow: 0 2px 8px rgba(61, 122, 95, .08); }
+    .feature-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+    .feature-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      background: rgba(61, 122, 95, .06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .feature-icon svg { width: 13px; height: 13px; stroke: #3D7A5F; fill: none; stroke-width: 1.5; }
+    .feature-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: #C8DCC8;
+      line-height: 1;
+    }
+    .feature-title {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 9.5px;
+      font-weight: 500;
+      color: #1A2B1A;
+      letter-spacing: .02em;
+    }
+    .feature-desc {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 7.5px;
+      color: #7A8E7A;
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+    .feature-progress {
+      width: 100%;
+      height: 1.5px;
+      background: #EDF2ED;
+      border-radius: 1px;
+      margin-top: auto;
+      overflow: hidden;
+    }
+    .feature-progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #3D7A5F, #5A9E7A);
+      border-radius: 1px;
+    }
+
+    /* Tech Stack - 学术标签 */
+    .tech-section {
+      position: relative;
+      z-index: 5;
+      margin-top: 8px;
+      flex-shrink: 0;
+    }
+    .tech-header {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #7A8E7A;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tech-header::after { content: ''; flex: 1; height: 1px; background: #D8E4D8; }
+    .tech-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .tech-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .08em;
+      padding: 3px 7px;
+      background: #FFFFFF;
+      border: 1px solid #D8E4D8;
+      border-radius: 2px;
+      color: #5A6E5A;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .tech-pill:active {
+      background: #3D7A5F;
+      border-color: #3D7A5F;
+      color: #F4F7F4;
+    }
+    .tech-pill.accent { border-color: #3D7A5F; color: #3D7A5F; }
+
+    /* Bottom bar */
+    .bottombar {
+      position: relative;
+      z-index: 10;
+      margin-top: auto;
+      padding-top: 8px;
+      border-top: 1px solid #D8E4D8;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .github-link {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      color: #7A8E7A;
+      text-decoration: none;
+      letter-spacing: .08em;
+      transition: color .2s;
+    }
+    .github-link:active { color: #1A2B1A; }
+    .github-link svg { width: 12px; height: 12px; fill: currentColor; }
+    .visit-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .1em;
+      color: #3D7A5F;
+      border: 1px solid #3D7A5F;
+      padding: 5px 10px;
+      border-radius: 2px;
+      background: rgba(61, 122, 95, .04);
+      cursor: pointer;
+      transition: all .2s;
+      text-decoration: none;
+    }
+    .visit-btn:active { background: #3D7A5F; color: #F4F7F4; }
+
+    /* Overlay */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(244, 247, 244, .94);
+      backdrop-filter: blur(14px);
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      display: flex;
+      align-items: flex-end;
+      transition: opacity .35s;
+    }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+    .sheet {
+      width: 100%;
+      max-height: 75%;
+      background: #FFFFFF;
+      border-radius: 14px 14px 0 0;
+      border: 1px solid #D8E4D8;
+      border-bottom: none;
+      transform: translateY(101%);
+      transition: transform .45s cubic-bezier(.7, 0, .3, 1);
+      padding: 16px 14px 20px;
+      overflow-y: auto;
+      box-shadow: 0 -4px 20px rgba(44, 62, 44, .06);
+    }
+    .overlay.active .sheet { transform: translateY(0); }
+    .sheet-handle { width: 32px; height: 3px; background: #C2D4C2; border-radius: 2px; margin: 0 auto 12px; }
+    .sheet-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 16px;
+      font-weight: 500;
+      color: #1A2B1A;
+      letter-spacing: .04em;
+    }
+    .sheet-desc {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 11px;
+      color: #5A6E5A;
+      line-height: 1.75;
+      margin-top: 10px;
+    }
+    .sheet-desc code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: #3D7A5F;
+      background: rgba(61, 122, 95, .08);
+      padding: 1px 4px;
+      border-radius: 2px;
+    }
+    .sheet-points {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .sheet-point {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      color: #2C3E2C;
+      line-height: 1.55;
+    }
+    .sheet-point::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      background: #3D7A5F;
+      border-radius: 1px;
+      flex-shrink: 0;
+      margin-top: 5px;
+      transform: rotate(45deg);
+    }
+    .sheet-close {
+      margin-top: 14px;
+      width: 100%;
+      padding: 10px;
+      background: rgba(61, 122, 95, .06);
+      border: 1px solid rgba(61, 122, 95, .2);
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .15em;
+      color: #3D7A5F;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .sheet-close:active { background: #3D7A5F; color: #F4F7F4; }
+
+    /* Toast */
+    .toast {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #3D7A5F;
+      color: #F4F7F4;
+      padding: 7px 14px;
+      border-radius: 4px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: all .3s;
+      z-index: 200;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* 3D 知识树画布 */
+    .tree3d-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 45%;
+      pointer-events: none;
+      z-index: 4;
+    }
+
+    /* 入场动画 */
+    .reveal { opacity: 0; transform: translateY(10px); transition: all .45s cubic-bezier(.4, 0, .2, 1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+  </style>
+
+  <!-- Three.js importmap -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div class="stage">
+    <!-- 3D 知识树画布 -->
+    <canvas class="tree3d-canvas" id="tree3dCanvas"></canvas>
+
+    <!-- 背景树状分支纹理 SVG -->
+    <svg class="tree-bg" viewBox="0 0 400 720" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <pattern id="treePattern" x="0" y="0" width="400" height="720" patternUnits="userSpaceOnUse">
+          <!-- 主干 -->
+          <line x1="200" y1="720" x2="200" y2="580" stroke="#C2D4C2" stroke-width="1.5" stroke-opacity=".4"/>
+          <!-- 一级分支 -->
+          <line x1="200" y1="580" x2="140" y2="520" stroke="#C2D4C2" stroke-width="1" stroke-opacity=".3"/>
+          <line x1="200" y1="580" x2="260" y2="510" stroke="#C2D4C2" stroke-width="1" stroke-opacity=".3"/>
+          <line x1="200" y1="580" x2="200" y2="490" stroke="#C2D4C2" stroke-width="1" stroke-opacity=".3"/>
+          <!-- 二级分支 -->
+          <line x1="140" y1="520" x2="100" y2="470" stroke="#D8E4D8" stroke-width=".8" stroke-opacity=".25"/>
+          <line x1="140" y1="520" x2="160" y2="460" stroke="#D8E4D8" stroke-width=".8" stroke-opacity=".25"/>
+          <line x1="260" y1="510" x2="300" y2="460" stroke="#D8E4D8" stroke-width=".8" stroke-opacity=".25"/>
+          <line x1="260" y1="510" x2="240" y2="450" stroke="#D8E4D8" stroke-width=".8" stroke-opacity=".25"/>
+          <line x1="200" y1="490" x2="180" y2="430" stroke="#D8E4D8" stroke-width=".8" stroke-opacity=".25"/>
+          <line x1="200" y1="490" x2="220" y2="425" stroke="#D8E4D8" stroke-width=".8" stroke-opacity=".25"/>
+          <!-- 三级分支 -->
+          <line x1="100" y1="470" x2="80" y2="430" stroke="#D8E4D8" stroke-width=".5" stroke-opacity=".2"/>
+          <line x1="100" y1="470" x2="115" y2="425" stroke="#D8E4D8" stroke-width=".5" stroke-opacity=".2"/>
+          <line x1="300" y1="460" x2="320" y2="420" stroke="#D8E4D8" stroke-width=".5" stroke-opacity=".2"/>
+          <line x1="300" y1="460" x2="285" y2="415" stroke="#D8E4D8" stroke-width=".5" stroke-opacity=".2"/>
+          <!-- 顶部细枝 -->
+          <line x1="80" y1="430" x2="65" y2="400" stroke="#D8E4D8" stroke-width=".3" stroke-opacity=".15"/>
+          <line x1="115" y1="425" x2="125" y2="395" stroke="#D8E4D8" stroke-width=".3" stroke-opacity=".15"/>
+          <line x1="320" y1="420" x2="335" y2="390" stroke="#D8E4D8" stroke-width=".3" stroke-opacity=".15"/>
+          <line x1="180" y1="430" x2="170" y2="395" stroke="#D8E4D8" stroke-width=".3" stroke-opacity=".15"/>
+          <line x1="220" y1="425" x2="230" y2="390" stroke="#D8E4D8" stroke-width=".3" stroke-opacity=".15"/>
+          <!-- 小叶点 -->
+          <circle cx="65" cy="398" r="2" fill="#C8DCC8" fill-opacity=".2"/>
+          <circle cx="125" cy="393" r="2" fill="#C8DCC8" fill-opacity=".2"/>
+          <circle cx="335" cy="388" r="2" fill="#C8DCC8" fill-opacity=".2"/>
+          <circle cx="170" cy="393" r="2" fill="#C8DCC8" fill-opacity=".2"/>
+          <circle cx="230" cy="388" r="2" fill="#C8DCC8" fill-opacity=".2"/>
+          <circle cx="285" cy="413" r="1.5" fill="#C8DCC8" fill-opacity=".15"/>
+          <circle cx="160" cy="458" r="1.5" fill="#C8DCC8" fill-opacity=".15"/>
+        </pattern>
+      </defs>
+      <rect width="400" height="720" fill="url(#treePattern)"/>
+    </svg>
+
+    <!-- Topbar -->
+    <div class="topbar reveal">
+      <div class="brand">
+        <div class="brand-icon"></div>
+        <span>Young's Insight</span>
+      </div>
+      <button class="share-btn" id="shareBtn">
+        SHARE <span class="arr">↗</span>
+      </button>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero reveal">
+      <div class="meta-row">
+        <span class="vol">AGENT WIKI CLI</span>
+        <span>2026.07</span>
+      </div>
+      <div class="title-block">
+        <div class="book-stamp" id="stamp">
+          <!-- 书本图标 -->
+          <svg viewBox="0 0 24 24">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+            <line x1="8" y1="7" x2="16" y2="7"/>
+            <line x1="8" y1="11" x2="14" y2="11"/>
+          </svg>
+        </div>
+        <div class="title-text">
+          <div class="wiki-title">OpenWiki<span class="dot">.</span></div>
+          <div class="langchain-line">
+            <span class="langchain">by LangChain</span>
+            <span class="v-tag">OPEN SOURCE</span>
+          </div>
+        </div>
+      </div>
+      <div class="tagline">为代码库自动生成 <em>Agent 可读</em> 的文档 Wiki</div>
+    </div>
+
+    <!-- 知识树主视觉 -->
+    <div class="knowledge-tree-section reveal">
+      <div class="tree-header">Knowledge Tree</div>
+      <div class="tree-container">
+        <svg class="tree-svg" viewBox="0 0 320 100" fill="none">
+          <!-- 根节点: Codebase -->
+          <g class="tree-node" id="tree-code" data-tree="code">
+            <circle class="tree-node-circle" cx="30" cy="50" r="10" fill="rgba(61,122,95,.08)" stroke="#3D7A5F" stroke-width="1.2"/>
+            <text x="30" y="53" font-family="JetBrains Mono, monospace" font-size="6" fill="#1A2B1A" text-anchor="middle">CODE</text>
+          </g>
+
+          <!-- 分支1: Codebase → Parse -->
+          <path class="tree-branch" d="M40 50 Q70 50 85 30" stroke="#3D7A5F" stroke-width="1" stroke-opacity=".4" fill="none"/>
+          <g class="tree-node" id="tree-parse" data-tree="parse">
+            <circle class="tree-node-circle tree-node-delay1" cx="100" cy="25" r="10" fill="rgba(61,122,95,.1)" stroke="#3D7A5F" stroke-width="1.2"/>
+            <text x="100" y="28" font-family="JetBrains Mono, monospace" font-size="5.5" fill="#1A2B1A" text-anchor="middle">PARSE</text>
+          </g>
+
+          <!-- 分支2: Codebase → Structure -->
+          <path class="tree-branch tree-branch-delay1" d="M40 50 Q70 50 85 70" stroke="#3D7A5F" stroke-width="1" stroke-opacity=".4" fill="none"/>
+          <g class="tree-node" id="tree-structure" data-tree="structure">
+            <circle class="tree-node-circle tree-node-delay2" cx="100" cy="75" r="10" fill="rgba(61,122,95,.1)" stroke="#3D7A5F" stroke-width="1.2"/>
+            <text x="100" y="78" font-family="JetBrains Mono, monospace" font-size="5" fill="#1A2B1A" text-anchor="middle">STRUCT</text>
+          </g>
+
+          <!-- 分支3: Parse → Wiki -->
+          <path class="tree-branch tree-branch-delay2" d="M110 25 Q140 25 160 35" stroke="#5A9E7A" stroke-width="1" stroke-opacity=".4" fill="none"/>
+          <g class="tree-node" id="tree-wiki" data-tree="wiki">
+            <circle class="tree-node-circle tree-node-delay3" cx="175" cy="38" r="12" fill="rgba(61,122,95,.12)" stroke="#3D7A5F" stroke-width="1.5"/>
+            <text x="175" y="41" font-family="JetBrains Mono, monospace" font-size="6" fill="#3D7A5F" text-anchor="middle" font-weight="500">WIKI</text>
+          </g>
+
+          <!-- 分支4: Structure → Wiki (汇聚) -->
+          <path class="tree-branch tree-branch-delay3" d="M110 75 Q140 65 163 42" stroke="#5A9E7A" stroke-width="1" stroke-opacity=".3" fill="none"/>
+
+          <!-- 叶子节点: Wiki 展开 -->
+          <g class="tree-leaf leaf-delay1">
+            <line x1="187" y1="32" x2="210" y2="20" stroke="#C8DCC8" stroke-width=".8"/>
+            <circle cx="215" cy="18" r="6" fill="rgba(61,122,95,.06)" stroke="#C8DCC8" stroke-width=".8"/>
+            <text x="215" y="20" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#7A8E7A" text-anchor="middle">.md</text>
+          </g>
+          <g class="tree-leaf leaf-delay2">
+            <line x1="187" y1="38" x2="215" y2="38" stroke="#C8DCC8" stroke-width=".8"/>
+            <circle cx="220" cy="38" r="6" fill="rgba(61,122,95,.06)" stroke="#C8DCC8" stroke-width=".8"/>
+            <text x="220" y="40" font-family="JetBrains Mono, monospace" font-size="4" fill="#7A8E7A" text-anchor="middle">AST</text>
+          </g>
+          <g class="tree-leaf leaf-delay3">
+            <line x1="187" y1="44" x2="210" y2="56" stroke="#C8DCC8" stroke-width=".8"/>
+            <circle cx="215" cy="58" r="6" fill="rgba(61,122,95,.06)" stroke="#C8DCC8" stroke-width=".8"/>
+            <text x="215" y="60" font-family="JetBrains Mono, monospace" font-size="4" fill="#7A8E7A" text-anchor="middle">API</text>
+          </g>
+
+          <!-- Agent 终端 -->
+          <g class="tree-leaf leaf-delay4">
+            <line x1="233" y1="38" x2="255" y2="38" stroke="#C8DCC8" stroke-width=".8"/>
+            <rect x="258" y="28" width="50" height="20" rx="3" fill="rgba(61,122,95,.06)" stroke="#3D7A5F" stroke-width=".8" stroke-opacity=".4"/>
+            <text x="283" y="40" font-family="JetBrains Mono, monospace" font-size="5.5" fill="#3D7A5F" text-anchor="middle">AGENT</text>
+          </g>
+
+          <!-- 脉冲动画点 -->
+          <circle cx="70" cy="45" r="2" fill="#3D7A5F" class="tree-leaf leaf-delay5">
+            <animate attributeName="opacity" values=".8;.2;.8" dur="2s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="145" cy="30" r="2" fill="#5A9E7A" class="tree-leaf leaf-delay6">
+            <animate attributeName="opacity" values=".8;.2;.8" dur="2s" repeatCount="indefinite" begin=".5s"/>
+          </circle>
+        </svg>
+
+        <!-- 可展开子节点 -->
+        <div class="tree-children" id="treeChildren">
+          <div class="tree-child-row" data-child="ast">
+            <span class="tree-child-dot active"></span>
+            <span class="tree-child-connector"></span>
+            <span>AST 解析 → 函数/类/模块</span>
+          </div>
+          <div class="tree-child-row" data-child="llm">
+            <span class="tree-child-dot active"></span>
+            <span class="tree-child-connector"></span>
+            <span>LLM 生成 → 文档描述</span>
+          </div>
+          <div class="tree-child-row" data-child="md">
+            <span class="tree-child-dot"></span>
+            <span class="tree-child-connector"></span>
+            <span>Markdown → WIKI.md 输出</span>
+          </div>
+          <div class="tree-child-row" data-child="agent">
+            <span class="tree-child-dot"></span>
+            <span class="tree-child-connector"></span>
+            <span>Agent → 代码理解与生成</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Intro -->
+    <div class="intro reveal">
+      <div class="intro-inner">
+        <div class="intro-line"></div>
+        <div class="intro-text">
+          自动解析代码库，生成结构化 Markdown 文档。<strong>Agent</strong> 直接读取 WIKI.md —— 无需人工编写，每次提交自动更新。
+        </div>
+      </div>
+    </div>
+
+    <!-- Features - 2x2 Grid -->
+    <div class="features reveal">
+      <div class="feature" data-f="0">
+        <div class="feature-header">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <span class="feature-num">01</span>
+        </div>
+        <div class="feature-title">自动生成 Wiki</div>
+        <div class="feature-desc">解析代码库，生成结构化文档</div>
+        <div class="feature-progress"><div class="feature-progress-bar" style="width: 95%"></div></div>
+      </div>
+      <div class="feature" data-f="1">
+        <div class="feature-header">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/></svg>
+          </div>
+          <span class="feature-num">02</span>
+        </div>
+        <div class="feature-title">Agent 优化</div>
+        <div class="feature-desc">专为 LLM/Agent 阅读设计</div>
+        <div class="feature-progress"><div class="feature-progress-bar" style="width: 88%"></div></div>
+      </div>
+      <div class="feature" data-f="2">
+        <div class="feature-header">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+          </div>
+          <span class="feature-num">03</span>
+        </div>
+        <div class="feature-title">Git 友好</div>
+        <div class="feature-desc">输出 Markdown，直接提交到仓库</div>
+        <div class="feature-progress"><div class="feature-progress-bar" style="width: 100%"></div></div>
+      </div>
+      <div class="feature" data-f="3">
+        <div class="feature-header">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </div>
+          <span class="feature-num">04</span>
+        </div>
+        <div class="feature-title">多格式支持</div>
+        <div class="feature-desc">Python、TypeScript、Go 等</div>
+        <div class="feature-progress"><div class="feature-progress-bar" style="width: 85%"></div></div>
+      </div>
+    </div>
+
+    <!-- Tech Stack -->
+    <div class="tech-section reveal">
+      <div class="tech-header">Tech Stack</div>
+      <div class="tech-pills">
+        <span class="tech-pill accent">Python</span>
+        <span class="tech-pill">LangChain</span>
+        <span class="tech-pill">Tree-sitter</span>
+        <span class="tech-pill">Markdown</span>
+      </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="bottombar reveal">
+      <a href="https://github.com/langchain-ai/openwiki" target="_blank" class="github-link">
+        <svg viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        langchain-ai/openwiki
+      </a>
+      <a href="https://github.com/langchain-ai/openwiki" target="_blank" class="visit-btn">GITHUB →</a>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title" id="sheetTitle"></div>
+        <div class="sheet-desc" id="sheetDesc"></div>
+        <div class="sheet-points" id="sheetPoints"></div>
+        <button class="sheet-close" id="sheetClose">CLOSE</button>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script>
+    // Data
+    const features = [
+      {
+        title: '自动生成 Wiki',
+        desc: '使用 Tree-sitter 解析代码库，自动提取函数、类、模块等结构信息。生成符合 Agent 阅读习惯的结构化文档。',
+        points: ['解析代码 AST 结构', '提取函数签名与文档', '生成模块依赖关系', '支持增量更新']
+      },
+      {
+        title: 'Agent 优化',
+        desc: '生成的 WIKI.md 专为 LLM 和 Agent 设计。结构清晰、信息密度适中，让 Agent 快速理解代码库。',
+        points: ['LLM 友好的文档结构', '关键信息高亮标注', '代码示例自动提取', '上下文边界清晰']
+      },
+      {
+        title: 'Git 友好',
+        desc: '输出纯 Markdown 文件，直接提交到代码仓库。版本控制、代码审查、CI/CD 完美集成。',
+        points: ['纯 Markdown 输出', 'Git 版本控制友好', 'CI/CD 自动化集成', 'Diff 友好可追溯']
+      },
+      {
+        title: '多格式支持',
+        desc: '支持 Python、TypeScript、Go、Rust 等主流语言。基于 Tree-sitter 的通用解析架构，易于扩展新语言。',
+        points: ['Python 完整支持', 'TypeScript/JavaScript', 'Go、Rust 等语言', '可扩展架构']
+      }
+    ];
+
+    const treeInfo = {
+      code: { title: 'Codebase', desc: '源代码目录，支持任意规模的代码库。OpenWiki 会递归扫描所有源文件并解析其结构。' },
+      parse: { title: 'Parse', desc: '使用 Tree-sitter 进行语法解析，构建 AST（抽象语法树）。支持增量解析和错误恢复，解析速度快，准确度高。' },
+      structure: { title: 'Structure', desc: '从 AST 中提取代码结构：函数签名、类定义、模块依赖、接口说明等关键信息。' },
+      wiki: { title: 'WIKI.md', desc: '生成的 WIKI.md 文件，包含代码库概览、模块结构、关键函数说明等。Agent 可直接阅读理解。' }
+    };
+
+    const childInfo = {
+      ast: 'AST 解析：Tree-sitter 构建抽象语法树，提取函数/类/模块结构',
+      llm: 'LLM 生成：LangChain 编排大语言模型，自动生成文档描述',
+      md: 'Markdown 输出：标准 WIKI.md 格式，Git 友好，Agent 可读',
+      agent: 'Agent 应用：LLM/Agent 读取 Wiki，辅助代码理解与生成'
+    };
+
+    const techInfo = {
+      Python: '核心开发语言，CLI 工具实现',
+      LangChain: 'LLM 编排框架，驱动文档生成',
+      'Tree-sitter': '通用语法解析器，支持多语言',
+      Markdown: '输出格式，Git 友好，Agent 可读'
+    };
+
+    // Elements
+    const overlay = document.getElementById('overlay');
+    const sheetTitle = document.getElementById('sheetTitle');
+    const sheetDesc = document.getElementById('sheetDesc');
+    const sheetPoints = document.getElementById('sheetPoints');
+    const sheetClose = document.getElementById('sheetClose');
+    const toast = document.getElementById('toast');
+    const shareBtn = document.getElementById('shareBtn');
+    const stamp = document.getElementById('stamp');
+    const treeChildren = document.getElementById('treeChildren');
+
+    // Reveal animation
+    setTimeout(() => {
+      document.querySelectorAll('.reveal').forEach((el, i) => {
+        setTimeout(() => el.classList.add('visible'), i * 60);
+      });
+    }, 100);
+
+    // Tree node click → expand children + show info
+    let treeExpanded = false;
+    document.querySelectorAll('.tree-node').forEach(el => {
+      el.addEventListener('click', () => {
+        const key = el.dataset.tree;
+        const info = treeInfo[key];
+        if (info) {
+          sheetTitle.textContent = info.title;
+          sheetDesc.textContent = info.desc;
+          sheetPoints.innerHTML = '';
+          overlay.classList.add('active');
+        }
+        // Toggle tree children expansion
+        if (!treeExpanded) {
+          treeChildren.classList.add('expanded');
+          treeExpanded = true;
+        } else {
+          treeChildren.classList.remove('expanded');
+          treeExpanded = false;
+        }
+      });
+    });
+
+    // Tree child row click
+    document.querySelectorAll('.tree-child-row').forEach(el => {
+      el.addEventListener('click', () => {
+        const key = el.dataset.child;
+        const info = childInfo[key];
+        if (info) {
+          sheetTitle.textContent = key.toUpperCase();
+          sheetDesc.textContent = info;
+          sheetPoints.innerHTML = '';
+          overlay.classList.add('active');
+        }
+      });
+    });
+
+    // Feature click
+    document.querySelectorAll('.feature').forEach(el => {
+      el.addEventListener('click', () => {
+        const i = +el.dataset.f;
+        const f = features[i];
+        sheetTitle.textContent = f.title;
+        sheetDesc.textContent = f.desc;
+        sheetPoints.innerHTML = f.points.map(p => `<div class="sheet-point">${p}</div>`).join('');
+        overlay.classList.add('active');
+      });
+    });
+
+    // Tech pill click
+    document.querySelectorAll('.tech-pill').forEach(el => {
+      el.addEventListener('click', () => {
+        const tech = el.textContent.trim();
+        const info = techInfo[tech];
+        if (info) {
+          sheetTitle.textContent = tech;
+          sheetDesc.textContent = info;
+          sheetPoints.innerHTML = '';
+          overlay.classList.add('active');
+        }
+      });
+    });
+
+    // Stamp click
+    stamp.addEventListener('click', () => {
+      sheetTitle.textContent = 'OpenWiki';
+      sheetDesc.innerHTML = '为代码库自动生成 Agent 可读的文档 Wiki。<br><br>OpenWiki 是 LangChain 官方开源项目，使用 <code>Tree-sitter</code> 解析代码结构，<code>LangChain</code> 编排 LLM 生成文档描述。输出标准 Markdown 文件，直接提交到 Git 仓库。<br><br>核心价值：让 <strong>Agent</strong> 快速理解代码库，无需人工编写文档。';
+      sheetPoints.innerHTML = '';
+      overlay.classList.add('active');
+    });
+
+    // Close sheet
+    sheetClose.addEventListener('click', () => overlay.classList.remove('active'));
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('active'); });
+
+    // Share
+    shareBtn.addEventListener('click', async () => {
+      const text = 'OpenWiki — Agent Wiki CLI by LangChain\n为代码库自动生成 Agent 可读的文档 Wiki';
+      const url = 'https://mindresonance.online/youngsinsight/pages/openwiki.html';
+      const full = text + '\n' + url;
+
+      try {
+        if (navigator.share) {
+          await navigator.share({ title: 'OpenWiki', text, url });
+          return;
+        }
+      } catch (e) {}
+
+      try {
+        await navigator.clipboard.writeText(full);
+        showToast('已复制标题与链接');
+      } catch (e) {
+        const ta = document.createElement('textarea');
+        ta.value = full;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('已复制标题与链接');
+      }
+    });
+
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+  </script>
+
+  <!-- 3D 知识树效果 -->
+  <script type="module">
+    import * as THREE from 'three';
+
+    // ── 初始化 ──
+    const canvas = document.getElementById('tree3dCanvas');
+    if (!canvas) throw new Error('tree3dCanvas not found');
+
+    const stage = canvas.closest('.stage');
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x000000, 0);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+    camera.position.set(0, 2.5, 6);
+    camera.lookAt(0, 1.8, 0);
+
+    // ── 尺寸适配 ──
+    function resize() {
+      const rect = stage.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height * 0.45;
+      renderer.setSize(w, h);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // ── 树结构数据 ──
+    // 从根部向上展开的知识层级
+    const treeData = {
+      pos: [0, 0, 0],       // 根
+      children: [
+        {
+          pos: [-1.2, 1.5, 0.3],
+          children: [
+            { pos: [-2.0, 2.8, 0.6], children: [
+              { pos: [-2.4, 3.6, 0.8], children: [] },
+              { pos: [-1.6, 3.5, 0.2], children: [] }
+            ]},
+            { pos: [-0.6, 2.6, -0.4], children: [
+              { pos: [-0.8, 3.4, -0.6], children: [] }
+            ]}
+          ]
+        },
+        {
+          pos: [0, 1.8, -0.2],
+          children: [
+            { pos: [-0.5, 3.0, -0.5], children: [
+              { pos: [-0.7, 3.7, -0.7], children: [] }
+            ]},
+            { pos: [0.5, 3.1, 0.1], children: [
+              { pos: [0.3, 3.8, -0.2], children: [] },
+              { pos: [0.8, 3.7, 0.4], children: [] }
+            ]}
+          ]
+        },
+        {
+          pos: [1.2, 1.4, 0.2],
+          children: [
+            { pos: [2.0, 2.7, 0.5], children: [
+              { pos: [2.4, 3.5, 0.7], children: [] },
+              { pos: [1.6, 3.4, 0.1], children: [] }
+            ]},
+            { pos: [0.7, 2.5, -0.3], children: [] }
+          ]
+        }
+      ]
+    };
+
+    // ── 构建分支（Line） ──
+    const branchGroup = new THREE.Group();
+    const branchMaterial = new THREE.LineBasicMaterial({
+      color: 0x3D7A5F,
+      transparent: true,
+      opacity: 0.5
+    });
+
+    const branches = []; // 存储分支端点用于粒子流动
+
+    function buildBranches(node, parentPos = null) {
+      if (parentPos) {
+        const pA = new THREE.Vector3(...parentPos);
+        const pB = new THREE.Vector3(...node.pos);
+        // 用贝塞尔曲线让分支更自然
+        const mid = new THREE.Vector3().lerpVectors(pA, pB, 0.5);
+        mid.x += (Math.random() - 0.5) * 0.3;
+        mid.z += (Math.random() - 0.5) * 0.2;
+        const curve = new THREE.QuadraticBezierCurve3(pA, mid, pB);
+        const points = curve.getPoints(16);
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+        const line = new THREE.Line(geometry, branchMaterial);
+        branchGroup.add(line);
+
+        // 记录分支曲线用于粒子流动
+        branches.push({ curve, length: curve.getLength() });
+      }
+      node.children.forEach(child => buildBranches(child, node.pos));
+    }
+    buildBranches(treeData);
+    scene.add(branchGroup);
+
+    // ── 构建节点（Sphere + 发光） ──
+    const nodeGroup = new THREE.Group();
+    const allNodePositions = [];
+
+    function collectNodes(node, depth = 0) {
+      allNodePositions.push({ pos: new THREE.Vector3(...node.pos), depth });
+      node.children.forEach(c => collectNodes(c, depth + 1));
+    }
+    collectNodes(treeData);
+
+    // 节点球体
+    allNodePositions.forEach(({ pos, depth }) => {
+      const radius = Math.max(0.06, 0.12 - depth * 0.02);
+      const geo = new THREE.SphereGeometry(radius, 12, 8);
+      const mat = new THREE.MeshBasicMaterial({
+        color: depth === 0 ? 0x3D7A5F : 0x5A9E7A,
+        transparent: true,
+        opacity: 0.9
+      });
+      const sphere = new THREE.Mesh(geo, mat);
+      sphere.position.copy(pos);
+      nodeGroup.add(sphere);
+
+      // 发光光晕
+      const glowRadius = radius * 3;
+      const glowGeo = new THREE.SphereGeometry(glowRadius, 12, 8);
+      const glowMat = new THREE.MeshBasicMaterial({
+        color: 0x5A9E7A,
+        transparent: true,
+        opacity: 0.08
+      });
+      const glow = new THREE.Mesh(glowGeo, glowMat);
+      glow.position.copy(pos);
+      nodeGroup.add(glow);
+    });
+    scene.add(nodeGroup);
+
+    // ── 粒子系统（沿分支流动） ──
+    const PARTICLE_COUNT = 80;
+    const particleGeo = new THREE.BufferGeometry();
+    const particlePositions = new Float32Array(PARTICLE_COUNT * 3);
+    const particleSizes = new Float32Array(PARTICLE_COUNT);
+    const particleAlphas = new Float32Array(PARTICLE_COUNT);
+
+    // 每个粒子的状态
+    const particleStates = [];
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      particleStates.push({
+        branchIdx: Math.floor(Math.random() * branches.length),
+        t: Math.random(),           // 沿曲线的进度 0→1
+        speed: 0.002 + Math.random() * 0.004,
+        size: 1.5 + Math.random() * 2.5,
+        baseAlpha: 0.3 + Math.random() * 0.5
+      });
+      particleSizes[i] = particleStates[i].size;
+    }
+
+    particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+    particleGeo.setAttribute('size', new THREE.BufferAttribute(particleSizes, 1));
+
+    // 粒子着色器材质 - 绿色发光点
+    const particleMat = new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      uniforms: {
+        uColor: { value: new THREE.Color(0x5A9E7A) },
+        uTime: { value: 0 }
+      },
+      vertexShader: `
+        attribute float size;
+        varying float vAlpha;
+        void main() {
+          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+          gl_PointSize = size * (200.0 / -mvPosition.z);
+          gl_Position = projectionMatrix * mvPosition;
+          vAlpha = 0.6;
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 uColor;
+        varying float vAlpha;
+        void main() {
+          float d = length(gl_PointCoord - vec2(0.5));
+          if (d > 0.5) discard;
+          float glow = 1.0 - smoothstep(0.0, 0.5, d);
+          glow = pow(glow, 2.0);
+          gl_FragColor = vec4(uColor, glow * vAlpha);
+        }
+      `
+    });
+
+    const particleSystem = new THREE.Points(particleGeo, particleMat);
+    scene.add(particleSystem);
+
+    // ── 环境漂浮粒子 ──
+    const FLOAT_COUNT = 40;
+    const floatGeo = new THREE.BufferGeometry();
+    const floatPositions = new Float32Array(FLOAT_COUNT * 3);
+    const floatSizes = new Float32Array(FLOAT_COUNT);
+    const floatStates = [];
+
+    for (let i = 0; i < FLOAT_COUNT; i++) {
+      const x = (Math.random() - 0.5) * 6;
+      const y = Math.random() * 4.5;
+      const z = (Math.random() - 0.5) * 2;
+      floatPositions[i * 3] = x;
+      floatPositions[i * 3 + 1] = y;
+      floatPositions[i * 3 + 2] = z;
+      floatSizes[i] = 0.8 + Math.random() * 1.5;
+      floatStates.push({
+        baseX: x, baseY: y, baseZ: z,
+        phaseX: Math.random() * Math.PI * 2,
+        phaseY: Math.random() * Math.PI * 2,
+        speedX: 0.2 + Math.random() * 0.3,
+        speedY: 0.15 + Math.random() * 0.25,
+        ampX: 0.1 + Math.random() * 0.2,
+        ampY: 0.05 + Math.random() * 0.1
+      });
+    }
+
+    floatGeo.setAttribute('position', new THREE.BufferAttribute(floatPositions, 3));
+    floatGeo.setAttribute('size', new THREE.BufferAttribute(floatSizes, 1));
+
+    const floatMat = new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      uniforms: {
+        uColor: { value: new THREE.Color(0x3D7A5F) }
+      },
+      vertexShader: `
+        attribute float size;
+        varying float vAlpha;
+        void main() {
+          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+          gl_PointSize = size * (150.0 / -mvPosition.z);
+          gl_Position = projectionMatrix * mvPosition;
+          vAlpha = 0.35;
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 uColor;
+        varying float vAlpha;
+        void main() {
+          float d = length(gl_PointCoord - vec2(0.5));
+          if (d > 0.5) discard;
+          float glow = 1.0 - smoothstep(0.0, 0.5, d);
+          glow = pow(glow, 1.5);
+          gl_FragColor = vec4(uColor, glow * vAlpha);
+        }
+      `
+    });
+
+    const floatSystem = new THREE.Points(floatGeo, floatMat);
+    scene.add(floatSystem);
+
+    // ── 动画循环 ──
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const elapsed = clock.getElapsedTime();
+      const delta = clock.getDelta();
+
+      // 更新流动粒子
+      const posAttr = particleGeo.getAttribute('position');
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        const state = particleStates[i];
+        state.t += state.speed;
+        if (state.t > 1) {
+          state.t = 0;
+          state.branchIdx = Math.floor(Math.random() * branches.length);
+        }
+        const branch = branches[state.branchIdx];
+        if (branch) {
+          const point = branch.curve.getPoint(state.t);
+          posAttr.setXYZ(i, point.x, point.y, point.z);
+        }
+      }
+      posAttr.needsUpdate = true;
+
+      // 更新漂浮粒子
+      const floatPosAttr = floatGeo.getAttribute('position');
+      for (let i = 0; i < FLOAT_COUNT; i++) {
+        const s = floatStates[i];
+        floatPosAttr.setXYZ(i,
+          s.baseX + Math.sin(elapsed * s.speedX + s.phaseX) * s.ampX,
+          s.baseY + Math.sin(elapsed * s.speedY + s.phaseY) * s.ampY,
+          s.baseZ
+        );
+      }
+      floatPosAttr.needsUpdate = true;
+
+      // 节点呼吸发光
+      nodeGroup.children.forEach((child, idx) => {
+        if (child.material && child.material.opacity !== undefined) {
+          // 只对光晕球体做呼吸（它们是偶数索引的第二个子元素）
+          if (child.geometry.parameters.radius > 0.15) {
+            child.material.opacity = 0.06 + Math.sin(elapsed * 1.5 + idx * 0.5) * 0.03;
+          }
+        }
+      });
+
+      // 整体轻微旋转
+      branchGroup.rotation.y = Math.sin(elapsed * 0.15) * 0.08;
+      nodeGroup.rotation.y = Math.sin(elapsed * 0.15) * 0.08;
+      particleSystem.rotation.y = Math.sin(elapsed * 0.15) * 0.08;
+      floatSystem.rotation.y = Math.sin(elapsed * 0.15) * 0.08;
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  </script>
+</body>
+</html>

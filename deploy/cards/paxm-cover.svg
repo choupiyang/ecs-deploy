@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="450" height="800" viewBox="0 0 450 800">
+  <!-- 深蓝黑背景 -->
+  <rect width="450" height="800" fill="#050810"/>
+  
+  <!-- 青绿光晕 -->
+  <defs>
+    <radialGradient id="glow-cyan" cx="50%" cy="30%" r="50%">
+      <stop offset="0%" stop-color="#06B6D4" stop-opacity="0.15"/>
+      <stop offset="60%" stop-color="#06B6D4" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow-teal" cx="20%" cy="70%" r="40%">
+      <stop offset="0%" stop-color="#14B8A6" stop-opacity="0.08"/>
+      <stop offset="60%" stop-color="#14B8A6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow-blue" cx="80%" cy="90%" r="50%">
+      <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.06"/>
+      <stop offset="60%" stop-color="#3B82F6" stop-opacity="0"/>
+    </radialGradient>
+    
+    <!-- 连接线纹理 -->
+    <pattern id="connections" width="60" height="60" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="0" x2="30" y2="30" stroke="#06B6D4" stroke-opacity="0.04" stroke-width="0.5"/>
+      <line x1="30" y1="0" x2="60" y2="30" stroke="#06B6D4" stroke-opacity="0.04" stroke-width="0.5"/>
+      <line x1="0" y1="30" x2="30" y2="60" stroke="#14B8A6" stroke-opacity="0.03" stroke-width="0.5"/>
+      <line x1="30" y1="30" x2="60" y2="60" stroke="#14B8A6" stroke-opacity="0.03" stroke-width="0.5"/>
+      <circle cx="30" cy="30" r="1" fill="#06B6D4" fill-opacity="0.08"/>
+      <circle cx="0" cy="0" r="0.8" fill="#14B8A6" fill-opacity="0.06"/>
+      <circle cx="60" cy="60" r="0.8" fill="#3B82F6" fill-opacity="0.06"/>
+    </pattern>
+    
+    <!-- 脉冲动画 -->
+    <filter id="glow-pulse">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <rect width="450" height="800" fill="url(#glow-cyan)"/>
+  <rect width="450" height="800" fill="url(#glow-teal)"/>
+  <rect width="450" height="800" fill="url(#glow-blue)"/>
+  <rect width="450" height="800" fill="url(#connections)"/>
+  
+  <!-- ========== 标题区域 ========== -->
+  <g transform="translate(30, 30)">
+    <!-- 数据库印章 -->
+    <g transform="translate(0, 0)">
+      <!-- 外层虚线圈 -->
+      <circle cx="25" cy="25" r="32" fill="none" stroke="#06B6D4" stroke-opacity="0.25" stroke-width="1" stroke-dasharray="4,3">
+        <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="30s" repeatCount="indefinite"/>
+      </circle>
+      <!-- 主圆环 -->
+      <circle cx="25" cy="25" r="24" fill="rgba(6, 182, 212, 0.08)" stroke="#06B6D4" stroke-width="2"/>
+      <!-- 内层圆环 -->
+      <circle cx="25" cy="25" r="16" fill="none" stroke="#14B8A6" stroke-width="1.2" stroke-opacity="0.6"/>
+      <!-- 数据库图标 - 层叠圆柱 -->
+      <ellipse cx="25" cy="18" rx="9" ry="4" fill="none" stroke="#06B6D4" stroke-width="1.5"/>
+      <path d="M16 18 L16 32 Q25 36 34 32 L34 18" fill="none" stroke="#06B6D4" stroke-width="1.5"/>
+      <ellipse cx="25" cy="32" rx="9" ry="4" fill="none" stroke="#06B6D4" stroke-width="1.5"/>
+      <path d="M16 25 Q25 29 34 25" fill="none" stroke="#14B8A6" stroke-width="0.8" stroke-opacity="0.5"/>
+    </g>
+    
+    <!-- 标题文字 -->
+    
+    <text x="185" y="30" font-family="Georgia, serif" font-size="52" font-weight="500" fill="#06B6D4">.</text>
+    
+    <!-- 副标题 -->
+    <text x="65" y="52" font-family="Georgia, serif" font-size="12" font-style="italic" fill="#64748B" letter-spacing="0.5">AI Agent Memory Adaptor</text>
+    
+    <!-- 开源标签 -->
+    <rect x="240" y="38" width="80" height="18" rx="3" fill="none" stroke="#14B8A6" stroke-width="1"/>
+    <text x="280" y="51" font-family="monospace" font-size="8" fill="#14B8A6" text-anchor="middle" letter-spacing="1.5">OPEN SOURCE</text>
+  </g>
+  
+  <!-- 标语 -->
+  <g transform="translate(30, 95)">
+    <rect x="0" y="0" width="20" height="2" fill="#06B6D4"/>
+    <text x="28" y="8" font-family="sans-serif" font-size="11" fill="#94A3B8" letter-spacing="0.5">为 AI Agent 提供统一的</text>
+    <text x="168" y="8" font-family="sans-serif" font-size="11" fill="#06B6D4" font-weight="500" letter-spacing="0.5">记忆适配层</text>
+  </g>
+  
+  <!-- ========== 主视觉：数据流管道图 ========== -->
+  <g transform="translate(30, 130)">
+    <!-- 流程图背景 -->
+    <rect x="0" y="0" width="390" height="280" rx="12" fill="rgba(15, 23, 42, 0.6)" stroke="#1E293B" stroke-width="1"/>
+    
+    <!-- 流程标题 -->
+    <text x="15" y="22" font-family="monospace" font-size="8" fill="#64748B" letter-spacing="2">DATA FLOW PIPELINE</text>
+    
+    <!-- ========== 第一层：Agent ========== -->
+    <g transform="translate(20, 45)">
+      <!-- Agent 节点 -->
+      <rect x="0" y="0" width="350" height="50" rx="6" fill="rgba(30, 41, 59, 0.8)" stroke="#334155" stroke-width="1"/>
+      
+      <!-- Agent 图标 -->
+      <g transform="translate(10, 10)">
+        <circle cx="15" cy="15" r="12" fill="rgba(6, 182, 212, 0.15)" stroke="#06B6D4" stroke-width="1.5"/>
+        <circle cx="15" cy="11" r="4" fill="#06B6D4"/>
+        <path d="M7 24 Q15 18 23 24" fill="none" stroke="#06B6D4" stroke-width="1.5"/>
+      </g>
+      
+      <text x="55" y="20" font-family="sans-serif" font-size="11" fill="#E2E8F0">AI Agent</text>
+      <text x="55" y="36" font-family="sans-serif" font-size="9" fill="#64748B">Claude / GPT / Gemini / Other LLMs</text>
+      
+      <!-- 状态指示 -->
+      <g transform="translate(300, 15)">
+        <circle cx="8" cy="10" r="4" fill="#14B8A6">
+          <animate attributeName="opacity" values="1;0.4;1" dur="1.8s" repeatCount="indefinite"/>
+        </circle>
+        <text x="18" y="13" font-family="monospace" font-size="7" fill="#14B8A6">ACTIVE</text>
+      </g>
+    </g>
+    
+    <!-- 连接线 1 -->
+    <g transform="translate(195, 95)">
+      <line x1="0" y1="0" x2="0" y2="25" stroke="#06B6D4" stroke-width="2" stroke-dasharray="6,4">
+        <animate attributeName="stroke-dashoffset" from="10" to="0" dur="1s" repeatCount="indefinite"/>
+      </line>
+      <polygon points="-4,25 4,25 0,32" fill="#06B6D4"/>
+      <!-- 数据点 -->
+      <circle cx="0" cy="12" r="3" fill="#06B6D4" filter="url(#glow-pulse)">
+        <animate attributeName="cy" values="0;25;0" dur="1.5s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+    
+    <!-- ========== 第二层：PAXM Adaptor ========== -->
+    <g transform="translate(20, 120)">
+      <!-- PAXM 核心节点 -->
+      <rect x="0" y="0" width="350" height="70" rx="8" fill="rgba(6, 182, 212, 0.1)" stroke="#06B6D4" stroke-width="2"/>
+      
+      <!-- PAXM Logo -->
+      <g transform="translate(15, 15)">
+        <circle cx="20" cy="20" r="18" fill="rgba(6, 182, 212, 0.15)" stroke="#06B6D4" stroke-width="1.5"/>
+        <text x="20" y="26" font-family="Georgia, serif" font-size="18" fill="#06B6D4" text-anchor="middle" font-weight="500">P</text>
+      </g>
+      
+      <text x="60" y="22" font-family="sans-serif" font-size="14" fill="#E2E8F0" font-weight="500">PAXM Adaptor</text>
+      <text x="60" y="38" font-family="sans-serif" font-size="9" fill="#64748B">Memory Interface Layer • MCP Protocol</text>
+      
+      <!-- 功能标签 -->
+      <g transform="translate(60, 45)">
+        <rect x="0" y="0" width="45" height="14" rx="2" fill="rgba(6, 182, 212, 0.2)"/>
+        <text x="22" y="10" font-family="monospace" font-size="6" fill="#06B6D4" text-anchor="middle">READ</text>
+        
+        <rect x="50" y="0" width="45" height="14" rx="2" fill="rgba(20, 184, 166, 0.2)"/>
+        <text x="72" y="10" font-family="monospace" font-size="6" fill="#14B8A6" text-anchor="middle">WRITE</text>
+        
+        <rect x="100" y="0" width="50" height="14" rx="2" fill="rgba(59, 130, 246, 0.2)"/>
+        <text x="125" y="10" font-family="monospace" font-size="6" fill="#3B82F6" text-anchor="middle">RECALL</text>
+      </g>
+      
+      <!-- MCP 标识 -->
+      <g transform="translate(280, 25)">
+        <rect x="0" y="0" width="55" height="22" rx="4" fill="none" stroke="#06B6D4" stroke-width="1"/>
+        <text x="27" y="15" font-family="monospace" font-size="9" fill="#06B6D4" text-anchor="middle" font-weight="500">MCP</text>
+      </g>
+    </g>
+    
+    <!-- 连接线 2 - 分叉到三个后端 -->
+    <g transform="translate(195, 190)">
+      <!-- 主干线 -->
+      <line x1="0" y1="0" x2="0" y2="20" stroke="#14B8A6" stroke-width="2"/>
+      
+      <!-- 分叉点 -->
+      <circle cx="0" cy="20" r="4" fill="#14B8A6">
+        <animate attributeName="r" values="3;5;3" dur="1.2s" repeatCount="indefinite"/>
+      </circle>
+      
+      <!-- 左分支 -->
+      <path d="M0 20 Q-60 30 -100 50 L-100 55" stroke="#F59E0B" stroke-width="1.5" fill="none" stroke-dasharray="4,3">
+        <animate attributeName="stroke-dashoffset" from="7" to="0" dur="0.8s" repeatCount="indefinite"/>
+      </path>
+      
+      <!-- 中分支 -->
+      <line x1="0" y1="20" x2="0" y2="55" stroke="#14B8A6" stroke-width="1.5" stroke-dasharray="4,3">
+        <animate attributeName="stroke-dashoffset" from="7" to="0" dur="0.8s" repeatCount="indefinite"/>
+      </line>
+      
+      <!-- 右分支 -->
+      <path d="M0 20 Q60 30 100 50 L100 55" stroke="#3B82F6" stroke-width="1.5" fill="none" stroke-dasharray="4,3">
+        <animate attributeName="stroke-dashoffset" from="7" to="0" dur="0.8s" repeatCount="indefinite"/>
+      </path>
+      
+      <!-- 数据点动画 -->
+      <circle r="2.5" fill="#14B8A6">
+        <animate attributeName="cx" values="0;-100;0;100;0" dur="3s" repeatCount="indefinite"/>
+        <animate attributeName="cy" values="0;55;55;55;0" dur="3s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+    
+    <!-- ========== 第三层：存储后端 ========== -->
+    <g transform="translate(20, 210)">
+      <!-- SQLite -->
+      <g transform="translate(0, 0)">
+        <rect x="0" y="0" width="105" height="55" rx="6" fill="rgba(245, 158, 11, 0.08)" stroke="#F59E0B" stroke-width="1"/>
+        <!-- SQLite 图标 -->
+        <rect x="10" y="8" width="22" height="22" rx="3" fill="none" stroke="#F59E0B" stroke-width="1.5"/>
+        <text x="21" y="23" font-family="monospace" font-size="10" fill="#F59E0B" text-anchor="middle">DB</text>
+        <text x="55" y="18" font-family="sans-serif" font-size="10" fill="#E2E8F0">SQLite</text>
+        <text x="55" y="30" font-family="sans-serif" font-size="7" fill="#64748B">零配置 • 本地</text>
+        <!-- 脉冲点 -->
+        <circle cx="95" cy="10" r="3" fill="#F59E0B">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0.2s"/>
+        </circle>
+      </g>
+      
+      <!-- Postgres -->
+      <g transform="translate(122, 0)">
+        <rect x="0" y="0" width="105" height="55" rx="6" fill="rgba(20, 184, 166, 0.08)" stroke="#14B8A6" stroke-width="1"/>
+        <!-- Postgres 图标 -->
+        <circle cx="21" cy="19" r="11" fill="none" stroke="#14B8A6" stroke-width="1.5"/>
+        <ellipse cx="21" cy="19" rx="6" ry="8" fill="none" stroke="#14B8A6" stroke-width="1"/>
+        <text x="55" y="18" font-family="sans-serif" font-size="10" fill="#E2E8F0">Postgres</text>
+        <text x="55" y="30" font-family="sans-serif" font-size="7" fill="#64748B">生产级 • 高并发</text>
+        <!-- 脉冲点 -->
+        <circle cx="95" cy="10" r="3" fill="#14B8A6">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0.5s"/>
+        </circle>
+      </g>
+      
+      <!-- Vector DB -->
+      <g transform="translate(244, 0)">
+        <rect x="0" y="0" width="105" height="55" rx="6" fill="rgba(59, 130, 246, 0.08)" stroke="#3B82F6" stroke-width="1"/>
+        <!-- Vector 图标 -->
+        <g transform="translate(10, 8)">
+          <circle cx="5" cy="5" r="3" fill="#3B82F6"/>
+          <circle cx="15" cy="3" r="3" fill="#3B82F6"/>
+          <circle cx="20" cy="12" r="3" fill="#3B82F6"/>
+          <line x1="5" y1="5" x2="15" y2="3" stroke="#3B82F6" stroke-width="0.8"/>
+          <line x1="15" y1="3" x2="20" y2="12" stroke="#3B82F6" stroke-width="0.8"/>
+          <line x1="5" y1="5" x2="20" y2="12" stroke="#3B82F6" stroke-width="0.8" stroke-dasharray="2,1"/>
+        </g>
+        <text x="55" y="18" font-family="sans-serif" font-size="10" fill="#E2E8F0">Vector DB</text>
+        <text x="55" y="30" font-family="sans-serif" font-size="7" fill="#64748B">语义搜索 • 向量</text>
+        <!-- 脉冲点 -->
+        <circle cx="95" cy="10" r="3" fill="#3B82F6">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0.8s"/>
+        </circle>
+      </g>
+    </g>
+  </g>
+  
+  <!-- ========== 核心功能 ========== -->
+  <g transform="translate(30, 430)">
+    <text x="0" y="0" font-family="monospace" font-size="8" fill="#64748B" letter-spacing="2">CORE CAPABILITIES</text>
+    
+    <!-- 功能卡片网格 -->
+    <g transform="translate(0, 15)">
+      <!-- 记忆适配 -->
+      <rect x="0" y="0" width="188" height="60" rx="8" fill="rgba(15, 23, 42, 0.6)" stroke="#1E293B" stroke-width="1"/>
+      <rect x="12" y="12" width="36" height="36" rx="6" fill="rgba(6, 182, 212, 0.1)"/>
+      <g transform="translate(18, 18)">
+        <path d="M12 2 L2 7 L12 12 L22 7 L12 2 M2 17 L12 22 L22 17 M2 12 L12 17 L22 12" fill="none" stroke="#06B6D4" stroke-width="1.5"/>
+      </g>
+      
+      
+      
+      <!-- MCP 协议 -->
+      <rect x="200" y="0" width="188" height="60" rx="8" fill="rgba(15, 23, 42, 0.6)" stroke="#1E293B" stroke-width="1"/>
+      <rect x="212" y="12" width="36" height="36" rx="6" fill="rgba(6, 182, 212, 0.1)"/>
+      <g transform="translate(218, 18)">
+        <path d="M12 22 L12 14 M7 17 L12 12 L17 17 M5 9 L12 2 L19 9" fill="none" stroke="#06B6D4" stroke-width="1.5"/>
+      </g>
+      
+      
+      
+      <!-- 多后端支持 -->
+      <rect x="0" y="70" width="188" height="60" rx="8" fill="rgba(15, 23, 42, 0.6)" stroke="#1E293B" stroke-width="1"/>
+      <rect x="12" y="82" width="36" height="36" rx="6" fill="rgba(14, 165, 233, 0.1)"/>
+      <g transform="translate(18, 88)">
+        <rect x="2" y="2" width="8" height="20" rx="2" fill="none" stroke="#0EA5E9" stroke-width="1.5"/>
+        <rect x="13" y="6" width="8" height="16" rx="2" fill="none" stroke="#14B8A6" stroke-width="1.5"/>
+        <rect x="24" y="10" width="8" height="12" rx="2" fill="none" stroke="#3B82F6" stroke-width="1.5"/>
+      </g>
+      
+      
+      
+      <!-- 会话管理 -->
+      <rect x="200" y="70" width="188" height="60" rx="8" fill="rgba(15, 23, 42, 0.6)" stroke="#1E293B" stroke-width="1"/>
+      <rect x="212" y="82" width="36" height="36" rx="6" fill="rgba(14, 165, 233, 0.1)"/>
+      <g transform="translate(218, 88)">
+        <circle cx="12" cy="12" r="8" fill="none" stroke="#0EA5E9" stroke-width="1.5"/>
+        <circle cx="12" cy="12" r="3" fill="#0EA5E9"/>
+        <line x1="12" y1="0" x2="12" y2="4" stroke="#14B8A6" stroke-width="1"/>
+        <line x1="20" y1="12" x2="24" y2="12" stroke="#14B8A6" stroke-width="1"/>
+        <line x1="12" y1="20" x2="12" y2="24" stroke="#14B8A6" stroke-width="1"/>
+        <line x1="0" y1="12" x2="4" y2="12" stroke="#14B8A6" stroke-width="1"/>
+      </g>
+      
+      
+    </g>
+  </g>
+  
+  <!-- ========== 技术栈 ========== -->
+  <g transform="translate(30, 595)">
+    <text x="0" y="0" font-family="monospace" font-size="8" fill="#64748B" letter-spacing="2">TECH STACK</text>
+    <g transform="translate(0, 12)">
+      <rect x="0" y="0" width="60" height="22" rx="4" fill="rgba(6, 182, 212, 0.15)" stroke="#06B6D4" stroke-width="1"/>
+      <text x="30" y="15" font-family="monospace" font-size="9" fill="#06B6D4" text-anchor="middle">Python</text>
+      
+      <rect x="68" y="0" width="50" height="22" rx="4" fill="rgba(6, 182, 212, 0.15)" stroke="#06B6D4" stroke-width="1"/>
+      
+      
+      <rect x="126" y="0" width="60" height="22" rx="4" fill="rgba(15, 23, 42, 0.8)" stroke="#334155" stroke-width="1"/>
+      
+      
+      <rect x="194" y="0" width="70" height="22" rx="4" fill="rgba(15, 23, 42, 0.8)" stroke="#334155" stroke-width="1"/>
+      
+    </g>
+  </g>
+  
+  <!-- ========== 底部命令示例 ========== -->
+  <g transform="translate(30, 660)">
+    <rect x="0" y="0" width="390" height="45" rx="8" fill="rgba(15, 23, 42, 0.8)" stroke="#1E293B" stroke-width="1"/>
+    <text x="15" y="20" font-family="monospace" font-size="10" fill="#64748B">$</text>
+    <text x="30" y="20" font-family="monospace" font-size="10" fill="#06B6D4">paxm recall</text>
+    
+    
+    <rect x="15" y="28" width="70" height="12" rx="2" fill="none" stroke="#14B8A6" stroke-width="0.8"/>
+    <text x="50" y="37" font-family="monospace" font-size="7" fill="#14B8A6" text-anchor="middle">MCP READY</text>
+    
+    
+  </g>
+  
+  <!-- ========== 底部装饰线 ========== -->
+  <rect x="0" y="796" width="450" height="4" fill="url(#bottomGrad)"/>
+  <defs>
+    <linearGradient id="bottomGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06B6D4"/>
+      <stop offset="50%" stop-color="#14B8A6"/>
+      <stop offset="100%" stop-color="#3B82F6"/>
+    </linearGradient>
+  </defs>
+</svg>

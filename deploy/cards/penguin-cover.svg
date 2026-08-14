@@ -38,7 +38,7 @@
     <path d="M6 52 q-8 16 -2 34 l10 -8 q-2 -14 0 -24 z" fill="#0D1B2E" stroke="#4FC3F7" stroke-width=".8" opacity=".9"/>
     <path d="M62 52 q8 16 2 34 l-10 -8 q2 -14 0 -24 z" fill="#0D1B2E" stroke="#4FC3F7" stroke-width=".8" opacity=".9"/>
   </g>
-  <g transform="translate(24,180)">
+  <g transform="translate(24,140)">
     <rect x="0" y="0" width="152" height="52" rx="4" fill="#0A1420" stroke="#4FC3F7" stroke-opacity=".45" stroke-width=".9"/>
     <rect x="0" y="0" width="152" height="13" rx="4" fill="#4FC3F7" opacity=".12"/>
     <circle cx="8" cy="6.5" r="2" fill="#FF5F57"/><circle cx="15" cy="6.5" r="2" fill="#FFB020"/><circle cx="22" cy="6.5" r="2" fill="#28C840"/>

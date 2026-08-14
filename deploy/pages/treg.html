@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#08080C">
+  <title>Treg — 密钥安全分享</title>
+  <link rel="preconnect" href="https://fonts.googleapis.cn">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.cn/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Noto+Serif+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #08080C;
+      --bg-2: #101018;
+      --accent: #FF6B35;
+      --accent-light: #FF8A5C;
+      --text: #E8E8E8;
+      --muted: #6B6B7B;
+      --success: #22C55E;
+      --warning: #F59E0B;
+      --surface: #14141C;
+      --glow: #FF6B35;
+      --serif: 'Cormorant Garamond', serif;
+      --cn: 'Noto Serif SC', serif;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Noto Sans SC', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; background: #040406; font-family: 'Noto Sans SC', sans-serif; color: #E8E8E8; -webkit-font-smoothing: antialiased; }
+    body { display: flex; align-items: center; justify-content: center; }
+
+    /* 舞台 */
+    .stage {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      height: min(100vh, calc(100vw * 16 / 9));
+      width: min(100vw, calc(100vh * 9 / 16));
+      background: #08080C;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,.6);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 16px 10px;
+    }
+
+    /* 加密虚线流动背景 */
+    .stage::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 75% 8%, rgba(255, 107, 53, .1) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 35% at 15% 55%, rgba(255, 107, 53, .06) 0%, transparent 60%);
+    }
+
+    /* 加密线条纹理 */
+    .encrypt-pattern {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.6;
+    }
+
+    /* 流动线条容器 */
+    .flow-lines {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .flow-line {
+      position: absolute;
+      left: -50px;
+      width: calc(100% + 100px);
+      height: 1px;
+      stroke: #FF6B35;
+    }
+
+    /* 顶部条 */
+    .topbar {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .16em;
+      color: #6B6B7B;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(232, 232, 232, .06);
+    }
+    .brand { display: flex; align-items: center; gap: 6px; color: #E8E8E8; }
+    .brand-dot { 
+      width: 5px; 
+      height: 5px; 
+      background: #FF6B35; 
+      border-radius: 50%; 
+      box-shadow: 0 0 8px #FF6B35; 
+      animation: securePulse 2.2s ease-in-out infinite; 
+    }
+    @keyframes securePulse { 
+      0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 8px #FF6B35; } 
+      50% { opacity: .4; transform: scale(.6); box-shadow: 0 0 4px #FF6B35; } 
+    }
+    .share-btn {
+      background: none;
+      border: 1px solid rgba(232, 232, 232, .2);
+      padding: 4px 8px 3px;
+      font: inherit;
+      color: #E8E8E8;
+      cursor: pointer;
+      letter-spacing: .12em;
+      transition: all .3s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 7.5px;
+    }
+    .share-btn:active { background: #FF6B35; color: #08080C; border-color: #FF6B35; }
+    .share-btn .arr { color: #FF6B35; transition: transform .3s; }
+    .share-btn:active .arr { color: #08080C; transform: translate(2px, -2px); }
+
+    /* Hero */
+    .hero { position: relative; z-index: 5; flex-shrink: 0; margin-top: 10px; }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #6B6B7B;
+      text-transform: uppercase;
+      padding-bottom: 6px;
+    }
+    .meta-row .vol { color: #FF6B35; font-weight: 500; position: relative; }
+    .meta-row .vol::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; background: #FF6B35; }
+
+    .title-block { position: relative; margin-top: 4px; display: flex; align-items: flex-start; gap: 3px; }
+    
+    /* 锁形印章 */
+    .lock-stamp {
+      position: relative;
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+      margin-top: 3px;
+      border: 1.5px solid #FF6B35;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform .4s cubic-bezier(.7, 0, .3, 1);
+      background: rgba(255, 107, 53, .06);
+    }
+    .lock-stamp:active { transform: rotate(15deg) scale(.95); }
+    .lock-stamp::before {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border: 1px dashed rgba(255, 107, 53, .3);
+      border-radius: 10px;
+      animation: lockSpin 20s linear infinite;
+    }
+    @keyframes lockSpin { to { transform: rotate(360deg); } }
+    
+    .lock-stamp svg {
+      width: 16px;
+      height: 16px;
+    }
+    .lock-body {
+      fill: none;
+      stroke: #FF6B35;
+      stroke-width: 1.5;
+    }
+    .lock-shackle {
+      fill: none;
+      stroke: #FF6B35;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+    }
+    .lock-keyhole {
+      fill: #FF6B35;
+    }
+    /* 开启动画 */
+    .lock-opening {
+      fill: none;
+      stroke: #22C55E;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      opacity: 0;
+      animation: lockOpen 3s ease-in-out infinite;
+    }
+    @keyframes lockOpen {
+      0%, 70%, 100% { opacity: 0; }
+      75%, 95% { opacity: 1; }
+    }
+
+    .title-text { flex: 1; min-width: 0; }
+    .treg-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 500;
+      font-size: 36px;
+      line-height: .95;
+      letter-spacing: .01em;
+      color: #E8E8E8;
+    }
+    .treg-title .dot { color: #FF6B35; }
+    .superdesign-line {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-top: 1px;
+    }
+    .superdesign {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 400;
+      font-style: italic;
+      font-size: 13px;
+      color: #6B6B7B;
+      letter-spacing: .04em;
+    }
+    .v-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      color: #22C55E;
+      border: 1px solid #22C55E;
+      padding: 1px 4px;
+      letter-spacing: .1em;
+    }
+
+    .tagline {
+      margin-top: 5px;
+      font-family: 'Noto Serif SC', serif;
+      font-weight: 300;
+      font-size: 10px;
+      color: #E8E8E8;
+      letter-spacing: .05em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tagline::before { content: ''; width: 12px; height: 1px; background: #FF6B35; flex-shrink: 0; }
+    .tagline em { font-style: normal; color: #FF6B35; font-weight: 500; }
+    
+    .cn-tagline {
+      margin-top: 2px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 9px;
+      color: #6B6B7B;
+      letter-spacing: .05em;
+    }
+
+    /* ========== 加密流程图 ========== */
+    .flow-section {
+      position: relative;
+      z-index: 5;
+      margin-top: 10px;
+      flex-shrink: 0;
+    }
+    .flow-header {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #FF6B35;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .flow-header::after { content: ''; flex: 1; height: 1px; background: rgba(255, 107, 53, .15); }
+    
+    .flow-diagram {
+      background: rgba(20, 20, 28, .6);
+      border: 1px solid rgba(255, 107, 53, .12);
+      border-radius: 10px;
+      padding: 12px;
+      position: relative;
+    }
+    .flow-svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .flow-node {
+      cursor: pointer;
+      transition: transform .2s, filter .2s;
+    }
+    .flow-node:hover { transform: scale(1.02); filter: brightness(1.1); }
+    .flow-arrow {
+      animation: flowPulse 2s ease-in-out infinite;
+    }
+    @keyframes flowPulse {
+      0%, 100% { opacity: .4; }
+      50% { opacity: 1; }
+    }
+    
+    /* 流动点 */
+    .flow-dot {
+      animation: flowDot 3s linear infinite;
+    }
+    @keyframes flowDot {
+      0% { opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    /* Features */
+    .features {
+      position: relative;
+      z-index: 5;
+      margin-top: 10px;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .features-header {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #FF6B35;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .feature {
+      flex: 1;
+      background: rgba(26, 26, 36, .35);
+      border: 1px solid rgba(255, 107, 53, .1);
+      border-radius: 8px;
+      padding: 7px 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .feature:active { background: rgba(255, 107, 53, .06); border-color: rgba(255, 107, 53, .25); }
+    .feature-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      background: rgba(255, 107, 53, .06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .feature-icon svg { width: 14px; height: 14px; stroke-width: 1.5; fill: none; }
+    .feature-icon.encrypt svg { stroke: #FF6B35; }
+    .feature-icon.share svg { stroke: #22C55E; }
+    .feature-icon.zk svg { stroke: #FF6B35; }
+    .feature-icon.audit svg { stroke: #F59E0B; }
+    .feature-icon::after {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 107, 53, .12);
+      opacity: 0;
+      transition: opacity .3s;
+    }
+    .feature:active .feature-icon::after { opacity: 1; }
+    .feature-content { flex: 1; min-width: 0; }
+    .feature-title {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      color: #E8E8E8;
+      letter-spacing: .02em;
+    }
+    .feature-desc {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 8px;
+      color: #6B6B7B;
+      margin-top: 1px;
+    }
+    .feature-arrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: #FF6B35;
+      opacity: .35;
+      transition: all .25s;
+    }
+    .feature:active .feature-arrow { opacity: 1; transform: translateX(2px); }
+
+    /* Tech Stack Pills */
+    .tech-section {
+      position: relative;
+      z-index: 5;
+      margin-top: 8px;
+      flex-shrink: 0;
+    }
+    .tech-header {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #6B6B7B;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+    .tech-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .tech-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .08em;
+      padding: 3px 8px;
+      background: rgba(26, 26, 36, .35);
+      border: 1px solid rgba(232, 232, 232, .08);
+      border-radius: 10px;
+      color: #B0B0B8;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .tech-pill:active { 
+      background: rgba(255, 107, 53, .1); 
+      border-color: rgba(255, 107, 53, .3); 
+      color: #E8E8E8;
+    }
+    .tech-pill.accent { 
+      border-color: rgba(255, 107, 53, .25); 
+      color: #FF8A5C; 
+      background: rgba(255, 107, 53, .08);
+    }
+    .tech-pill.success { 
+      border-color: rgba(34, 197, 94, .25); 
+      color: #4ADE80; 
+      background: rgba(34, 197, 94, .08);
+    }
+
+    /* Link Section */
+    .link-section {
+      position: relative;
+      z-index: 5;
+      margin-top: 8px;
+      flex-shrink: 0;
+    }
+    .link-box {
+      background: rgba(255, 107, 53, .04);
+      border: 1px solid rgba(255, 107, 53, .15);
+      border-radius: 6px;
+      padding: 7px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .link-url {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      color: #6B6B7B;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+    .visit-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .1em;
+      color: #FF6B35;
+      border: 1px solid #FF6B35;
+      padding: 4px 8px;
+      border-radius: 3px;
+      background: transparent;
+      cursor: pointer;
+      transition: all .2s;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+    .visit-btn:active { background: #FF6B35; color: #08080C; }
+
+    /* Security Status */
+    .security-status {
+      position: relative;
+      z-index: 5;
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .1em;
+    }
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      background: #22C55E;
+      border-radius: 50%;
+      animation: statusPulse 2s ease-in-out infinite;
+    }
+    @keyframes statusPulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 4px #22C55E; }
+      50% { opacity: .5; box-shadow: 0 0 2px #22C55E; }
+    }
+    .status-text { color: #22C55E; }
+    .status-detail { color: #6B6B7B; }
+
+    /* Bottom bar */
+    .bottombar {
+      position: relative;
+      z-index: 10;
+      margin-top: auto;
+      padding-top: 8px;
+      border-top: 1px solid rgba(232, 232, 232, .06);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    
+    /* 安全指示条 */
+    .secure-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #FF6B35, #CC5429);
+    }
+
+    /* Overlay */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(8, 8, 12, .94);
+      backdrop-filter: blur(14px);
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      display: flex;
+      align-items: flex-end;
+      transition: opacity .35s;
+    }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+    .sheet {
+      width: 100%;
+      max-height: 75%;
+      background: #101018;
+      border-radius: 14px 14px 0 0;
+      transform: translateY(101%);
+      transition: transform .45s cubic-bezier(.7, 0, .3, 1);
+      padding: 16px 14px 20px;
+      overflow-y: auto;
+    }
+    .overlay.active .sheet { transform: translateY(0); }
+    .sheet-handle { width: 32px; height: 3px; background: #3A3A4A; border-radius: 2px; margin: 0 auto 12px; }
+    .sheet-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 16px;
+      font-weight: 500;
+      color: #E8E8E8;
+      letter-spacing: .04em;
+    }
+    .sheet-desc {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 11px;
+      color: #B0B0B8;
+      line-height: 1.75;
+      margin-top: 10px;
+    }
+    .sheet-desc code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: #FF6B35;
+      background: rgba(255, 107, 53, .1);
+      padding: 1px 4px;
+      border-radius: 2px;
+    }
+    .sheet-points {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .sheet-point {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      color: #D0D0D8;
+      line-height: 1.55;
+    }
+    .sheet-point::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      background: #FF6B35;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+    .sheet-close {
+      margin-top: 14px;
+      width: 100%;
+      padding: 10px;
+      background: rgba(255, 107, 53, .08);
+      border: 1px solid rgba(255, 107, 53, .25);
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .15em;
+      color: #FF6B35;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .sheet-close:active { background: #FF6B35; color: #08080C; }
+
+    /* Toast */
+    .toast {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #22C55E;
+      color: #08080C;
+      padding: 7px 14px;
+      border-radius: 5px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: all .3s;
+      z-index: 200;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* 入场动画 */
+    .reveal { opacity: 0; transform: translateY(10px); transition: all .45s cubic-bezier(.4, 0, .2, 1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <!-- Topbar -->
+    <div class="topbar reveal">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <span>Young's Insight</span>
+      </div>
+      <button class="share-btn" id="shareBtn">
+        SHARE <span class="arr">↗</span>
+      </button>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero reveal">
+      <div class="meta-row">
+        <span class="vol">SECRET REGISTRY</span>
+        <span>2026.07</span>
+      </div>
+      <div class="title-block">
+        <div class="lock-stamp" id="stamp">
+          <svg viewBox="0 0 24 24">
+            <!-- 锁身 -->
+            <rect class="lock-body" x="5" y="11" width="14" height="10" rx="2"/>
+            <!-- 锁环 -->
+            <path class="lock-shackle" d="M8 11V7a4 4 0 0 1 8 0v4"/>
+            <!-- 锁孔 -->
+            <circle class="lock-keyhole" cx="12" cy="16" r="1.5"/>
+            <rect class="lock-keyhole" x="11.5" y="16" width="1" height="3"/>
+            <!-- 开启动画 -->
+            <path class="lock-opening" d="M8 7V5a2 2 0 0 1 3-1.7"/>
+          </svg>
+        </div>
+        <div class="title-text">
+          <div class="treg-title">Treg<span class="dot">.</span></div>
+          <div class="superdesign-line">
+            <span class="superdesign">密钥安全分享工具</span>
+            <span class="v-tag">SECURE</span>
+          </div>
+        </div>
+      </div>
+      <div class="tagline">Share skills & secrets <em>without leaking keys</em></div>
+      <div class="cn-tagline">安全分享密钥而不泄露</div>
+    </div>
+
+    <!-- 加密流程图 -->
+    <div class="flow-section reveal">
+      <div class="flow-header">Encryption Flow</div>
+      <div class="flow-diagram">
+        <svg class="flow-svg" viewBox="0 0 350 90" fill="none">
+          <!-- 节点 1: Secret -->
+          <g class="flow-node" id="flow-secret">
+            <rect x="5" y="20" width="65" height="50" rx="8" fill="rgba(255, 107, 53, .06)" stroke="#FF6B35" stroke-width="1" stroke-opacity=".4"/>
+            <!-- 密钥图标 -->
+            <path d="M37.5 30 L37.5 42 M33 38 L37.5 42 L42 38" stroke="#FF6B35" stroke-width="1.3" fill="none"/>
+            <circle cx="37.5" cy="52" r="4" fill="none" stroke="#FF6B35" stroke-width="1"/>
+            <text x="37.5" y="65" font-family="JetBrains Mono, monospace" font-size="6" fill="#B0B0B8" text-anchor="middle">SECRET</text>
+          </g>
+          
+          <!-- 箭头 1 -->
+          <g>
+            <line x1="75" y1="45" x2="95" y2="45" stroke="#FF6B35" stroke-width="1.5" stroke-opacity=".5" stroke-dasharray="4,3">
+              <animate attributeName="stroke-dashoffset" from="0" to="-14" dur="1s" repeatCount="indefinite"/>
+            </line>
+            <polygon points="98,42 98,48 105,45" fill="#FF6B35" fill-opacity=".5"/>
+          </g>
+          
+          <!-- 节点 2: Encrypt -->
+          <g class="flow-node" id="flow-encrypt">
+            <rect x="108" y="20" width="65" height="50" rx="8" fill="rgba(255, 107, 53, .08)" stroke="#FF6B35" stroke-width="1.2"/>
+            <!-- 加密图标 -->
+            <rect x="125" y="28" width="22" height="16" rx="2" fill="none" stroke="#FF6B35" stroke-width="1.3"/>
+            <path d="M129 28 L129 24 A5 5 0 0 1 143 24 L143 28" fill="none" stroke="#FF6B35" stroke-width="1.3"/>
+            <circle cx="136" cy="38" r="2.5" fill="#FF6B35"/>
+            <text x="140.5" y="65" font-family="JetBrains Mono, monospace" font-size="6" fill="#E8E8E8" text-anchor="middle" font-weight="500">ENCRYPT</text>
+          </g>
+          
+          <!-- 箭头 2 -->
+          <g>
+            <line x1="178" y1="45" x2="198" y2="45" stroke="#22C55E" stroke-width="1.5" stroke-opacity=".5" stroke-dasharray="4,3">
+              <animate attributeName="stroke-dashoffset" from="0" to="-14" dur="1s" repeatCount="indefinite"/>
+            </line>
+            <polygon points="201,42 201,48 208,45" fill="#22C55E" fill-opacity=".5"/>
+          </g>
+          
+          <!-- 节点 3: Share -->
+          <g class="flow-node" id="flow-share">
+            <rect x="211" y="20" width="65" height="50" rx="8" fill="rgba(34, 197, 94, .06)" stroke="#22C55E" stroke-width="1" stroke-opacity=".5"/>
+            <!-- 分享图标 -->
+            <path d="M233 35 L243.5 28 L254 35" fill="none" stroke="#22C55E" stroke-width="1.3"/>
+            <line x1="243.5" y1="28" x2="243.5" y2="50" stroke="#22C55E" stroke-width="1.3"/>
+            <path d="M238 48 L243.5 55 L249 48" fill="none" stroke="#22C55E" stroke-width="1"/>
+            <text x="243.5" y="65" font-family="JetBrains Mono, monospace" font-size="6" fill="#B0B0B8" text-anchor="middle">SHARE</text>
+          </g>
+          
+          <!-- 箭头 3 (向下) -->
+          <g>
+            <line x1="276" y1="45" x2="295" y2="45" stroke="#22C55E" stroke-width="1.5" stroke-opacity=".5" stroke-dasharray="4,3">
+              <animate attributeName="stroke-dashoffset" from="0" to="-14" dur="1s" repeatCount="indefinite"/>
+            </line>
+            <polygon points="292,42 292,48 299,45" fill="#22C55E" fill-opacity=".5"/>
+          </g>
+          
+          <!-- 节点 4: Decrypt -->
+          <g class="flow-node" id="flow-decrypt">
+            <rect x="302" y="25" width="45" height="40" rx="6" fill="rgba(34, 197, 94, .08)" stroke="#22C55E" stroke-width="1"/>
+            <!-- 解锁图标 -->
+            <path d="M320 38 L328 38" stroke="#22C55E" stroke-width="1.2"/>
+            <circle cx="324.5" cy="42" r="3" fill="none" stroke="#22C55E" stroke-width="1"/>
+            <text x="324.5" y="60" font-family="JetBrains Mono, monospace" font-size="5" fill="#E8E8E8" text-anchor="middle">DECRYPT</text>
+          </g>
+          
+          <!-- 流动点 -->
+          <circle r="2.5" fill="#FF6B35" class="flow-dot">
+            <animateMotion dur="3s" repeatCount="indefinite" path="M37.5,45 L140.5,45 L243.5,45 L324.5,45"/>
+          </circle>
+          <circle r="2.5" fill="#22C55E" class="flow-dot" style="animation-delay: 1s;">
+            <animateMotion dur="3s" repeatCount="indefinite" path="M140.5,45 L243.5,45 L324.5,45" begin="1s"/>
+          </circle>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <div class="features reveal">
+      <div class="features-header">Core Features</div>
+      <div class="feature" data-f="0">
+        <div class="feature-icon encrypt">
+          <svg viewBox="0 0 24 24">
+            <rect x="5" y="11" width="14" height="10" rx="2"/>
+            <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+          </svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">密钥加密</div>
+          <div class="feature-desc">AGE 加密算法，本地加密后上传</div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="1">
+        <div class="feature-icon share">
+          <svg viewBox="0 0 24 24">
+            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+            <polyline points="16 6 12 2 8 6"/>
+            <line x1="12" y1="2" x2="12" y2="15"/>
+          </svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">安全分享</div>
+          <div class="feature-desc">端到端加密，密钥永不在客户端明文</div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="2">
+        <div class="feature-icon zk">
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" stroke-dasharray="4,2"/>
+            <text x="12" y="15" font-size="8" fill="currentColor" text-anchor="middle" stroke="none" style="fill:#FF6B35">ZK</text>
+          </svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">零知识证明</div>
+          <div class="feature-desc">验证权限无需暴露原始数据</div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="3">
+        <div class="feature-icon audit">
+          <svg viewBox="0 0 24 24">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">审计日志</div>
+          <div class="feature-desc">完整记录每次访问和操作</div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+    </div>
+
+    <!-- Tech Stack -->
+    <div class="tech-section reveal">
+      <div class="tech-header">Tech Stack</div>
+      <div class="tech-pills">
+        <span class="tech-pill accent">Rust</span>
+        <span class="tech-pill">SQLite</span>
+        <span class="tech-pill success">AGE Encryption</span>
+      </div>
+    </div>
+
+    <!-- Link Section -->
+    <div class="link-section reveal">
+      <div class="link-box">
+        <span class="link-url">mindresonance.online/youngsinsight/pages/treg.html</span>
+        <a href="https://mindresonance.online/youngsinsight/pages/treg.html" target="_blank" class="visit-btn">VISIT</a>
+      </div>
+    </div>
+
+    <!-- Security Status -->
+    <div class="security-status reveal">
+      <div class="status-dot"></div>
+      <span class="status-text">ENCRYPTED</span>
+      <span class="status-detail">• Zero-knowledge • Audited</span>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="bottombar reveal"></div>
+    
+    <!-- 安全指示条 -->
+    <div class="secure-bar"></div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title" id="sheetTitle"></div>
+        <div class="sheet-desc" id="sheetDesc"></div>
+        <div class="sheet-points" id="sheetPoints"></div>
+        <button class="sheet-close" id="sheetClose">CLOSE</button>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script>
+    // Data
+    const features = [
+      {
+        title: '密钥加密',
+        desc: '使用 AGE 加密算法在本地对密钥进行加密。加密后的数据上传到服务器，私钥永远保留在用户设备。',
+        points: ['AGE 加密算法，业界标准', '本地加密，服务器只存储密文', '支持多种密钥类型和格式', '加密过程零网络暴露']
+      },
+      {
+        title: '安全分享',
+        desc: '端到端加密传输，确保密钥在整个分享流程中永不以明文形式出现在客户端或网络传输中。',
+        points: ['端到端加密传输', '密钥永不在客户端明文', '支持限时分享和权限控制', '分享链接自动过期']
+      },
+      {
+        title: '零知识证明',
+        desc: '验证用户权限时无需暴露原始数据。服务器只能验证加密证明，无法获取实际密钥内容。',
+        points: ['验证无需原始数据', '服务器无法获取密钥内容', '隐私保护最大化', '支持多种证明协议']
+      },
+      {
+        title: '审计日志',
+        desc: '完整记录每次访问、分享、修改操作。支持追溯、审计和合规检查。',
+        points: ['完整操作记录', '支持追溯和审计', '合规检查友好', '日志加密存储']
+      }
+    ];
+
+    const flowInfo = {
+      secret: '原始密钥存储在用户本地设备。可以是 API key、密码、证书等敏感信息。',
+      encrypt: '使用 AGE 加密算法对密钥进行本地加密。加密后的密文可以安全上传到服务器。',
+      share: '通过端到端加密通道分享加密后的密钥。接收者获得解密授权后可以访问原始密钥。',
+      decrypt: '获得授权的用户使用自己的私钥解密收到的密钥。解密过程在本地完成。'
+    };
+
+    // Elements
+    const overlay = document.getElementById('overlay');
+    const sheetTitle = document.getElementById('sheetTitle');
+    const sheetDesc = document.getElementById('sheetDesc');
+    const sheetPoints = document.getElementById('sheetPoints');
+    const sheetClose = document.getElementById('sheetClose');
+    const toast = document.getElementById('toast');
+    const shareBtn = document.getElementById('shareBtn');
+    const stamp = document.getElementById('stamp');
+
+    // Reveal animation
+    setTimeout(() => {
+      document.querySelectorAll('.reveal').forEach((el, i) => {
+        setTimeout(() => el.classList.add('visible'), i * 60);
+      });
+    }, 100);
+
+    // Feature click
+    document.querySelectorAll('.feature').forEach(el => {
+      el.addEventListener('click', () => {
+        const i = +el.dataset.f;
+        const f = features[i];
+        sheetTitle.textContent = f.title;
+        sheetDesc.textContent = f.desc;
+        sheetPoints.innerHTML = f.points.map(p => `<div class="sheet-point">${p}</div>`).join('');
+        overlay.classList.add('active');
+      });
+    });
+
+    // Flow node click
+    document.querySelectorAll('.flow-node').forEach(el => {
+      el.addEventListener('click', () => {
+        const id = el.id.replace('flow-', '');
+        const info = flowInfo[id];
+        if (info) {
+          const titles = { secret: 'Secret 密钥', encrypt: 'Encrypt 加密', share: 'Share 分享', decrypt: 'Decrypt 解密' };
+          sheetTitle.textContent = titles[id] || id;
+          sheetDesc.textContent = info;
+          sheetPoints.innerHTML = '';
+          overlay.classList.add('active');
+        }
+      });
+    });
+
+    // Stamp click
+    stamp.addEventListener('click', () => {
+      sheetTitle.textContent = 'Treg — 密钥安全分享';
+      sheetDesc.innerHTML = 'Share skills & secrets without leaking keys<br><br>安全分享密钥而不泄露。使用 AGE 加密算法实现端到端加密，确保密钥在整个分享流程中永不以明文形式暴露。';
+      sheetPoints.innerHTML = '';
+      overlay.classList.add('active');
+    });
+
+    // Close sheet
+    sheetClose.addEventListener('click', () => overlay.classList.remove('active'));
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('active'); });
+
+    // Share
+    shareBtn.addEventListener('click', async () => {
+      const text = 'Treg — Share skills & secrets without leaking keys\n安全分享密钥而不泄露';
+      const url = 'https://mindresonance.online/youngsinsight/pages/treg.html';
+      const full = text + '\n' + url;
+
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: 'Treg', text: text, url: url });
+          showToast('已分享');
+        } catch (e) {
+          if (e.name !== 'AbortError') copyToClipboard(full);
+        }
+      } else {
+        copyToClipboard(full);
+      }
+    });
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('已复制到剪贴板');
+      }).catch(() => {
+        showToast('复制失败');
+      });
+    }
+
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+  </script>
+</body>
+</html>

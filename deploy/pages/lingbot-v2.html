@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0D0815">
+  <title>LINGBOT. — World V2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.cn">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.cn/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Noto+Serif+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0D0815;
+      --bg-2: #1A0F2E;
+      --accent: #8B5CF6;
+      --accent-light: #A78BFA;
+      --cyan: #06B6D4;
+      --cyan-light: #22D3EE;
+      --text: #F0F0F0;
+      --muted: #6B6B7B;
+      --success: #22C55E;
+      --warning: #F59E0B;
+      --surface: #1A1A24;
+      --glow: #8B5CF6;
+      --serif: 'Cormorant Garamond', serif;
+      --cn: 'Noto Serif SC', serif;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Noto Sans SC', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; background: #050508; font-family: 'Noto Sans SC', sans-serif; color: #F0F0F0; -webkit-font-smoothing: antialiased; }
+    body { display: flex; align-items: center; justify-content: center; }
+
+    /* 舞台 */
+    .stage {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      height: min(100vh, calc(100vw * 16 / 9));
+      width: min(100vw, calc(100vh * 9 / 16));
+      background: linear-gradient(135deg, #0D0815 0%, #1A0F2E 50%, #0D0815 100%);
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,.6);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 16px 10px;
+    }
+
+    /* 神经网络背景 */
+    .neural-bg {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* 光晕效果 */
+    .stage::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 50% 35% at 80% 10%, rgba(6, 182, 212, .12) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 45% at 20% 60%, rgba(139, 92, 246, .1) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 70% 90%, rgba(6, 182, 212, .08) 0%, transparent 60%);
+    }
+
+    /* 网格纹理 - 更科幻的样式 */
+    .stage::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(rgba(6, 182, 212, .03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(6, 182, 212, .03) 1px, transparent 1px);
+      background-size: 30px 30px;
+      mask-image: radial-gradient(ellipse 100% 100% at 50% 50%, black 20%, transparent 70%);
+    }
+
+    /* 脉冲粒子 */
+    .pulse-particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: var(--cyan);
+      border-radius: 50%;
+      opacity: 0;
+      filter: blur(1px);
+      animation: pulseFloat 8s linear infinite;
+    }
+    @keyframes pulseFloat {
+      0% { transform: translateY(100vh) scale(0); opacity: 0; }
+      10% { opacity: 0.6; }
+      90% { opacity: 0.6; }
+      100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+    }
+
+    /* 顶部条 */
+    .topbar {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .16em;
+      color: #6B6B7B;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(6, 182, 212, .15);
+    }
+    .brand { display: flex; align-items: center; gap: 6px; color: #F0F0F0; }
+    .brand-dot {
+      width: 5px;
+      height: 5px;
+      background: var(--cyan);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--cyan), 0 0 20px var(--cyan);
+      animation: neuralPulse 2s ease-in-out infinite;
+    }
+    @keyframes neuralPulse {
+      0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 10px var(--cyan), 0 0 20px var(--cyan); }
+      50% { opacity: .4; transform: scale(.6); box-shadow: 0 0 5px var(--cyan); }
+    }
+    .share-btn {
+      background: none;
+      border: 1px solid rgba(6, 182, 212, .3);
+      padding: 4px 8px 3px;
+      font: inherit;
+      color: #F0F0F0;
+      cursor: pointer;
+      letter-spacing: .12em;
+      transition: all .3s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 7.5px;
+    }
+    .share-btn:active { background: var(--cyan); color: #0D0815; border-color: var(--cyan); }
+    .share-btn .arr { color: var(--cyan); transition: transform .3s; }
+    .share-btn:active .arr { color: #0D0815; transform: translate(2px, -2px); }
+
+    /* Hero */
+    .hero { position: relative; z-index: 5; flex-shrink: 0; margin-top: 10px; }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #6B6B7B;
+      text-transform: uppercase;
+      padding-bottom: 6px;
+    }
+    .meta-row .vol { color: var(--cyan); font-weight: 500; position: relative; }
+    .meta-row .vol::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; background: var(--cyan); }
+
+    .title-block { position: relative; margin-top: 4px; display: flex; align-items: flex-start; gap: 5px; }
+
+    /* 神经网络印章 */
+    .neural-stamp {
+      position: relative;
+      width: 38px;
+      height: 38px;
+      flex-shrink: 0;
+      margin-top: 2px;
+      cursor: pointer;
+    }
+    .neural-stamp-outer {
+      position: absolute;
+      inset: -4px;
+      border: 1px dashed rgba(6, 182, 212, .4);
+      border-radius: 50%;
+      animation: spin 25s linear infinite;
+    }
+    .neural-stamp-ring {
+      position: absolute;
+      inset: -1px;
+      border: 1px solid rgba(139, 92, 246, .3);
+      border-radius: 50%;
+    }
+    .neural-stamp-core {
+      position: absolute;
+      inset: 4px;
+      background: rgba(139, 92, 246, .08);
+      border: 1.5px solid var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .neural-stamp-letter {
+      font-family: 'Georgia', serif;
+      font-weight: bold;
+      font-size: 18px;
+      color: var(--accent);
+      text-shadow: 0 0 10px var(--accent);
+    }
+    .neural-stamp-node {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: var(--cyan);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--cyan);
+      animation: nodePulse 2s ease-in-out infinite;
+    }
+    .neural-stamp-node:nth-child(1) { top: -3px; left: 50%; transform: translateX(-50%); animation-delay: 0s; }
+    .neural-stamp-node:nth-child(2) { right: -3px; top: 50%; transform: translateY(-50%); animation-delay: .5s; }
+    .neural-stamp-node:nth-child(3) { bottom: -3px; left: 50%; transform: translateX(-50%); animation-delay: 1s; }
+    .neural-stamp-node:nth-child(4) { left: -3px; top: 50%; transform: translateY(-50%); animation-delay: 1.5s; }
+    @keyframes nodePulse {
+      0%, 100% { opacity: .6; transform: translateX(-50%) scale(1); }
+      50% { opacity: 1; transform: translateX(-50%) scale(1.3); }
+    }
+    .neural-stamp-node:nth-child(2) { animation-name: nodePulse2; }
+    .neural-stamp-node:nth-child(4) { animation-name: nodePulse2; }
+    @keyframes nodePulse2 {
+      0%, 100% { opacity: .6; transform: translateY(-50%) scale(1); }
+      50% { opacity: 1; transform: translateY(-50%) scale(1.3); }
+    }
+
+    .title-text { flex: 1; min-width: 0; }
+    .lingbot-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 500;
+      font-size: 36px;
+      line-height: .95;
+      letter-spacing: .02em;
+      color: #F0F0F0;
+      text-shadow: 0 0 30px rgba(6, 182, 212, .3);
+    }
+    .lingbot-title .dot { color: var(--cyan); text-shadow: 0 0 15px var(--cyan); }
+    .superdesign-line {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-top: 1px;
+    }
+    .superdesign {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 400;
+      font-style: italic;
+      font-size: 13px;
+      color: #6B6B7B;
+      letter-spacing: .04em;
+    }
+    .v-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      color: #22C55E;
+      border: 1px solid #22C55E;
+      padding: 1px 4px;
+      letter-spacing: .1em;
+    }
+
+    .tagline {
+      margin-top: 5px;
+      font-family: 'Noto Serif SC', serif;
+      font-weight: 300;
+      font-size: 10px;
+      color: #F0F0F0;
+      letter-spacing: .05em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tagline::before { content: ''; width: 12px; height: 1px; background: var(--cyan); flex-shrink: 0; box-shadow: 0 0 8px var(--cyan); }
+    .tagline em { font-style: normal; color: var(--cyan); font-weight: 500; }
+
+    /* Intro */
+    .intro { position: relative; z-index: 5; margin-top: 8px; flex-shrink: 0; }
+    .intro-inner {
+      display: flex;
+      gap: 8px;
+      padding: 8px 10px;
+      background: rgba(26, 15, 46, .5);
+      border-radius: 6px;
+      border: 1px solid rgba(6, 182, 212, .12);
+    }
+    .intro-line { width: 2px; background: linear-gradient(180deg, var(--cyan), var(--accent)); border-radius: 1px; flex-shrink: 0; }
+    .intro-text {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 9px;
+      line-height: 1.65;
+      color: #B0B0B8;
+      letter-spacing: .02em;
+    }
+    .intro-text strong { color: #F0F0F0; font-weight: 500; }
+
+    /* Neural Flow Section */
+    .neural-flow {
+      position: relative;
+      z-index: 5;
+      margin-top: 10px;
+      flex-shrink: 0;
+    }
+    .neural-flow-header {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: var(--cyan);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .neural-flow-header::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(6, 182, 212, .3), transparent); }
+
+    .neural-flow-diagram {
+      background: rgba(13, 8, 21, .6);
+      border: 1px solid rgba(139, 92, 246, .2);
+      border-radius: 10px;
+      padding: 12px;
+      position: relative;
+    }
+
+    .flow-svg { width: 100%; height: auto; display: block; }
+
+    /* Features */
+    .features {
+      position: relative;
+      z-index: 5;
+      margin-top: 8px;
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .feature {
+      background: rgba(26, 15, 46, .35);
+      border: 1px solid rgba(139, 92, 246, .15);
+      border-radius: 8px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      cursor: pointer;
+      transition: all .25s;
+      position: relative;
+      overflow: hidden;
+    }
+    .feature:active {
+      background: rgba(6, 182, 212, .08);
+      border-color: rgba(6, 182, 212, .3);
+    }
+    .feature::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--feature-color), transparent);
+      opacity: 0;
+      transition: opacity .3s;
+    }
+    .feature:active::before { opacity: 1; }
+    .feature-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .feature-icon svg { width: 16px; height: 16px; stroke-width: 1.5; }
+    .feature-icon::after {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: 10px;
+      border: 1px solid rgba(6, 182, 212, .15);
+      opacity: 0;
+      transition: opacity .3s;
+    }
+    .feature:active .feature-icon::after { opacity: 1; }
+    .feature-title {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      color: #F0F0F0;
+      letter-spacing: .02em;
+    }
+    .feature-desc {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 8px;
+      color: #6B6B7B;
+    }
+
+    /* Tech Stack Pills */
+    .tech-section {
+      position: relative;
+      z-index: 5;
+      margin-top: 8px;
+      flex-shrink: 0;
+    }
+    .tech-header {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #6B6B7B;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+    .tech-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .tech-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .08em;
+      padding: 3px 8px;
+      background: rgba(26, 15, 46, .4);
+      border: 1px solid rgba(6, 182, 212, .2);
+      border-radius: 10px;
+      color: #B0B0B8;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .tech-pill:active {
+      background: rgba(6, 182, 212, .15);
+      border-color: var(--cyan);
+      color: var(--cyan-light);
+    }
+    .tech-pill.accent { border-color: var(--cyan); color: var(--cyan-light); }
+
+    /* Bottom bar */
+    .bottombar {
+      position: relative;
+      z-index: 10;
+      margin-top: auto;
+      padding-top: 8px;
+      border-top: 1px solid rgba(6, 182, 212, .15);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .github-link {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      color: #6B6B7B;
+      text-decoration: none;
+      letter-spacing: .08em;
+      transition: color .2s;
+    }
+    .github-link:active { color: var(--cyan); }
+    .github-link svg { width: 12px; height: 12px; fill: currentColor; }
+    .visit-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .1em;
+      color: var(--cyan);
+      border: 1px solid rgba(6, 182, 212, .35);
+      padding: 5px 10px;
+      border-radius: 4px;
+      background: rgba(6, 182, 212, .05);
+      cursor: pointer;
+      transition: all .2s;
+      text-decoration: none;
+    }
+    .visit-btn:active { background: var(--cyan); color: #0D0815; }
+
+    /* Overlay */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(13, 8, 21, .94);
+      backdrop-filter: blur(14px);
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      display: flex;
+      align-items: flex-end;
+      transition: opacity .35s;
+    }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+    .sheet {
+      width: 100%;
+      max-height: 75%;
+      background: linear-gradient(180deg, #1A0F2E, #0D0815);
+      border-radius: 14px 14px 0 0;
+      transform: translateY(101%);
+      transition: transform .45s cubic-bezier(.7, 0, .3, 1);
+      padding: 16px 14px 20px;
+      overflow-y: auto;
+      border: 1px solid rgba(6, 182, 212, .1);
+      border-bottom: none;
+    }
+    .overlay.active .sheet { transform: translateY(0); }
+    .sheet-handle { width: 32px; height: 3px; background: rgba(6, 182, 212, .4); border-radius: 2px; margin: 0 auto 12px; }
+    .sheet-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 16px;
+      font-weight: 500;
+      color: #F0F0F0;
+      letter-spacing: .04em;
+    }
+    .sheet-desc {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 11px;
+      color: #B0B0B8;
+      line-height: 1.75;
+      margin-top: 10px;
+    }
+    .sheet-desc code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--cyan);
+      background: rgba(6, 182, 212, .1);
+      padding: 1px 4px;
+      border-radius: 2px;
+    }
+    .sheet-points {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .sheet-point {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      color: #D0D0D8;
+      line-height: 1.55;
+    }
+    .sheet-point::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      background: var(--cyan);
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 5px;
+      box-shadow: 0 0 8px var(--cyan);
+    }
+    .sheet-close {
+      margin-top: 14px;
+      width: 100%;
+      padding: 10px;
+      background: rgba(6, 182, 212, .08);
+      border: 1px solid rgba(6, 182, 212, .25);
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .15em;
+      color: var(--cyan);
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .sheet-close:active { background: var(--cyan); color: #0D0815; }
+
+    /* Toast */
+    .toast {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--cyan);
+      color: #0D0815;
+      padding: 7px 14px;
+      border-radius: 5px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: all .3s;
+      z-index: 200;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* 入场动画 */
+    .reveal { opacity: 0; transform: translateY(10px); transition: all .45s cubic-bezier(.4, 0, .2, 1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* 3D 神经网络容器 */
+    .lingbot-3d-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 45%;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .lingbot-3d-container canvas {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* 节点脉冲动画 */
+    @keyframes nodeGlow {
+      0%, 100% { filter: drop-shadow(0 0 3px var(--cyan)); }
+      50% { filter: drop-shadow(0 0 8px var(--cyan)); }
+    }
+  </style>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div class="stage">
+    <!-- 背景脉冲粒子 -->
+    <div class="neural-bg">
+      <div class="pulse-particle" style="left: 10%; animation-delay: 0s;"></div>
+      <div class="pulse-particle" style="left: 25%; animation-delay: 2s;"></div>
+      <div class="pulse-particle" style="left: 40%; animation-delay: 4s;"></div>
+      <div class="pulse-particle" style="left: 60%; animation-delay: 1s;"></div>
+      <div class="pulse-particle" style="left: 75%; animation-delay: 3s;"></div>
+      <div class="pulse-particle" style="left: 90%; animation-delay: 5s;"></div>
+    </div>
+
+    <!-- 3D 神经网络效果层 -->
+    <div class="lingbot-3d-container" id="lingbot3d"></div>
+
+    <!-- Topbar -->
+    <div class="topbar reveal">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <span>Young's Insight</span>
+      </div>
+      <button class="share-btn" id="shareBtn">
+        SHARE <span class="arr">↗</span>
+      </button>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero reveal">
+      <div class="meta-row">
+        <span class="vol">LINGBOT WORLD</span>
+        <span>2026.07</span>
+      </div>
+      <div class="title-block">
+        <!-- 神经网络印章 -->
+        <div class="neural-stamp" id="stamp">
+          <div class="neural-stamp-outer"></div>
+          <div class="neural-stamp-ring"></div>
+          <div class="neural-stamp-core">
+            <span class="neural-stamp-letter">L</span>
+          </div>
+          <div class="neural-stamp-node"></div>
+          <div class="neural-stamp-node"></div>
+          <div class="neural-stamp-node"></div>
+          <div class="neural-stamp-node"></div>
+        </div>
+        <div class="title-text">
+          <div class="lingbot-title">LINGBOT<span class="dot">.</span></div>
+          <div class="superdesign-line">
+            <span class="superdesign">World V2</span>
+            <span class="v-tag">OPEN SOURCE</span>
+          </div>
+        </div>
+      </div>
+      <div class="tagline">对话即世界 · <em>对话驱动的工作流</em></div>
+    </div>
+
+    <!-- Intro -->
+    <div class="intro reveal">
+      <div class="intro-inner">
+        <div class="intro-line"></div>
+        <div class="intro-text">
+          开源智能体框架，<strong>对话驱动</strong>的工作流编排。用自然语言定义任务，多 Agent 协作拆解，工具链自动集成。
+        </div>
+      </div>
+    </div>
+
+    <!-- Neural Flow Diagram -->
+    <div class="neural-flow reveal">
+      <div class="neural-flow-header">Neural Dialogue Flow</div>
+      <div class="neural-flow-diagram">
+        <svg class="flow-svg" viewBox="0 0 340 100" fill="none">
+          <!-- 背景网格 -->
+          <defs>
+            <pattern id="flowGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(6, 182, 212, 0.05)" stroke-width="0.5"/>
+            </pattern>
+          </defs>
+          <rect width="340" height="100" fill="url(#flowGrid)"/>
+
+          <!-- 连接线 -->
+          <line x1="65" y1="35" x2="95" y2="35" stroke="#8B5CF6" stroke-width="2" stroke-opacity="0.4"/>
+          <line x1="155" y1="35" x2="185" y2="35" stroke="#06B6D4" stroke-width="2" stroke-opacity="0.4"/>
+
+          <!-- 脉冲点动画 -->
+          <circle r="3" fill="#8B5CF6">
+            <animate attributeName="cx" values="65;95;65" dur="2s" repeatCount="indefinite"/>
+            <animate attributeName="cy" values="35;35;35" dur="2s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="1;1;1" dur="2s" repeatCount="indefinite"/>
+          </circle>
+          <circle r="3" fill="#06B6D4">
+            <animate attributeName="cx" values="155;185;155" dur="2s" repeatCount="indefinite" begin="0.3s"/>
+            <animate attributeName="cy" values="35;35;35" dur="2s" repeatCount="indefinite" begin="0.3s"/>
+          </circle>
+
+          <!-- Node 1: User -->
+          <g class="flow-node" id="flow-user" style="cursor: pointer;">
+            <circle cx="35" cy="35" r="20" fill="rgba(6, 182, 212, 0.08)" stroke="#06B6D4" stroke-width="1"/>
+            <circle cx="35" cy="35" r="12" fill="rgba(6, 182, 212, 0.15)"/>
+            <circle cx="35" cy="35" r="5" fill="#06B6D4"/>
+            <circle cx="35" cy="35" r="8" fill="none" stroke="#06B6D4" stroke-width="1">
+              <animate attributeName="r" values="5;14;5" dur="2s" repeatCount="indefinite"/>
+              <animate attributeName="opacity" values="0.6;0;0.6" dur="2s" repeatCount="indefinite"/>
+            </circle>
+            <text x="35" y="62" font-family="JetBrains Mono, monospace" font-size="7" fill="#06B6D4" text-anchor="middle">USER</text>
+          </g>
+
+          <!-- Node 2: Agent Core -->
+          <g class="flow-node" id="flow-core" style="cursor: pointer;">
+            <circle cx="125" cy="35" r="28" fill="none" stroke="#8B5CF6" stroke-width="0.5" stroke-opacity="0.3">
+              <animate attributeName="r" values="26;30;26" dur="3s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="125" cy="35" r="22" fill="rgba(139, 92, 246, 0.1)" stroke="#8B5CF6" stroke-width="1.5"/>
+            <circle cx="125" cy="35" r="10" fill="#8B5CF6"/>
+            <circle cx="125" cy="35" r="14" fill="none" stroke="#A78BFA" stroke-width="1">
+              <animate attributeName="r" values="10;18;10" dur="1.8s" repeatCount="indefinite"/>
+              <animate attributeName="opacity" values="0.5;0;0.5" dur="1.8s" repeatCount="indefinite"/>
+            </circle>
+            <text x="125" y="32" font-family="JetBrains Mono, monospace" font-size="7" fill="#A78BFA" text-anchor="middle">AGENT</text>
+            <text x="125" y="40" font-family="JetBrains Mono, monospace" font-size="5" fill="#6B6B7B" text-anchor="middle">CORE</text>
+          </g>
+
+          <!-- Node 3: Tools -->
+          <g class="flow-node" id="flow-tools" style="cursor: pointer;">
+            <circle cx="215" cy="35" r="18" fill="rgba(34, 197, 94, 0.08)" stroke="#22C55E" stroke-width="1"/>
+            <circle cx="215" cy="35" r="10" fill="rgba(34, 197, 94, 0.15)"/>
+            <circle cx="215" cy="35" r="4" fill="#22C55E"/>
+            <text x="215" y="58" font-family="JetBrains Mono, monospace" font-size="7" fill="#22C55E" text-anchor="middle">TOOLS</text>
+          </g>
+
+          <!-- 协作 Agent 群 -->
+          <g transform="translate(30, 75)">
+            <circle cx="20" cy="10" r="8" fill="rgba(139, 92, 246, 0.06)" stroke="#8B5CF6" stroke-width="0.8" stroke-opacity="0.5"/>
+            <circle cx="20" cy="10" r="3" fill="#8B5CF6"/>
+            <text x="20" y="24" font-family="JetBrains Mono, monospace" font-size="5" fill="#8B5CF6" text-anchor="middle">A1</text>
+
+            <circle cx="70" cy="10" r="8" fill="rgba(139, 92, 246, 0.06)" stroke="#8B5CF6" stroke-width="0.8" stroke-opacity="0.5"/>
+            <circle cx="70" cy="10" r="3" fill="#8B5CF6"/>
+            <text x="70" y="24" font-family="JetBrains Mono, monospace" font-size="5" fill="#8B5CF6" text-anchor="middle">A2</text>
+
+            <circle cx="120" cy="10" r="8" fill="rgba(6, 182, 212, 0.06)" stroke="#06B6D4" stroke-width="0.8" stroke-opacity="0.5"/>
+            <circle cx="120" cy="10" r="3" fill="#06B6D4"/>
+            <text x="120" y="24" font-family="JetBrains Mono, monospace" font-size="5" fill="#06B6D4" text-anchor="middle">A3</text>
+
+            <circle cx="170" cy="10" r="8" fill="rgba(139, 92, 246, 0.06)" stroke="#8B5CF6" stroke-width="0.8" stroke-opacity="0.5"/>
+            <circle cx="170" cy="10" r="3" fill="#8B5CF6"/>
+            <text x="170" y="24" font-family="JetBrains Mono, monospace" font-size="5" fill="#8B5CF6" text-anchor="middle">A4</text>
+
+            <!-- Agent 间连接 -->
+            <line x1="28" y1="10" x2="62" y2="10" stroke="#8B5CF6" stroke-width="0.5" stroke-opacity="0.3"/>
+            <line x1="78" y1="10" x2="112" y2="10" stroke="#06B6D4" stroke-width="0.5" stroke-opacity="0.3"/>
+            <line x1="128" y1="10" x2="162" y2="10" stroke="#8B5CF6" stroke-width="0.5" stroke-opacity="0.3"/>
+
+            <!-- 脉冲 -->
+            <circle r="2" fill="#8B5CF6">
+              <animate attributeName="cx" values="28;62;28" dur="1.5s" repeatCount="indefinite"/>
+              <animate attributeName="cy" values="10;10;10" dur="1.5s" repeatCount="indefinite"/>
+            </circle>
+            <circle r="2" fill="#06B6D4">
+              <animate attributeName="cx" values="78;112;78" dur="1.5s" repeatCount="indefinite" begin="0.2s"/>
+              <animate attributeName="cy" values="10;10;10" dur="1.5s" repeatCount="indefinite" begin="0.2s"/>
+            </circle>
+
+            <text x="210" y="13" font-family="Noto Sans SC, sans-serif" font-size="6" fill="#6B6B7B">多 Agent 协作</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <div class="features reveal">
+      <div class="feature" data-f="0" style="--feature-color: #06B6D4;">
+        <div class="feature-icon" style="background: rgba(6, 182, 212, 0.1);">
+          <svg viewBox="0 0 24 24" stroke="#06B6D4" fill="none">
+            <circle cx="12" cy="12" r="4"/>
+            <circle cx="12" cy="12" r="8" stroke-dasharray="4 2"/>
+          </svg>
+        </div>
+        <div class="feature-title">对话驱动</div>
+        <div class="feature-desc">自然语言定义工作流</div>
+      </div>
+      <div class="feature" data-f="1" style="--feature-color: #8B5CF6;">
+        <div class="feature-icon" style="background: rgba(139, 92, 246, 0.1);">
+          <svg viewBox="0 0 24 24" stroke="#8B5CF6" fill="none">
+            <circle cx="12" cy="5" r="3"/>
+            <circle cx="5" cy="19" r="3"/>
+            <circle cx="19" cy="19" r="3"/>
+            <line x1="12" y1="8" x2="5" y2="16"/>
+            <line x1="12" y1="8" x2="19" y2="16"/>
+          </svg>
+        </div>
+        <div class="feature-title">多 Agent 协作</div>
+        <div class="feature-desc">支持复杂任务拆解</div>
+      </div>
+      <div class="feature" data-f="2" style="--feature-color: #22C55E;">
+        <div class="feature-icon" style="background: rgba(34, 197, 94, 0.1);">
+          <svg viewBox="0 0 24 24" stroke="#22C55E" fill="none">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+          </svg>
+        </div>
+        <div class="feature-title">工具集成</div>
+        <div class="feature-desc">API、数据库</div>
+      </div>
+      <div class="feature" data-f="3" style="--feature-color: #8B5CF6;">
+        <div class="feature-icon" style="background: rgba(139, 92, 246, 0.1);">
+          <svg viewBox="0 0 24 24" stroke="#8B5CF6" fill="none">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+        </div>
+        <div class="feature-title">可视化调试</div>
+        <div class="feature-desc">实时追踪执行</div>
+      </div>
+    </div>
+
+    <!-- Tech Stack -->
+    <div class="tech-section reveal">
+      <div class="tech-header">Tech Stack</div>
+      <div class="tech-pills">
+        <span class="tech-pill accent">Python</span>
+        <span class="tech-pill">LangGraph</span>
+        <span class="tech-pill">FastAPI</span>
+        <span class="tech-pill">Vue.js</span>
+      </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="bottombar reveal">
+      <a href="https://github.com/your-org/lingbot" target="_blank" class="github-link">
+        <svg viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        your-org/lingbot
+      </a>
+      <a href="https://github.com/your-org/lingbot" target="_blank" class="visit-btn">VISIT →</a>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title" id="sheetTitle"></div>
+        <div class="sheet-desc" id="sheetDesc"></div>
+        <div class="sheet-points" id="sheetPoints"></div>
+        <button class="sheet-close" id="sheetClose">CLOSE</button>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script>
+    // Data
+    const features = [
+      {
+        title: '对话驱动',
+        desc: '用自然语言定义工作流，无需编写代码。LINGBOT 解析用户意图，自动编排执行步骤，让对话成为最自然的编程接口。',
+        points: ['自然语言 → 工作流定义', '意图识别与任务拆解', '上下文感知的多轮对话', '支持中英文混合指令']
+      },
+      {
+        title: '多 Agent 协作',
+        desc: '支持复杂任务的自动拆解与多 Agent 协同执行。每个 Agent 专注自己的领域，通过消息传递实现高效协作。',
+        points: ['任务自动拆解为子任务', 'Agent 间消息传递与协调', '支持并行与串行执行', '动态 Agent 调度与负载均衡']
+      },
+      {
+        title: '工具集成',
+        desc: '内置丰富的工具链：REST API 调用、数据库查询、文件读写、代码执行等。支持自定义工具扩展，一键接入外部服务。',
+        points: ['REST API 调用与鉴权', '数据库 CRUD 操作', '文件读写与处理', '自定义工具注册与扩展']
+      },
+      {
+        title: '可视化调试',
+        desc: '实时追踪 Agent 执行过程，可视化展示工作流状态、中间结果和错误信息。让调试像看日志一样直观。',
+        points: ['实时执行状态追踪', '工作流可视化展示', '中间结果与错误定位', '执行回放与性能分析']
+      }
+    ];
+
+    const flowInfo = {
+      user: '用户通过自然语言对话发起任务。LINGBOT 解析意图，生成执行计划。',
+      core: 'LINGBOT 核心编排引擎：解析意图 → 拆解任务 → 调度 Agent → 协调执行 → 汇总结果。',
+      tools: '工具层：API 调用、数据库操作、文件处理等。Agent 按需调用，结果自动回传。'
+    };
+
+    const techInfo = {
+      Python: '核心开发语言，3.10+，类型注解全覆盖',
+      LangGraph: 'Agent 编排框架，基于有向图的工作流引擎',
+      FastAPI: '高性能异步 Web 框架，自动生成 OpenAPI 文档',
+      'Vue.js': '前端可视化界面，工作流编辑器与调试面板'
+    };
+
+    // Elements
+    const overlay = document.getElementById('overlay');
+    const sheetTitle = document.getElementById('sheetTitle');
+    const sheetDesc = document.getElementById('sheetDesc');
+    const sheetPoints = document.getElementById('sheetPoints');
+    const sheetClose = document.getElementById('sheetClose');
+    const toast = document.getElementById('toast');
+    const shareBtn = document.getElementById('shareBtn');
+    const stamp = document.getElementById('stamp');
+
+    // Reveal animation
+    setTimeout(() => {
+      document.querySelectorAll('.reveal').forEach((el, i) => {
+        setTimeout(() => el.classList.add('visible'), i * 60);
+      });
+    }, 100);
+
+    // Feature click
+    document.querySelectorAll('.feature').forEach(el => {
+      el.addEventListener('click', () => {
+        const i = +el.dataset.f;
+        const f = features[i];
+        sheetTitle.textContent = f.title;
+        sheetDesc.textContent = f.desc;
+        sheetPoints.innerHTML = f.points.map(p => `<div class="sheet-point">${p}</div>`).join('');
+        overlay.classList.add('active');
+      });
+    });
+
+    // Flow node click
+    document.querySelectorAll('.flow-node').forEach(el => {
+      el.addEventListener('click', () => {
+        const id = el.id.replace('flow-', '');
+        const info = flowInfo[id];
+        if (info) {
+          const titles = { user: 'User', core: 'Agent Core', tools: 'Tools' };
+          sheetTitle.textContent = titles[id] || id;
+          sheetDesc.textContent = info;
+          sheetPoints.innerHTML = '';
+          overlay.classList.add('active');
+        }
+      });
+    });
+
+    // Tech pill click
+    document.querySelectorAll('.tech-pill').forEach(el => {
+      el.addEventListener('click', () => {
+        const tech = el.textContent.trim();
+        const info = techInfo[tech];
+        if (info) {
+          sheetTitle.textContent = tech;
+          sheetDesc.textContent = info;
+          sheetPoints.innerHTML = '';
+          overlay.classList.add('active');
+        }
+      });
+    });
+
+    // Stamp click
+    stamp.addEventListener('click', () => {
+      sheetTitle.textContent = 'LINGBOT. World V2';
+      sheetDesc.innerHTML = '开源智能体框架，对话驱动的工作流。<br><br>用自然语言定义任务，多 <code>Agent</code> 协作拆解，工具链自动集成。基于 <code>LangGraph</code> 构建有向图工作流，<code>FastAPI</code> 提供高性能异步服务，<code>Vue.js</code> 实现可视化调试面板。<br><br>核心原则：<strong>对话即编程</strong> —— 让 AI Agent 成为最自然的人机交互接口。';
+      sheetPoints.innerHTML = '';
+      overlay.classList.add('active');
+    });
+
+    // Close sheet
+    sheetClose.addEventListener('click', () => overlay.classList.remove('active'));
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('active'); });
+
+    // Share
+    shareBtn.addEventListener('click', async () => {
+      const text = 'LINGBOT. — World V2 · 对话即世界\\n开源智能体框架，对话驱动的工作流';
+      const url = 'https://mindresonance.online/youngsinsight/pages/lingbot-v2.html';
+      const full = text + '\\n' + url;
+
+      try {
+        if (navigator.share) {
+          await navigator.share({ title: 'LINGBOT.', text, url });
+          return;
+        }
+      } catch (e) {}
+
+      try {
+        await navigator.clipboard.writeText(full);
+        showToast('已复制标题与链接');
+      } catch (e) {
+        const ta = document.createElement('textarea');
+        ta.value = full;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('已复制标题与链接');
+      }
+    });
+
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+
+    // ── 3D 神经网络效果 ──
+    const container = document.getElementById('lingbot3d');
+    if (!container) throw new Error('lingbot3d container not found');
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 100);
+    camera.position.set(0, 0, 5);
+
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x000000, 0);
+    container.appendChild(renderer.domElement);
+
+    // ── 节点数据 ──
+    const nodeData = [
+      { pos: [0, 0.6, 0], color: 0x8B5CF6, size: 0.18, label: 'Core' },
+      { pos: [-1.8, 0.3, -0.5], color: 0x06B6D4, size: 0.12, label: 'User' },
+      { pos: [1.8, 0.3, -0.3], color: 0x22C55E, size: 0.12, label: 'Tools' },
+      { pos: [-1.0, -0.5, 0.8], color: 0x8B5CF6, size: 0.10, label: 'A1' },
+      { pos: [0.0, -0.8, 1.0], color: 0x06B6D4, size: 0.10, label: 'A2' },
+      { pos: [1.0, -0.5, 0.6], color: 0x8B5CF6, size: 0.10, label: 'A3' },
+      { pos: [-0.5, 1.2, -0.8], color: 0xA78BFA, size: 0.08, label: 'A4' },
+      { pos: [0.6, 1.0, -0.6], color: 0x22D3EE, size: 0.08, label: 'A5' },
+    ];
+
+    // ── 连接关系 ──
+    const connections = [
+      [0, 1], [0, 2], [0, 3], [0, 4], [0, 5],
+      [1, 6], [2, 7], [3, 4], [4, 5], [6, 7],
+      [1, 3], [2, 5], [3, 6], [5, 7],
+    ];
+
+    // ── 创建发光节点 ──
+    const nodes = [];
+    const nodeGroup = new THREE.Group();
+
+    nodeData.forEach((nd, i) => {
+      // 核心球体
+      const geo = new THREE.SphereGeometry(Math.max(0.01, nd.size), 16, 16);
+      const mat = new THREE.MeshBasicMaterial({
+        color: nd.color,
+        transparent: true,
+        opacity: 0.9,
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(...nd.pos);
+      nodeGroup.add(mesh);
+
+      // 外层光晕
+      const glowGeo = new THREE.SphereGeometry(Math.max(0.01, nd.size * 2.2), 16, 16);
+      const glowMat = new THREE.MeshBasicMaterial({
+        color: nd.color,
+        transparent: true,
+        opacity: 0.12,
+      });
+      const glow = new THREE.Mesh(glowGeo, glowMat);
+      glow.position.set(...nd.pos);
+      nodeGroup.add(glow);
+
+      // 脉冲环
+      const ringGeo = new THREE.RingGeometry(Math.max(0.01, nd.size * 1.5), Math.max(0.02, nd.size * 1.8), 32);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: nd.color,
+        transparent: true,
+        opacity: 0.3,
+        side: THREE.DoubleSide,
+      });
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.position.set(...nd.pos);
+      ring.lookAt(camera.position);
+      nodeGroup.add(ring);
+
+      nodes.push({ mesh, glow, ring, basePos: nd.pos, phase: i * 0.7 });
+    });
+
+    scene.add(nodeGroup);
+
+    // ── 创建连接线 ──
+    const lineGroup = new THREE.Group();
+
+    connections.forEach(([a, b]) => {
+      const posA = new THREE.Vector3(...nodeData[a].pos);
+      const posB = new THREE.Vector3(...nodeData[b].pos);
+      const points = [posA, posB];
+      const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
+
+      // 渐变色：混合两端节点颜色
+      const colA = new THREE.Color(nodeData[a].color);
+      const colB = new THREE.Color(nodeData[b].color);
+      const colors = new Float32Array([
+        colA.r, colA.g, colA.b,
+        colB.r, colB.g, colB.b,
+      ]);
+      lineGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+      const lineMat = new THREE.LineBasicMaterial({
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.25,
+      });
+      const line = new THREE.Line(lineGeo, lineMat);
+      lineGroup.add(line);
+    });
+
+    scene.add(lineGroup);
+
+    // ── 粒子流动系统 ──
+    const PARTICLE_COUNT = 60;
+    const particleGeo = new THREE.BufferGeometry();
+    const particlePositions = new Float32Array(PARTICLE_COUNT * 3);
+    const particleColors = new Float32Array(PARTICLE_COUNT * 3);
+    const particleSizes = new Float32Array(PARTICLE_COUNT);
+
+    // 每个粒子的流动状态
+    const particleStates = [];
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const connIdx = Math.floor(Math.random() * connections.length);
+      const [a, b] = connections[connIdx];
+      const t = Math.random();
+      const posA = new THREE.Vector3(...nodeData[a].pos);
+      const posB = new THREE.Vector3(...nodeData[b].pos);
+      const pos = new THREE.Vector3().lerpVectors(posA, posB, t);
+
+      particlePositions[i * 3] = pos.x;
+      particlePositions[i * 3 + 1] = pos.y;
+      particlePositions[i * 3 + 2] = pos.z;
+
+      // 颜色：根据连接两端混合
+      const colA = new THREE.Color(nodeData[a].color);
+      const colB = new THREE.Color(nodeData[b].color);
+      const col = new THREE.Color().lerpColors(colA, colB, t);
+      particleColors[i * 3] = col.r;
+      particleColors[i * 3 + 1] = col.g;
+      particleColors[i * 3 + 2] = col.b;
+
+      particleSizes[i] = 2.0 + Math.random() * 2.0;
+
+      particleStates.push({
+        connIdx,
+        t,
+        speed: 0.15 + Math.random() * 0.25,
+        direction: Math.random() > 0.5 ? 1 : -1,
+      });
+    }
+
+    particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+    particleGeo.setAttribute('color', new THREE.BufferAttribute(particleColors, 3));
+    particleGeo.setAttribute('size', new THREE.BufferAttribute(particleSizes, 1));
+
+    // 自定义粒子着色器 - 发光圆点
+    const particleMat = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 },
+      },
+      vertexShader: `
+        attribute float size;
+        attribute vec3 color;
+        varying vec3 vColor;
+        varying float vAlpha;
+        void main() {
+          vColor = color;
+          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+          gl_PointSize = size * (200.0 / -mvPosition.z);
+          gl_Position = projectionMatrix * mvPosition;
+          vAlpha = 0.8;
+        }
+      `,
+      fragmentShader: `
+        varying vec3 vColor;
+        varying float vAlpha;
+        void main() {
+          float d = length(gl_PointCoord - vec2(0.5));
+          if (d > 0.5) discard;
+          float glow = 1.0 - smoothstep(0.0, 0.5, d);
+          glow = pow(glow, 1.5);
+          gl_FragColor = vec4(vColor, glow * vAlpha);
+        }
+      `,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+
+    const particleSystem = new THREE.Points(particleGeo, particleMat);
+    scene.add(particleSystem);
+
+    // ── 环境微光粒子 ──
+    const AMBIENT_COUNT = 40;
+    const ambientGeo = new THREE.BufferGeometry();
+    const ambientPos = new Float32Array(AMBIENT_COUNT * 3);
+    const ambientCol = new Float32Array(AMBIENT_COUNT * 3);
+    const ambientSizes = new Float32Array(AMBIENT_COUNT);
+
+    for (let i = 0; i < AMBIENT_COUNT; i++) {
+      ambientPos[i * 3] = (Math.random() - 0.5) * 6;
+      ambientPos[i * 3 + 1] = (Math.random() - 0.5) * 4;
+      ambientPos[i * 3 + 2] = (Math.random() - 0.5) * 3;
+
+      const isPurple = Math.random() > 0.5;
+      const col = isPurple
+        ? new THREE.Color(0x8B5CF6)
+        : new THREE.Color(0x06B6D4);
+      ambientCol[i * 3] = col.r;
+      ambientCol[i * 3 + 1] = col.g;
+      ambientCol[i * 3 + 2] = col.b;
+
+      ambientSizes[i] = 1.0 + Math.random() * 1.5;
+    }
+
+    ambientGeo.setAttribute('position', new THREE.BufferAttribute(ambientPos, 3));
+    ambientGeo.setAttribute('color', new THREE.BufferAttribute(ambientCol, 3));
+    ambientGeo.setAttribute('size', new THREE.BufferAttribute(ambientSizes, 1));
+
+    const ambientMat = new THREE.ShaderMaterial({
+      uniforms: { uTime: { value: 0 } },
+      vertexShader: `
+        attribute float size;
+        attribute vec3 color;
+        varying vec3 vColor;
+        uniform float uTime;
+        void main() {
+          vColor = color;
+          vec3 pos = position;
+          pos.y += sin(uTime * 0.3 + position.x * 2.0) * 0.1;
+          pos.x += cos(uTime * 0.2 + position.y * 1.5) * 0.08;
+          vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+          gl_PointSize = size * (150.0 / -mvPosition.z);
+          gl_Position = projectionMatrix * mvPosition;
+        }
+      `,
+      fragmentShader: `
+        varying vec3 vColor;
+        void main() {
+          float d = length(gl_PointCoord - vec2(0.5));
+          if (d > 0.5) discard;
+          float glow = 1.0 - smoothstep(0.0, 0.5, d);
+          glow = pow(glow, 2.0);
+          gl_FragColor = vec4(vColor, glow * 0.3);
+        }
+      `,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+
+    const ambientSystem = new THREE.Points(ambientGeo, ambientMat);
+    scene.add(ambientSystem);
+
+    // ── 动画循环 ──
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const elapsed = clock.getElapsedTime();
+      const delta = clock.getDelta();
+
+      // 节点呼吸动画
+      nodes.forEach((n, i) => {
+        const breathe = 1 + Math.sin(elapsed * 1.2 + n.phase) * 0.08;
+        n.mesh.scale.setScalar(breathe);
+        n.glow.scale.setScalar(breathe * 1.1);
+        n.glow.material.opacity = 0.08 + Math.sin(elapsed * 1.5 + n.phase) * 0.04;
+
+        // 脉冲环缩放
+        const pulse = 1 + ((elapsed * 0.5 + n.phase) % 2) * 0.5;
+        const pulseAlpha = Math.max(0, 0.3 - ((elapsed * 0.5 + n.phase) % 2) * 0.15);
+        n.ring.scale.setScalar(pulse);
+        n.ring.material.opacity = pulseAlpha;
+        n.ring.lookAt(camera.position);
+
+        // 微小浮动
+        n.mesh.position.y = n.basePos[1] + Math.sin(elapsed * 0.6 + n.phase) * 0.05;
+        n.glow.position.y = n.mesh.position.y;
+        n.ring.position.y = n.mesh.position.y;
+      });
+
+      // 更新连接线位置（跟随节点浮动）
+      connections.forEach(([a, b], idx) => {
+        const line = lineGroup.children[idx];
+        if (line) {
+          const posAttr = line.geometry.attributes.position;
+          posAttr.setXYZ(0, nodes[a].mesh.position.x, nodes[a].mesh.position.y, nodes[a].mesh.position.z);
+          posAttr.setXYZ(1, nodes[b].mesh.position.x, nodes[b].mesh.position.y, nodes[b].mesh.position.z);
+          posAttr.needsUpdate = true;
+        }
+      });
+
+      // 粒子流动
+      const pPos = particleGeo.attributes.position;
+      const pCol = particleGeo.attributes.color;
+
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        const ps = particleStates[i];
+        ps.t += ps.speed * ps.direction * 0.008;
+
+        // 到达端点后换连接线
+        if (ps.t > 1 || ps.t < 0) {
+          ps.connIdx = Math.floor(Math.random() * connections.length);
+          const [a, b] = connections[ps.connIdx];
+          ps.t = ps.direction > 0 ? 0 : 1;
+          ps.direction = Math.random() > 0.5 ? 1 : -1;
+          ps.speed = 0.15 + Math.random() * 0.25;
+        }
+
+        const [a, b] = connections[ps.connIdx];
+        const posA = nodes[a].mesh.position;
+        const posB = nodes[b].mesh.position;
+
+        pPos.setXYZ(i,
+          posA.x + (posB.x - posA.x) * ps.t,
+          posA.y + (posB.y - posA.y) * ps.t,
+          posA.z + (posB.z - posA.z) * ps.t
+        );
+
+        // 颜色随位置渐变
+        const colA = new THREE.Color(nodeData[a].color);
+        const colB = new THREE.Color(nodeData[b].color);
+        const col = new THREE.Color().lerpColors(colA, colB, ps.t);
+        pCol.setXYZ(i, col.r, col.g, col.b);
+      }
+
+      pPos.needsUpdate = true;
+      pCol.needsUpdate = true;
+
+      // 更新 uniform
+      particleMat.uniforms.uTime.value = elapsed;
+      ambientMat.uniforms.uTime.value = elapsed;
+
+      // 整体缓慢旋转
+      nodeGroup.rotation.y = Math.sin(elapsed * 0.15) * 0.3;
+      nodeGroup.rotation.x = Math.sin(elapsed * 0.1) * 0.1;
+      lineGroup.rotation.y = nodeGroup.rotation.y;
+      lineGroup.rotation.x = nodeGroup.rotation.x;
+      particleSystem.rotation.y = nodeGroup.rotation.y;
+      particleSystem.rotation.x = nodeGroup.rotation.x;
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    // ── 响应式 ──
+    function onResize() {
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    }
+
+    window.addEventListener('resize', onResize);
+
+    // 监听 stage 尺寸变化（移动端旋转等）
+    if (typeof ResizeObserver !== 'undefined') {
+      const ro = new ResizeObserver(onResize);
+      ro.observe(container);
+    }
+  </script>
+</body>
+</html>

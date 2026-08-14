@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="450" height="800" viewBox="0 0 450 800">
+  <!-- 学术感浅灰绿背景 -->
+  <rect width="450" height="800" fill="#F4F7F4"/>
+  
+  <!-- 背景树状分支纹理 -->
+  <defs>
+    <pattern id="treeBgPattern" x="0" y="0" width="450" height="800" patternUnits="userSpaceOnUse">
+      <!-- 主干 -->
+      <line x1="225" y1="800" x2="225" y2="650" stroke="#C2D4C2" stroke-width="2" stroke-opacity=".3"/>
+      <!-- 一级分支 -->
+      <line x1="225" y1="650" x2="160" y2="580" stroke="#C2D4C2" stroke-width="1.2" stroke-opacity=".25"/>
+      <line x1="225" y1="650" x2="290" y2="570" stroke="#C2D4C2" stroke-width="1.2" stroke-opacity=".25"/>
+      <line x1="225" y1="650" x2="225" y2="550" stroke="#C2D4C2" stroke-width="1.2" stroke-opacity=".25"/>
+      <!-- 二级分支 -->
+      <line x1="160" y1="580" x2="120" y2="520" stroke="#D8E4D8" stroke-width="1" stroke-opacity=".2"/>
+      <line x1="160" y1="580" x2="180" y2="510" stroke="#D8E4D8" stroke-width="1" stroke-opacity=".2"/>
+      <line x1="290" y1="570" x2="330" y2="510" stroke="#D8E4D8" stroke-width="1" stroke-opacity=".2"/>
+      <line x1="290" y1="570" x2="270" y2="500" stroke="#D8E4D8" stroke-width="1" stroke-opacity=".2"/>
+      <line x1="225" y1="550" x2="200" y2="480" stroke="#D8E4D8" stroke-width="1" stroke-opacity=".2"/>
+      <line x1="225" y1="550" x2="250" y2="475" stroke="#D8E4D8" stroke-width="1" stroke-opacity=".2"/>
+      <!-- 三级分支 -->
+      <line x1="120" y1="520" x2="95" y2="470" stroke="#D8E4D8" stroke-width=".6" stroke-opacity=".15"/>
+      <line x1="120" y1="520" x2="140" y2="465" stroke="#D8E4D8" stroke-width=".6" stroke-opacity=".15"/>
+      <line x1="330" y1="510" x2="355" y2="460" stroke="#D8E4D8" stroke-width=".6" stroke-opacity=".15"/>
+      <line x1="330" y1="510" x2="310" y2="455" stroke="#D8E4D8" stroke-width=".6" stroke-opacity=".15"/>
+      <!-- 小叶点 -->
+      <circle cx="95" cy="468" r="3" fill="#C8DCC8" fill-opacity=".15"/>
+      <circle cx="140" cy="463" r="3" fill="#C8DCC8" fill-opacity=".15"/>
+      <circle cx="355" cy="458" r="3" fill="#C8DCC8" fill-opacity=".15"/>
+      <circle cx="180" cy="508" r="2.5" fill="#C8DCC8" fill-opacity=".12"/>
+      <circle cx="270" cy="498" r="2.5" fill="#C8DCC8" fill-opacity=".12"/>
+      <circle cx="200" cy="478" r="2" fill="#C8DCC8" fill-opacity=".1"/>
+      <circle cx="250" cy="473" r="2" fill="#C8DCC8" fill-opacity=".1"/>
+    </pattern>
+  </defs>
+  <rect width="450" height="800" fill="url(#treeBgPattern)"/>
+  
+  <!-- 书本印章 -->
+  <g transform="translate(35, 90)">
+    <!-- 外框 -->
+    <rect x="0" y="0" width="48" height="48" rx="8" fill="rgba(61,122,95,0.06)" stroke="#3D7A5F" stroke-width="2"/>
+    <rect x="-6" y="-6" width="60" height="60" rx="10" fill="none" stroke="#3D7A5F" stroke-opacity="0.2" stroke-width="1" stroke-dasharray="4,3"/>
+    <!-- 书本图标 -->
+    <path d="M12 32 A4 4 0 0 1 16 28 L36 28" fill="none" stroke="#3D7A5F" stroke-width="2" stroke-linecap="round"/>
+    <path d="M16 12 L36 12 A4 4 0 0 1 40 16 L40 36 L16 36 A4 4 0 0 1 12 32 L12 16 A4 4 0 0 1 16 12" fill="none" stroke="#3D7A5F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="20" y1="20" x2="32" y2="20" stroke="#3D7A5F" stroke-width="1.2" stroke-linecap="round"/>
+    <line x1="20" y1="25" x2="28" y2="25" stroke="#3D7A5F" stroke-width="1.2" stroke-linecap="round"/>
+  </g>
+  
+  <!-- 标题 -->
+  <text x="95" y="120" font-family="Georgia, serif" font-size="52" font-weight="600" fill="#1A2B1A" letter-spacing="1">OpenWiki</text>
+  <text x="280" y="120" font-family="Georgia, serif" font-size="52" font-weight="600" fill="#3D7A5F">.</text>
+  
+  <!-- 副标题 -->
+  <text x="95" y="145" font-family="Georgia, serif" font-size="13" font-style="italic" fill="#7A8E7A" letter-spacing="1">by LangChain</text>
+  
+  <!-- 标签 -->
+  <rect x="195" y="132" width="85" height="16" rx="2" fill="none" stroke="#3D7A5F" stroke-width="1"/>
+  <text x="237" y="144" font-family="monospace" font-size="7" fill="#3D7A5F" text-anchor="middle" letter-spacing="1.5">OPEN SOURCE</text>
+  
+  <!-- Tagline -->
+  <rect x="35" y="180" width="18" height="1.5" fill="#3D7A5F"/>
+  <text x="58" y="186" font-family="Georgia, serif" font-size="11" fill="#2C3E2C" letter-spacing="0.5">为代码库自动生成</text>
+  <text x="172" y="186" font-family="Georgia, serif" font-size="11" fill="#3D7A5F" font-weight="500" letter-spacing="0.5">Agent 可读</text>
+  <text x="245" y="186" font-family="Georgia, serif" font-size="11" fill="#2C3E2C" letter-spacing="0.5">的文档 Wiki</text>
+  
+  <!-- 知识树主视觉 -->
+  <g transform="translate(35, 215)">
+    <rect x="0" y="0" width="379" height="95" rx="10" fill="#FFFFFF" stroke="#D8E4D8" stroke-width="1"/>
+    
+    <!-- 根节点: Codebase -->
+    <circle cx="45" cy="48" r="14" fill="rgba(61,122,95,0.08)" stroke="#3D7A5F" stroke-width="1.5"/>
+    <text x="45" y="52" font-family="monospace" font-size="7" fill="#1A2B1A" text-anchor="middle" font-weight="500">CODE</text>
+    
+    <!-- 分支: Code → Parse -->
+    <path d="M59 48 Q85 48 95 32" stroke="#3D7A5F" stroke-width="1.2" stroke-opacity=".4" fill="none"/>
+    <circle cx="110" cy="24" r="12" fill="rgba(61,122,95,0.1)" stroke="#3D7A5F" stroke-width="1.2"/>
+    <text x="110" y="27" font-family="monospace" font-size="6.5" fill="#1A2B1A" text-anchor="middle">PARSE</text>
+    
+    <!-- 分支: Code → Structure -->
+    <path d="M59 48 Q85 48 95 64" stroke="#3D7A5F" stroke-width="1.2" stroke-opacity=".4" fill="none"/>
+    <circle cx="110" cy="72" r="12" fill="rgba(61,122,95,0.1)" stroke="#3D7A5F" stroke-width="1.2"/>
+    <text x="110" y="75" font-family="monospace" font-size="5.5" fill="#1A2B1A" text-anchor="middle">STRUCT</text>
+    
+    <!-- 分支: Parse → Wiki -->
+    <path d="M122 24 Q145 24 160 32" stroke="#5A9E7A" stroke-width="1" stroke-opacity=".4" fill="none"/>
+    <circle cx="175" cy="36" r="15" fill="rgba(61,122,95,0.12)" stroke="#3D7A5F" stroke-width="1.8"/>
+    <text x="175" y="39" font-family="monospace" font-size="8" fill="#3D7A5F" text-anchor="middle" font-weight="500">WIKI</text>
+    
+    <!-- 分支: Structure → Wiki -->
+    <path d="M122 72 Q145 60 160 40" stroke="#5A9E7A" stroke-width="1" stroke-opacity=".3" fill="none"/>
+    
+    <!-- 叶子节点 -->
+    <line x1="190" y1="28" x2="215" y2="16" stroke="#C8DCC8" stroke-width="1"/>
+    <circle cx="222" cy="14" r="7" fill="rgba(61,122,95,0.05)" stroke="#C8DCC8" stroke-width=".8"/>
+    <text x="222" y="17" font-family="monospace" font-size="5" fill="#7A8E7A" text-anchor="middle">.md</text>
+    
+    <line x1="190" y1="36" x2="220" y2="36" stroke="#C8DCC8" stroke-width="1"/>
+    <circle cx="228" cy="36" r="7" fill="rgba(61,122,95,0.05)" stroke="#C8DCC8" stroke-width=".8"/>
+    <text x="228" y="39" font-family="monospace" font-size="5" fill="#7A8E7A" text-anchor="middle">AST</text>
+    
+    <line x1="190" y1="44" x2="215" y2="56" stroke="#C8DCC8" stroke-width="1"/>
+    <circle cx="222" cy="58" r="7" fill="rgba(61,122,95,0.05)" stroke="#C8DCC8" stroke-width=".8"/>
+    <text x="222" y="61" font-family="monospace" font-size="5" fill="#7A8E7A" text-anchor="middle">API</text>
+    
+    <!-- Agent 终端 -->
+    <line x1="238" y1="36" x2="265" y2="36" stroke="#C8DCC8" stroke-width="1"/>
+    <rect x="268" y="24" width="60" height="24" rx="4" fill="rgba(61,122,95,0.06)" stroke="#3D7A5F" stroke-width=".8" stroke-opacity=".4"/>
+    <text x="298" y="40" font-family="monospace" font-size="7" fill="#3D7A5F" text-anchor="middle">AGENT</text>
+    
+    <!-- 脉冲动画点 -->
+    <circle cx="75" cy="42" r="2.5" fill="#3D7A5F">
+      <animate attributeName="opacity" values=".8;.3;.8" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="142" cy="28" r="2.5" fill="#5A9E7A">
+      <animate attributeName="opacity" values=".8;.3;.8" dur="2s" repeatCount="indefinite" begin=".5s"/>
+    </circle>
+  </g>
+  
+  <!-- Feature 卡片 - 2x2 Grid -->
+  <g transform="translate(35, 330)">
+    <!-- 卡片1: 自动生成 Wiki -->
+    <rect x="0" y="0" width="184" height="72" rx="8" fill="#FFFFFF" stroke="#D8E4D8" stroke-width="1"/>
+    <rect x="10" y="10" width="28" height="28" rx="4" fill="rgba(61,122,95,0.06)"/>
+    <path d="M18 18 L22 14 L26 18 L22 22 L18 18 M18 28 L22 32 L26 28 M18 23 L22 27 L26 23" fill="none" stroke="#3D7A5F" stroke-width="1.5"/>
+    <text x="40" y="5" font-family="Georgia, serif" font-size="12" fill="#C8DCC8">01</text>
+    <text x="48" y="22" font-family="sans-serif" font-size="10" fill="#1A2B1A" font-weight="500">自动生成 Wiki</text>
+    <text x="48" y="38" font-family="sans-serif" font-size="8" fill="#7A8E7A">解析代码库，生成结构化文档</text>
+    <rect x="10" y="56" width="164" height="3" rx="1" fill="#EDF2ED"/>
+    <rect x="10" y="56" width="156" height="3" rx="1" fill="#3D7A5F"/>
+    
+    <!-- 卡片2: Agent 优化 -->
+    <rect x="195" y="0" width="184" height="72" rx="8" fill="#FFFFFF" stroke="#D8E4D8" stroke-width="1"/>
+    <rect x="205" y="10" width="28" height="28" rx="4" fill="rgba(61,122,95,0.06)"/>
+    <circle cx="219" cy="24" r="6" fill="none" stroke="#3D7A5F" stroke-width="1.5"/>
+    <path d="M219 18 L219 20 M219 28 L219 30 M213 24 L215 24 M223 24 L225 24" stroke="#3D7A5F" stroke-width="1.5"/>
+    <text x="235" y="5" font-family="Georgia, serif" font-size="12" fill="#C8DCC8">02</text>
+    <text x="243" y="22" font-family="sans-serif" font-size="10" fill="#1A2B1A" font-weight="500">Agent 优化</text>
+    <text x="243" y="38" font-family="sans-serif" font-size="8" fill="#7A8E7A">专为 LLM/Agent 阅读设计</text>
+    <rect x="205" y="56" width="164" height="3" rx="1" fill="#EDF2ED"/>
+    <rect x="205" y="56" width="145" height="3" rx="1" fill="#3D7A5F"/>
+    
+    <!-- 卡片3: Git 友好 -->
+    <rect x="0" y="82" width="184" height="72" rx="8" fill="#FFFFFF" stroke="#D8E4D8" stroke-width="1"/>
+    <rect x="10" y="92" width="28" height="28" rx="4" fill="rgba(61,122,95,0.06)"/>
+    <path d="M18 100 L22 96 L26 100 M18 114 L22 118 L26 114 M16 107 L26 107" fill="none" stroke="#3D7A5F" stroke-width="1.5"/>
+    <text x="40" y="87" font-family="Georgia, serif" font-size="12" fill="#C8DCC8">03</text>
+    <text x="48" y="104" font-family="sans-serif" font-size="10" fill="#1A2B1A" font-weight="500">Git 友好</text>
+    <text x="48" y="120" font-family="sans-serif" font-size="8" fill="#7A8E7A">输出 Markdown，直接提交</text>
+    <rect x="10" y="138" width="164" height="3" rx="1" fill="#EDF2ED"/>
+    <rect x="10" y="138" width="164" height="3" rx="1" fill="#3D7A5F"/>
+    
+    <!-- 卡片4: 多格式支持 -->
+    <rect x="195" y="82" width="184" height="72" rx="8" fill="#FFFFFF" stroke="#D8E4D8" stroke-width="1"/>
+    <rect x="205" y="92" width="28" height="28" rx="4" fill="rgba(61,122,95,0.06)"/>
+    <path d="M216 100 L224 94 L232 100 L224 106 Z M224 108 L224 115 M212 115 L224 127 L236 115" fill="none" stroke="#3D7A5F" stroke-width="1.5"/>
+    <text x="235" y="87" font-family="Georgia, serif" font-size="12" fill="#C8DCC8">04</text>
+    <text x="243" y="104" font-family="sans-serif" font-size="10" fill="#1A2B1A" font-weight="500">多格式支持</text>
+    <text x="243" y="120" font-family="sans-serif" font-size="8" fill="#7A8E7A">Python、TypeScript、Go 等</text>
+    <rect x="205" y="138" width="164" height="3" rx="1" fill="#EDF2ED"/>
+    <rect x="205" y="138" width="140" height="3" rx="1" fill="#3D7A5F"/>
+  </g>
+  
+  <!-- Tech Stack -->
+  <text x="50" y="520" font-family="monospace" font-size="7" fill="#7A8E7A" letter-spacing="2">— TECH STACK</text>
+  <rect x="50" y="532" width="58" height="18" rx="2" fill="none" stroke="#3D7A5F" stroke-opacity="0.3"/>
+  <text x="79" y="544" font-family="monospace" font-size="8" fill="#3D7A5F" text-anchor="middle">Python</text>
+  <rect x="113" y="532" width="70" height="18" rx="2" fill="#FFFFFF" stroke="#D8E4D8" stroke-width="1"/>
+  
+  <rect x="188" y="532" width="70" height="18" rx="2" fill="#FFFFFF" stroke="#D8E4D8" stroke-width="1"/>
+  
+  <rect x="263" y="532" width="65" height="18" rx="2" fill="#FFFFFF" stroke="#D8E4D8" stroke-width="1"/>
+  
+  
+  <!-- GitHub CTA -->
+  <rect x="35" y="570" width="190" height="35" rx="4" fill="#3D7A5F"/>
+  
+  <rect x="235" y="570" width="180" height="35" rx="4" fill="none" stroke="#D8E4D8" stroke-width="1"/>
+  
+  
+  <!-- 底部知识树装饰 -->
+  <g transform="translate(0, 620)" opacity="0.15">
+    <line x1="225" y1="180" x2="225" y2="140" stroke="#3D7A5F" stroke-width="1.5"/>
+    <line x1="225" y1="140" x2="180" y2="110" stroke="#3D7A5F" stroke-width="1"/>
+    <line x1="225" y1="140" x2="270" y2="105" stroke="#3D7A5F" stroke-width="1"/>
+    <line x1="180" y1="110" x2="150" y2="85" stroke="#5A9E7A" stroke-width=".8"/>
+    <line x1="180" y1="110" x2="195" y2="80" stroke="#5A9E7A" stroke-width=".8"/>
+    <line x1="270" y1="105" x2="300" y2="80" stroke="#5A9E7A" stroke-width=".8"/>
+    <line x1="270" y1="105" x2="255" y2="75" stroke="#5A9E7A" stroke-width=".8"/>
+    <circle cx="150" cy="83" r="3" fill="#C8DCC8"/>
+    <circle cx="195" cy="78" r="3" fill="#C8DCC8"/>
+    <circle cx="300" cy="78" r="3" fill="#C8DCC8"/>
+    <circle cx="255" cy="73" r="3" fill="#C8DCC8"/>
+  </g>
+  
+  <!-- 底部色条 -->
+  <rect x="0" y="796" width="450" height="4" fill="#3D7A5F"/>
+</svg>
