@@ -21,27 +21,15 @@
       <path d="M16 0H0V16" fill="none" stroke="#2DD4BF" stroke-width="0.4" opacity="0.12"/>
     </pattern>
   </defs>
-
-  <!-- 背景 -->
   <rect width="200" height="356" fill="url(#bg)"/>
   <rect width="200" height="356" fill="url(#grid)"/>
   <circle cx="100" cy="140" r="95" fill="url(#glow)"/>
   <circle cx="100" cy="140" r="62" fill="url(#glow2)"/>
-
-  <!-- 顶部栏 -->
   <rect x="0" y="0" width="200" height="2" fill="#2DD4BF" opacity="0.8"/>
-  <text x="16" y="24" font-family="monospace" font-size="7" fill="#3E5870" letter-spacing="2">HOLAOS</text>
-  <text x="184" y="24" font-family="monospace" font-size="7" fill="#2DD4BF" text-anchor="end">6.8K★</text>
-
-  <!-- 轨道核：中心=共享内存，轨道=多 Agent -->
   <g transform="translate(100,140)">
-    <!-- 内轨 -->
     <ellipse cx="0" cy="0" rx="42" ry="15" fill="none" stroke="#2DD4BF" stroke-width="1" opacity="0.55"/>
-    <!-- 中轨 -->
     <ellipse cx="0" cy="0" rx="56" ry="20" fill="none" stroke="#F4A95E" stroke-width="0.8" opacity="0.4"/>
-    <!-- 外轨 -->
     <ellipse cx="0" cy="0" rx="66" ry="23" fill="none" stroke="#7DF3E4" stroke-width="0.6" opacity="0.3"/>
-    <!-- 轨道卫星（C=Claude Code, X=Codex, h=holaOS） -->
     <g>
       <animateTransform attributeName="transform" type="rotate" values="0 0 0;360 0 0" dur="9s" repeatCount="indefinite"/>
       <circle cx="42" cy="0" r="8" fill="#2DD4BF">
@@ -59,7 +47,6 @@
       <circle cx="66" cy="0" r="5.5" fill="#9FB8FF"/>
       <text x="66" y="2" text-anchor="middle" font-family="monospace" font-size="5" font-weight="bold" fill="#0A1030">h</text>
     </g>
-    <!-- 中心内存核 -->
     <circle cx="0" cy="0" r="17" fill="url(#core)">
       <animate attributeName="r" values="16;18;16" dur="3.2s" repeatCount="indefinite"/>
     </circle>
@@ -68,9 +55,4 @@
     </circle>
     <text x="0" y="3" text-anchor="middle" font-family="monospace" font-size="8" font-weight="bold" fill="#04101B">M</text>
   </g>
-
-  <!-- 底部：项目名小字（与首页 HTML 层标题不冲突） -->
-  <text x="16" y="336" font-family="monospace" font-size="9" fill="#D1FAF2" font-weight="bold">holaOS</text>
-  <text x="16" y="348" font-family="monospace" font-size="6.5" fill="#3E5870">AGENT COMPUTER · 1.0 · TRENDING #1</text>
-  <text x="184" y="338" font-family="monospace" font-size="6.5" fill="#2DD4BF" text-anchor="end">605 forks</text>
 </svg>

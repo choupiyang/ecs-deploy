@@ -18,33 +18,22 @@
       <path d="M14 0H0V14" fill="none" stroke="#E8B63E" stroke-opacity="0.05" stroke-width="0.5"/>
     </pattern>
   </defs>
-
-  <!-- 背景 -->
   <rect width="200" height="356" fill="url(#bg)"/>
   <rect width="200" height="356" fill="url(#grid)"/>
   <circle cx="100" cy="130" r="85" fill="url(#glow)"/>
-
-  <!-- 顶部品牌行 -->
   <g font-family="monospace" font-size="5.2" letter-spacing="1.6" fill="#6B7280">
-    <text x="10" y="13">EAREENDIL-WORKS · AI AGENT TOOLKIT</text>
-    <text x="182" y="13" text-anchor="end" fill="#E8B63E">π</text>
   </g>
-
-  <!-- 生态辐射：中心 π + 环绕节点 -->
   <g transform="translate(100,140)">
-    <!-- 轨道环 -->
     <ellipse cx="0" cy="0" rx="52" ry="20" fill="none" stroke="#E8B63E" stroke-opacity="0.35" stroke-width="1">
       <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="16s" repeatCount="indefinite"/>
     </ellipse>
     <ellipse cx="0" cy="0" rx="72" ry="28" fill="none" stroke="#9CA3AF" stroke-opacity="0.22" stroke-width="0.8">
       <animateTransform attributeName="transform" type="rotate" from="360" to="0" dur="26s" repeatCount="indefinite"/>
     </ellipse>
-    <!-- 中心 π 徽章 -->
     <rect x="-19" y="-19" width="38" height="38" rx="7" fill="#FAFAF9" filter="url(#neon)">
       <animate attributeName="opacity" values="0.85;1;0.85" dur="3s" repeatCount="indefinite"/>
     </rect>
     <text x="0" y="7" text-anchor="middle" font-family="'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="700" fill="#09090B">π</text>
-    <!-- 生态节点 -->
     <g font-family="monospace" font-size="5">
       <g>
         <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="16s" repeatCount="indefinite"/>
@@ -68,13 +57,7 @@
       </g>
     </g>
   </g>
-
-  <!-- 底部标题区 -->
   <rect x="0" y="296" width="200" height="60" fill="url(#bg)" fill-opacity="0.92"/>
   <line x1="10" y1="296" x2="190" y2="296" stroke="#E8B63E" stroke-opacity="0.4" stroke-width="0.8"/>
 
-  <text x="14" y="320" font-family="monospace" font-size="6" letter-spacing="1.8" fill="#6B7280">OPEN SOURCE · MIT · TYPESCRIPT</text>
-  <text x="14" y="338" font-family="'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="700" fill="#FAFAF9">Pi<span fill="#E8B63E" font-size="12">.</span></text>
-  <text x="184" y="338" text-anchor="end" font-family="monospace" font-size="7.5" fill="#E8B63E">85.2K★</text>
-  <text x="14" y="351" font-family="'Helvetica Neue', Arial, sans-serif" font-size="7.5" letter-spacing="0.5" fill="#6B7280">AI Agent 工具包 · OpenClaw 等构建其上</text>
 </svg>
