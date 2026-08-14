@@ -15,18 +15,21 @@
       <stop offset="100%" stop-color="#D9E8F5"/>
     </linearGradient>
     <filter id="neon"><feGaussianBlur stdDeviation="2.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <pattern id="grid" width="16" height="16" patternUnits="userSpaceOnUse">
+      <path d="M16 0H0V16" fill="none" stroke="#1E3A52" stroke-width="0.5"/>
+    </pattern>
   </defs>
-  <rect width="200" height="356" fill="url(#bg)" rx="4"/>
-  <!-- Grid -->
-  <g opacity=".07" stroke="#4FC3F7" stroke-width=".3">
-    <line x1="0" y1="70" x2="200" y2="70"/><line x1="0" y1="96" x2="200" y2="96"/>
-    <line x1="0" y1="122" x2="200" y2="122"/><line x1="0" y1="148" x2="200" y2="148"/>
-    <line x1="0" y1="174" x2="200" y2="174"/><line x1="0" y1="200" x2="200" y2="200"/>
-    <line x1="40" y1="50" x2="40" y2="210"/><line x1="80" y1="50" x2="80" y2="210"/>
-    <line x1="120" y1="50" x2="120" y2="210"/><line x1="160" y1="50" x2="160" y2="210"/>
-  </g>
-  <!-- 企鹅 -->
-  <g transform="translate(66,36)">
+  <rect width="200" height="356" fill="url(#bg)"/>
+  <rect width="200" height="356" fill="url(#grid)" opacity="0.5"/>
+
+  <!-- 顶部栏 -->
+  <rect x="0" y="0" width="200" height="2" fill="url(#ice)" opacity="0.8"/>
+  <text x="16" y="24" font-family="monospace" font-size="7" fill="#5E86A8" letter-spacing="2">PENGUINHARNESS</text>
+  <text x="184" y="24" font-family="monospace" font-size="7" fill="#4FC3F7" text-anchor="end">490★</text>
+
+  <!-- 中心: 企鹅 + 代码窗口 -->
+  <g transform="translate(66,32)">
     <ellipse cx="34" cy="112" rx="28" ry="11" fill="#4FC3F7" opacity=".15"/>
     <path d="M34 4 C12 4 4 24 4 50 C4 76 14 100 34 100 C54 100 64 76 64 50 C64 24 56 4 34 4 Z" fill="#12283E" stroke="#4FC3F7" stroke-width="1.2"/>
     <path d="M34 20 C20 20 14 36 14 52 C14 71 22 92 34 92 C46 92 54 71 54 52 C54 36 48 20 34 20 Z" fill="url(#belly)"/>
@@ -43,7 +46,7 @@
     <path d="M62 50 q8 16 2 32 l-10 -8 q2 -14 0 -22 z" fill="#0D1B2E" stroke="#4FC3F7" stroke-width=".8" opacity=".9"/>
   </g>
   <!-- 代码窗口 -->
-  <g transform="translate(24,152)">
+  <g transform="translate(24,148)">
     <rect x="0" y="0" width="152" height="46" rx="4" fill="#0A1420" stroke="#4FC3F7" stroke-opacity=".45" stroke-width=".9"/>
     <rect x="0" y="0" width="152" height="12" rx="4" fill="#4FC3F7" opacity=".12"/>
     <circle cx="8" cy="6" r="2" fill="#FF5F57"/><circle cx="15" cy="6" r="2" fill="#FFB020"/><circle cx="22" cy="6" r="2" fill="#28C840"/>
@@ -53,8 +56,8 @@
       <rect x="74" y="34" width="8" height="9" fill="#4FC3F7" opacity=".9"/>
     </g>
   </g>
-  <!-- 构建箭头 (一句话 → 应用) -->
-  <g transform="translate(30,214)" opacity=".85">
+  <!-- 构建箭头 -->
+  <g transform="translate(30,210)" opacity=".85">
     <rect x="0" y="0" width="56" height="16" rx="8" fill="none" stroke="#4FC3F7" stroke-width=".9"/>
     <text x="28" y="11" text-anchor="middle" font-family="system-ui,sans-serif" font-size="5.5" fill="#8FB8D8">一句话描述</text>
     <path d="M60 8 L74 8" stroke="#4FC3F7" stroke-width="1"/>
@@ -62,15 +65,16 @@
     <rect x="80" y="0" width="76" height="16" rx="8" fill="#4FC3F7" opacity=".15" stroke="#4FC3F7" stroke-width=".9"/>
     <text x="118" y="11" text-anchor="middle" font-family="system-ui,sans-serif" font-size="5.5" fill="#D6EDFF">完整 Agent 应用</text>
   </g>
-  <!-- Title (Codex QQ Skin 样式) -->
-  <text x="100" y="248" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" font-weight="800" fill="#4FC3F7" letter-spacing="-.4" filter="url(#neon)">PenguinHarness</text>
-  <text x="100" y="264" text-anchor="middle" font-family="system-ui,sans-serif" font-size="6.5" fill="#94A3B8" letter-spacing=".25">AUTOMATED AGENT BUILDER</text>
-  <text x="100" y="276" text-anchor="middle" font-family="system-ui,sans-serif" font-size="6.5" fill="#64748B" letter-spacing=".2">一句话 · 自动构建完整应用</text>
-  <rect x="60" y="288" width="80" height="2" rx="1" fill="url(#ice)" opacity=".7"/>
-  <!-- Bottom tags -->
-  <g font-family="system-ui,sans-serif" font-size="5.5" fill="#475569" text-anchor="middle">
-    <text x="50" y="308">490★</text><circle cx="50" cy="314" r="1.2" fill="#4FC3F7" opacity=".8"/>
-    <text x="100" y="308">$0.02/构建</text><circle cx="100" cy="314" r="1.2" fill="#1F6FEB" opacity=".8"/>
-    <text x="152" y="308">APACHE-2.0</text><circle cx="152" cy="314" r="1.2" fill="#4FC3F7" opacity=".8"/>
-  </g>
+
+  <!-- 标题区 (Semantica) -->
+  <text x="100" y="236" text-anchor="middle" font-family="Georgia,serif" font-size="24" font-weight="bold" fill="#E8F4FD">PenguinHarness</text>
+  <text x="100" y="252" text-anchor="middle" font-family="monospace" font-size="7" fill="#4FC3F7" letter-spacing="1.5">AUTOMATED AGENT BUILDER</text>
+  <text x="100" y="268" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#9AB8D4">一句话 · 自动构建完整应用</text>
+
+  <!-- 数据条 -->
+  <rect x="24" y="288" width="152" height="24" rx="12" fill="#0A1420" stroke="#1E3A52" stroke-width="0.8"/>
+  <text x="100" y="304" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#E8F4FD">490★ · $0.02/构建 · APACHE-2.0</text>
+
+  <!-- 底部 -->
+  <text x="100" y="338" text-anchor="middle" font-family="monospace" font-size="6.5" fill="#5E86A8" letter-spacing="1">MIND RESONANCE · 反共识观察</text>
 </svg>
