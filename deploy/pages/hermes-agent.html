@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0A0814">
+<title>Hermes Agent · 会成长的 Agent</title>
+<style>
+:root{
+  --bg:#0A0814; --bg-2:#141024; --bg-3:#1E1834;
+  --accent:#FFD700; --accent-light:#FFE98A; --plugin:#8B5CF6;
+  --text:#F0EDF8; --text-mute:#8A83A8; --border:rgba(255,215,0,.22);
+  --glow:rgba(255,215,0,.5);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'PingFang SC','Noto Sans SC',system-ui,sans-serif;user-select:none}
+.stage{
+  aspect-ratio:9/16;height:min(100svh,calc(100vw*16/9));width:min(100vw,calc(100svh*9/16));
+  margin:0 auto;position:relative;overflow:hidden;perspective:1000px;
+  display:flex;flex-direction:column;
+  background:
+  radial-gradient(120% 80% at 80% -10%,rgba(255,215,0,.08),transparent 55%),
+  radial-gradient(100% 70% at 10% 110%,rgba(139,92,246,.06),transparent 60%),var(--bg);
+}
+@supports not (height:100svh){.stage{height:min(100vh,calc(100vw*16/9))}}
+.stage::before{content:'';position:absolute;inset:0;background:
+  linear-gradient(rgba(255,215,0,.04) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(255,215,0,.04) 1px,transparent 1px);
+  background-size:26px 26px;transform:translateZ(-60px);pointer-events:none}
+.topbar{position:relative;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:10px 14px 0;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:6px;font-size:9px;color:var(--text-mute);letter-spacing:.14em}
+.brand i{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--glow);animation:bdot 2.4s ease-in-out infinite}
+@keyframes bdot{0%,100%{opacity:.5}50%{opacity:1}}
+.share{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--bg-2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s}
+.share:active{transform:scale(.92)}
+.share svg{width:13px;height:13px;fill:var(--accent)}
+
+/* 3D 记忆闭环：中心=记忆核(☤)，轨道=技能/记忆/平台/模型环绕（主题：会成长的 Agent） */
+.sp3d{width:118px;height:118px;flex-shrink:0;position:relative;transform-style:preserve-3d;animation:gfloat 6s ease-in-out infinite}
+@keyframes gfloat{0%,100%{transform:rotateX(12deg) rotateY(-8deg)}50%{transform:rotateX(12deg) rotateY(8deg)}}
+/* 中心记忆核 */
+.sp3d .core{position:absolute;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;z-index:3;
+  background:radial-gradient(circle at 35% 30%,#FFE98A,#D4AF37 45%,#6E40C9 90%);
+  box-shadow:0 0 24px rgba(255,215,0,.55),inset 0 0 14px rgba(255,255,255,.25);animation:corePulse 3.2s ease-in-out infinite}
+@keyframes corePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+.sp3d .core::after{content:'';position:absolute;inset:-7px;border-radius:50%;border:1.5px dashed rgba(255,233,138,.5);animation:ringRot 14s linear infinite}
+@keyframes ringRot{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+/* 三层轨道 */
+.sp3d .ring{position:absolute;left:50%;top:50%;border:1px solid rgba(255,215,0,.28);border-radius:50%;transform-style:preserve-3d}
+.sp3d .r1{width:76px;height:76px;margin:-38px 0 0 -38px;animation:rot1 9s linear infinite}
+.sp3d .r2{width:100px;height:100px;margin:-50px 0 0 -50px;border-color:rgba(139,92,246,.3);animation:rot2 14s linear infinite}
+.sp3d .r3{width:118px;height:118px;margin:-59px 0 0 -59px;border-color:rgba(255,233,138,.16);animation:rot3 22s linear infinite}
+@keyframes rot1{from{transform:rotateX(68deg) rotateZ(0)}to{transform:rotateX(68deg) rotateZ(360deg)}}
+@keyframes rot2{from{transform:rotateX(68deg) rotateZ(360deg)}to{transform:rotateX(68deg) rotateZ(0)}}
+@keyframes rot3{from{transform:rotateX(68deg) rotateZ(0)}to{transform:rotateX(68deg) rotateZ(360deg)}}
+/* 卫星（平台/能力） */
+.sp3d .sat{position:absolute;left:50%;top:50%;width:17px;height:17px;margin:-8.5px 0 0 -8.5px;border-radius:50%;z-index:4;
+  display:flex;align-items:center;justify-content:center;font-size:8px;color:#141024;
+  background:radial-gradient(circle at 35% 30%,#fff,var(--accent) 60%);box-shadow:0 0 10px rgba(255,215,0,.5);animation:s1 9s linear infinite}
+.sp3d .sat.s2{width:14px;height:14px;margin:-7px 0 0 -7px;font-size:7px;background:radial-gradient(circle at 35% 30%,#fff,var(--plugin) 60%);box-shadow:0 0 10px rgba(139,92,246,.5);animation:s2 14s linear infinite}
+.sp3d .sat.s3{width:11px;height:11px;margin:-5.5px 0 0 -5.5px;font-size:6px;background:radial-gradient(circle at 35% 30%,#fff,#A78BFA 60%);box-shadow:0 0 10px rgba(167,139,250,.5);animation:s3 22s linear infinite}
+@keyframes s1{from{transform:rotateX(68deg) rotateZ(0deg) translateX(38px) rotateZ(0deg)}to{transform:rotateX(68deg) rotateZ(360deg) translateX(38px) rotateZ(-360deg)}}
+@keyframes s2{from{transform:rotateX(68deg) rotateZ(180deg) translateX(50px) rotateZ(-180deg)}to{transform:rotateX(68deg) rotateZ(-180deg) translateX(50px) rotateZ(180deg)}}
+@keyframes s3{from{transform:rotateX(68deg) rotateZ(90deg) translateX(59px) rotateZ(-90deg)}to{transform:rotateX(68deg) rotateZ(450deg) translateX(59px) rotateZ(-450deg)}}
+/* 数据流光点（知识流动） */
+.sp3d .dlight{position:absolute;left:50%;top:50%;width:3px;height:3px;border-radius:50%;background:#fff;box-shadow:0 0 6px var(--accent);z-index:2;animation:dl 3.4s linear infinite}
+.sp3d .dlight.d2{animation-delay:1.7s;background:var(--plugin);box-shadow:0 0 6px var(--plugin)}
+@keyframes dl{0%{transform:rotate(0deg) translateX(30px);opacity:0}20%{opacity:1}80%{opacity:1}100%{transform:rotate(360deg) translateX(30px);opacity:0}}
+.sp3d .seal{position:absolute;bottom:2px;left:0;right:0;text-align:center;font-family:monospace;font-size:6px;letter-spacing:.13em;color:var(--text-mute);z-index:5;animation:sealGlow 3s ease-in-out infinite}
+@keyframes sealGlow{0%,100%{opacity:.7}50%{opacity:1;color:var(--accent-light)}}
+
+/* Hero 右侧 */
+.hero-side{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:5px;position:relative;z-index:3}
+.stamp{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;background:radial-gradient(circle at 35% 30%,rgba(255,215,0,.2),var(--bg-2));box-shadow:0 0 12px rgba(255,215,0,.15);cursor:pointer;transition:transform .15s;animation:stampSpin 12s linear infinite}
+.stamp:active{transform:scale(.9)}
+@keyframes stampSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.sp-title{font-size:22px;font-weight:800;color:var(--text);letter-spacing:.01em;line-height:1.15}
+.sp-title em{font-style:normal;color:var(--accent-light);text-shadow:0 0 18px rgba(255,215,0,.35)}
+.tagline{font-size:10px;color:var(--text-mute);line-height:1.55;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.tagline em{color:var(--accent-light);font-style:normal;font-weight:600}
+.hint-badge{display:inline-block;margin-top:5px;font-size:8px;color:var(--text-mute);letter-spacing:.06em;border:1px dashed var(--border);border-radius:20px;padding:3px 9px}
+
+.hero{position:relative;z-index:3;display:flex;align-items:center;gap:14px;padding:12px 16px 10px;flex-shrink:0}
+@media (max-height:850px) and (min-height:731px){
+  .hero{padding-top:8px;padding-bottom:6px;gap:11px}
+  .sp3d{width:104px;height:104px}
+  .sp-title{font-size:20px}
+  .tagline{font-size:9.5px}
+  .stats{padding:7px 16px 3px}
+  .flow{padding:6px 16px 1px}
+  .feats{padding:6px 16px 3px}
+  .tech{padding:6px 16px 3px}
+  .term-body{font-size:7.5px;line-height:1.65}
+  .quick{padding:6px 16px 3px;gap:5px}
+}
+@media (max-height:730px){
+  .hero{padding-top:6px;padding-bottom:4px;gap:10px}
+  .sp3d{width:88px;height:88px}
+  .sp3d .r3{display:none}
+  .sp3d .sat.s3{display:none}
+  .sp3d .core{width:32px;height:32px;margin:-16px 0 0 -16px}
+  .sp-title{font-size:18px}
+  .tagline{font-size:9px;-webkit-line-clamp:2}
+  .stats{padding:6px 14px 2px;gap:4px}
+  .stat b{font-size:12px}
+  .flow{padding:5px 14px 0}
+  .fnode i{font-size:11px}
+  .fnode b{font-size:7px}
+  .feats{padding:5px 14px 2px;gap:4px}
+  .feat{padding:5px 7px}
+  .tech{padding:5px 14px 2px;gap:4px}
+  .bottombar{padding:7px 14px 9px}
+  .term-body{font-size:7px;line-height:1.55;padding:6px 9px;gap:1px}
+  .showcase{padding:3px 14px}
+  .quick{padding:5px 14px 2px;gap:4px}
+  .qitem{padding:5px 8px}
+  .qitem span{font-size:6.5px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+}
+
+/* 核心展示区：Hermes 终端（弹性填充） */
+.showcase{position:relative;z-index:3;flex:0 1 auto;display:flex;flex-direction:column;padding:4px 16px;min-height:0}
+.term{flex:0 1 auto;display:flex;flex-direction:column;border:1px solid var(--border);border-radius:12px;background:rgba(20,16,36,.6);overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.35),inset 0 0 40px rgba(255,215,0,.03);cursor:pointer;transition:transform .15s}
+.term:active{transform:scale(.985)}
+.term-bar{display:flex;align-items:center;gap:5px;padding:7px 11px;border-bottom:1px solid var(--border);background:rgba(30,24,52,.5);flex-shrink:0}
+.term-bar i{width:7px;height:7px;border-radius:50%;display:block}
+.term-bar i:nth-child(1){background:#FF5F56}
+.term-bar i:nth-child(2){background:#FFBD2E}
+.term-bar i:nth-child(3){background:#27C93F}
+.term-bar span{margin-left:6px;font-family:monospace;font-size:8px;color:var(--text-mute);letter-spacing:.06em}
+.term-body{flex:1 1 auto;padding:10px 12px;font-family:monospace;font-size:8px;line-height:1.75;color:#8FA8BC;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+.term-body .ln{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;animation:lnIn .5s ease both}
+.term-body .ln .k{color:var(--accent)}
+.term-body .ln .g{color:#7DD4A8}
+.term-body .ln .b{color:var(--plugin)}
+.term-body .ln .y{color:var(--accent-light)}
+.term-body .ln.cursor::after{content:'▍';color:var(--accent);animation:cur 1s steps(2) infinite}
+@keyframes cur{0%,49%{opacity:1}50%,100%{opacity:0}}
+@keyframes lnIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+
+/* 社区口碑速览 */
+.quick{position:relative;z-index:3;flex:1 1 auto;display:flex;flex-direction:column;gap:6px;padding:8px 16px 4px;min-height:0;overflow-y:auto}
+.qitem{background:var(--bg-2);border:1px solid var(--border);border-radius:9px;padding:7px 10px;cursor:pointer;transition:transform .15s,box-shadow .2s;display:flex;align-items:center;gap:8px;flex:1 1 auto;min-height:34px}
+.qitem:active{transform:scale(.97)}
+.qitem i{font-style:normal;font-size:12px;flex-shrink:0;margin-top:0}
+.qitem div{min-width:0}
+.qitem b{display:block;font-size:8.5px;color:var(--text)}
+.qitem span{display:block;font-size:7px;color:var(--text-mute);margin-top:1.5px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.qitem.hotq{border-color:rgba(255,215,0,.5);background:linear-gradient(160deg,rgba(255,215,0,.1),var(--bg-2))}
+
+/* Stats */
+.stats{position:relative;z-index:3;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:10px 16px 4px;flex-shrink:0}
+.stat{background:var(--bg-2);border:1px solid var(--border);border-radius:9px;padding:7px 4px 6px;text-align:center;cursor:pointer;transition:transform .15s,box-shadow .2s}
+.stat:active{transform:scale(.94)}
+.stat b{display:block;font-size:13px;color:var(--accent-light);font-family:monospace;letter-spacing:.02em}
+.stat span{display:block;font-size:7px;color:var(--text-mute);margin-top:2px;letter-spacing:.04em}
+
+/* Flow */
+.flow{position:relative;z-index:3;padding:8px 16px 2px;flex-shrink:0}
+.flow-row{display:flex;align-items:center;gap:3px}
+.fnode{flex:1;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;padding:6px 2px;text-align:center;cursor:pointer;transition:transform .15s,background .2s}
+.fnode:active{transform:scale(.92)}
+.fnode i{display:block;font-style:normal;font-size:12px;margin-bottom:2px}
+.fnode b{display:block;font-size:7.5px;color:var(--text);font-weight:600}
+.fnode span{display:block;font-size:6px;color:var(--text-mute);margin-top:1px}
+.fnode.hot{border-color:rgba(255,215,0,.5);background:linear-gradient(160deg,rgba(255,215,0,.12),var(--bg-2));animation:fhot 2s ease-in-out infinite}
+@keyframes fhot{0%,100%{box-shadow:0 0 6px rgba(255,215,0,.1)}50%{box-shadow:0 0 14px rgba(255,215,0,.3)}}
+.farrow{color:var(--accent);font-size:9px;flex-shrink:0;opacity:.7}
+
+/* Features */
+.feats{position:relative;z-index:3;display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px 16px 4px;flex-shrink:0}
+.feat{background:var(--bg-2);border:1px solid var(--border);border-radius:9px;padding:7px 9px;cursor:pointer;transition:transform .15s,box-shadow .2s;display:flex;align-items:center;gap:7px}
+.feat:active{transform:scale(.95)}
+.feat i{font-style:normal;font-size:13px;flex-shrink:0}
+.feat div{min-width:0}
+.feat b{display:block;font-size:8.5px;color:var(--text)}
+.feat span{display:block;font-size:6.8px;color:var(--text-mute);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Tech */
+.tech{position:relative;z-index:3;display:flex;flex-wrap:wrap;gap:5px;padding:8px 16px 4px;flex-shrink:0}
+.pill{font-size:7.5px;color:var(--text-mute);border:1px solid var(--border);background:var(--bg-2);border-radius:20px;padding:3.5px 9px;cursor:pointer;transition:all .15s;letter-spacing:.03em}
+.pill:active{transform:scale(.93);background:rgba(255,215,0,.12);color:var(--accent-light)}
+
+/* Bottom */
+.bottombar{position:relative;z-index:3;display:flex;align-items:center;gap:8px;padding:10px 16px 12px;flex-shrink:0}
+.btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 0;border-radius:10px;font-size:9px;font-weight:600;cursor:pointer;transition:transform .15s,filter .2s;text-decoration:none;letter-spacing:.05em}
+.btn:active{transform:scale(.95)}
+.btn.primary{background:linear-gradient(135deg,var(--accent),#B8860B);color:#141024;box-shadow:0 4px 16px rgba(255,215,0,.25)}
+.btn.ghost{border:1px solid var(--border);color:var(--text);background:var(--bg-2)}
+.btn svg{width:12px;height:12px;fill:currentColor}
+
+/* Overlay */
+.overlay{position:fixed;inset:0;background:rgba(6,5,12,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);opacity:0;pointer-events:none;transition:opacity .35s;z-index:40}
+.overlay.show{opacity:1;pointer-events:auto}
+.sheet{position:absolute;bottom:0;left:50%;transform:translate(-50%,105%);width:min(94vw,calc(100svh*9/16*0.94));max-height:78svh;background:linear-gradient(180deg,#241D42,#120E24);border:1px solid rgba(255,215,0,.25);border-bottom:none;border-radius:20px 20px 0 0;padding:18px 20px 26px;transition:transform .45s cubic-bezier(.7,0,.3,1);z-index:50;overflow-y:auto;box-shadow:0 -12px 50px rgba(0,0,0,.5)}
+.sheet.show{transform:translate(-50%,0)}
+.sheet h3{font-size:15px;color:var(--text);margin-bottom:8px;line-height:1.4}
+.sheet h3 em{font-style:normal;color:var(--accent-light)}
+.sheet p{font-size:11px;color:#C4BAD8;line-height:1.75;margin-bottom:10px}
+.sheet ul{list-style:none;margin-bottom:10px}
+.sheet ul li{font-size:10.5px;color:#A89FC0;line-height:1.7;padding-left:14px;position:relative;margin-bottom:3px}
+.sheet ul li::before{content:'◆';position:absolute;left:0;top:1px;font-size:7px;color:var(--accent)}
+.sheet pre{background:rgba(10,8,20,.8);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:monospace;font-size:9.5px;color:#8FA8BC;line-height:1.7;overflow-x:auto;margin-bottom:10px;white-space:pre-wrap;word-break:break-all}
+.sheet .close{display:block;width:100%;padding:10px 0;border:none;border-radius:10px;background:linear-gradient(135deg,var(--accent),#B8860B);color:#141024;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.08em}
+.sheet .close:active{transform:scale(.97)}
+.sheet::-webkit-scrollbar{width:3px}
+.sheet::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+.toast{position:fixed;top:44px;left:50%;transform:translate(-50%,-16px);background:var(--bg-3);border:1px solid var(--border);color:var(--text);font-size:10px;padding:7px 14px;border-radius:20px;opacity:0;pointer-events:none;transition:all .3s;z-index:60;box-shadow:0 6px 20px rgba(0,0,0,.4);white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <div class="topbar">
+    <div class="brand"><i></i>HERMES AGENT · SELF-IMPROVING</div>
+    <div class="share" id="shareBtn">
+      <svg viewBox="0 0 24 24"><path d="M18 16.1c-.8 0-1.5.3-2.1.8l-7.1-4.2c.1-.2.1-.4.1-.7s0-.5-.1-.7l7.1-4.2c.6.5 1.4.8 2.1.8 1.9 0 3.4-1.5 3.4-3.4S19.9 3.1 18 3.1s-3.4 1.5-3.4 3.4c0 .2 0 .5.1.7l-7.1 4.2c-.6-.5-1.4-.8-2.1-.8-1.9 0-3.4 1.5-3.4 3.4s1.5 3.4 3.4 3.4c.8 0 1.5-.3 2.1-.8l7.1 4.2c-.1.2-.1.4-.1.7 0 1.9 1.5 3.4 3.4 3.4s3.4-3.4 3.4-3.4z"/></svg>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="sp3d tilt-deep" id="sp3d">
+      <div class="core"></div>
+      <div class="ring r1"></div>
+      <div class="ring r2"></div>
+      <div class="ring r3"></div>
+      <div class="sat s1">☤</div>
+      <div class="sat s2">🧠</div>
+      <div class="sat s3">⚡</div>
+      <div class="dlight d1"></div>
+      <div class="dlight d2"></div>
+      <div class="seal" id="seal">EXPERIENCE → SKILL → MEMORY</div>
+    </div>
+    <div class="hero-side">
+      <div class="stamp" id="stamp">☤</div>
+      <div class="sp-title">Hermes Agent<br><em>会成长的 Agent</em></div>
+      <div class="tagline">Nous Research 开源 AI Agent：<em>内置学习闭环</em>——从经验中创建技能、跨会话累积记忆、自动沉淀你的画像。一个进程，Telegram/微信/CLI 随处可聊</div>
+      <div class="hint-badge">轻触任何元素探索 · 拖动卡片看 3D 视差</div>
+    </div>
+  </div>
+
+  <div class="showcase">
+    <div class="term" id="termShow">
+      <div class="term-bar"><i></i><i></i><i></i><span>hermes — 1.0.0 · gateway: running</span></div>
+      <div class="term-body" id="termBody"></div>
+    </div>
+  </div>
+
+  <div class="quick">
+    <div class="qitem hotq" data-k="q1"><i>🔥</i><div><b>1 年冲到 23 万 ★ · GitHub 现象级</b><span>2025-07-22 创建，一年内 230K★ / 45.7K forks——「唯一内置学习闭环的 Agent」定位出圈，HN 发布帖 52 分 42 评论</span></div></div>
+    <div class="qitem" data-k="q2"><i>📚</i><div><b>中文圈最热：4.8K★ 橙皮书教程</b><span>社区《Hermes Agent 橙皮书》从入门到精通 4.8K★；awesome-hermes-agent 生态目录 5.3K★、self-evolution 进化套件 5K★</span></div></div>
+    <div class="qitem" data-k="q3"><i>⚖️</i><div><b>双面声：争议也留在 GitHub</b><span>HN 记录「Nous 编辑 issue 掩盖抄袭指控」事件（#10232），社区评论「记录永远存在」——开源明星项目该有的审视一样不少</span></div></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat" data-k="stars"><b>230K</b><span>★ GitHub</span></div>
+    <div class="stat" data-k="forks"><b>45.7K</b><span>Forks</span></div>
+    <div class="stat" data-k="platforms"><b>12+</b><span>消息平台</span></div>
+    <div class="stat" data-k="models"><b>300+</b><span>可用模型</span></div>
+  </div>
+
+  <div class="flow">
+    <div class="flow-row">
+      <div class="fnode" data-k="f1"><i>💬</i><b>体验</b><span>完成任务</span></div>
+      <div class="farrow">›</div>
+      <div class="fnode" data-k="f2"><i>📦</i><b>技能</b><span>自动沉淀</span></div>
+      <div class="farrow">›</div>
+      <div class="fnode" data-k="f3"><i>🧠</i><b>记忆</b><span>跨会话累积</span></div>
+      <div class="farrow">›</div>
+      <div class="fnode hot" data-k="f4"><i>🔍</i><b>会话搜索</b><span>过去即用</span></div>
+    </div>
+  </div>
+
+  <div class="feats">
+    <div class="feat" data-k="fe1"><i>♻️</i><div><b>内置学习闭环</b><span>技能/记忆/画像自动进化</span></div></div>
+    <div class="feat" data-k="fe2"><i>📱</i><div><b>12+ 平台网关</b><span>TG/微信/Slack/Signal…</span></div></div>
+    <div class="feat" data-k="fe3"><i>🔀</i><div><b>任意模型可换</b><span>Portal/OpenRouter/本地</span></div></div>
+    <div class="feat" data-k="fe4"><i>⏰</i><div><b>Cron 自动任务</b><span>自然语言定时执行</span></div></div>
+  </div>
+
+  <div class="tech">
+    <div class="pill" data-k="t1">Python</div>
+    <div class="pill" data-k="t2">MIT</div>
+    <div class="pill" data-k="t3">40+ 工具</div>
+    <div class="pill" data-k="t4">MCP</div>
+    <div class="pill" data-k="t5">FTS5 记忆</div>
+    <div class="pill" data-k="t6">OpenClaw 迁移</div>
+  </div>
+
+  <div class="bottombar">
+    <a class="btn primary" id="ghBtn" target="_blank"><svg viewBox="0 0 24 24"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.6 18.3 5 18.3 5c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"/></svg>GitHub</a>
+    <a class="btn ghost" id="siteBtn" target="_blank"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm7.9 9h-3.4a15.9 15.9 0 0 0-2.9-6.6A8 8 0 0 1 19.9 11zM12 4c1.6 1.9 2.7 4.2 3 7H9c.3-2.8 1.4-5.1 3-7zM4.1 11h3.4a15.9 15.9 0 0 1 2.9-6.6A8 8 0 0 0 4.1 11zm0 2a8 8 0 0 0 6.4 6.6A15.9 15.9 0 0 1 7.5 13H4.1zM9.7 15h4.6c-.4 2.6-1.5 4.8-3.3 6.6A15.3 15.3 0 0 1 9.7 15zm5.9 0h3.5a8 8 0 0 1-6.6 6.6A15.3 15.3 0 0 0 15.6 15z"/></svg>hermes-agent.nousresearch.com</a>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+  <div class="sheet" id="sheet">
+    <h3 id="sTitle"></h3>
+    <div id="sBody"></div>
+    <button class="close" id="sClose">CLOSE ✕</button>
+  </div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+(function(){
+  var $=function(s){return document.querySelector(s)};
+  var html=document.documentElement;
+  html.className='js';
+
+  /* 终端打字效果：安装 → 启动 → 学习闭环 */
+  var LINES=[
+    {t:'$ curl -fsSL hermes-agent.nousresearch.com/install.sh | bash',c:''},
+    {t:'→ uv + Python 3.11 + 运行时 就绪',c:'g'},
+    {t:'→ 检测到 ~/.openclaw → 一键迁移？[y/N]',c:'b'},
+    {t:'$ hermes',c:''},
+    {t:'→ 模型：Nous Portal · 300+ 可选',c:'y'},
+    {t:'→ 网关：Telegram / WeChat / Discord 在线',c:'y'},
+    {t:'→ 记忆引擎：FTS5 会话索引 已挂载',c:'b'},
+    {t:'→ 技能库：231 个技能 · 跨会话复用',c:'b'},
+    {t:'→ 画像：正在构建你的用户模型…',c:'g'},
+    {t:'✓ The agent that grows with you',c:'g'}
+  ];
+  var termBody=$('#termBody');
+  function typeTerm(){
+    termBody.innerHTML='';
+    LINES.forEach(function(l,i){
+      var d=document.createElement('div');
+      d.className='ln'+(i===LINES.length-1?' cursor':'');
+      var s=l.c.indexOf('g')>-1?'g':l.c.indexOf('b')>-1?'b':l.c.indexOf('y')>-1?'y':'k';
+      d.innerHTML='<span class="'+s+'">'+l.t+'</span>';
+      d.style.animationDelay=(i*0.35)+'s';
+      termBody.appendChild(d);
+    });
+  }
+  typeTerm();
+
+  /* 弹窗数据 */
+  var DATA={
+    stars:{t:'230K★ <em>GitHub Stars</em>',d:'Hermes Agent 于 2025-07-22 由 Nous Research 创建，一年内冲到 230,648★ / 45,727 forks / 881 watchers——增长速度属于开源 AI Agent 框架第一梯队。描述只有一句话：「The agent that grows with you」。2026-06-05 登上 HN 首页（52 分 42 评论），随后进入爆发期。',p:['230,648★ / 45,727 forks / 881 watchers','2025-07-22 创建 · Python','HN 发布帖 52 分 / 42 评论（2026-06-05）','2026-08-14 仍在每日高频推送','「The agent that grows with you」']},
+    forks:{t:'45.7K <em>Forks</em>',d:'45,727 forks 说明自托管与二次开发需求极强——Hermes 定位「不绑在你的笔记本上」：$5 VPS、GPU 集群、serverless（Modal/Daytona 环境休眠唤醒）都能跑。MIT 协议，生态仓库多到成体系（橙皮书/awesome/self-evolution 都是 5K★ 级）。',p:['45,727 forks / 32,217 open issues','MIT · 可商用可自托管','7 种终端后端：本地/Docker/SSH/Singularity/Modal/Daytona/Vercel','serverless：空闲近零成本，唤醒即用','官方支持从 OpenClaw 一键迁移']},
+    platforms:{t:'12+ <em>消息平台</em>',d:'一个 gateway 进程同时接入 Telegram、Discord、Slack、WhatsApp、Signal、iMessage、Matrix、Teams、Email、微信（社区桥 HermesClaw）等 12+ 平台——同一个 Agent、同一份记忆，在任何聊天软件里都能指挥它干活。Voice memo 转录 + 跨平台对话连续。',p:['Telegram / Discord / Slack / WhatsApp / Signal','iMessage / Matrix / Teams / Email / 微信桥','一个 gateway 进程 · 全平台同一记忆','Voice memo 转录','跨平台对话连续（换平台不丢上下文）']},
+    models:{t:'300+ <em>可用模型</em>',d:'不锁任何模型商：Nous Portal 一个订阅通吃 300+ 模型（/model <name> 随时换），也支持 OpenRouter、OpenAI、Anthropic、DeepSeek、xAI、本地模型等 20+ provider。hermes model 一条命令切换，无代码改动、无锁定。',p:['Nous Portal：300+ 模型一个订阅','OpenRouter / OpenAI / Anthropic / DeepSeek / xAI','本地模型（Ollama 等）','Tool Gateway：搜索/生图/TTS/云浏览器一条龙','hermes model 随时切换，零 lock-in']},
+    f1:{t:'💬 <em>体验 → 任务完成</em>',d:'学习闭环的起点：每次完成任务，Hermes 不只是回答——它会观察自己「怎么做到的」。复杂任务（5+ 工具调用）完成后自动触发技能沉淀，把流程固化成可复用步骤。',p:['每次复杂任务自动评估','5+ 工具调用的任务触发技能创建','过程可回放：会话搜索可检索','研究模式：批量轨迹生成','轨迹压缩：为训练下一代模型准备数据']},
+    f2:{t:'📦 <em>技能 → 自动沉淀</em>',d:'技能（Skills）是 Hermes 的程序性记忆：把「怎么做」写成可加载的 SKILL.md，下次遇到同类任务自动调用。技能在使用中还会自我改进——踩过的坑直接补进技能的 Pitfalls 段，越用越准。兼容 agentskills.io 开放标准，社区技能库 231+ 个可用。',p:['复杂任务后自动创建技能','技能使用中自我改进（Pitfalls 沉淀）','兼容 agentskills.io 开放标准','Skills Hub：231+ 社区技能','本地 ~/.hermes/skills/ 明文可编辑']},
+    f3:{t:'🧠 <em>记忆 → 跨会话累积</em>',d:'三套记忆系统：① 持久记忆（MEMORY.md/USER.md）——你的偏好、环境、教训，每轮注入；② FTS5 会话搜索——所有历史对话可检索，LLM 摘要跨会话召回；③ Honcho 辩证用户建模——持续构建「你是什么样的人」。还会主动 nudges 你持久化知识。',p:['持久记忆：MEMORY.md + USER.md 每轮注入','FTS5 全历史会话搜索 + LLM 摘要召回','Honcho 辩证式用户画像建模','主动 nudges：提醒你保存重要知识','记忆后端可插拔（本地/Honcho 等）']},
+    f4:{t:'🔍 <em>会话搜索 → 过去即用</em>',d:'「它记得上周那件事」不是玄学：所有会话存入 SQLite + FTS5 全文索引，跨会话检索 + LLM 摘要。「我们上次聊到 X」→ 一条命令翻出完整上下文。这就是学习闭环的闭环——体验变成记忆，记忆变成下次体验的起点。',p:['SQLite + FTS5 全文索引','LLM 摘要召回跨会话上下文','@session: 链接可直接跳转历史','session_search 语义级检索','「上次聊到 X」不再是失忆']},
+    fe1:{t:'♻️ <em>内置学习闭环</em>',d:'README 原话：「It\'s the only agent with a built-in learning loop」——唯一内置学习闭环的 Agent：经验→技能→记忆→画像，四段循环自动运转。技能用中自改、记忆主动沉淀、画像持续构建，越用越懂你。',p:['「The only agent with a built-in learning loop」','技能创建/改进/复用全自动','记忆主动沉淀 + nudges','用户画像持续进化','开源 Agent 里的差异化定位']},
+    fe2:{t:'📱 <em>12+ 平台网关</em>',d:'同一个 Agent 进程，同时活在 Telegram/微信/Discord/Slack/WhatsApp/Signal/iMessage/Matrix/Teams/Email。不止聊天——全工具访问：在 Telegram 里让它 SSH 上云服务器干活、在微信里让它跑完报告回传附件。',p:['全平台同一进程同一记忆','Messaging Gateway 单进程多平台','全工具访问（非阉割版聊天）','Voice memo 语音转录','社区桥：HermesClaw 微信双开']},
+    fe3:{t:'🔀 <em>任意模型可换</em>',d:'20+ provider 随便换：Nous Portal（300+ 模型一订阅）、OpenRouter、OpenAI、Anthropic、DeepSeek、xAI、本地模型。工作中 /model 直接切换，主模型换思路、轻模型跑日常，成本自己掌控。',p:['20+ provider 支持','/model 会话内即时切换','credential pool 多密钥轮换','Tool Gateway：搜索/生图/TTS 一个订阅','零 lock-in：hermes model 一条命令']},
+    fe4:{t:'⏰ <em>Cron 自动任务</em>',d:'内置 cron 调度器：用自然语言写定时任务（「每天早上 9 点汇总邮件」），结果投递到任意平台。日报、巡检、备份全无人值守，还能通过 webhook 事件驱动触发。',p:['自然语言定时任务','投递到任意平台（微信/Telegram/邮件…）','webhook 事件驱动','monitor 模式：变化才通知','与技能组合：定时跑完整流水线']},
+    q1:{t:'🔥 <em>1 年 23 万 ★ · GitHub 现象级</em>',d:'HN 发布帖（2026-06-05）52 分 42 评论，社区讨论集中在「内置学习闭环」这个差异点——多数 Agent 靠 prompt 工程，Hermes 靠系统机制成长。一年 230K★ 的速度，在 Agent 框架里只有 Claude Code 同级别。',p:['HN 发布帖：52 分 / 42 评论（2026-06-05）','社区焦点：内置学习闭环 vs 纯 prompt','230K★ / 45.7K forks / 1 年','「The agent that grows with you」','与 Claude Code/Codex/OpenClaw 同级竞品']},
+    q2:{t:'📚 <em>中文圈最热：橙皮书 4.8K★</em>',d:'中文社区生态异常活跃：《Hermes Agent 橙皮书》（从入门到精通）4.8K★、awesome-hermes-agent 生态目录 5.3K★、hermes-agent-self-evolution 进化套件 5K★、Hermes-Bot-Mode（桌面 bot 名册插件，2026-08-13 刚发布）379★。生态仓库多是 5K★ 级，说明不只是围观，是真在用。',p:['橙皮书（中文教程）4.8K★','awesome-hermes-agent 5.3K★','self-evolution 进化套件 5K★','Hermes-Bot-Mode 379★（8-13 发布）','生态仓库 5K★ 级 = 真实使用量']},
+    q3:{t:'⚖️ <em>双面声：争议也留在 GitHub</em>',d:'HN 有帖子记录「Nous Research 编辑 GitHub issue 以移除关于 Hermes 的抄袭指控」（2026-05-19），issue #10232 标题与正文被改为「.」，仅留 2 条评论，其中一条：「记录永远存在。你可以善意回应，或看起来像笨拙的掩盖」——社区对此的评价是开源明星必须面对的审视。正面：2026-06-05 发布帖 52 分、生态活跃；负面：issue 管理透明度争议、32K open issues 积压。',p:['HN：编辑 issue 掩盖抄袭指控（2026-05-19）','issue #10232 被清空为「.」','社区评论：「记录永远存在」','32,217 open issues（积压明显）','开源明星的审视：好事坏事都公开']},
+    t1:{t:'Python <em>技术栈</em>',d:'全 Python 代码库，uv 管理环境（Python 3.11）。CLI/TUI/Gateway/工具系统一体，安装器自动装 uv、Python、Node.js、ripgrep、ffmpeg。',p:['Python 3.11 · uv 管理','CLI + Ink TUI + 桌面 + Web 面板','Windows 原生支持（PowerShell 安装）','WSL2 / Termux / Linux / macOS 全支持','40+ 内置工具 + toolset 系统']},
+    t2:{t:'MIT <em>协议</em>',d:'完全 MIT 开源——比很多「开源」Agent 更开放，可商用、可自托管、可二次开发。官方还维护自进化套件（self-evolution）鼓励社区改它。',p:['MIT · 无附加条款','官方 self-evolution 套件 5K★','可商用可自托管','贡献指南完整（docs/contributing）']},
+    t3:{t:'40+ <em>内置工具</em>',d:'终端、文件、网页、搜索、浏览器、邮件、定时任务、子代理（delegate_task）、代码执行等 40+ 工具，按 toolset 分组开关。终端后端 7 种：本地/Docker/SSH/Singularity/Modal/Daytona/Vercel Sandbox。',p:['40+ 工具 · 按 toolset 分组','delegate_task：并行子代理','7 种终端后端（本地→云）','Docker/SSH 隔离执行','Modal/Daytona serverless 持久化']},
+    t4:{t:'MCP <em>生态接入</em>',d:'原生 MCP 客户端：config.yaml 配好即自动发现 MCP 工具。MCP catalog 支持搜索安装，社区 MCP 服务器（GitHub、飞书、浏览器等）即插即用。',p:['原生 MCP 客户端','config.yaml 声明式接入','MCP catalog 搜索安装','hermes mcp 命令行管理','工具即插即用，与内置工具平级']},
+    t5:{t:'FTS5 <em>记忆引擎</em>',d:'SQLite FTS5 全文索引所有会话，LLM 摘要做跨会话召回。state.db 存结构化记忆，~/.hermes/sessions/ 存 JSONL 原始会话。这是「跨会话记忆」的底层实现。',p:['SQLite + FTS5 全文索引','state.db 规范会话存储','sessions/*.jsonl 原始记录','LLM 摘要召回','session_search 语义检索']},
+    t6:{t:'OpenClaw <em>迁移</em>',d:'官方提供 hermes claw migrate：从 OpenClaw 自动导入 SOUL.md 人格、MEMORY/USER 记忆、技能、命令白名单、消息配置、API keys、TTS 资产、AGENTS.md。dry-run 预览 + preset 选择。',p:['hermes claw migrate 一键迁移','SOUL.md / 记忆 / 技能 / API keys 全导入','--dry-run 预览 · --preset 选择','openclaw-migration 技能辅助','竞品迁移 = 生态虹吸']},
+    stamp:{t:'☤ <em>Hermes 的故事</em>',d:'Hermes（赫尔墨斯）：希腊神话的传信神、旅行者之神、商业与盗窃之神——双蛇杖（Caduceus）是他的标志，也是「Agent」的原型：替神传话、代行事务。Nous Research（知名开源实验室，Hermes 系列模型作者）用他命名这个 Agent 框架：不是「工具」，是「使者」——替你跑腿、替你传话、替你办事，而且一次比一次更懂你。2025-07-22 开源，一年内成为 23 万星的现象级项目，中文圈橙皮书教程 4.8K★。',p:['希腊神话传信神 · 双蛇杖 ☤','Nous Research：Hermes 系列模型作者','2025-07-22 开源 · MIT','1 年 230K★ · Agent 框架第一梯队','「The agent that grows with you」']}
+  };
+
+  /* 弹窗系统 */
+  var overlay=$('#overlay'),sheet=$('#sheet');
+  function openSheet(key){
+    var d=DATA[key];if(!d)return;
+    $('#sTitle').innerHTML=d.t;
+    var body='<p>'+d.d+'</p>';
+    if(d.p&&d.p.length){body+='<ul>';d.p.forEach(function(x){body+='<li>'+x+'</li>'});body+='</ul>';}
+    $('#sBody').innerHTML=body;
+    sheet.classList.add('show');overlay.classList.add('show');
+  }
+  function closeSheet(){sheet.classList.remove('show');overlay.classList.remove('show')}
+  $('#sClose').addEventListener('click',closeSheet);
+  overlay.addEventListener('click',closeSheet);
+  document.querySelectorAll('[data-k]').forEach(function(el){
+    el.addEventListener('click',function(){openSheet(el.getAttribute('data-k'))});
+  });
+  $('#termShow').addEventListener('click',function(){openSheet('stamp')});
+  $('#stamp').addEventListener('click',function(){openSheet('stamp')});
+
+  /* toast */
+  var toastTimer;
+  function showToast(msg){
+    var t=$('#toast');t.textContent=msg;t.classList.add('show');
+    clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.classList.remove('show')},2200);
+  }
+
+  /* 分享 */
+  var SHARE_TEXT='开源 AI Agent Hermes Agent（Nous Research）：唯一内置学习闭环——经验→技能→记忆→画像自动进化，一个进程接入 12+ 消息平台，300+ 模型随便换，1 年 23 万★\nhttps://mindresonance.online/youngsinsight/pages/hermes-agent.html\n\n你可以用任何AI工具订阅我的博客文章：https://mindresonance.online/youngsinsight/subscribe.html';
+  $('#shareBtn').addEventListener('click',function(){
+    if(navigator.share){navigator.share({title:'Hermes Agent · 会成长的 Agent',text:SHARE_TEXT}).catch(function(){})}
+    else{
+      var ta=document.createElement('textarea');ta.value=SHARE_TEXT;document.body.appendChild(ta);ta.select();
+      try{document.execCommand('copy');showToast('已复制：介绍 + 链接 + 订阅推荐')}catch(e){}
+      document.body.removeChild(ta);
+    }
+  });
+
+  /* 彩蛋：stamp 连点 5 次 → 学习闭环加速（技能/记忆全速运转） */
+  var stampCount=0;
+  $('#stamp').addEventListener('click',function(){
+    stampCount++;
+    if(stampCount>=5){
+      stampCount=0;
+      var sats=document.querySelectorAll('#sp3d .sat');
+      sats.forEach(function(s){s.style.animationDuration='0.6s'});
+      var core=$('#sp3d .core');
+      core.style.animation='corePulse 0.5s ease-in-out 4';
+      showToast('☤ 学习闭环全速运转：Experience → Skill → Memory');
+      if(navigator.vibrate)navigator.vibrate([20,40,20]);
+      setTimeout(function(){sats.forEach(function(s){s.style.animationDuration=''})},3000);
+    }
+  });
+
+  /* 3D 视差 tilt */
+  var stage=$('#stage');
+  var tiltEls=document.querySelectorAll('.tilt-deep');
+  var last=0;
+  function applyTilt(x,y){
+    var r=stage.getBoundingClientRect();
+    var dx=(x-r.left)/r.width-0.5,dy=(y-r.top)/r.height-0.5;
+    tiltEls.forEach(function(el){
+      el.style.transform='rotateX('+(-dy*10)+'deg) rotateY('+(dx*12)+'deg)';
+    });
+  }
+  stage.addEventListener('touchmove',function(e){
+    var t=e.touches[0],now=performance.now();
+    if(now-last<16)return;last=now;
+    applyTilt(t.clientX,t.clientY);
+  },{passive:true});
+  stage.addEventListener('mousemove',function(e){
+    var now=performance.now();
+    if(now-last<16)return;last=now;
+    applyTilt(e.clientX,e.clientY);
+  });
+  stage.addEventListener('mouseleave',function(){
+    tiltEls.forEach(function(el){el.style.transform=''});
+  });
+
+  /* 外链 */
+  $('#ghBtn').href='https://github.com/NousResearch/hermes-agent';
+  $('#siteBtn').href='https://hermes-agent.nousresearch.com';
+})();
+</script>
+</body>
+</html>

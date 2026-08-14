@@ -1,17 +1,17 @@
 {
-  "id": "macro",
-  "title": "Macro",
-  "subtitle": "开源团队工作系统：邮件+聊天+文档+任务+CRM+Agent 合一，@双向链接全打通 · 167 个 Rust 库 · a16z 投资 · AGPLv3 完全开源",
-  "image": "cards/macro-cover.svg",
-  "page": "pages/macro.html",
+  "id": "hermes-agent",
+  "title": "Hermes Agent",
+  "subtitle": "开源 AI Agent（Nous Research）：唯一内置学习闭环——经验→技能→记忆→画像自动进化 · 一个进程接入 12+ 消息平台 · 300+ 模型随便换 · 1 年 23 万★",
+  "image": "cards/hermes-agent-cover.svg",
+  "page": "pages/hermes-agent.html",
   "tags": [
-    "团队协作",
-    "All-in-One",
-    "Rust",
-    "AGPLv3",
-    "a16z",
-    "AI Agent"
+    "AI Agent",
+    "开源",
+    "自进化",
+    "记忆",
+    "Nous Research",
+    "跨平台"
   ],
-  "date": "2026-08-14",
+  "date": "2026-08-15",
   "type": "recommendation"
 }
