@@ -22,11 +22,20 @@
       <path d="M16 0H0V16" fill="none" stroke="#38BDF8" stroke-width="0.4" opacity="0.13"/>
     </pattern>
   </defs>
+
+  <!-- 背景 -->
   <rect width="200" height="356" fill="url(#bg)"/>
   <rect width="200" height="356" fill="url(#grid)"/>
   <circle cx="100" cy="118" r="88" fill="url(#glow)"/>
+
+  <!-- 顶部栏 -->
   <rect x="0" y="0" width="200" height="2" fill="url(#blue)" opacity="0.8"/>
+  <text x="14" y="22" font-family="monospace" font-size="7" fill="#7E8AA3" letter-spacing="2">MAC · MULTI-AGENT CAD</text>
+  <text x="186" y="22" font-family="monospace" font-size="7" fill="#7DD3FC" text-anchor="end">791★</text>
+
+  <!-- 齿轮 + 4 Agent -->
   <g transform="translate(100,120)">
+    <!-- 齿轮齿 -->
     <g transform="rotate(0)"><rect x="-3" y="-28" width="6" height="56" rx="2" fill="url(#gear)" opacity="0.85"/></g>
     <g transform="rotate(45)"><rect x="-3" y="-28" width="6" height="56" rx="2" fill="url(#gear)" opacity="0.85"/></g>
     <g transform="rotate(90)"><rect x="-3" y="-28" width="6" height="56" rx="2" fill="url(#gear)" opacity="0.85"/></g>
@@ -35,10 +44,12 @@
     <g transform="rotate(225)"><rect x="-3" y="-28" width="6" height="56" rx="2" fill="url(#gear)" opacity="0.85"/></g>
     <g transform="rotate(270)"><rect x="-3" y="-28" width="6" height="56" rx="2" fill="url(#gear)" opacity="0.85"/></g>
     <g transform="rotate(315)"><rect x="-3" y="-28" width="6" height="56" rx="2" fill="url(#gear)" opacity="0.85"/></g>
+    <!-- 齿轮核 -->
     <circle r="19" fill="url(#gear)">
       <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="9s" repeatCount="indefinite"/>
     </circle>
     <circle r="6" fill="#0B1420" stroke="#FFB84D" stroke-width="1.2"/>
+    <!-- 4 Agent 轨道 -->
     <g>
       <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="8s" repeatCount="indefinite"/>
       <circle cx="44" cy="0" r="10" fill="#0B2A44" stroke="#7DD3FC" stroke-width="1.2"/>
@@ -61,7 +72,15 @@
     </g>
   </g>
 
+  <!-- 标题区 -->
+  <text x="100" y="228" text-anchor="middle" font-family="Georgia,serif" font-size="21" font-weight="bold" fill="#E8ECF4">Multi-Agent CAD</text>
+  <text x="100" y="244" text-anchor="middle" font-family="monospace" font-size="7" fill="#7DD3FC" letter-spacing="1.5">4 AGENTS · 1/116 TOKENS · 99.3%</text>
+  <text x="100" y="260" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#7E8AA3">自然语言 → 可打印 3D 模型</text>
 
-  <!-- 底部标题区（与首页 HTML 层标题不冲突） -->
-  <rect x="150" y="326" width="36" height="17" rx="3" fill="none" stroke="#38BDF8" stroke-width="1"/>
+  <!-- 数据条 -->
+  <rect x="24" y="278" width="152" height="24" rx="12" fill="#0A1322" stroke="#38BDF8" stroke-width="0.7" opacity="0.8"/>
+  <text x="100" y="294" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#E8ECF4">¥125.69 → ¥9.67 · $0.15/件</text>
+
+  <!-- 底部 -->
+  <text x="100" y="336" text-anchor="middle" font-family="monospace" font-size="6.5" fill="#4A5570" letter-spacing="1">MIND RESONANCE · 反共识观察</text>
 </svg>

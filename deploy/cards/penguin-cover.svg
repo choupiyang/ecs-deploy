@@ -17,6 +17,7 @@
     <filter id="neon"><feGaussianBlur stdDeviation="2.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
   </defs>
   <rect width="200" height="356" fill="url(#bg)" rx="4"/>
+  <!-- Grid -->
   <g opacity=".07" stroke="#4FC3F7" stroke-width=".3">
     <line x1="0" y1="70" x2="200" y2="70"/><line x1="0" y1="96" x2="200" y2="96"/>
     <line x1="0" y1="122" x2="200" y2="122"/><line x1="0" y1="148" x2="200" y2="148"/>
@@ -24,6 +25,7 @@
     <line x1="40" y1="50" x2="40" y2="210"/><line x1="80" y1="50" x2="80" y2="210"/>
     <line x1="120" y1="50" x2="120" y2="210"/><line x1="160" y1="50" x2="160" y2="210"/>
   </g>
+  <!-- 企鹅 -->
   <g transform="translate(66,40)">
     <ellipse cx="34" cy="118" rx="30" ry="12" fill="#4FC3F7" opacity=".15"/>
     <path d="M34 6 C12 6 4 26 4 52 C4 78 14 104 34 104 C54 104 64 78 64 52 C64 26 56 6 34 6 Z" fill="#12283E" stroke="#4FC3F7" stroke-width="1.2"/>
@@ -33,11 +35,14 @@
     <circle cx="24" cy="42" r="1.8" fill="#0A1420"/>
     <circle cx="44" cy="42" r="1.8" fill="#0A1420"/>
     <path d="M28 50 q6 6 12 0" stroke="#7BA7C9" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+    <!-- 围巾 -->
     <path d="M14 62 q20 8 40 0 l-3 8 q-17 6 -34 0 z" fill="#1F6FEB"/>
     <path d="M46 66 l4 16 l-7 -3 l-1 -10 z" fill="#4FC3F7" opacity=".85"/>
+    <!-- 翅膀 -->
     <path d="M6 52 q-8 16 -2 34 l10 -8 q-2 -14 0 -24 z" fill="#0D1B2E" stroke="#4FC3F7" stroke-width=".8" opacity=".9"/>
     <path d="M62 52 q8 16 2 34 l-10 -8 q2 -14 0 -24 z" fill="#0D1B2E" stroke="#4FC3F7" stroke-width=".8" opacity=".9"/>
   </g>
+  <!-- 代码窗口 -->
   <g transform="translate(24,180)">
     <rect x="0" y="0" width="152" height="52" rx="4" fill="#0A1420" stroke="#4FC3F7" stroke-opacity=".45" stroke-width=".9"/>
     <rect x="0" y="0" width="152" height="13" rx="4" fill="#4FC3F7" opacity=".12"/>
@@ -48,16 +53,26 @@
       <rect x="74" y="37" width="8" height="9" fill="#4FC3F7" opacity=".9"/>
     </g>
   </g>
-  <g transform="translate(30,186)" opacity=".85">
+  <!-- 构建箭头 (一句话 → 应用) -->
+  <g transform="translate(30,242)" opacity=".85">
     <rect x="0" y="0" width="56" height="18" rx="9" fill="none" stroke="#4FC3F7" stroke-width=".9"/>
+    <text x="28" y="12" text-anchor="middle" font-family="system-ui,sans-serif" font-size="6" fill="#8FB8D8">一句话描述</text>
     <path d="M60 9 L74 9" stroke="#4FC3F7" stroke-width="1" marker-end="none"/>
     <path d="M70 5 l6 4 l-6 4 z" fill="#4FC3F7"/>
     <rect x="80" y="0" width="76" height="18" rx="9" fill="#4FC3F7" opacity=".15" stroke="#4FC3F7" stroke-width=".9"/>
     <text x="118" y="12" text-anchor="middle" font-family="system-ui,sans-serif" font-size="6" fill="#D6EDFF">完整 Agent 应用</text>
   </g>
+  <!-- 自进化循环 -->
   <path d="M100 274 q28 0 28 14 q0 14 -28 14 q-28 0 -28 -14 q0 -6 6 -9" fill="none" stroke="#1F6FEB" stroke-width="1" stroke-dasharray="3 3" opacity=".6"/>
   <path d="M104 280 l-4 -4 l-5 3" fill="#1F6FEB" opacity=".7"/>
+  <text x="100" y="316" text-anchor="middle" font-family="system-ui,sans-serif" font-size="6" fill="#5E8FB8" letter-spacing=".15">SELF-EVOLVING LOOP</text>
+  <!-- Title -->
+  <text x="100" y="244" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" font-weight="800" fill="#4FC3F7" letter-spacing="-.4" filter="url(#neon)">PenguinHarness</text>
+  <text x="100" y="258" text-anchor="middle" font-family="system-ui,sans-serif" font-size="6.5" fill="#94A3B8" letter-spacing=".25">AUTOMATED AGENT BUILDER</text>
   <rect x="60" y="325" width="80" height="2" rx="1" fill="url(#ice)" opacity=".7"/>
   <g font-family="system-ui,sans-serif" font-size="5.5" fill="#475569" text-anchor="middle">
+    <text x="50" y="342">490★</text><circle cx="50" cy="348" r="1.2" fill="#4FC3F7" opacity=".8"/>
+    <text x="100" y="342">$0.02/构建</text><circle cx="100" cy="348" r="1.2" fill="#1F6FEB" opacity=".8"/>
+    <text x="152" y="342">APACHE-2.0</text><circle cx="152" cy="348" r="1.2" fill="#4FC3F7" opacity=".8"/>
   </g>
 </svg>

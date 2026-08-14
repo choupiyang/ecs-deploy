@@ -21,10 +21,19 @@
       <path d="M16 0H0V16" fill="none" stroke="#16352A" stroke-width="0.5"/>
     </pattern>
   </defs>
+
+  <!-- 背景 -->
   <rect width="200" height="356" fill="url(#bg)"/>
   <rect width="200" height="356" fill="url(#grid)" opacity="0.5"/>
+
+  <!-- 顶部栏 -->
   <rect x="0" y="0" width="200" height="2" fill="url(#accentGrad)" opacity="0.8"/>
+  <text x="16" y="24" font-family="monospace" font-size="7" fill="#3D6B57" letter-spacing="2">SCRAPLING</text>
+  <text x="184" y="24" font-family="monospace" font-size="7" fill="#34D399" text-anchor="end">73.3K★</text>
+
+  <!-- 中心: 抓取核 + 自适应追踪环 -->
   <g transform="translate(100,132)">
+    <!-- 自适应追踪环（双环反向） -->
     <g>
       <circle r="52" fill="none" stroke="#34D399" stroke-width="1" stroke-dasharray="4 5" opacity="0.5">
         <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="14s" repeatCount="indefinite"/>
@@ -35,16 +44,20 @@
         <animateTransform attributeName="transform" type="rotate" from="360 0 0" to="0 0 0" dur="20s" repeatCount="indefinite"/>
       </circle>
     </g>
+    <!-- 蜘蛛丝 -->
     <g stroke="#1E4A38" stroke-width="0.7" opacity="0.6">
       <line x1="0" y1="-52" x2="0" y2="52"/>
       <line x1="-52" y1="0" x2="52" y2="0"/>
       <line x1="-37" y1="-37" x2="37" y2="37"/>
       <line x1="37" y1="-37" x2="-37" y2="37"/>
     </g>
+
+    <!-- 中心抓取核（蜘蛛体） -->
     <g filter="url(#glow)">
       <circle r="19" fill="url(#coreGrad)">
         <animate attributeName="r" values="18;20.5;18" dur="2.6s" repeatCount="indefinite"/>
       </circle>
+      <!-- 蜘蛛眼 -->
       <circle cx="-6" cy="-5" r="2.6" fill="#07130F"/>
       <circle cx="6" cy="-5" r="2.6" fill="#07130F"/>
       <circle cx="-6" cy="-5" r="1.2" fill="#6EE7B7">
@@ -53,6 +66,7 @@
       <circle cx="6" cy="-5" r="1.2" fill="#6EE7B7">
         <animate attributeName="opacity" values="1;0.3;1" dur="1.6s" repeatCount="indefinite" begin="0.3s"/>
       </circle>
+      <!-- 蜘蛛腿 -->
       <g stroke="#07130F" stroke-width="1.6" stroke-linecap="round" opacity="0.75">
         <line x1="-10" y1="-8" x2="-20" y2="-18"/>
         <line x1="-10" y1="-2" x2="-22" y2="-6"/>
@@ -61,8 +75,11 @@
         <line x1="10" y1="-2" x2="22" y2="-6"/>
         <line x1="10" y1="4" x2="21" y2="10"/>
       </g>
+      <!-- 中心标记 -->
       <rect x="-5" y="7" width="10" height="2.4" rx="1.2" fill="#07130F" opacity="0.8"/>
     </g>
+
+    <!-- 自适应探测点（追踪元素） -->
     <g>
       <circle r="3.2" fill="#34D399" opacity="0.95">
         <animateMotion dur="5.5s" repeatCount="indefinite" path="M0,-52 A52,52 0 1,1 -0.01,-52 Z"/>
@@ -74,6 +91,8 @@
       </circle>
     </g>
   </g>
+
+  <!-- 数据流（抓取结果上传） -->
   <g opacity="0.5">
     <rect x="40" y="246" width="2" height="12" rx="1" fill="#34D399">
       <animate attributeName="y" from="246" to="200" dur="2.6s" repeatCount="indefinite"/>
@@ -88,5 +107,11 @@
       <animate attributeName="opacity" from="0.8" to="0" dur="2.8s" repeatCount="indefinite" begin="1.2s"/>
     </rect>
   </g>
+
+  <!-- 底部标题区 -->
+  <rect x="0" y="316" width="200" height="40" fill="#07130F" opacity="0.92"/>
+  <text x="16" y="336" font-family="monospace" font-size="9" fill="#D1FAE5" font-weight="bold">Scrapling</text>
+  <text x="16" y="348" font-family="monospace" font-size="6.5" fill="#4A7B66">ADAPTIVE WEB SCRAPING · BSD-3</text>
   <rect x="150" y="326" width="36" height="17" rx="3" fill="none" stroke="#34D399" stroke-width="1"/>
+  <text x="168" y="338" font-family="monospace" font-size="6.5" fill="#34D399" text-anchor="middle">1.99ms</text>
 </svg>

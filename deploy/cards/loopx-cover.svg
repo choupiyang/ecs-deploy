@@ -18,6 +18,7 @@
     <filter id="neon"><feGaussianBlur stdDeviation="2.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
   </defs>
   <rect width="200" height="356" fill="url(#bg)" rx="4"/>
+  <!-- Grid -->
   <g opacity=".1" stroke="#8B5CF6" stroke-width=".3">
     <line x1="0" y1="70" x2="200" y2="70"/><line x1="0" y1="95" x2="200" y2="95"/>
     <line x1="0" y1="120" x2="200" y2="120"/><line x1="0" y1="145" x2="200" y2="145"/>
@@ -25,23 +26,37 @@
     <line x1="40" y1="50" x2="40" y2="190"/><line x1="80" y1="50" x2="80" y2="190"/>
     <line x1="120" y1="50" x2="120" y2="190"/><line x1="160" y1="50" x2="160" y2="190"/>
   </g>
+  <!-- Orbit ring 1 -->
   <ellipse cx="100" cy="100" rx="62" ry="26" fill="none" stroke="#8B5CF6" stroke-width="1.2" opacity=".55" filter="url(#neon)" transform="rotate(-18 100 100)"/>
+  <!-- Orbit ring 2 -->
   <ellipse cx="100" cy="100" rx="44" ry="19" fill="none" stroke="#22D3EE" stroke-width=".8" opacity=".4" transform="rotate(24 100 100)"/>
+  <!-- Core sphere -->
   <circle cx="100" cy="100" r="15" fill="url(#core)" filter="url(#neon)"/>
   <circle cx="100" cy="100" r="6" fill="#E0F2FE" opacity=".9"/>
+  <!-- Orbiting dots -->
   <circle cx="162" cy="80" r="3" fill="#22D3EE" filter="url(#neon)"/>
   <circle cx="46" cy="126" r="2.4" fill="#8B5CF6" filter="url(#neon)"/>
   <circle cx="78" cy="70" r="1.8" fill="#A78BFA" opacity=".8"/>
+  <!-- Tick marks on orbit -->
   <g opacity=".35" stroke="#22D3EE" stroke-width="1">
     <line x1="100" y1="58" x2="100" y2="63" transform="rotate(-18 100 100)"/>
     <line x1="100" y1="137" x2="100" y2="142" transform="rotate(-18 100 100)"/>
     <line x1="40" y1="100" x2="46" y2="100" transform="rotate(-18 100 100)"/>
     <line x1="154" y1="100" x2="160" y2="100" transform="rotate(-18 100 100)"/>
   </g>
+  <!-- Loop wave -->
   <g transform="translate(18,205)" opacity=".18" fill="none" stroke="#22D3EE" stroke-width=".7">
     <polyline points="0,0 28,-10 50,3 80,-14 110,2 140,-8 164,8"/>
   </g>
+  <!-- Title -->
+  <text x="100" y="250" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" font-weight="800" fill="#A78BFA" letter-spacing="-.4" filter="url(#neon)">LoopX</text>
+  <text x="100" y="266" text-anchor="middle" font-family="system-ui,sans-serif" font-size="6.5" fill="#94A3B8" letter-spacing=".25">LOCAL CONTROL PLANE</text>
+  <text x="100" y="278" text-anchor="middle" font-family="system-ui,sans-serif" font-size="6.5" fill="#64748B" letter-spacing=".2">for long-running AI agents</text>
   <rect x="60" y="290" width="80" height="2" rx="1" fill="url(#accent)" opacity=".6"/>
+  <!-- Bottom tags -->
   <g font-family="system-ui,sans-serif" font-size="5.5" fill="#475569" text-anchor="middle">
+    <text x="50" y="310">PYTHON</text><circle cx="50" cy="316" r="1.2" fill="#8B5CF6" opacity=".7"/>
+    <text x="100" y="310">AGENT-AGNOSTIC</text><circle cx="100" cy="316" r="1.2" fill="#22D3EE" opacity=".7"/>
+    <text x="150" y="310">MIT</text><circle cx="150" cy="316" r="1.2" fill="#8B5CF6" opacity=".7"/>
   </g>
 </svg>
