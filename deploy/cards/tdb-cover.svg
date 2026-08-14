@@ -30,12 +30,21 @@
       <path d="M14 0H0V14" fill="none" stroke="#00A4FF" stroke-opacity="0.07" stroke-width="0.5"/>
     </pattern>
   </defs>
+
+  <!-- 背景 -->
   <rect width="200" height="356" fill="url(#bg)"/>
   <rect width="200" height="356" fill="url(#grid)"/>
   <circle cx="100" cy="128" r="78" fill="url(#glow)"/>
   <circle cx="100" cy="128" r="46" fill="url(#glow2)"/>
-  <g font-family="monospace" font-size="5.2" letter-spacing="1.6" fill="#4A6B87">
+
+  <!-- 顶部栏 -->
+  <rect x="0" y="0" width="200" height="2" fill="#00A4FF" opacity="0.8"/>
+  <g font-family="monospace" font-size="7" letter-spacing="2" fill="#4A6B87">
+    <text x="16" y="24">TENCENTDB · AGENT MEMORY</text>
+    <text x="184" y="24" text-anchor="end" fill="#00A4FF">14.9K★</text>
   </g>
+
+  <!-- 记忆网络：中心核心 + 四资产节点 -->
   <!-- 连线 -->
   <g stroke="#00A4FF" stroke-opacity="0.22" stroke-width="0.7">
     <line x1="100" y1="128" x2="40"  y2="86"/>
@@ -45,12 +54,14 @@
     <line x1="100" y1="128" x2="100" y2="52"/>
     <line x1="100" y1="128" x2="100" y2="204"/>
   </g>
+  <!-- 轨道环 -->
   <circle cx="100" cy="128" r="34" fill="none" stroke="#00A4FF" stroke-opacity="0.28" stroke-width="0.8" stroke-dasharray="3 5">
     <animateTransform attributeName="transform" type="rotate" from="0 100 128" to="360 100 128" dur="26s" repeatCount="indefinite"/>
   </circle>
   <circle cx="100" cy="128" r="55" fill="none" stroke="#2EE6A8" stroke-opacity="0.16" stroke-width="0.6" stroke-dasharray="1.5 6">
     <animateTransform attributeName="transform" type="rotate" from="360 100 128" to="0 100 128" dur="36s" repeatCount="indefinite"/>
   </circle>
+  <!-- 卫星节点 -->
   <g>
     <circle cx="40" cy="86" r="8" fill="#0A2A44" stroke="#00A4FF" stroke-width="1" filter="url(#neon)"/>
     <text x="40" y="88.5" font-family="sans-serif" font-size="6.5" fill="#7CC8FF" text-anchor="middle">聊</text>
@@ -67,20 +78,29 @@
     <circle cx="156" cy="176" r="8" fill="#0A2A44" stroke="#2EE6A8" stroke-width="1" filter="url(#neon)"/>
     <text x="156" y="178.5" font-family="sans-serif" font-size="6.5" fill="#8AF0C8" text-anchor="middle">码</text>
   </g>
+  <!-- 中央核心：数据库柱 -->
   <ellipse cx="100" cy="112" rx="12" ry="3.5" fill="#00A4FF" opacity="0.9" filter="url(#neonBig)"/>
   <path d="M88 112 L88 144 A12 3.5 0 0 0 112 144 L112 112 A12 3.5 0 0 1 88 112" fill="url(#core)" filter="url(#neonBig)"/>
   <ellipse cx="100" cy="118" rx="12" ry="3.2" fill="none" stroke="#B5E4FF" stroke-opacity="0.5" stroke-width="0.6"/>
   <ellipse cx="100" cy="128" rx="12" ry="3.2" fill="none" stroke="#B5E4FF" stroke-opacity="0.5" stroke-width="0.6"/>
   <ellipse cx="100" cy="138" rx="12" ry="3.2" fill="none" stroke="#B5E4FF" stroke-opacity="0.5" stroke-width="0.6"/>
+  <!-- L0-L3 阶梯 -->
   <g font-family="monospace" font-size="4.6" fill="#3E6484">
     <text x="122" y="122">L0 会话</text>
     <text x="122" y="130" fill="#5B8DB5">L1 原子</text>
     <text x="122" y="138" fill="#7CC8FF">L2 场景</text>
     <text x="122" y="146" fill="#2EE6A8">L3 人格</text>
   </g>
-  <rect x="0" y="318" width="200" height="1.2" fill="#00A4FF" opacity="0.55"/>
-  <g>
-    <rect x="10" y="300" width="34" height="10" rx="2" fill="#00A4FF" opacity="0.14"/>
-    <text x="12" y="307.5" font-family="monospace" font-size="5" letter-spacing="0.8" fill="#00A4FF">14.9K ★</text>
-  </g>
+
+  <!-- 标题区 (Semantica 式) -->
+  <text x="100" y="236" text-anchor="middle" font-family="Georgia,serif" font-size="24" font-weight="bold" fill="#F2F7FB">TencentDB</text>
+  <text x="100" y="252" text-anchor="middle" font-family="monospace" font-size="7" fill="#00A4FF" letter-spacing="1.5">AGENT MEMORY · 团队级记忆中枢</text>
+  <text x="100" y="268" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#6B86A0">L0-L3 分层记忆 · 会话到人格</text>
+
+  <!-- 数据条 -->
+  <rect x="24" y="288" width="152" height="24" rx="12" fill="#0A2A44" stroke="#1E4A6E" stroke-width="0.8" opacity="0.85"/>
+  <text x="100" y="304" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#F2F7FB">14.9K★ · MIT · TypeScript</text>
+
+  <!-- 底部 -->
+  <text x="100" y="338" text-anchor="middle" font-family="monospace" font-size="6.5" fill="#3E6484" letter-spacing="1">MIND RESONANCE · 反共识观察</text>
 </svg>

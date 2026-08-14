@@ -14,7 +14,10 @@
       <stop offset="1" stop-color="#38BDF8" stop-opacity="0"/>
     </radialGradient>
   </defs>
+
+  <!-- 背景 -->
   <rect width="200" height="356" fill="url(#bg)"/>
+  <!-- 网格（缓慢漂移动画） -->
   <g stroke="#38BDF8" stroke-opacity="0.07" stroke-width="0.5">
     <line x1="0" y1="40" x2="200" y2="40"><animate attributeName="y1" values="40;44;40" dur="6s" repeatCount="indefinite"/></line>
     <line x1="0" y1="80" x2="200" y2="80"><animate attributeName="y1" values="80;84;80" dur="6s" repeatCount="indefinite"/></line>
@@ -29,11 +32,17 @@
     <line x1="120" y1="0" x2="120" y2="356"><animate attributeName="x1" values="120;124;120" dur="7s" repeatCount="indefinite"/></line>
     <line x1="160" y1="0" x2="160" y2="356"><animate attributeName="x1" values="160;164;160" dur="7s" repeatCount="indefinite"/></line>
   </g>
-  <ellipse cx="100" cy="150" rx="90" ry="120" fill="url(#glow)">
-    <animate attributeName="opacity" values="0.6;1;0.6" dur="3.2s" repeatCount="indefinite"/>
-  </ellipse>
+  <!-- 顶部栏 -->
+  <rect x="0" y="0" width="200" height="2" fill="#38BDF8" opacity="0.8"/>
+  <g font-family="monospace" font-size="7" letter-spacing="2" fill="#5B6B85">
+    <text x="16" y="24">PRIME AGENT · RLM</text>
+    <text x="184" y="24" text-anchor="end" fill="#38BDF8">8.8K★</text>
+  </g>
+
+  <!-- 3D 递归终端立方体（整体轻微浮动 + 顶部/右侧面呼吸） -->
   <g transform="translate(100, 148)">
     <animateTransform attributeName="transform" type="translate" values="100,148;100,142;100,148" dur="4s" repeatCount="indefinite" additive="replace"/>
+    <!-- 外立方体（青蓝线框） -->
     <g stroke="#38BDF8" stroke-width="1.2" fill="none" opacity="0.95">
       <rect x="-38" y="-30" width="76" height="60" fill="#0A1526" stroke="#38BDF8">
         <animate attributeName="stroke-opacity" values="1;0.6;1" dur="2.4s" repeatCount="indefinite"/>
@@ -43,10 +52,12 @@
         <animate attributeName="stroke-opacity" values="1;0.7;1" dur="3.1s" repeatCount="indefinite"/>
       </polygon>
     </g>
+    <!-- 前面屏幕细节：菜单栏 -->
     <g stroke="#38BDF8" stroke-width="0.8">
       <line x1="-32" y1="-25" x2="32" y2="-25" opacity="0.7"/>
       <line x1="-32" y1="-25" x2="-22" y2="-25" opacity="0.4"/>
     </g>
+    <!-- 前面屏幕：代码行（逐行显现） -->
     <g fill="#7DD3FC" font-family="monospace" font-size="5" opacity="0.9">
       <text x="-32" y="-15">$ prime-agent</text>
       <text x="-32" y="-7" fill="#34D399">✓ kernel alive</text>
@@ -54,9 +65,11 @@
       <text x="-32" y="9" fill="#34D399">✓ child #2 admitted</text>
       <text x="-32" y="17" fill="#7DD3FC">/refine applied</text>
     </g>
+    <!-- 光标（闪烁） -->
     <rect x="-32" y="19" width="10" height="2" fill="#38BDF8" opacity="0.9">
       <animate attributeName="opacity" values="1;0.2;1" dur="1s" repeatCount="indefinite"/>
     </rect>
+    <!-- 内层递归子终端（脉冲） -->
     <g transform="translate(-6, -4)">
       <rect x="-14" y="-12" width="28" height="22" fill="#0B1830" stroke="#7DD3FC" stroke-width="0.8" rx="2">
         <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="2.2s" repeatCount="indefinite"/>
@@ -64,6 +77,7 @@
       <text x="-10" y="-1" fill="#38BDF8" font-family="monospace" font-size="5" opacity="0.85">rlm(</text>
       <text x="-10" y="6" fill="#38BDF8" font-family="monospace" font-size="5" opacity="0.85">...)</text>
     </g>
+    <!-- 扫描线（移动） -->
     <g stroke="#38BDF8" stroke-width="0.3" opacity="0.12">
       <line x1="-38" y1="-20" x2="38" y2="-20"><animate attributeName="y1" values="-20;-14;-20" dur="1.4s" repeatCount="indefinite"/></line>
       <line x1="-38" y1="-10" x2="38" y2="-10"><animate attributeName="y1" values="-10;-4;-10" dur="1.4s" repeatCount="indefinite"/></line>
@@ -72,11 +86,16 @@
       <line x1="-38" y1="20" x2="38" y2="20"><animate attributeName="y1" values="20;26;20" dur="1.4s" repeatCount="indefinite"/></line>
     </g>
   </g>
-  <g transform="translate(100, 260)">
-    <rect x="-88" y="-2" width="176" height="42" rx="6" fill="#0A1526" stroke="#38BDF8" stroke-opacity="0.35">
-      <animate attributeName="stroke-opacity" values="0.35;0.7;0.35" dur="3.6s" repeatCount="indefinite"/>
-    </rect>
-  </g>
-  <g fill="#5B6B85" font-family="'JetBrains Mono', monospace" font-size="5.5" letter-spacing="1.5">
-  </g>
+
+  <!-- 标题区 (Semantica 式) -->
+  <text x="100" y="236" text-anchor="middle" font-family="Georgia,serif" font-size="24" font-weight="bold" fill="#F0F6FC">Prime Agent</text>
+  <text x="100" y="252" text-anchor="middle" font-family="monospace" font-size="7" fill="#38BDF8" letter-spacing="1.5">SELF-IMPROVING RLM AGENT</text>
+  <text x="100" y="268" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#7A8BA5">自改进推理循环 Agent · 递归内核</text>
+
+  <!-- 数据条 -->
+  <rect x="24" y="288" width="152" height="24" rx="12" fill="#0A1526" stroke="#1E3A5C" stroke-width="0.8"/>
+  <text x="100" y="304" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#F0F6FC">8.8K★ · MIT · TypeScript</text>
+
+  <!-- 底部 -->
+  <text x="100" y="338" text-anchor="middle" font-family="monospace" font-size="6.5" fill="#5B6B85" letter-spacing="1">MIND RESONANCE · 反共识观察</text>
 </svg>
