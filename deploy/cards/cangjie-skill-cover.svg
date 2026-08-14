@@ -21,18 +21,31 @@
       <path d="M16 0H0V16" fill="none" stroke="#E8B931" stroke-width="0.4" opacity="0.14"/>
     </pattern>
   </defs>
+
+  <!-- 背景 -->
   <rect width="200" height="356" fill="url(#bg)"/>
   <rect width="200" height="356" fill="url(#grid)"/>
   <circle cx="100" cy="120" r="90" fill="url(#glow)"/>
+
+  <!-- 顶部栏 -->
   <rect x="0" y="0" width="200" height="2" fill="url(#gold)" opacity="0.8"/>
+  <text x="14" y="22" font-family="monospace" font-size="7" fill="#8A90A8" letter-spacing="2">CANGJIE SKILL</text>
+  <text x="186" y="22" font-family="monospace" font-size="7" fill="#FFD75E" text-anchor="end">7.6K★</text>
+
+  <!-- 蒸馏瓶 -->
   <g transform="translate(100,128)">
+    <!-- 瓶口 -->
     <ellipse cx="0" cy="-58" rx="12" ry="3.5" fill="none" stroke="#E8B931" stroke-width="1.2" opacity="0.6"/>
+    <!-- 瓶颈 -->
     <path d="M-9 -56 V-42 H9 V-56" fill="none" stroke="#E8B931" stroke-width="1.2" opacity="0.5"/>
+    <!-- 瓶身 -->
     <path d="M-9 -42 C-9 -20 -44 -8 -44 12 C-44 38 -22 54 0 54 C22 54 44 38 44 12 C44 -8 9 -20 9 -42 Z"
       fill="rgba(232,185,49,0.08)" stroke="#E8B931" stroke-width="1.4" opacity="0.75"/>
+    <!-- 液面 -->
     <ellipse cx="0" cy="30" rx="36" ry="7" fill="url(#gold)" opacity="0.28">
       <animate attributeName="opacity" values="0.18;0.4;0.18" dur="2.2s" repeatCount="indefinite"/>
     </ellipse>
+    <!-- 上升粒子 -->
     <circle r="3" fill="#FFD75E" opacity="0">
       <animate attributeName="cy" values="26;-50" dur="2.6s" repeatCount="indefinite"/>
       <animate attributeName="opacity" values="0;0.95;0" dur="2.6s" repeatCount="indefinite"/>
@@ -49,6 +62,7 @@
       <animate attributeName="cy" values="20;-44" dur="3.4s" begin="1.6s" repeatCount="indefinite"/>
       <animate attributeName="opacity" values="0;0.8;0" dur="3.4s" begin="1.6s" repeatCount="indefinite"/>
     </circle>
+    <!-- 弹出的 skill 方块 -->
     <g>
       <animateTransform attributeName="transform" type="translate" values="0,0;0,-10;0,-24;0,-34" dur="3.2s" repeatCount="indefinite"/>
       <rect x="-8" y="-74" width="16" height="16" rx="3" fill="url(#gold)" filter="url(#soft)" opacity="0"/>
@@ -62,7 +76,15 @@
     </g>
   </g>
 
+  <!-- 标题区 -->
+  <text x="100" y="236" text-anchor="middle" font-family="Georgia,serif" font-size="22" font-weight="bold" fill="#E8E4D9">Cangjie Skill</text>
+  <text x="100" y="252" text-anchor="middle" font-family="monospace" font-size="7" fill="#FFD75E" letter-spacing="1.5">内容蒸馏引擎 · RIA-TV++</text>
+  <text x="100" y="268" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#8A90A8">书 · 长视频 · 播客 → 可调用 Skills</text>
 
-  <!-- 底部标题区（与首页 HTML 层标题不冲突） -->
-  <rect x="150" y="326" width="36" height="17" rx="3" fill="none" stroke="#E8B931" stroke-width="1"/>
+  <!-- 数据条 -->
+  <rect x="24" y="286" width="152" height="24" rx="12" fill="#0D1226" stroke="#E8B931" stroke-width="0.7" opacity="0.8"/>
+  <text x="100" y="302" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#E8E4D9">21+ Packs · 280+ Skills</text>
+
+  <!-- 底部 -->
+  <text x="100" y="336" text-anchor="middle" font-family="monospace" font-size="6.5" fill="#5A6078" letter-spacing="1">MIND RESONANCE · 反共识观察</text>
 </svg>

@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="450" height="800" viewBox="0 0 450 800">
   <!-- 深蓝黑背景 -->
   <rect width="450" height="800" fill="#050810"/>
@@ -64,7 +63,7 @@
     </g>
     
     <!-- 标题文字 -->
-    
+    <text x="65" y="30" font-family="Georgia, serif" font-size="52" font-weight="500" fill="#E0F2FE" letter-spacing="3">PAXM</text>
     <text x="185" y="30" font-family="Georgia, serif" font-size="52" font-weight="500" fill="#06B6D4">.</text>
     
     <!-- 副标题 -->
@@ -256,8 +255,8 @@
       <g transform="translate(18, 18)">
         <path d="M12 2 L2 7 L12 12 L22 7 L12 2 M2 17 L12 22 L22 17 M2 12 L12 17 L22 12" fill="none" stroke="#06B6D4" stroke-width="1.5"/>
       </g>
-      
-      
+      <text x="58" y="25" font-family="sans-serif" font-size="11" fill="#E2E8F0">记忆适配</text>
+      <text x="58" y="40" font-family="sans-serif" font-size="8" fill="#64748B">统一不同 LLM 的记忆接口</text>
       
       <!-- MCP 协议 -->
       <rect x="200" y="0" width="188" height="60" rx="8" fill="rgba(15, 23, 42, 0.6)" stroke="#1E293B" stroke-width="1"/>
@@ -265,8 +264,8 @@
       <g transform="translate(218, 18)">
         <path d="M12 22 L12 14 M7 17 L12 12 L17 17 M5 9 L12 2 L19 9" fill="none" stroke="#06B6D4" stroke-width="1.5"/>
       </g>
-      
-      
+      <text x="258" y="25" font-family="sans-serif" font-size="11" fill="#E2E8F0">MCP 协议</text>
+      <text x="258" y="40" font-family="sans-serif" font-size="8" fill="#64748B">Model Context Protocol 支持</text>
       
       <!-- 多后端支持 -->
       <rect x="0" y="70" width="188" height="60" rx="8" fill="rgba(15, 23, 42, 0.6)" stroke="#1E293B" stroke-width="1"/>
@@ -276,8 +275,8 @@
         <rect x="13" y="6" width="8" height="16" rx="2" fill="none" stroke="#14B8A6" stroke-width="1.5"/>
         <rect x="24" y="10" width="8" height="12" rx="2" fill="none" stroke="#3B82F6" stroke-width="1.5"/>
       </g>
-      
-      
+      <text x="58" y="95" font-family="sans-serif" font-size="11" fill="#E2E8F0">多后端支持</text>
+      <text x="58" y="110" font-family="sans-serif" font-size="8" fill="#64748B">SQLite / Postgres / Vector</text>
       
       <!-- 会话管理 -->
       <rect x="200" y="70" width="188" height="60" rx="8" fill="rgba(15, 23, 42, 0.6)" stroke="#1E293B" stroke-width="1"/>
@@ -290,8 +289,8 @@
         <line x1="12" y1="20" x2="12" y2="24" stroke="#14B8A6" stroke-width="1"/>
         <line x1="0" y1="12" x2="4" y2="12" stroke="#14B8A6" stroke-width="1"/>
       </g>
-      
-      
+      <text x="258" y="95" font-family="sans-serif" font-size="11" fill="#E2E8F0">会话管理</text>
+      <text x="258" y="110" font-family="sans-serif" font-size="8" fill="#64748B">跨会话记忆持久化</text>
     </g>
   </g>
   
@@ -303,13 +302,13 @@
       <text x="30" y="15" font-family="monospace" font-size="9" fill="#06B6D4" text-anchor="middle">Python</text>
       
       <rect x="68" y="0" width="50" height="22" rx="4" fill="rgba(6, 182, 212, 0.15)" stroke="#06B6D4" stroke-width="1"/>
-      
+      <text x="93" y="15" font-family="monospace" font-size="9" fill="#06B6D4" text-anchor="middle">MCP</text>
       
       <rect x="126" y="0" width="60" height="22" rx="4" fill="rgba(15, 23, 42, 0.8)" stroke="#334155" stroke-width="1"/>
-      
+      <text x="156" y="15" font-family="monospace" font-size="9" fill="#94A3B8" text-anchor="middle">SQLite</text>
       
       <rect x="194" y="0" width="70" height="22" rx="4" fill="rgba(15, 23, 42, 0.8)" stroke="#334155" stroke-width="1"/>
-      
+      <text x="229" y="15" font-family="monospace" font-size="9" fill="#94A3B8" text-anchor="middle">Postgres</text>
     </g>
   </g>
   
@@ -318,12 +317,12 @@
     <rect x="0" y="0" width="390" height="45" rx="8" fill="rgba(15, 23, 42, 0.8)" stroke="#1E293B" stroke-width="1"/>
     <text x="15" y="20" font-family="monospace" font-size="10" fill="#64748B">$</text>
     <text x="30" y="20" font-family="monospace" font-size="10" fill="#06B6D4">paxm recall</text>
-    
+    <text x="105" y="20" font-family="monospace" font-size="10" fill="#94A3B8">--query "user context" --limit 5</text>
     
     <rect x="15" y="28" width="70" height="12" rx="2" fill="none" stroke="#14B8A6" stroke-width="0.8"/>
     <text x="50" y="37" font-family="monospace" font-size="7" fill="#14B8A6" text-anchor="middle">MCP READY</text>
     
-    
+    <text x="100" y="37" font-family="sans-serif" font-size="7" fill="#475569">跨会话记忆检索</text>
   </g>
   
   <!-- ========== 底部装饰线 ========== -->

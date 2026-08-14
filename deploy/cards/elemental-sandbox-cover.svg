@@ -18,11 +18,20 @@
       <path d="M16 0H0V16" fill="none" stroke="#7DD3FC" stroke-width="0.4" opacity="0.12"/>
     </pattern>
   </defs>
+
+  <!-- 背景 -->
   <rect width="200" height="356" fill="url(#bg)"/>
   <rect width="200" height="356" fill="url(#grid)"/>
   <circle cx="100" cy="118" r="88" fill="url(#glow)"/>
+
+  <!-- 顶部栏 -->
   <rect x="0" y="0" width="200" height="2" fill="#7DD3FC" opacity="0.8"/>
+  <text x="14" y="22" font-family="monospace" font-size="7" fill="#7E8AA3" letter-spacing="2">ELEMENTAL SANDBOX</text>
+  <text x="186" y="22" font-family="monospace" font-size="7" fill="#7DD3FC" text-anchor="end">455★</text>
+
+  <!-- 能量核 -->
   <g transform="translate(100,120)">
+    <!-- 3 层能量环 -->
     <g transform="rotateX(68deg)">
       <ellipse rx="34" ry="34" fill="none" stroke="#7DD3FC" stroke-width="1.2" opacity="0.5">
         <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="5s" repeatCount="indefinite"/>
@@ -34,10 +43,12 @@
         <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="9s" repeatCount="indefinite"/>
       </ellipse>
     </g>
+    <!-- 中心能量球 -->
     <circle r="16" fill="url(#orb)">
       <animate attributeName="r" values="15;17.5;15" dur="2.4s" repeatCount="indefinite"/>
     </circle>
     <circle r="3.5" fill="#fff" opacity="0.9"/>
+    <!-- 5 元素卫星 -->
     <g>
       <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="10s" repeatCount="indefinite"/>
       <circle cx="48" cy="0" r="8" fill="#0B4A5C" stroke="#A5E8FF" stroke-width="1"/>
@@ -65,7 +76,15 @@
     </g>
   </g>
 
+  <!-- 标题区 -->
+  <text x="100" y="228" text-anchor="middle" font-family="Georgia,serif" font-size="20" font-weight="bold" fill="#E8ECF4">Elemental Sandbox</text>
+  <text x="100" y="244" text-anchor="middle" font-family="monospace" font-size="7" fill="#7DD3FC" letter-spacing="1.5">10 SPELLS · 0 TEXTURES · 938 SLIDERS</text>
+  <text x="100" y="260" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#7E8AA3">浏览器里的 VFX 实验室</text>
 
-  <!-- 底部标题区（与首页 HTML 层标题不冲突） -->
-  <rect x="150" y="326" width="36" height="17" rx="3" fill="none" stroke="#7DD3FC" stroke-width="1"/>
+  <!-- 数据条 -->
+  <rect x="24" y="278" width="152" height="24" rx="12" fill="#0A1322" stroke="#7DD3FC" stroke-width="0.7" opacity="0.8"/>
+  <text x="100" y="294" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#E8ECF4">Three.js · GLSL · GPU Particles</text>
+
+  <!-- 底部 -->
+  <text x="100" y="336" text-anchor="middle" font-family="monospace" font-size="6.5" fill="#4A5570" letter-spacing="1">MIND RESONANCE · 反共识观察</text>
 </svg>
