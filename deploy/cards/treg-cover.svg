@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="450" height="800" viewBox="0 0 450 800">
+  <!-- 深色背景 -->
+  <rect width="450" height="800" fill="#08080C"/>
+  
+  <!-- 加密虚线流动纹理 - 多层 -->
+  <defs>
+    <!-- 渐变定义 -->
+    <radialGradient id="glow1" cx="75%" cy="10%" r="60%">
+      <stop offset="0%" stop-color="#FF6B35" stop-opacity="0.08"/>
+      <stop offset="60%" stop-color="#FF6B35" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="15%" cy="55%" r="50%">
+      <stop offset="0%" stop-color="#FF6B35" stop-opacity="0.05"/>
+      <stop offset="60%" stop-color="#FF6B35" stop-opacity="0"/>
+    </radialGradient>
+    
+    <!-- 流动虚线动画 -->
+    <linearGradient id="flowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FF6B35" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#FF6B35" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#FF6B35" stop-opacity="0"/>
+    </linearGradient>
+    
+    <!-- 锁图标渐变 -->
+    <linearGradient id="lockGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FF6B35"/>
+      <stop offset="100%" stop-color="#CC5429"/>
+    </linearGradient>
+    
+    <!-- 加密流线 -->
+    <pattern id="encryptLines" width="60" height="60" patternUnits="userSpaceOnUse">
+      <path d="M0 30 Q15 20 30 30 T60 30" fill="none" stroke="#FF6B35" stroke-width="0.5" stroke-opacity="0.08" stroke-dasharray="4,6"/>
+      <path d="M0 45 Q15 35 30 45 T60 45" fill="none" stroke="#FF6B35" stroke-width="0.5" stroke-opacity="0.05" stroke-dasharray="3,8"/>
+    </pattern>
+  </defs>
+  
+  <!-- 光晕层 -->
+  <rect width="450" height="800" fill="url(#glow1)"/>
+  <rect width="450" height="800" fill="url(#glow2)"/>
+  
+  <!-- 加密虚线纹理 -->
+  <rect width="450" height="800" fill="url(#encryptLines)" opacity="0.8"/>
+  
+  <!-- 动态流动线条 - 水平方向 -->
+  <g opacity="0.4">
+    <path d="M-50 180 Q100 160 225 180 T500 160" fill="none" stroke="#FF6B35" stroke-width="1" stroke-dasharray="8,12" stroke-opacity="0.3">
+      <animate attributeName="stroke-dashoffset" from="0" to="-40" dur="3s" repeatCount="indefinite"/>
+    </path>
+    <path d="M-50 220 Q120 200 225 220 T500 200" fill="none" stroke="#FF6B35" stroke-width="0.8" stroke-dasharray="6,10" stroke-opacity="0.2">
+      <animate attributeName="stroke-dashoffset" from="0" to="-32" dur="4s" repeatCount="indefinite"/>
+    </path>
+    <path d="M-50 260 Q80 240 225 260 T500 240" fill="none" stroke="#FF6B35" stroke-width="0.6" stroke-dasharray="4,8" stroke-opacity="0.15">
+      <animate attributeName="stroke-dashoffset" from="0" to="-24" dur="5s" repeatCount="indefinite"/>
+    </path>
+  </g>
+  
+  <!-- 锁形印章 - 带开启动画 -->
+  <g transform="translate(35, 95)">
+    <!-- 外框动画环 -->
+    <rect x="-8" y="-8" width="76" height="76" rx="20" fill="none" stroke="#FF6B35" stroke-opacity="0.2" stroke-width="1" stroke-dasharray="4,6">
+      <animate attributeName="stroke-dashoffset" from="0" to="20" dur="8s" repeatCount="indefinite"/>
+    </rect>
+    
+    <!-- 锁形主体 -->
+    <rect x="0" y="0" width="60" height="60" rx="14" fill="rgba(255, 107, 53, 0.08)" stroke="#FF6B35" stroke-width="2"/>
+    
+    <!-- 锁图标 -->
+    <g transform="translate(30, 30)">
+      <!-- 锁身 -->
+      <rect x="-12" y="-4" width="24" height="18" rx="3" fill="none" stroke="#FF6B35" stroke-width="1.8"/>
+      <!-- 锁环 -->
+      <path d="M-7 -4 L-7 -10 A7 7 0 0 1 7 -10 L7 -4" fill="none" stroke="#FF6B35" stroke-width="1.8" stroke-linecap="round"/>
+      <!-- 锁孔 -->
+      <circle cx="0" cy="5" r="2.5" fill="#FF6B35"/>
+      <rect x="-1" y="5" width="2" height="6" fill="#FF6B35"/>
+      
+      <!-- 开启动画 - 锁环上移 -->
+      <g>
+        <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.3;0.7;1" dur="3s" repeatCount="indefinite"/>
+        <path d="M-7 -14 L-7 -18 A5 5 0 0 1 2 -18" fill="none" stroke="#22C55E" stroke-width="1.5" stroke-linecap="round"/>
+      </g>
+    </g>
+  </g>
+  
+  <!-- 标题 -->
+  <text x="105" y="135" font-family="Georgia, serif" font-size="56" font-weight="500" fill="#E8E8E8" letter-spacing="1">Treg</text>
+  <text x="190" y="135" font-family="Georgia, serif" font-size="56" font-weight="500" fill="#FF6B35">.</text>
+  
+  <!-- 副标题 -->
+  <text x="105" y="158" font-family="Georgia, serif" font-size="13" font-style="italic" fill="#6B6B7B" letter-spacing="0.5">密钥安全分享工具</text>
+  
+  <!-- 状态标签 -->
+  <rect x="280" y="145" width="80" height="16" rx="3" fill="none" stroke="#22C55E" stroke-width="1"/>
+  <text x="320" y="156" font-family="monospace" font-size="7" fill="#22C55E" text-anchor="middle" letter-spacing="1">SECURE</text>
+  
+  <!-- 标语 -->
+  <g transform="translate(35, 190)">
+    <rect x="0" y="0" width="16" height="1.5" fill="#FF6B35"/>
+    <text x="22" y="5" font-family="sans-serif" font-size="11" fill="#C0C0C8" letter-spacing="0.5">Share skills &amp; secrets </text>
+    <text x="145" y="5" font-family="sans-serif" font-size="11" fill="#FF6B35" font-weight="500" letter-spacing="0.5">without leaking keys</text>
+  </g>
+  
+  <!-- 中文标语 -->
+  <text x="35" y="212" font-family="sans-serif" font-size="10" fill="#6B6B7B" letter-spacing="1">安全分享密钥而不泄露</text>
+  
+  <!-- ========== 主视觉：加密传输流程图 ========== -->
+  <g transform="translate(35, 245)">
+    <!-- 流程图标题 -->
+    <text x="0" y="0" font-family="monospace" font-size="8" fill="#FF6B35" letter-spacing="2">ENCRYPTION FLOW</text>
+    
+    <!-- 流程图容器 -->
+    <rect x="0" y="12" width="379" height="140" rx="10" fill="rgba(20, 20, 28, 0.6)" stroke="rgba(255, 107, 53, 0.15)" stroke-width="1"/>
+    
+    <!-- 流程节点 -->
+    <!-- 1. Secret -->
+    <g transform="translate(25, 35)">
+      <rect x="0" y="0" width="65" height="55" rx="8" fill="rgba(255, 107, 53, 0.06)" stroke="#FF6B35" stroke-width="1" stroke-opacity="0.5"/>
+      <!-- 密钥图标 -->
+      <path d="M32.5 12 L32.5 28 M27 22 L32.5 28 L38 22" fill="none" stroke="#FF6B35" stroke-width="1.5"/>
+      <circle cx="32.5" cy="38" r="5" fill="none" stroke="#FF6B35" stroke-width="1.2"/>
+      <text x="32.5" y="52" font-family="monospace" font-size="7" fill="#B0B0B8" text-anchor="middle">SECRET</text>
+    </g>
+    
+    <!-- 流动箭头 1 -->
+    <g transform="translate(95, 62)">
+      <line x1="0" y1="0" x2="30" y2="0" stroke="#FF6B35" stroke-width="1.5" stroke-opacity="0.6" stroke-dasharray="4,3">
+        <animate attributeName="stroke-dashoffset" from="0" to="-14" dur="1s" repeatCount="indefinite"/>
+      </line>
+      <polygon points="32,-4 32,4 40,0" fill="#FF6B35" fill-opacity="0.6"/>
+    </g>
+    
+    <!-- 2. Encrypt -->
+    <g transform="translate(135, 35)">
+      <rect x="0" y="0" width="65" height="55" rx="8" fill="rgba(255, 107, 53, 0.08)" stroke="#FF6B35" stroke-width="1.2"/>
+      <!-- 加密图标 -->
+      <rect x="22" y="15" width="21" height="18" rx="2" fill="none" stroke="#FF6B35" stroke-width="1.5"/>
+      <path d="M26 15 L26 11 A5 5 0 0 1 39 11 L39 15" fill="none" stroke="#FF6B35" stroke-width="1.5"/>
+      <circle cx="32.5" cy="26" r="3" fill="#FF6B35"/>
+      <text x="32.5" y="52" font-family="monospace" font-size="7" fill="#F0F0F0" text-anchor="middle" font-weight="500">ENCRYPT</text>
+    </g>
+    
+    <!-- 流动箭头 2 -->
+    <g transform="translate(205, 62)">
+      <line x1="0" y1="0" x2="30" y2="0" stroke="#22C55E" stroke-width="1.5" stroke-opacity="0.6" stroke-dasharray="4,3">
+        <animate attributeName="stroke-dashoffset" from="0" to="-14" dur="1s" repeatCount="indefinite"/>
+      </line>
+      <polygon points="32,-4 32,4 40,0" fill="#22C55E" fill-opacity="0.6"/>
+    </g>
+    
+    <!-- 3. Share -->
+    <g transform="translate(250, 35)">
+      <rect x="0" y="0" width="65" height="55" rx="8" fill="rgba(34, 197, 94, 0.06)" stroke="#22C55E" stroke-width="1" stroke-opacity="0.5"/>
+      <!-- 传输图标 -->
+      <path d="M22 25 L32.5 15 L43 25 M32.5 15 L32.5 38" fill="none" stroke="#22C55E" stroke-width="1.5"/>
+      <path d="M25 35 L32.5 42 L40 35" fill="none" stroke="#22C55E" stroke-width="1.2"/>
+      <text x="32.5" y="52" font-family="monospace" font-size="7" fill="#B0B0B8" text-anchor="middle">SHARE</text>
+    </g>
+    
+    <!-- 流动箭头 3 (向下) -->
+    <g transform="translate(282, 95)">
+      <line x1="0" y1="0" x2="0" y2="20" stroke="#22C55E" stroke-width="1.5" stroke-opacity="0.6" stroke-dasharray="4,3">
+        <animate attributeName="stroke-dashoffset" from="0" to="-14" dur="1s" repeatCount="indefinite"/>
+      </line>
+      <polygon points="-4,22 4,22 0,30" fill="#22C55E" fill-opacity="0.6"/>
+    </g>
+    
+    <!-- 4. Decrypt -->
+    <g transform="translate(250, 125)">
+      <rect x="0" y="0" width="65" height="30" rx="6" fill="rgba(34, 197, 94, 0.08)" stroke="#22C55E" stroke-width="1"/>
+      <!-- 解锁图标 -->
+      <path d="M25 15 L32.5 15 L40 15" fill="none" stroke="#22C55E" stroke-width="1.2"/>
+      <circle cx="32.5" cy="18" r="3" fill="none" stroke="#22C55E" stroke-width="1"/>
+      <text x="32.5" y="25" font-family="monospace" font-size="6" fill="#F0F0F0" text-anchor="middle">DECRYPT</text>
+    </g>
+    
+    <!-- 数据流动画点 -->
+    <circle r="3" fill="#FF6B35">
+      <animateMotion dur="3s" repeatCount="indefinite" path="M57,62 L125,62 L190,62 L282,62 L282,140"/>
+      <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur="3s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="3" fill="#22C55E">
+      <animateMotion dur="3s" repeatCount="indefinite" path="M190,62 L282,62 L282,140" begin="1s"/>
+      <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur="3s" repeatCount="indefinite" begin="1s"/>
+    </circle>
+  </g>
+  
+  <!-- ========== 核心功能模块 ========== -->
+  <g transform="translate(35, 420)">
+    <text x="0" y="0" font-family="monospace" font-size="8" fill="#FF6B35" letter-spacing="2">CORE FEATURES</text>
+    
+    <!-- 功能卡片 1: 密钥加密 -->
+    <g transform="translate(0, 15)">
+      <rect width="379" height="50" rx="8" fill="rgba(26, 26, 36, 0.4)" stroke="rgba(255, 107, 53, 0.12)" stroke-width="1"/>
+      <rect x="12" y="10" width="30" height="30" rx="6" fill="rgba(255, 107, 53, 0.08)"/>
+      <!-- 加密图标 -->
+      <g transform="translate(27, 25)">
+        <rect x="-7" y="-7" width="14" height="10" rx="2" fill="none" stroke="#FF6B35" stroke-width="1.2"/>
+        <path d="M-4 -7 L-4 -10 A4 4 0 0 1 4 -10 L4 -7" fill="none" stroke="#FF6B35" stroke-width="1.2"/>
+      </g>
+      
+      
+      <text x="365" y="32" font-family="monospace" font-size="12" fill="#FF6B35" fill-opacity="0.4">→</text>
+    </g>
+    
+    <!-- 功能卡片 2: 安全分享 -->
+    <g transform="translate(0, 72)">
+      <rect width="379" height="50" rx="8" fill="rgba(26, 26, 36, 0.4)" stroke="rgba(34, 197, 94, 0.12)" stroke-width="1"/>
+      <rect x="12" y="10" width="30" height="30" rx="6" fill="rgba(34, 197, 94, 0.08)"/>
+      <!-- 安全传输图标 -->
+      <g transform="translate(27, 25)">
+        <path d="M-6 0 L0 -6 L6 0" fill="none" stroke="#22C55E" stroke-width="1.2"/>
+        <line x1="0" y1="-6" x2="0" y2="8" stroke="#22C55E" stroke-width="1.2"/>
+        <circle cx="0" cy="5" r="3" fill="none" stroke="#22C55E" stroke-width="1"/>
+      </g>
+      
+      
+      <text x="365" y="32" font-family="monospace" font-size="12" fill="#22C55E" fill-opacity="0.4">→</text>
+    </g>
+    
+    <!-- 功能卡片 3: 零知识证明 -->
+    <g transform="translate(0, 129)">
+      <rect width="379" height="50" rx="8" fill="rgba(26, 26, 36, 0.4)" stroke="rgba(255, 107, 53, 0.12)" stroke-width="1"/>
+      <rect x="12" y="10" width="30" height="30" rx="6" fill="rgba(255, 107, 53, 0.08)"/>
+      <!-- 零知识图标 -->
+      <g transform="translate(27, 25)">
+        <circle cx="0" cy="0" r="8" fill="none" stroke="#FF6B35" stroke-width="1.2" stroke-dasharray="3,2"/>
+        <text x="0" y="3" font-family="monospace" font-size="8" fill="#FF6B35" text-anchor="middle">ZK</text>
+      </g>
+      
+      
+      <text x="365" y="32" font-family="monospace" font-size="12" fill="#FF6B35" fill-opacity="0.4">→</text>
+    </g>
+    
+    <!-- 功能卡片 4: 审计日志 -->
+    <g transform="translate(0, 186)">
+      <rect width="379" height="50" rx="8" fill="rgba(26, 26, 36, 0.4)" stroke="rgba(245, 158, 11, 0.12)" stroke-width="1"/>
+      <rect x="12" y="10" width="30" height="30" rx="6" fill="rgba(245, 158, 11, 0.08)"/>
+      <!-- 日志图标 -->
+      <g transform="translate(27, 25)">
+        <rect x="-7" y="-8" width="14" height="16" rx="1" fill="none" stroke="#F59E0B" stroke-width="1.2"/>
+        <line x1="-4" y1="-4" x2="4" y2="-4" stroke="#F59E0B" stroke-width="1"/>
+        <line x1="-4" y1="0" x2="4" y2="0" stroke="#F59E0B" stroke-width="1"/>
+        <line x1="-4" y1="4" x2="2" y2="4" stroke="#F59E0B" stroke-width="1"/>
+      </g>
+      
+      
+      <text x="365" y="32" font-family="monospace" font-size="12" fill="#F59E0B" fill-opacity="0.4">→</text>
+    </g>
+  </g>
+  
+  <!-- ========== 技术栈 ========== -->
+  <g transform="translate(35, 685)">
+    <text x="0" y="0" font-family="monospace" font-size="7" fill="#6B6B7B" letter-spacing="2">TECH STACK</text>
+    <g transform="translate(0, 10)">
+      <!-- Rust -->
+      <rect x="0" y="0" width="55" height="18" rx="9" fill="rgba(255, 107, 53, 0.1)" stroke="rgba(255, 107, 53, 0.3)" stroke-width="1"/>
+      <text x="27.5" y="12" font-family="monospace" font-size="8" fill="#FF6B35" text-anchor="middle">Rust</text>
+      
+      <!-- SQLite -->
+      <rect x="60" y="0" width="55" height="18" rx="9" fill="rgba(26, 26, 36, 0.4)" stroke="rgba(240, 240, 240, 0.1)" stroke-width="1"/>
+      
+      
+      <!-- AGE Encryption -->
+      <rect x="120" y="0" width="85" height="18" rx="9" fill="rgba(34, 197, 94, 0.1)" stroke="rgba(34, 197, 94, 0.3)" stroke-width="1"/>
+      
+    </g>
+  </g>
+  
+  <!-- 分享链接 -->
+  <g transform="translate(35, 735)">
+    <rect width="379" height="32" rx="6" fill="rgba(255, 107, 53, 0.05)" stroke="rgba(255, 107, 53, 0.2)" stroke-width="1"/>
+    
+    <rect x="330" y="7" width="42" height="18" rx="3" fill="none" stroke="#FF6B35" stroke-width="1"/>
+    
+  </g>
+  
+  <!-- 底部安全指示条 -->
+  <rect x="0" y="796" width="450" height="4" fill="url(#lockGrad)"/>
+  
+  <!-- 底部安全状态指示 -->
+  <g transform="translate(35, 782)">
+    <circle cx="5" cy="5" r="4" fill="#22C55E">
+      <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <text x="14" y="8" font-family="monospace" font-size="7" fill="#22C55E" letter-spacing="1">ENCRYPTED</text>
+    <text x="90" y="8" font-family="monospace" font-size="7" fill="#6B6B7B">• Zero-knowledge • Audited</text>
+  </g>
+</svg>
