@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1a1412">
+  <title>气感 — Vibe Designing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.cn">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.cn/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Noto+Serif+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #1a1412;
+      --bg-warm: #241c18;
+      --ink: #2d2320;
+      --accent: #d4a574;
+      --accent-light: #e8c9a8;
+      --accent-dark: #a67c52;
+      --pink: #e8b4a0;
+      --pink-light: #f5d8ca;
+      --text: #f5f0eb;
+      --muted: #8a7a70;
+      --serif: 'Cormorant Garamond', serif;
+      --cn: 'Noto Serif SC', serif;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Noto Sans SC', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; background: #0f0c0a; font-family: 'Noto Sans SC', sans-serif; color: #f5f0eb; -webkit-font-smoothing: antialiased; }
+    body { display: flex; align-items: center; justify-content: center; }
+
+    /* 舞台 */
+    .stage {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      height: min(100vh, calc(100vw * 16 / 9));
+      width: min(100vw, calc(100vh * 9 / 16));
+      background: var(--bg);
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,.6);
+      display: flex;
+      flex-direction: column;
+      padding: 14px 18px 12px;
+    }
+
+    /* 水墨晕染背景 */
+    .ink-bg {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+    
+    .ink-bg::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: 
+        radial-gradient(ellipse 80% 60% at 30% 20%, rgba(232, 180, 160, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse 60% 50% at 70% 70%, rgba(212, 165, 116, 0.12) 0%, transparent 50%),
+        radial-gradient(ellipse 100% 80% at 50% 100%, rgba(232, 180, 160, 0.08) 0%, transparent 40%);
+      filter: blur(30px);
+    }
+    
+    .ink-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: 
+        radial-gradient(ellipse 40% 30% at 20% 80%, rgba(166, 124, 82, 0.1) 0%, transparent 50%),
+        radial-gradient(ellipse 50% 40% at 80% 30%, rgba(245, 216, 202, 0.08) 0%, transparent 50%);
+      filter: blur(20px);
+    }
+
+    /* 水墨纹理层 */
+    .ink-texture {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.4;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+    }
+
+    /* 涟漪容器 */
+    .ripple-container {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+      overflow: hidden;
+    }
+    
+    .ripple {
+      position: absolute;
+      border: 1px solid rgba(212, 165, 116, 0.3);
+      border-radius: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      opacity: 0;
+      animation: rippleAnim 1.5s ease-out forwards;
+    }
+    
+    @keyframes rippleAnim {
+      0% { transform: translate(-50%, -50%) scale(0); opacity: 0.6; }
+      100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+    }
+
+    /* 顶部条 */
+    .topbar {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .18em;
+      color: var(--muted);
+      text-transform: uppercase;
+      flex-shrink: 0;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(212, 165, 116, 0.15);
+    }
+    .brand { display: flex; align-items: center; gap: 6px; color: var(--text); }
+    .brand-dot { 
+      width: 4px; height: 4px; 
+      background: var(--accent); 
+      border-radius: 50%; 
+      box-shadow: 0 0 8px var(--accent);
+      animation: pulse 3s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .4; transform: scale(.7); } }
+    .share-btn {
+      background: none;
+      border: 1px solid rgba(212, 165, 116, 0.25);
+      padding: 4px 8px 3px;
+      font: inherit;
+      color: var(--text);
+      cursor: pointer;
+      letter-spacing: .1em;
+      transition: all .3s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .share-btn:active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+    .share-btn .arr { color: var(--accent); transition: transform .3s; }
+    .share-btn:active .arr { color: var(--bg); transform: translate(2px, -2px); }
+
+    /* 标题区 */
+    .title-section {
+      position: relative;
+      z-index: 5;
+      flex-shrink: 0;
+      margin-top: 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    /* 艺术「气」印章 */
+    .qi-stamp {
+      position: relative;
+      width: 44px;
+      height: 44px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    
+    .qi-stamp svg {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 2px 8px rgba(212, 165, 116, 0.3));
+      transition: transform .4s cubic-bezier(.7, 0, .3, 1);
+    }
+    
+    .qi-stamp:active svg { transform: rotate(180deg) scale(.9); }
+
+    .title-text { flex: 1; min-width: 0; }
+    .vibe-title {
+      font-family: 'Noto Serif SC', serif;
+      font-weight: 900;
+      font-size: 32px;
+      line-height: .95;
+      letter-spacing: .03em;
+      color: var(--text);
+    }
+    .vibe-title .dot { color: var(--accent); }
+    
+    .subtitle-line {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-top: 2px;
+    }
+    .subtitle {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 400;
+      font-style: italic;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: .04em;
+    }
+    .v-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      color: var(--accent);
+      border: 1px solid rgba(212, 165, 116, 0.4);
+      padding: 1px 5px;
+      letter-spacing: .1em;
+    }
+
+    .tagline {
+      margin-top: 6px;
+      font-family: 'Noto Serif SC', serif;
+      font-weight: 300;
+      font-size: 9px;
+      color: var(--text);
+      letter-spacing: .06em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tagline::before { content: ''; width: 14px; height: 1px; background: var(--accent); flex-shrink: 0; }
+    .tagline em { font-style: normal; color: var(--accent); font-weight: 500; }
+
+    /* 气感三元图 - 核心视觉 */
+    .trinity-section {
+      position: relative;
+      z-index: 5;
+      margin-top: 16px;
+      flex-shrink: 0;
+    }
+    
+    .trinity-container {
+      position: relative;
+      background: rgba(45, 35, 32, 0.25);
+      border: 1px solid rgba(212, 165, 116, 0.1);
+      border-radius: 12px;
+      padding: 16px 12px 14px;
+    }
+    
+    .trinity-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      letter-spacing: .2em;
+      color: var(--muted);
+      text-transform: uppercase;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    
+    .trinity-svg {
+      width: 100%;
+      display: block;
+      margin: 0 auto;
+    }
+    
+    .trinity-node {
+      cursor: pointer;
+      transition: transform .2s;
+    }
+    .trinity-node:hover { transform: scale(1.05); }
+    
+    .trinity-label {
+      position: absolute;
+      font-family: 'Noto Serif SC', serif;
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--text);
+      pointer-events: none;
+    }
+
+    /* 三元图下方说明 */
+    .trinity-desc {
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-around;
+      gap: 8px;
+    }
+    
+    .sense-item {
+      text-align: center;
+      flex: 1;
+    }
+    
+    .sense-name {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 9px;
+      font-weight: 500;
+      color: var(--accent);
+      letter-spacing: .05em;
+    }
+    
+    .sense-hint {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      color: var(--muted);
+      letter-spacing: .08em;
+      margin-top: 2px;
+    }
+
+    /* 核心功能 */
+    .features-section {
+      position: relative;
+      z-index: 5;
+      margin-top: 12px;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    
+    .feature {
+      flex: 1;
+      background: rgba(45, 35, 32, 0.2);
+      border: 1px solid rgba(212, 165, 116, 0.08);
+      border-radius: 8px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .feature:active { 
+      background: rgba(212, 165, 116, 0.08); 
+      border-color: rgba(212, 165, 116, 0.25); 
+    }
+    
+    .feature-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      background: rgba(212, 165, 116, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .feature-icon svg { width: 14px; height: 14px; stroke: var(--accent); fill: none; stroke-width: 1.5; }
+    
+    .feature-content { flex: 1; min-width: 0; }
+    .feature-title {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 9px;
+      font-weight: 500;
+      color: var(--text);
+      letter-spacing: .02em;
+    }
+    .feature-desc {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 7px;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+    .feature-arrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--accent);
+      opacity: .4;
+      transition: all .25s;
+    }
+    .feature:active .feature-arrow { opacity: 1; transform: translateX(2px); }
+
+    /* 流程示意 */
+    .flow-section {
+      position: relative;
+      z-index: 5;
+      margin-top: 10px;
+      flex-shrink: 0;
+    }
+    
+    .flow-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 12px;
+      background: linear-gradient(135deg, rgba(232, 180, 160, 0.08) 0%, rgba(212, 165, 116, 0.06) 100%);
+      border: 1px solid rgba(212, 165, 116, 0.12);
+      border-radius: 8px;
+    }
+    
+    .flow-step {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .05em;
+      color: var(--muted);
+    }
+    .flow-step.highlight { color: var(--accent); font-weight: 500; }
+    .flow-arrow {
+      color: var(--accent);
+      opacity: 0.5;
+      font-size: 10px;
+    }
+
+    /* 底部 */
+    .bottombar {
+      position: relative;
+      z-index: 10;
+      margin-top: auto;
+      padding-top: 10px;
+      border-top: 1px solid rgba(212, 165, 116, 0.12);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    
+    .link-ref {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: .06em;
+      transition: color .2s;
+    }
+    .link-ref:active { color: var(--text); }
+    .link-ref svg { width: 11px; height: 11px; fill: currentColor; }
+    
+    .visit-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .12em;
+      color: var(--accent);
+      border: 1px solid rgba(212, 165, 116, 0.35);
+      padding: 5px 10px;
+      border-radius: 4px;
+      background: rgba(212, 165, 116, 0.05);
+      cursor: pointer;
+      transition: all .2s;
+      text-decoration: none;
+    }
+    .visit-btn:active { background: var(--accent); color: var(--bg); }
+
+    /* Overlay */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(26, 20, 18, .95);
+      backdrop-filter: blur(16px);
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      display: flex;
+      align-items: flex-end;
+      transition: opacity .35s;
+    }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+    
+    .sheet {
+      width: 100%;
+      max-height: 75%;
+      background: var(--bg-warm);
+      border-radius: 14px 14px 0 0;
+      transform: translateY(101%);
+      transition: transform .45s cubic-bezier(.7, 0, .3, 1);
+      padding: 16px 14px 20px;
+      overflow-y: auto;
+    }
+    .overlay.active .sheet { transform: translateY(0); }
+    .sheet-handle { width: 32px; height: 3px; background: rgba(212, 165, 116, 0.3); border-radius: 2px; margin: 0 auto 12px; }
+    .sheet-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text);
+      letter-spacing: .04em;
+    }
+    .sheet-desc {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      color: var(--pink-light);
+      line-height: 1.75;
+      margin-top: 10px;
+    }
+    .sheet-desc code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: var(--accent);
+      background: rgba(212, 165, 116, .1);
+      padding: 1px 4px;
+      border-radius: 2px;
+    }
+    .sheet-points {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .sheet-point {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 9px;
+      color: var(--text);
+      line-height: 1.55;
+    }
+    .sheet-point::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      background: var(--accent);
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+    .sheet-close {
+      margin-top: 14px;
+      width: 100%;
+      padding: 10px;
+      background: rgba(212, 165, 116, .08);
+      border: 1px solid rgba(212, 165, 116, .25);
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: .15em;
+      color: var(--accent);
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .sheet-close:active { background: var(--accent); color: var(--bg); }
+
+    /* Toast */
+    .toast {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--accent);
+      color: var(--bg);
+      padding: 7px 14px;
+      border-radius: 5px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 9px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: all .3s;
+      z-index: 200;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* 入场动画 */
+    .reveal { opacity: 0; transform: translateY(10px); transition: all .5s cubic-bezier(.4, 0, .2, 1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    
+    /* 三元图动画 */
+    @keyframes breatheTriangle {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.7; }
+    }
+    .trinity-breath { animation: breatheTriangle 3s ease-in-out infinite; }
+  </style>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <style>
+    /* 3D 粒子画布 */
+    .particle-canvas {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="stage" id="stage">
+    <!-- 水墨背景 -->
+    <div class="ink-bg"></div>
+    <div class="ink-texture"></div>
+    
+    <!-- 3D 水墨粒子画布 -->
+    <canvas class="particle-canvas" id="particleCanvas"></canvas>
+    
+    <!-- 涟漪容器 -->
+    <div class="ripple-container" id="rippleContainer"></div>
+
+    <!-- 顶部条 -->
+    <div class="topbar reveal">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <span>Young's Insight</span>
+      </div>
+      <button class="share-btn" id="shareBtn">
+        SHARE <span class="arr">↗</span>
+      </button>
+    </div>
+
+    <!-- 标题区 -->
+    <div class="title-section reveal">
+      <!-- 艺术气字印章 -->
+      <div class="qi-stamp" id="stamp">
+        <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- 印章外框 - 晕染效果 -->
+          <rect x="8" y="8" width="44" height="44" rx="6" 
+                stroke="#d4a574" stroke-width="1.5" fill="rgba(212, 165, 116, 0.06)"
+                style="filter: url(#qiBlur)"/>
+          <!-- 虚线装饰框 -->
+          <rect x="4" y="4" width="52" height="52" rx="8" 
+                stroke="#d4a574" stroke-width="0.8" stroke-dasharray="4,3" fill="none"
+                opacity="0.4"/>
+          <!-- 气字 - 艺术字体 -->
+          <text x="30" y="40" 
+                font-family="'Noto Serif SC', serif" 
+                font-size="26" 
+                font-weight="900"
+                fill="#d4a574"
+                text-anchor="middle"
+                style="filter: url(#qiBlur)">气</text>
+          <!-- 晕染滤镜 -->
+          <defs>
+            <filter id="qiBlur" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="0.5" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+        </svg>
+      </div>
+      <div class="title-text">
+        <div class="vibe-title">气感<span class="dot">。</span></div>
+        <div class="subtitle-line">
+          <span class="subtitle">Vibe Designing 气感设计手册</span>
+          <span class="v-tag">METHODOLOGY</span>
+        </div>
+        <div class="tagline">AI时代的<em>「感觉优先」</em>设计方法论</div>
+      </div>
+    </div>
+
+    <!-- 气感三元图 - 核心视觉 -->
+    <div class="trinity-section reveal">
+      <div class="trinity-container">
+        <div class="trinity-title">气感三元论 Trinity</div>
+        <svg class="trinity-svg" viewBox="0 0 260 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- 三角形连线 -->
+          <path d="M 130 15 L 40 100 L 220 100 Z" 
+                stroke="#d4a574" stroke-width="1" stroke-opacity="0.3" fill="none"
+                class="trinity-breath"/>
+          <!-- 内部渐变填充 -->
+          <path d="M 130 15 L 40 100 L 220 100 Z" 
+                fill="url(#trinityGrad)" opacity="0.1"/>
+          
+          <!-- 中心气感 -->
+          <circle cx="130" cy="70" r="18" fill="rgba(212, 165, 116, 0.08)" stroke="#d4a574" stroke-width="1"/>
+          <text x="130" y="74" font-family="'Noto Serif SC', serif" font-size="11" fill="#d4a574" text-anchor="middle" font-weight="500">气感</text>
+          
+          <!-- 顶点：体感 -->
+          <g class="trinity-node" id="node-body">
+            <circle cx="130" cy="15" r="12" fill="rgba(232, 180, 160, 0.15)" stroke="#e8b4a0" stroke-width="1"/>
+            <text x="130" y="19" font-family="'Noto Serif SC', serif" font-size="8" fill="#e8b4a0" text-anchor="middle">体感</text>
+          </g>
+          
+          <!-- 左下：手感 -->
+          <g class="trinity-node" id="node-touch">
+            <circle cx="40" cy="100" r="12" fill="rgba(212, 165, 116, 0.15)" stroke="#d4a574" stroke-width="1"/>
+            <text x="40" y="104" font-family="'Noto Serif SC', serif" font-size="8" fill="#d4a574" text-anchor="middle">手感</text>
+          </g>
+          
+          <!-- 右下：观感 -->
+          <g class="trinity-node" id="node-visual">
+            <circle cx="220" cy="100" r="12" fill="rgba(232, 216, 202, 0.15)" stroke="#f5d8ca" stroke-width="1"/>
+            <text x="220" y="104" font-family="'Noto Serif SC', serif" font-size="8" fill="#f5d8ca" text-anchor="middle">观感</text>
+          </g>
+          
+          <!-- 连线上的流动点 -->
+          <circle cx="85" cy="57" r="2" fill="#d4a574" opacity="0.6">
+            <animate attributeName="opacity" values="0.6;0.2;0.6" dur="2s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="175" cy="57" r="2" fill="#d4a574" opacity="0.6">
+            <animate attributeName="opacity" values="0.6;0.2;0.6" dur="2s" repeatCount="indefinite" begin="0.7s"/>
+          </circle>
+          <circle cx="130" cy="100" r="2" fill="#d4a574" opacity="0.6">
+            <animate attributeName="opacity" values="0.6;0.2;0.6" dur="2s" repeatCount="indefinite" begin="1.4s"/>
+          </circle>
+          
+          <defs>
+            <linearGradient id="trinityGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#e8b4a0"/>
+              <stop offset="50%" stop-color="#d4a574"/>
+              <stop offset="100%" stop-color="#f5d8ca"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        
+        <!-- 三感说明 -->
+        <div class="trinity-desc">
+          <div class="sense-item">
+            <div class="sense-name">体感</div>
+            <div class="sense-hint">BODY</div>
+          </div>
+          <div class="sense-item">
+            <div class="sense-name">手感</div>
+            <div class="sense-hint">TOUCH</div>
+          </div>
+          <div class="sense-item">
+            <div class="sense-name">观感</div>
+            <div class="sense-hint">VISION</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 核心功能 -->
+    <div class="features-section reveal">
+      <div class="feature" data-f="0">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">气感三元论</div>
+          <div class="feature-desc">体感、手感、观感的统一</div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="1">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">场景驱动</div>
+          <div class="feature-desc">从真实场景出发设计</div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="2">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">迭代优化</div>
+          <div class="feature-desc">数据驱动持续改进</div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="3">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2a4 4 0 0 1 4 4c0 1.95-1.4 3.58-3.25 3.93"/><path d="M8.56 6.22A4 4 0 0 1 12 2"/><path d="M12 12v4"/><circle cx="12" cy="20" r="2"/><path d="M8 20h8"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">AI协作</div>
+          <div class="feature-desc">人机协同设计流程</div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+    </div>
+
+    <!-- 流程示意 -->
+    <div class="flow-section reveal">
+      <div class="flow-bar">
+        <span class="flow-step highlight">Scene</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step highlight">Vibe</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">Iterate</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">Loop</span>
+      </div>
+    </div>
+
+    <!-- 底部 -->
+    <div class="bottombar reveal">
+      <a href="https://mindresonance.online/youngsinsight/pages/vibe-designing.html" target="_blank" class="link-ref">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+        mindresonance.online
+      </a>
+      <a href="https://mindresonance.online/youngsinsight/pages/vibe-designing.html" target="_blank" class="visit-btn">VISIT →</a>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title" id="sheetTitle"></div>
+        <div class="sheet-desc" id="sheetDesc"></div>
+        <div class="sheet-points" id="sheetPoints"></div>
+        <button class="sheet-close" id="sheetClose">CLOSE</button>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script>
+    // Data
+    const features = [
+      {
+        title: '气感三元论',
+        desc: '体感（身体感知）、手感（操作直觉）、观感（视觉审美）—— 三感统一，构成完整的「气感」设计语言。不再割裂地看待交互与视觉，而是从人的整体感受出发。',
+        points: ['体感：身体对空间、节奏、重量的直觉反应', '手感：操作流畅度、反馈即时性、控制精度', '观感：视觉层次、色彩情绪、信息密度', '三感协同：统一而非割裂的设计语言']
+      },
+      {
+        title: '场景驱动',
+        desc: '从真实使用场景出发，而非从功能列表出发。先理解人在什么情境下、带着什么目的、处于什么状态，再设计对应的体验。',
+        points: ['场景 > 功能：先有情境，再有方案', '用户状态映射：情绪、注意力、环境', '场景优先级：高频场景驱动核心体验', '边缘场景不驱动设计决策']
+      },
+      {
+        title: '迭代优化',
+        desc: '数据驱动持续改进。每一次迭代都基于真实用户反馈和量化指标，主观品味与客观数据的平衡。',
+        points: ['量化指标：转化率、留存率、完成率', '定性反馈：用户访谈、情绪记录', '迭代节奏：小步快跑，持续发布', '品味守门：数据不替代判断']
+      },
+      {
+        title: 'AI协作',
+        desc: '人机协同设计流程。AI负责生成、变体、执行，人负责判断、取舍、定调。不是AI替代设计师，而是AI放大设计师的意图。',
+        points: ['AI生成：快速产出大量变体', '人判断：从变体中选择和定调', '对话式设计：用自然语言描述意图', '意图放大：AI理解并扩展人的方向']
+      }
+    ];
+
+    const senseInfo = {
+      body: { title: '体感 Body', desc: '身体对空间、节奏、重量的直觉反应。人对环境的整体感知，包括温度、声音、空间感等综合体验。' },
+      touch: { title: '手感 Touch', desc: '操作流畅度、反馈即时性、控制精度。人与界面交互时的直觉感受，是否顺滑、是否有掌控感。' },
+      visual: { title: '观感 Vision', desc: '视觉层次、色彩情绪、信息密度。视觉审美层面的设计语言，传达品牌调性和情感氛围。' }
+    };
+
+    // Elements
+    const overlay = document.getElementById('overlay');
+    const sheetTitle = document.getElementById('sheetTitle');
+    const sheetDesc = document.getElementById('sheetDesc');
+    const sheetPoints = document.getElementById('sheetPoints');
+    const sheetClose = document.getElementById('sheetClose');
+    const toast = document.getElementById('toast');
+    const shareBtn = document.getElementById('shareBtn');
+    const stamp = document.getElementById('stamp');
+    const stage = document.getElementById('stage');
+    const rippleContainer = document.getElementById('rippleContainer');
+
+    // Reveal animation
+    setTimeout(() => {
+      document.querySelectorAll('.reveal').forEach((el, i) => {
+        setTimeout(() => el.classList.add('visible'), i * 80);
+      });
+    }, 100);
+
+    // Feature click
+    document.querySelectorAll('.feature').forEach(el => {
+      el.addEventListener('click', () => {
+        const i = +el.dataset.f;
+        const f = features[i];
+        sheetTitle.textContent = f.title;
+        sheetDesc.textContent = f.desc;
+        sheetPoints.innerHTML = f.points.map(p => `<div class="sheet-point">${p}</div>`).join('');
+        overlay.classList.add('active');
+      });
+    });
+
+    // Trinity node click
+    document.querySelectorAll('.trinity-node').forEach(el => {
+      el.addEventListener('click', () => {
+        const id = el.id.replace('node-', '');
+        const info = senseInfo[id];
+        if (info) {
+          sheetTitle.textContent = info.title;
+          sheetDesc.textContent = info.desc;
+          sheetPoints.innerHTML = '';
+          overlay.classList.add('active');
+        }
+      });
+    });
+
+    // Stamp click
+    stamp.addEventListener('click', () => {
+      sheetTitle.textContent = '气感 (Vibe Designing)';
+      sheetDesc.innerHTML = 'AI时代的「感觉优先」设计方法论。<br><br>气感将<strong>体感、手感、观感</strong>统一为设计语言，从真实场景出发，以人机协同的方式持续迭代优化。<br><br>核心原则：场景驱动设计，<strong>感觉优先于功能</strong>，AI放大人的意图而非替代判断。';
+      sheetPoints.innerHTML = '';
+      overlay.classList.add('active');
+    });
+
+    // Close overlay
+    sheetClose.addEventListener('click', () => {
+      overlay.classList.remove('active');
+    });
+
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.classList.remove('active');
+    });
+
+    // Share
+    shareBtn.addEventListener('click', async () => {
+      const shareData = {
+        title: '气感 — Vibe Designing',
+        text: 'AI时代的「感觉优先」设计方法论',
+        url: 'https://mindresonance.online/youngsinsight/pages/vibe-designing.html'
+      };
+      if (navigator.share) {
+        try { await navigator.share(shareData); } catch (e) {}
+      } else {
+        try {
+          await navigator.clipboard.writeText(shareData.url);
+          toast.textContent = '链接已复制';
+          toast.classList.add('show');
+          setTimeout(() => toast.classList.remove('show'), 2000);
+        } catch (e) {}
+      }
+    });
+
+    // 涟漪效果
+    stage.addEventListener('mousemove', (e) => {
+      const rect = stage.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      // 限制涟漪频率
+      if (Math.random() > 0.15) return;
+      
+      const ripple = document.createElement('div');
+      ripple.className = 'ripple';
+      ripple.style.left = x + 'px';
+      ripple.style.top = y + 'px';
+      ripple.style.width = '60px';
+      ripple.style.height = '60px';
+      
+      rippleContainer.appendChild(ripple);
+      
+      setTimeout(() => ripple.remove(), 1500);
+    });
+  </script>
+
+  <!-- 3D 水墨粒子系统 -->
+  <script type="module">
+    import * as THREE from 'three';
+
+    // === 初始化 ===
+    const canvas = document.getElementById('particleCanvas');
+    const stageEl = document.getElementById('stage');
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      alpha: true,          // 透明背景，与 CSS 水墨晕染融合
+      antialias: true,
+      depthWrite: false
+    });
+    renderer.setClearColor(0x000000, 0);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 100);
+    camera.position.z = 5;
+
+    // === 粒子系统参数 ===
+    const PARTICLE_COUNT = 280;
+    const positions = new Float32Array(PARTICLE_COUNT * 3);
+    const velocities = new Float32Array(PARTICLE_COUNT * 3);
+    const opacities = new Float32Array(PARTICLE_COUNT);
+    const sizes = new Float32Array(PARTICLE_COUNT);
+    const phases = new Float32Array(PARTICLE_COUNT);   // 呼吸相位偏移
+    const inkTypes = new Float32Array(PARTICLE_COUNT);  // 0=粉, 1=金, 用于渐变
+
+    // 初始化粒子
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const i3 = i * 3;
+      // 在 3D 空间中随机分布
+      positions[i3]     = (Math.random() - 0.5) * 8;   // x
+      positions[i3 + 1] = (Math.random() - 0.5) * 14;  // y (纵向更长)
+      positions[i3 + 2] = (Math.random() - 0.5) * 4;   // z 深度
+
+      // 缓慢飘散速度
+      velocities[i3]     = (Math.random() - 0.5) * 0.003;
+      velocities[i3 + 1] = (Math.random() - 0.5) * 0.004 + 0.001; // 微微上飘
+      velocities[i3 + 2] = (Math.random() - 0.5) * 0.002;
+
+      opacities[i] = Math.random() * 0.5 + 0.1;
+      sizes[i] = Math.random() * 6 + 2;
+      phases[i] = Math.random() * Math.PI * 2;
+      inkTypes[i] = Math.random();  // 粉金渐变比例
+    }
+
+    // === 粒子几何体 ===
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('aOpacity', new THREE.BufferAttribute(opacities, 1));
+    geometry.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
+    geometry.setAttribute('aPhase', new THREE.BufferAttribute(phases, 1));
+    geometry.setAttribute('aInkType', new THREE.BufferAttribute(inkTypes, 1));
+
+    // === 自定义着色器 - 水墨粒子 + 粉金渐变 ===
+    const vertexShader = `
+      attribute float aOpacity;
+      attribute float aSize;
+      attribute float aPhase;
+      attribute float aInkType;
+      
+      uniform float uTime;
+      uniform float uPixelRatio;
+      
+      varying float vOpacity;
+      varying float vInkType;
+      varying float vDist;
+      
+      void main() {
+        vec3 pos = position;
+        
+        // 呼吸动画 - 缓慢脉动
+        float breath = sin(uTime * 0.5 + aPhase) * 0.15;
+        pos.x += sin(uTime * 0.3 + aPhase) * 0.1;
+        pos.y += cos(uTime * 0.25 + aPhase * 1.3) * 0.08 + breath * 0.05;
+        pos.z += sin(uTime * 0.2 + aPhase * 0.7) * 0.05;
+        
+        vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+        gl_Position = projectionMatrix * mvPosition;
+        
+        // 墨点大小 - 近大远小 + 呼吸
+        float sizeScale = 1.0 + breath * 0.3;
+        gl_PointSize = aSize * sizeScale * uPixelRatio * (3.0 / -mvPosition.z);
+        
+        // 透明度呼吸
+        vOpacity = aOpacity * (0.7 + 0.3 * sin(uTime * 0.4 + aPhase));
+        vInkType = aInkType;
+        vDist = length(pos.xy);
+      }
+    `;
+
+    const fragmentShader = `
+      varying float vOpacity;
+      varying float vInkType;
+      varying float vDist;
+      
+      void main() {
+        // 圆形墨点 - 中心实、边缘虚（水墨晕散）
+        vec2 center = gl_PointCoord - 0.5;
+        float dist = length(center);
+        if (dist > 0.5) discard;
+        
+        // 水墨晕散衰减
+        float inkFade = 1.0 - smoothstep(0.0, 0.5, dist);
+        inkFade = pow(inkFade, 1.5);  // 更柔和的边缘
+        
+        // 粉金色渐变
+        // 粉色: #e8b4a0 = (0.91, 0.71, 0.63)
+        // 金色: #d4a574 = (0.83, 0.65, 0.45)
+        // 浅粉: #f5d8ca = (0.96, 0.85, 0.79)
+        vec3 pinkColor = vec3(0.91, 0.71, 0.63);
+        vec3 goldColor = vec3(0.83, 0.65, 0.45);
+        vec3 lightPink = vec3(0.96, 0.85, 0.79);
+        
+        // 根据 inkType 在粉金之间渐变
+        vec3 baseColor = mix(pinkColor, goldColor, vInkType);
+        // 中心偏亮（浅粉）
+        baseColor = mix(baseColor, lightPink, inkFade * 0.3);
+        
+        // 发光效果
+        float glow = exp(-dist * 4.0) * 0.4;
+        baseColor += vec3(glow * 0.15, glow * 0.1, glow * 0.05);
+        
+        float finalAlpha = vOpacity * inkFade;
+        gl_FragColor = vec4(baseColor, finalAlpha);
+      }
+    `;
+
+    const material = new THREE.ShaderMaterial({
+      vertexShader,
+      fragmentShader,
+      uniforms: {
+        uTime: { value: 0 },
+        uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) }
+      },
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    });
+
+    const particles = new THREE.Points(geometry, material);
+    scene.add(particles);
+
+    // === 鼠标交互 ===
+    const mouse = { x: 0, y: 0, active: false };
+    const mouseTarget = new THREE.Vector3(0, 0, 0);
+
+    stageEl.addEventListener('mousemove', (e) => {
+      const rect = stageEl.getBoundingClientRect();
+      // 归一化到 [-1, 1]
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      mouse.active = true;
+    });
+
+    stageEl.addEventListener('mouseleave', () => {
+      mouse.active = false;
+    });
+
+    // 触摸支持
+    stageEl.addEventListener('touchmove', (e) => {
+      const touch = e.touches[0];
+      const rect = stageEl.getBoundingClientRect();
+      mouse.x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((touch.clientY - rect.top) / rect.height) * 2 + 1;
+      mouse.active = true;
+    }, { passive: true });
+
+    stageEl.addEventListener('touchend', () => {
+      mouse.active = false;
+    });
+
+    // === 尺寸适配 ===
+    function resize() {
+      const rect = stageEl.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+      const dpr = Math.min(window.devicePixelRatio, 2);
+      
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      canvas.style.width = w + 'px';
+      canvas.style.height = h + 'px';
+      
+      renderer.setSize(w, h, false);
+      renderer.setPixelRatio(dpr);
+      
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      
+      material.uniforms.uPixelRatio.value = dpr;
+    }
+
+    resize();
+    window.addEventListener('resize', resize);
+
+    // === 动画循环 ===
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      
+      const elapsed = clock.getElapsedTime();
+      material.uniforms.uTime.value = elapsed;
+      
+      // 鼠标跟随 - 平滑插值
+      if (mouse.active) {
+        mouseTarget.x += (mouse.x * 4 - mouseTarget.x) * 0.03;
+        mouseTarget.y += (mouse.y * 7 - mouseTarget.y) * 0.03;
+      } else {
+        // 无鼠标时缓慢回归中心
+        mouseTarget.x *= 0.98;
+        mouseTarget.y *= 0.98;
+      }
+      
+      // 更新粒子位置
+      const posArr = geometry.attributes.position.array;
+      const opArr = geometry.attributes.aOpacity.array;
+      
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        const i3 = i * 3;
+        
+        // 基础飘散运动
+        posArr[i3]     += velocities[i3];
+        posArr[i3 + 1] += velocities[i3 + 1];
+        posArr[i3 + 2] += velocities[i3 + 2];
+        
+        // 鼠标吸引 - 粒子被鼠标轻微牵引
+        if (mouse.active) {
+          const dx = mouseTarget.x - posArr[i3];
+          const dy = mouseTarget.y - posArr[i3 + 1];
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const force = Math.max(0, 1.0 - dist * 0.15) * 0.008;
+          posArr[i3]     += dx * force;
+          posArr[i3 + 1] += dy * force;
+        }
+        
+        // 边界回绕 - 墨点飘出后从另一侧回来
+        if (posArr[i3] > 4.5)  posArr[i3] = -4.5;
+        if (posArr[i3] < -4.5) posArr[i3] = 4.5;
+        if (posArr[i3 + 1] > 8)   posArr[i3 + 1] = -8;
+        if (posArr[i3 + 1] < -8)  posArr[i3 + 1] = 8;
+        if (posArr[i3 + 2] > 2.5)  posArr[i3 + 2] = -2.5;
+        if (posArr[i3 + 2] < -2.5) posArr[i3 + 2] = 2.5;
+      }
+      
+      geometry.attributes.position.needsUpdate = true;
+      
+      // 相机微动 - 呼吸感
+      camera.position.x = Math.sin(elapsed * 0.15) * 0.1;
+      camera.position.y = Math.cos(elapsed * 0.12) * 0.08;
+      camera.lookAt(0, 0, 0);
+      
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  </script>
+</body>
+</html>

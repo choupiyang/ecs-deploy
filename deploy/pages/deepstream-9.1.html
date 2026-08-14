@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0A0A0F">
+  <title>DeepStream 9.1 — NVIDIA 视频 AI 分析开源工具包</title>
+  <link rel="preconnect" href="https://fonts.googleapis.cn">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.cn/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Noto+Serif+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0A0A0F;
+      --bg-2: #12121A;
+      --accent: #76B900;
+      --accent-light: #8FD020;
+      --text: #F0F0F0;
+      --muted: #6B6B7B;
+      --success: #22C55E;
+      --warning: #F59E0B;
+      --surface: #1A1A24;
+      --glow: #76B900;
+      --serif: 'Cormorant Garamond', serif;
+      --cn: 'Noto Serif SC', serif;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Noto Sans SC', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; background: #050508; font-family: 'Noto Sans SC', sans-serif; color: #F0F0F0; -webkit-font-smoothing: antialiased; }
+    body { display: flex; align-items: center; justify-content: center; }
+
+    /* 舞台 */
+    .stage {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      height: min(100vh, calc(100vw * 16 / 9));
+      width: min(100vw, calc(100vh * 9 / 16));
+      background: #0A0A0F;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,.6);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 16px 10px;
+    }
+
+    /* 背景光晕 */
+    .stage::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 75% 8%, rgba(118, 185, 0, .12) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 35% at 15% 55%, rgba(118, 185, 0, .06) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 50% 100%, rgba(34, 197, 94, .05) 0%, transparent 60%);
+    }
+
+    /* 网格纹理 */
+    .stage::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(rgba(240, 240, 240, .012) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(240, 240, 240, .012) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    /* 顶部条 */
+    .topbar {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .16em;
+      color: #6B6B7B;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(240, 240, 240, .06);
+    }
+    .brand { display: flex; align-items: center; gap: 6px; color: #F0F0F0; }
+    .brand-dot { width: 5px; height: 5px; background: #76B900; border-radius: 50%; box-shadow: 0 0 8px #76B900; animation: pulse 2.2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .3; transform: scale(.6); } }
+    .share-btn {
+      background: none;
+      border: 1px solid rgba(240, 240, 240, .2);
+      padding: 4px 8px 3px;
+      font: inherit;
+      color: #F0F0F0;
+      cursor: pointer;
+      letter-spacing: .12em;
+      transition: all .3s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 7.5px;
+    }
+    .share-btn:active { background: #76B900; color: #0A0A0F; border-color: #76B900; }
+    .share-btn .arr { color: #76B900; transition: transform .3s; }
+    .share-btn:active .arr { color: #0A0A0F; transform: translate(2px, -2px); }
+
+    /* Hero */
+    .hero { position: relative; z-index: 5; flex-shrink: 0; margin-top: 10px; }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #6B6B7B;
+      text-transform: uppercase;
+      padding-bottom: 6px;
+    }
+    .meta-row .vol { color: #76B900; font-weight: 500; position: relative; }
+    .meta-row .vol::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; background: #76B900; }
+
+    .title-block { position: relative; margin-top: 4px; display: flex; align-items: flex-start; gap: 3px; }
+    .ds-stamp {
+      position: relative;
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+      margin-top: 3px;
+      border: 1.5px solid #76B900;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Noto Serif SC', serif;
+      font-weight: 900;
+      font-size: 17px;
+      color: #76B900;
+      cursor: pointer;
+      transition: transform .4s cubic-bezier(.7, 0, .3, 1);
+      background: rgba(118, 185, 0, .06);
+    }
+    .ds-stamp:active { transform: rotate(180deg) scale(.9); }
+    .ds-stamp::before {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border: 1px dashed rgba(118, 185, 0, .3);
+      border-radius: 10px;
+      animation: spin 20s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .title-text { flex: 1; min-width: 0; }
+    .ds-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 500;
+      font-size: 36px;
+      line-height: .95;
+      letter-spacing: .02em;
+      color: #F0F0F0;
+    }
+    .ds-title .dot { color: #76B900; }
+    .superdesign-line {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-top: 1px;
+    }
+    .superdesign {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 400;
+      font-style: italic;
+      font-size: 13px;
+      color: #6B6B7B;
+      letter-spacing: .04em;
+    }
+    .v-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      color: #22C55E;
+      border: 1px solid #22C55E;
+      padding: 1px 4px;
+      letter-spacing: .1em;
+    }
+
+    .tagline {
+      margin-top: 5px;
+      font-family: 'Noto Serif SC', serif;
+      font-weight: 300;
+      font-size: 10px;
+      color: #F0F0F0;
+      letter-spacing: .05em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tagline::before { content: ''; width: 12px; height: 1px; background: #76B900; flex-shrink: 0; }
+    .tagline em { font-style: normal; color: #76B900; font-weight: 500; }
+
+    /* Intro */
+    .intro { position: relative; z-index: 5; margin-top: 8px; flex-shrink: 0; }
+    .intro-inner {
+      display: flex;
+      gap: 8px;
+      padding: 8px 10px;
+      background: rgba(26, 26, 36, .4);
+      border-radius: 6px;
+      border: 1px solid rgba(118, 185, 0, .08);
+    }
+    .intro-line { width: 2px; background: linear-gradient(180deg, #76B900, #22C55E); border-radius: 1px; flex-shrink: 0; }
+    .intro-text {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 9px;
+      line-height: 1.65;
+      color: #B0B0B8;
+      letter-spacing: .02em;
+    }
+    .intro-text strong { color: #F0F0F0; font-weight: 500; }
+
+    /* Stats with Chart */
+    .stats-section {
+      position: relative;
+      z-index: 5;
+      margin-top: 8px;
+      flex-shrink: 0;
+    }
+    .stats-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .stats-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #6B6B7B;
+      text-transform: uppercase;
+    }
+    .stats-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      letter-spacing: .1em;
+      color: #22C55E;
+      border: 1px solid #22C55E;
+      padding: 1px 5px;
+      border-radius: 2px;
+    }
+    
+    .stats-chart {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+    }
+    .stat-card {
+      background: rgba(26, 26, 36, .3);
+      border: 1px solid rgba(240, 240, 240, .05);
+      border-radius: 6px;
+      padding: 7px 5px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .25s;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card:active { background: rgba(118, 185, 0, .08); border-color: rgba(118, 185, 0, .2); }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--stat-color, #76B900), transparent);
+      opacity: 0;
+      transition: opacity .3s;
+    }
+    .stat-card:active::before { opacity: 1; }
+    .stat-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px;
+      font-weight: 600;
+      color: #F0F0F0;
+    }
+    .stat-num .accent { color: #76B900; }
+    .stat-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      letter-spacing: .12em;
+      color: #6B6B7B;
+      text-transform: uppercase;
+      margin-top: 1px;
+    }
+    .stat-mini-chart {
+      margin-top: 4px;
+      height: 12px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 1px;
+    }
+    .stat-bar {
+      width: 3px;
+      background: rgba(118, 185, 0, .3);
+      border-radius: 1px;
+      transition: height .3s, background .3s;
+    }
+    .stat-card:active .stat-bar { background: rgba(118, 185, 0, .6); }
+
+    /* Flow Diagram */
+    .flow-section {
+      position: relative;
+      z-index: 5;
+      margin-top: 8px;
+      flex-shrink: 0;
+    }
+    .flow-header {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #6B6B7B;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .flow-header::after { content: ''; flex: 1; height: 1px; background: rgba(240, 240, 240, .06); }
+    
+    .flow-diagram {
+      background: rgba(26, 26, 36, .25);
+      border: 1px solid rgba(240, 240, 240, .05);
+      border-radius: 8px;
+      padding: 10px;
+      position: relative;
+    }
+    .flow-svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .flow-node {
+      cursor: pointer;
+      transition: transform .2s;
+    }
+    .flow-node:active { transform: scale(.95); }
+    .flow-arrow {
+      animation: flowPulse 2s ease-in-out infinite;
+    }
+    @keyframes flowPulse {
+      0%, 100% { opacity: .4; }
+      50% { opacity: 1; }
+    }
+
+    /* Features */
+    .features {
+      position: relative;
+      z-index: 5;
+      margin-top: 8px;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .feature {
+      flex: 1;
+      background: rgba(26, 26, 36, .3);
+      border: 1px solid rgba(240, 240, 240, .05);
+      border-radius: 6px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .feature:active { background: rgba(118, 185, 0, .06); border-color: rgba(118, 185, 0, .2); }
+    .feature-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: rgba(118, 185, 0, .06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .feature-icon svg { width: 15px; height: 15px; stroke: #76B900; fill: none; stroke-width: 1.5; }
+    .feature-icon::after {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: 8px;
+      border: 1px solid rgba(118, 185, 0, .15);
+      opacity: 0;
+      transition: opacity .3s;
+    }
+    .feature:active .feature-icon::after { opacity: 1; }
+    .feature-content { flex: 1; min-width: 0; }
+    .feature-title {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      color: #F0F0F0;
+      letter-spacing: .02em;
+    }
+    .feature-desc {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 8px;
+      color: #6B6B7B;
+      margin-top: 1px;
+    }
+    .feature-arrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: #76B900;
+      opacity: .4;
+      transition: all .25s;
+    }
+    .feature:active .feature-arrow { opacity: 1; transform: translateX(2px); }
+    
+    /* Feature progress indicator */
+    .feature-progress {
+      width: 100%;
+      height: 2px;
+      background: rgba(118, 185, 0, .1);
+      border-radius: 1px;
+      margin-top: 4px;
+      overflow: hidden;
+    }
+    .feature-progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #76B900, #22C55E);
+      border-radius: 1px;
+      transition: width .3s;
+    }
+
+    /* Tech Stack Pills */
+    .tech-section {
+      position: relative;
+      z-index: 5;
+      margin-top: 8px;
+      flex-shrink: 0;
+    }
+    .tech-header {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #6B6B7B;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+    .tech-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .tech-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .08em;
+      padding: 3px 7px;
+      background: rgba(26, 26, 36, .35);
+      border: 1px solid rgba(240, 240, 240, .08);
+      border-radius: 10px;
+      color: #B0B0B8;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .tech-pill:active { 
+      background: rgba(118, 185, 0, .1); 
+      border-color: rgba(118, 185, 0, .3); 
+      color: #F0F0F0;
+    }
+    .tech-pill.accent { border-color: rgba(118, 185, 0, .25); color: #8FD020; }
+
+    /* Bottom bar */
+    .bottombar {
+      position: relative;
+      z-index: 10;
+      margin-top: auto;
+      padding-top: 8px;
+      border-top: 1px solid rgba(240, 240, 240, .06);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .github-link {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      color: #6B6B7B;
+      text-decoration: none;
+      letter-spacing: .08em;
+      transition: color .2s;
+    }
+    .github-link:active { color: #F0F0F0; }
+    .github-link svg { width: 12px; height: 12px; fill: currentColor; }
+    .visit-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .1em;
+      color: #76B900;
+      border: 1px solid rgba(118, 185, 0, .35);
+      padding: 5px 10px;
+      border-radius: 4px;
+      background: rgba(118, 185, 0, .05);
+      cursor: pointer;
+      transition: all .2s;
+      text-decoration: none;
+    }
+    .visit-btn:active { background: #76B900; color: #0A0A0F; }
+
+    /* Overlay */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(10, 10, 15, .92);
+      backdrop-filter: blur(14px);
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      display: flex;
+      align-items: flex-end;
+      transition: opacity .35s;
+    }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+    .sheet {
+      width: 100%;
+      max-height: 75%;
+      background: #12121A;
+      border-radius: 14px 14px 0 0;
+      transform: translateY(101%);
+      transition: transform .45s cubic-bezier(.7, 0, .3, 1);
+      padding: 16px 14px 20px;
+      overflow-y: auto;
+    }
+    .overlay.active .sheet { transform: translateY(0); }
+    .sheet-handle { width: 32px; height: 3px; background: #3A3A4A; border-radius: 2px; margin: 0 auto 12px; }
+    .sheet-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 16px;
+      font-weight: 500;
+      color: #F0F0F0;
+      letter-spacing: .04em;
+    }
+    .sheet-desc {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 11px;
+      color: #B0B0B8;
+      line-height: 1.75;
+      margin-top: 10px;
+    }
+    .sheet-desc code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: #76B900;
+      background: rgba(118, 185, 0, .1);
+      padding: 1px 4px;
+      border-radius: 2px;
+    }
+    .sheet-points {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .sheet-point {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      color: #D0D0D8;
+      line-height: 1.55;
+    }
+    .sheet-point::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      background: #76B900;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+    .sheet-close {
+      margin-top: 14px;
+      width: 100%;
+      padding: 10px;
+      background: rgba(118, 185, 0, .08);
+      border: 1px solid rgba(118, 185, 0, .25);
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .15em;
+      color: #76B900;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .sheet-close:active { background: #76B900; color: #0A0A0F; }
+
+    /* Toast */
+    .toast {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #22C55E;
+      color: #0A0A0F;
+      padding: 7px 14px;
+      border-radius: 5px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: all .3s;
+      z-index: 200;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* 入场动画 */
+    .reveal { opacity: 0; transform: translateY(10px); transition: all .45s cubic-bezier(.4, 0, .2, 1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    
+    /* 动态图表动画 */
+    @keyframes chartGrow {
+      from { transform: scaleY(0); }
+      to { transform: scaleY(1); }
+    }
+    .chart-animate { animation: chartGrow .6s cubic-bezier(.4, 0, .2, 1) forwards; }
+
+    /* 3D Container */
+    .deepstream-3d-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 4;
+    }
+    .deepstream-3d-container canvas {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+    }
+  </style>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div class="stage">
+    <!-- 3D Video Frame Flow -->
+    <div class="deepstream-3d-container" id="ds3dContainer"></div>
+
+    <!-- Topbar -->
+    <div class="topbar reveal">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <span>Young's Insight</span>
+      </div>
+      <button class="share-btn" id="shareBtn">
+        SHARE <span class="arr">↗</span>
+      </button>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero reveal">
+      <div class="meta-row">
+        <span class="vol">NVIDIA METROPOLIS</span>
+        <span>2026.07</span>
+      </div>
+      <div class="title-block">
+        <div class="ds-stamp" id="stamp">DS</div>
+        <div class="title-text">
+          <div class="ds-title">DeepStream<span class="dot">.</span></div>
+          <div class="superdesign-line">
+            <span class="superdesign">NVIDIA Video AI SDK</span>
+            <span class="v-tag">OPEN SOURCE</span>
+          </div>
+        </div>
+      </div>
+      <div class="tagline">端到端视频流AI推理框架 <em>支持 Jetson 边缘部署</em></div>
+    </div>
+
+    <!-- Intro -->
+    <div class="intro reveal">
+      <div class="intro-inner">
+        <div class="intro-line"></div>
+        <div class="intro-text">
+          <strong>DeepStream 9.1</strong> 首次开源发布。实时视频流 AI 分析 SDK，集成 TensorRT 加速与 Triton 推理服务器，支持 AI Agent 自动生成分析管道。
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats with Mini Charts -->
+    <div class="stats-section reveal">
+      <div class="stats-header">
+        <span class="stats-title">Performance</span>
+        <span class="stats-badge">JETSON THOR READY</span>
+      </div>
+      <div class="stats-chart">
+        <div class="stat-card" data-stat="fps" style="--stat-color: #76B900">
+          <div class="stat-num"><span class="accent">1258</span></div>
+          <div class="stat-label">FPS</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 8px; animation-delay: .1s"></div>
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .15s"></div>
+            <div class="stat-bar chart-animate" style="height: 6px; animation-delay: .2s"></div>
+            <div class="stat-bar chart-animate" style="height: 12px; animation-delay: .25s"></div>
+            <div class="stat-bar chart-animate" style="height: 9px; animation-delay: .3s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="samples" style="--stat-color: #22C55E">
+          <div class="stat-num">30<span class="accent">+</span></div>
+          <div class="stat-label">Samples</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 6px; animation-delay: .35s"></div>
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .4s"></div>
+            <div class="stat-bar chart-animate" style="height: 8px; animation-delay: .45s"></div>
+            <div class="stat-bar chart-animate" style="height: 4px; animation-delay: .5s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="plugins" style="--stat-color: #76B900">
+          <div class="stat-num">40<span class="accent">+</span></div>
+          <div class="stat-label">Plugins</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .55s"></div>
+            <div class="stat-bar chart-animate" style="height: 12px; animation-delay: .6s"></div>
+            <div class="stat-bar chart-animate" style="height: 11px; animation-delay: .65s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="streams" style="--stat-color: #F59E0B">
+          <div class="stat-num">100<span class="accent">+</span></div>
+          <div class="stat-label">Streams</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .7s"></div>
+            <div class="stat-bar chart-animate" style="height: 12px; animation-delay: .75s"></div>
+            <div class="stat-bar chart-animate" style="height: 11px; animation-delay: .8s"></div>
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .85s"></div>
+            <div class="stat-bar chart-animate" style="height: 8px; animation-delay: .9s"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flow Diagram -->
+    <div class="flow-section reveal">
+      <div class="flow-header">Video Pipeline</div>
+      <div class="flow-diagram">
+        <svg class="flow-svg" viewBox="0 0 350 50" fill="none">
+          <!-- Node 1: Video Input -->
+          <g class="flow-node" id="flow-input">
+            <rect x="5" y="12" width="55" height="26" rx="5" fill="rgba(118, 185, 0, .08)" stroke="#76B900" stroke-width="1" stroke-opacity=".4"/>
+            <text x="32" y="29" font-family="JetBrains Mono, monospace" font-size="7" fill="#F0F0F0" text-anchor="middle">INPUT</text>
+          </g>
+          
+          <!-- Arrow 1 -->
+          <path class="flow-arrow" d="M63 25 L83 25" stroke="#76B900" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#arrowhead)"/>
+          
+          <!-- Node 2: Decode -->
+          <g class="flow-node" id="flow-decode">
+            <rect x="87" y="8" width="60" height="34" rx="6" fill="rgba(118, 185, 0, .12)" stroke="#76B900" stroke-width="1.2"/>
+            <text x="117" y="24" font-family="JetBrains Mono, monospace" font-size="7" fill="#76B900" text-anchor="middle">DECODE</text>
+            <text x="117" y="35" font-family="JetBrains Mono, monospace" font-size="5" fill="#6B6B7B" text-anchor="middle">NVDEC</text>
+          </g>
+          
+          <!-- Arrow 2 -->
+          <path class="flow-arrow" d="M150 25 L170 25" stroke="#76B900" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#arrowhead)"/>
+          
+          <!-- Node 3: Inference -->
+          <g class="flow-node" id="flow-inference">
+            <rect x="174" y="8" width="70" height="34" rx="6" fill="rgba(118, 185, 0, .12)" stroke="#76B900" stroke-width="1.2"/>
+            <text x="209" y="24" font-family="JetBrains Mono, monospace" font-size="7" fill="#76B900" text-anchor="middle">INFERENCE</text>
+            <text x="209" y="35" font-family="JetBrains Mono, monospace" font-size="5" fill="#6B6B7B" text-anchor="middle">TensorRT/Triton</text>
+          </g>
+          
+          <!-- Arrow 3 -->
+          <path class="flow-arrow" d="M247 25 L267 25" stroke="#22C55E" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#arrowhead2)"/>
+          
+          <!-- Node 4: Output -->
+          <g class="flow-node" id="flow-output">
+            <rect x="271" y="12" width="55" height="26" rx="5" fill="rgba(34, 197, 94, .08)" stroke="#22C55E" stroke-width="1" stroke-opacity=".4"/>
+            <text x="298" y="29" font-family="JetBrains Mono, monospace" font-size="7" fill="#F0F0F0" text-anchor="middle">OUTPUT</text>
+          </g>
+          
+          <!-- Tracker indicator -->
+          <g class="flow-node" id="flow-tracker">
+            <rect x="330" y="15" width="15" height="20" rx="4" fill="rgba(245, 158, 11, .08)" stroke="#F59E0B" stroke-width=".8" stroke-opacity=".4"/>
+            <text x="337" y="28" font-family="JetBrains Mono, monospace" font-size="5" fill="#F59E0B" text-anchor="middle">TK</text>
+          </g>
+          
+          <!-- Arrowheads -->
+          <defs>
+            <marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L6,3 z" fill="#76B900" fill-opacity=".6"/>
+            </marker>
+            <marker id="arrowhead2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L6,3 z" fill="#22C55E" fill-opacity=".6"/>
+            </marker>
+          </defs>
+          
+          <!-- Animated pulse dots -->
+          <circle cx="73" cy="25" r="2" fill="#76B900">
+            <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="160" cy="25" r="2" fill="#76B900">
+            <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0.3s"/>
+          </circle>
+          <circle cx="258" cy="25" r="2" fill="#22C55E">
+            <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0.6s"/>
+          </circle>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Features with Progress -->
+    <div class="features reveal">
+      <div class="feature" data-f="0">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">多路视频流</div>
+          <div class="feature-desc">支持多路并发处理</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 95%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="1">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">零拷贝管道</div>
+          <div class="feature-desc">GPU内存零拷贝优化</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 100%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="2">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">多模型支持</div>
+          <div class="feature-desc">目标检测、追踪、分类</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 88%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="3">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">边缘部署</div>
+          <div class="feature-desc">支持 Jetson 边缘设备</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 92%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+    </div>
+
+    <!-- Tech Stack -->
+    <div class="tech-section reveal">
+      <div class="tech-header">Tech Stack</div>
+      <div class="tech-pills">
+        <span class="tech-pill accent">C++</span>
+        <span class="tech-pill">Python</span>
+        <span class="tech-pill">GStreamer</span>
+        <span class="tech-pill">TensorRT</span>
+        <span class="tech-pill">CUDA</span>
+        <span class="tech-pill">Triton</span>
+      </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="bottombar reveal">
+      <a href="https://github.com/NVIDIA-AI-IOT/deepstream_reference_apps" target="_blank" class="github-link">
+        <svg viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        NVIDIA-AI-IOT/deepstream
+      </a>
+      <a href="https://developer.nvidia.com/deepstream-sdk" target="_blank" class="visit-btn">VISIT →</a>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title" id="sheetTitle"></div>
+        <div class="sheet-desc" id="sheetDesc"></div>
+        <div class="sheet-points" id="sheetPoints"></div>
+        <button class="sheet-close" id="sheetClose">CLOSE</button>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script>
+    // Data
+    const features = [
+      {
+        title: '多路视频流',
+        desc: '支持 100+ 路视频流并发处理。零拷贝管道架构，GPU 内存直通，最大程度降低 CPU 开销。支持 RTSP、RTMP、文件等多种输入源。',
+        points: ['支持 100+ 路并发视频流', '零拷贝 GPU 内存优化', 'RTSP/RTMP/文件输入源', '动态流管理与负载均衡']
+      },
+      {
+        title: '零拷贝管道',
+        desc: 'DeepStream 核心架构 —— GPU 内存零拷贝优化。视频帧在 GPU 内存中直接传递，避免 CPU/GPU 数据拷贝开销，显著降低延迟与内存占用。',
+        points: ['GPU 内存零拷贝传递', 'NVDEC/NVENC 硬件加速', 'DLA 深度学习加速器', 'VIC 视觉图像合成器']
+      },
+      {
+        title: '多模型支持',
+        desc: '内置 TensorRT 加速推理引擎。支持目标检测、实例分割、图像分类、行为识别等多种 AI 任务。集成 Triton 推理服务器，支持多框架模型部署。',
+        points: ['TensorRT 原生加速', '支持 ONNX/UFF/Caffe', '目标检测 + 实例分割', '集成 Triton 推理服务器']
+      },
+      {
+        title: '边缘部署',
+        desc: '完整支持 NVIDIA Jetson 边缘设备系列：Jetson Orin (Nano/NX/AGX)、Jetson Thor。优化功耗与性能平衡，适合边缘 AI 场景。',
+        points: ['Jetson Orin 全系列支持', 'Jetson Thor 新一代平台', '边缘功耗优化', 'Docker 容器化部署']
+      }
+    ];
+
+    const statsInfo = {
+      fps: 'Jetson Thor 性能基准：C-RADIO-Base 达到 1,258 FPS，RT-DETR 195 FPS，Peoplenet+MV3DT 363 FPS，Grounding-DINO 23 FPS。零拷贝架构带来极致吞吐量。',
+      samples: '30+ 官方示例应用，涵盖目标检测、跟踪、分类、行为分析、多摄像头 3D 跟踪等场景。完整代码与配置文件，快速上手开发。',
+      plugins: '40+ GStreamer 硬件加速插件：视频解码 (NVDEC)、视频编码 (NVENC)、推理、跟踪、图像处理、IoT 通信、可视化等。',
+      streams: '支持 100+ 路视频流并发处理。通过零拷贝管道与 GPU 内存池化，实现大规模视频分析场景下的高性能与低延迟。'
+    };
+
+    const flowInfo = {
+      input: '视频输入源：支持 RTSP 流、RTMP 流、本地文件、USB 摄像头等多种输入方式。自动检测分辨率与帧率。',
+      decode: 'NVDEC 硬件视频解码：GPU 加速解码 H.264/H.265/VP9 等格式，零拷贝输出到 GPU 内存，无 CPU 拷贝开销。',
+      inference: '推理阶段：支持 TensorRT 原生加速与 Triton 推理服务器。多模型级联支持目标检测、分类、分割等任务。',
+      output: '输出阶段：支持渲染显示、文件录制、RTMP 推流、消息队列等多种输出方式。元数据可导出为 JSON/Kafka 消息。',
+      tracker: '跟踪器插件：支持 NvDCF、NvDeepSORT 等跟踪算法，实现跨帧目标 ID 一致性与轨迹分析。'
+    };
+
+    const techInfo = {
+      'C++': '核心高性能管道实现，零拷贝架构与 GPU 内存管理',
+      Python: 'Python Bindings，快速原型开发与 AI Agent 集成',
+      GStreamer: '开源多媒体框架，DeepStream 基于此构建管道架构',
+      TensorRT: 'NVIDIA 高性能推理引擎，FP16/INT8 量化加速',
+      CUDA: 'GPU 并行计算基础，自定义插件开发',
+      Triton: '多框架推理服务器，支持 ONNX/PyTorch/TensorFlow'
+    };
+
+    // Elements
+    const overlay = document.getElementById('overlay');
+    const sheetTitle = document.getElementById('sheetTitle');
+    const sheetDesc = document.getElementById('sheetDesc');
+    const sheetPoints = document.getElementById('sheetPoints');
+    const sheetClose = document.getElementById('sheetClose');
+    const toast = document.getElementById('toast');
+    const shareBtn = document.getElementById('shareBtn');
+    const stamp = document.getElementById('stamp');
+
+    // Reveal animation
+    setTimeout(() => {
+      document.querySelectorAll('.reveal').forEach((el, i) => {
+        setTimeout(() => el.classList.add('visible'), i * 60);
+      });
+    }, 100);
+
+    // Feature click
+    document.querySelectorAll('.feature').forEach(el => {
+      el.addEventListener('click', () => {
+        const i = +el.dataset.f;
+        const f = features[i];
+        sheetTitle.textContent = f.title;
+        sheetDesc.textContent = f.desc;
+        sheetPoints.innerHTML = f.points.map(p => `<div class="sheet-point">${p}</div>`).join('');
+        overlay.classList.add('active');
+      });
+    });
+
+    // Stat click
+    document.querySelectorAll('.stat-card').forEach(el => {
+      el.addEventListener('click', () => {
+        const key = el.dataset.stat;
+        const info = statsInfo[key];
+        if (info) {
+          sheetTitle.textContent = key.charAt(0).toUpperCase() + key.slice(1);
+          sheetDesc.textContent = info;
+          sheetPoints.innerHTML = '';
+          overlay.classList.add('active');
+        }
+      });
+    });
+
+    // Flow node click
+    document.querySelectorAll('.flow-node').forEach(el => {
+      el.addEventListener('click', () => {
+        const id = el.id.replace('flow-', '');
+        const info = flowInfo[id];
+        if (info) {
+          const titles = { input: 'Video Input', decode: 'NVDEC Decode', inference: 'TensorRT Inference', output: 'Output', tracker: 'Tracker' };
+          sheetTitle.textContent = titles[id] || id;
+          sheetDesc.textContent = info;
+          sheetPoints.innerHTML = '';
+          overlay.classList.add('active');
+        }
+      });
+    });
+
+    // Tech pill click
+    document.querySelectorAll('.tech-pill').forEach(el => {
+      el.addEventListener('click', () => {
+        const tech = el.textContent.trim();
+        const info = techInfo[tech];
+        if (info) {
+          sheetTitle.textContent = tech;
+          sheetDesc.textContent = info;
+          sheetPoints.innerHTML = '';
+          overlay.classList.add('active');
+        }
+      });
+    });
+
+    // Stamp click
+    stamp.addEventListener('click', () => {
+      sheetTitle.textContent = 'DeepStream SDK';
+      sheetDesc.innerHTML = 'NVIDIA DeepStream SDK 是端到端视频流 AI 推理框架。<br><br>首次开源发布，集成 <code>TensorRT</code> 加速与 <code>Triton</code> 推理服务器，支持 AI Agent 自动生成视频分析管道。<br><br>核心特性：<strong>零拷贝管道</strong>、<strong>硬件加速</strong>、<strong>边缘部署</strong>。';
+      sheetPoints.innerHTML = '';
+      overlay.classList.add('active');
+    });
+
+    // Close sheet
+    sheetClose.addEventListener('click', () => overlay.classList.remove('active'));
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('active'); });
+
+    // Share
+    shareBtn.addEventListener('click', async () => {
+      const text = 'DeepStream 9.1 — NVIDIA 视频 AI 分析开源工具包\\n端到端视频流AI推理框架';
+      const url = 'https://mindresonance.online/youngsinsight/pages/deepstream-9.1.html';
+      const full = text + '\\n' + url;
+
+      try {
+        if (navigator.share) {
+          await navigator.share({ title: 'DeepStream 9.1', text, url });
+          return;
+        }
+      } catch (e) {}
+
+      try {
+        await navigator.clipboard.writeText(full);
+        showToast('已复制标题与链接');
+      } catch (e) {
+        const ta = document.createElement('textarea');
+        ta.value = full;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('已复制标题与链接');
+      }
+    });
+
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+    import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+    import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+    // ── Setup ──
+    const container = document.getElementById('ds3dContainer');
+    if (!container) throw new Error('3D container not found');
+
+    const stage = container.closest('.stage');
+    const w = stage.clientWidth;
+    const h = stage.clientHeight;
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 100);
+    camera.position.set(0, 1.2, 5.5);
+    camera.lookAt(0, 0.3, 0);
+
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setSize(w, h);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x000000, 0);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.2;
+    container.appendChild(renderer.domElement);
+
+    // ── Bloom Post-Processing ──
+    const composer = new EffectComposer(renderer);
+    composer.setSize(w, h);
+    const renderPass = new RenderPass(scene, camera);
+    composer.addPass(renderPass);
+
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(w, h),
+      1.4,   // strength
+      0.6,   // radius
+      0.2    // threshold
+    );
+    composer.addPass(bloomPass);
+
+    // ── Lighting ──
+    const ambientLight = new THREE.AmbientLight(0x1a1a24, 0.5);
+    scene.add(ambientLight);
+
+    const greenPointLight = new THREE.PointLight(0x76B900, 3, 12);
+    greenPointLight.position.set(0, 0.5, 2);
+    scene.add(greenPointLight);
+
+    const greenPointLight2 = new THREE.PointLight(0x22C55E, 1.5, 8);
+    greenPointLight2.position.set(-2, 1, 1);
+    scene.add(greenPointLight2);
+
+    // ── GPU Chip Core Model ──
+    const chipGroup = new THREE.Group();
+    chipGroup.position.set(0, 0.3, 0);
+    scene.add(chipGroup);
+
+    // Main chip body
+    const chipGeo = new THREE.BoxGeometry(1.2, 0.15, 1.2);
+    const chipMat = new THREE.MeshStandardMaterial({
+      color: 0x1a1a24,
+      metalness: 0.8,
+      roughness: 0.3,
+      emissive: 0x76B900,
+      emissiveIntensity: 0.15
+    });
+    const chipMesh = new THREE.Mesh(chipGeo, chipMat);
+    chipGroup.add(chipMesh);
+
+    // Chip top die
+    const dieGeo = new THREE.BoxGeometry(0.7, 0.04, 0.7);
+    const dieMat = new THREE.MeshStandardMaterial({
+      color: 0x2a2a34,
+      metalness: 0.9,
+      roughness: 0.2,
+      emissive: 0x76B900,
+      emissiveIntensity: 0.4
+    });
+    const dieMesh = new THREE.Mesh(dieGeo, dieMat);
+    dieMesh.position.y = 0.095;
+    chipGroup.add(dieMesh);
+
+    // Chip edge glow wireframe
+    const chipEdges = new THREE.EdgesGeometry(chipGeo);
+    const chipLineMat = new THREE.LineBasicMaterial({ color: 0x76B900, transparent: true, opacity: 0.6 });
+    const chipWire = new THREE.LineSegments(chipEdges, chipLineMat);
+    chipGroup.add(chipWire);
+
+    // Die edge glow
+    const dieEdges = new THREE.EdgesGeometry(dieGeo);
+    const dieLineMat = new THREE.LineBasicMaterial({ color: 0x8FD020, transparent: true, opacity: 0.8 });
+    const dieWire = new THREE.LineSegments(dieEdges, dieLineMat);
+    dieWire.position.y = 0.095;
+    chipGroup.add(dieWire);
+
+    // Pin rows on chip sides
+    const pinGeo = new THREE.BoxGeometry(0.04, 0.03, 0.08);
+    const pinMat = new THREE.MeshStandardMaterial({
+      color: 0x76B900,
+      emissive: 0x76B900,
+      emissiveIntensity: 0.3,
+      metalness: 0.7,
+      roughness: 0.4
+    });
+    for (let side = 0; side < 4; side++) {
+      for (let i = 0; i < 8; i++) {
+        const pin = new THREE.Mesh(pinGeo, pinMat);
+        const offset = (i - 3.5) * 0.14;
+        if (side === 0) { pin.position.set(0.64, 0, offset); }
+        else if (side === 1) { pin.position.set(-0.64, 0, offset); }
+        else if (side === 2) { pin.position.set(offset, 0, 0.64); pin.rotation.y = Math.PI / 2; }
+        else { pin.position.set(offset, 0, -0.64); pin.rotation.y = Math.PI / 2; }
+        chipGroup.add(pin);
+      }
+    }
+
+    // ── Video Frame Flow Particles ──
+    const FRAME_COUNT = 60;
+    const frames = [];
+    const frameGeo = new THREE.BoxGeometry(0.18, 0.12, 0.02);
+
+    // Flow path: frames flow from left, curve around the GPU chip, exit right
+    // Path control points (3D catmull-rom)
+    const flowPath = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-5, 1.8, 0.5),
+      new THREE.Vector3(-3, 1.5, 0.3),
+      new THREE.Vector3(-1.8, 0.8, 0.2),
+      new THREE.Vector3(-0.8, 0.4, 0.15),
+      new THREE.Vector3(0, 0.3, 0.1),      // over chip
+      new THREE.Vector3(0.8, 0.4, 0.15),
+      new THREE.Vector3(1.8, 0.8, 0.2),
+      new THREE.Vector3(3, 1.5, 0.3),
+      new THREE.Vector3(5, 1.8, 0.5),
+    ], false, 'catmullrom', 0.5);
+
+    // Second flow path (lower, reverse direction for visual depth)
+    const flowPath2 = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(5, -0.5, -0.3),
+      new THREE.Vector3(3, -0.2, -0.2),
+      new THREE.Vector3(1.5, 0.1, -0.1),
+      new THREE.Vector3(0, 0.15, 0),
+      new THREE.Vector3(-1.5, 0.1, -0.1),
+      new THREE.Vector3(-3, -0.2, -0.2),
+      new THREE.Vector3(-5, -0.5, -0.3),
+    ], false, 'catmullrom', 0.5);
+
+    // Create frame materials with varying green shades
+    const frameColors = [0x76B900, 0x8FD020, 0x22C55E, 0x4CAF50, 0x66BB6A, 0x76B900];
+
+    for (let i = 0; i < FRAME_COUNT; i++) {
+      const isPath2 = i >= FRAME_COUNT * 0.4;
+      const path = isPath2 ? flowPath2 : flowPath;
+      const t = (i / (isPath2 ? (FRAME_COUNT * 0.6) : (FRAME_COUNT * 0.4)));
+      const colorIdx = i % frameColors.length;
+
+      const mat = new THREE.MeshStandardMaterial({
+        color: frameColors[colorIdx],
+        emissive: frameColors[colorIdx],
+        emissiveIntensity: 0.5 + Math.random() * 0.3,
+        metalness: 0.4,
+        roughness: 0.5,
+        transparent: true,
+        opacity: 0.7 + Math.random() * 0.3
+      });
+
+      const mesh = new THREE.Mesh(frameGeo, mat);
+      const pos = path.getPointAt(t % 1);
+      mesh.position.copy(pos);
+
+      // Orient along path
+      const tangent = path.getTangentAt(t % 1);
+      mesh.lookAt(pos.clone().add(tangent));
+
+      // Slight random scale variation
+      const s = 0.8 + Math.random() * 0.5;
+      mesh.scale.set(s, s, s);
+
+      scene.add(mesh);
+      frames.push({
+        mesh,
+        path,
+        t: t % 1,
+        speed: 0.0015 + Math.random() * 0.003,
+        baseEmissive: mat.emissiveIntensity,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
+
+    // ── Data Stream Lines (thin glowing lines along paths) ──
+    function createStreamLine(path, color, opacity) {
+      const points = path.getPoints(80);
+      const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
+      const lineMat = new THREE.LineBasicMaterial({
+        color,
+        transparent: true,
+        opacity
+      });
+      const line = new THREE.Line(lineGeo, lineMat);
+      scene.add(line);
+      return line;
+    }
+
+    createStreamLine(flowPath, 0x76B900, 0.15);
+    createStreamLine(flowPath2, 0x22C55E, 0.1);
+
+    // ── Floating Particles (ambient) ──
+    const particleCount = 80;
+    const particleGeo = new THREE.BufferGeometry();
+    const particlePositions = new Float32Array(particleCount * 3);
+    const particleSizes = new Float32Array(particleCount);
+
+    for (let i = 0; i < particleCount; i++) {
+      particlePositions[i * 3] = (Math.random() - 0.5) * 10;
+      particlePositions[i * 3 + 1] = Math.random() * 3 - 0.5;
+      particlePositions[i * 3 + 2] = (Math.random() - 0.5) * 4;
+      particleSizes[i] = Math.random() * 3 + 1;
+    }
+
+    particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+    particleGeo.setAttribute('size', new THREE.BufferAttribute(particleSizes, 1));
+
+    const particleMat = new THREE.PointsMaterial({
+      color: 0x76B900,
+      size: 0.03,
+      transparent: true,
+      opacity: 0.4,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+
+    const particles = new THREE.Points(particleGeo, particleMat);
+    scene.add(particles);
+
+    // ── Animation Loop ──
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const elapsed = clock.getElapsedTime();
+      const delta = clock.getDelta();
+
+      // Rotate chip slowly
+      chipGroup.rotation.y = Math.sin(elapsed * 0.3) * 0.15;
+      chipGroup.rotation.x = Math.sin(elapsed * 0.2) * 0.05;
+
+      // Pulse chip glow
+      const chipPulse = 0.15 + Math.sin(elapsed * 2) * 0.1;
+      chipMat.emissiveIntensity = chipPulse;
+      dieMat.emissiveIntensity = 0.4 + Math.sin(elapsed * 3) * 0.2;
+
+      // Pulse green light
+      greenPointLight.intensity = 3 + Math.sin(elapsed * 2.5) * 1;
+
+      // Animate video frames along paths
+      for (const frame of frames) {
+        frame.t += frame.speed;
+        if (frame.t > 1) frame.t -= 1;
+
+        const pos = frame.path.getPointAt(frame.t);
+        const tangent = frame.path.getTangentAt(frame.t);
+
+        frame.mesh.position.copy(pos);
+        frame.mesh.lookAt(pos.clone().add(tangent));
+
+        // Pulsing emissive
+        frame.mesh.material.emissiveIntensity = frame.baseEmissive + Math.sin(elapsed * 4 + frame.phase) * 0.2;
+
+        // Slight hover
+        frame.mesh.position.y += Math.sin(elapsed * 2 + frame.phase) * 0.02;
+      }
+
+      // Animate ambient particles
+      const positions = particles.geometry.attributes.position.array;
+      for (let i = 0; i < particleCount; i++) {
+        positions[i * 3 + 1] += Math.sin(elapsed + i) * 0.001;
+        positions[i * 3] += Math.cos(elapsed * 0.5 + i * 0.5) * 0.0005;
+      }
+      particles.geometry.attributes.position.needsUpdate = true;
+
+      // Render with bloom
+      composer.render();
+    }
+
+    animate();
+
+    // ── Resize Handler ──
+    const resizeObserver = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        if (width === 0 || height === 0) continue;
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
+        composer.setSize(width, height);
+      }
+    });
+    resizeObserver.observe(stage);
+  </script>
+</body>
+</html>

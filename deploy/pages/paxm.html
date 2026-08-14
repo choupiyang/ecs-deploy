@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#050810">
+  <title>PAXM — AI Agent Memory Adaptor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.cn">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.cn/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Noto+Serif+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #050810;
+      --bg-2: #0F172A;
+      --accent: #06B6D4;
+      --accent-teal: #14B8A6;
+      --accent-blue: #3B82F6;
+      --accent-amber: #F59E0B;
+      --text: #E2E8F0;
+      --muted: #64748B;
+      --surface: #1E293B;
+      --border: #334155;
+      --glow: #06B6D4;
+      --serif: 'Cormorant Garamond', serif;
+      --cn: 'Noto Serif SC', serif;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Noto Sans SC', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; background: #030508; font-family: 'Noto Sans SC', sans-serif; color: #E2E8F0; -webkit-font-smoothing: antialiased; }
+    body { display: flex; align-items: center; justify-content: center; }
+
+    /* 舞台 */
+    .stage {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      height: min(100vh, calc(100vw * 16 / 9));
+      width: min(100vw, calc(100vh * 9 / 16));
+      background: #050810;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,.6);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 16px 10px;
+    }
+
+    /* 背景光晕 - 深蓝黑 + 青绿 */
+    .stage::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 50% 20%, rgba(6, 182, 212, .12) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 35% at 20% 70%, rgba(20, 184, 166, .08) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 80% 90%, rgba(59, 130, 246, .06) 0%, transparent 60%);
+    }
+
+    /* 连接线纹理 */
+    .stage::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(30deg, rgba(6, 182, 212, .02) 1px, transparent 1px),
+        linear-gradient(-30deg, rgba(20, 184, 166, .02) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    /* 顶部条 */
+    .topbar {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .16em;
+      color: #64748B;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(6, 182, 212, .1);
+    }
+    .brand { display: flex; align-items: center; gap: 6px; color: #E2E8F0; }
+    .brand-dot { width: 5px; height: 5px; background: #06B6D4; border-radius: 50%; box-shadow: 0 0 8px #06B6D4; animation: pulse 2.2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .3; transform: scale(.6); } }
+    .share-btn {
+      background: none;
+      border: 1px solid rgba(6, 182, 212, .25);
+      padding: 4px 8px 3px;
+      font: inherit;
+      color: #E2E8F0;
+      cursor: pointer;
+      letter-spacing: .12em;
+      transition: all .3s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 7.5px;
+    }
+    .share-btn:active { background: #06B6D4; color: #050810; border-color: #06B6D4; }
+    .share-btn .arr { color: #06B6D4; transition: transform .3s; }
+    .share-btn:active .arr { color: #050810; transform: translate(2px, -2px); }
+
+    /* Hero */
+    .hero { position: relative; z-index: 5; flex-shrink: 0; margin-top: 10px; }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #64748B;
+      text-transform: uppercase;
+      padding-bottom: 6px;
+    }
+    .meta-row .vol { color: #06B6D4; font-weight: 500; position: relative; }
+    .meta-row .vol::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; background: #06B6D4; }
+
+    .title-block { position: relative; margin-top: 4px; display: flex; align-items: flex-start; gap: 3px; }
+    
+    /* 数据库印章 */
+    .db-stamp {
+      position: relative;
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+      margin-top: 3px;
+      cursor: pointer;
+      transition: transform .4s cubic-bezier(.7, 0, .3, 1);
+    }
+    .db-stamp:active { transform: scale(.95); }
+    .db-stamp svg { width: 100%; height: 100%; }
+    .db-stamp .ring-outer {
+      animation: spin 30s linear infinite;
+      transform-origin: center;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .title-text { flex: 1; min-width: 0; }
+    .paxm-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 500;
+      font-size: 36px;
+      line-height: .95;
+      letter-spacing: .02em;
+      color: #E2E8F0;
+    }
+    .paxm-title .dot { color: #06B6D4; }
+    .superdesign-line {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-top: 1px;
+    }
+    .superdesign {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 400;
+      font-style: italic;
+      font-size: 13px;
+      color: #64748B;
+      letter-spacing: .04em;
+    }
+    .v-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      color: #14B8A6;
+      border: 1px solid #14B8A6;
+      padding: 1px 4px;
+      letter-spacing: .1em;
+    }
+
+    .tagline {
+      margin-top: 5px;
+      font-family: 'Noto Serif SC', serif;
+      font-weight: 300;
+      font-size: 10px;
+      color: #E2E8F0;
+      letter-spacing: .05em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tagline::before { content: ''; width: 12px; height: 1px; background: #06B6D4; flex-shrink: 0; }
+    .tagline em { font-style: normal; color: #06B6D4; font-weight: 500; }
+
+    /* Intro */
+    .intro { position: relative; z-index: 5; margin-top: 8px; flex-shrink: 0; }
+    .intro-inner {
+      display: flex;
+      gap: 8px;
+      padding: 8px 10px;
+      background: rgba(30, 41, 59, .4);
+      border-radius: 6px;
+      border: 1px solid rgba(6, 182, 212, .08);
+    }
+    .intro-line { width: 2px; background: linear-gradient(180deg, #06B6D4, #14B8A6); border-radius: 1px; flex-shrink: 0; }
+    .intro-text {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 9px;
+      line-height: 1.65;
+      color: #94A3B8;
+      letter-spacing: .02em;
+    }
+    .intro-text strong { color: #E2E8F0; font-weight: 500; }
+
+    /* ========== 主视觉：数据流管道图 ========== */
+    .flow-section {
+      position: relative;
+      z-index: 5;
+      margin-top: 8px;
+      flex-shrink: 0;
+    }
+    .flow-header {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #64748B;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .flow-header::after { content: ''; flex: 1; height: 1px; background: rgba(6, 182, 212, .1); }
+    
+    .flow-diagram {
+      background: rgba(15, 23, 42, .5);
+      border: 1px solid #1E293B;
+      border-radius: 10px;
+      padding: 10px;
+      position: relative;
+    }
+    .flow-svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .flow-node {
+      cursor: pointer;
+      transition: transform .2s, opacity .2s;
+    }
+    .flow-node:active { transform: scale(.98); opacity: .9; }
+    .flow-arrow {
+      animation: flowPulse 2s ease-in-out infinite;
+    }
+    @keyframes flowPulse {
+      0%, 100% { opacity: .4; }
+      50% { opacity: 1; }
+    }
+    .pulse-dot {
+      animation: dotPulse 1.5s ease-in-out infinite;
+    }
+    @keyframes dotPulse {
+      0%, 100% { opacity: 1; r: 3; }
+      50% { opacity: .3; r: 4; }
+    }
+
+    /* Stats */
+    .stats-section {
+      position: relative;
+      z-index: 5;
+      margin-top: 8px;
+      flex-shrink: 0;
+    }
+    .stats-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .stats-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #64748B;
+      text-transform: uppercase;
+    }
+    .stats-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      letter-spacing: .1em;
+      color: #14B8A6;
+      border: 1px solid #14B8A6;
+      padding: 1px 5px;
+      border-radius: 2px;
+    }
+    
+    .stats-chart {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+    }
+    .stat-card {
+      background: rgba(30, 41, 59, .3);
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 7px 5px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .25s;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card:active { background: rgba(6, 182, 212, .08); border-color: rgba(6, 182, 212, .3); }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--stat-color, #06B6D4);
+      opacity: 0;
+      transition: opacity .3s;
+    }
+    .stat-card:active::before { opacity: 1; }
+    .stat-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px;
+      font-weight: 600;
+      color: #E2E8F0;
+    }
+    .stat-num .accent { color: #06B6D4; }
+    .stat-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      letter-spacing: .12em;
+      color: #64748B;
+      text-transform: uppercase;
+      margin-top: 1px;
+    }
+
+    /* Features */
+    .features {
+      position: relative;
+      z-index: 5;
+      margin-top: 8px;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .feature {
+      flex: 1;
+      background: rgba(30, 41, 59, .3);
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .feature:active { background: rgba(6, 182, 212, .06); border-color: rgba(6, 182, 212, .2); }
+    .feature-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: rgba(6, 182, 212, .1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .feature-icon svg { width: 15px; height: 15px; stroke: #06B6D4; fill: none; stroke-width: 1.5; }
+    .feature-content { flex: 1; min-width: 0; }
+    .feature-title {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      color: #E2E8F0;
+      letter-spacing: .02em;
+    }
+    .feature-desc {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 8px;
+      color: #64748B;
+      margin-top: 1px;
+    }
+    .feature-arrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: #06B6D4;
+      opacity: .4;
+      transition: all .25s;
+    }
+    .feature:active .feature-arrow { opacity: 1; transform: translateX(2px); }
+    
+    .feature-progress {
+      width: 100%;
+      height: 2px;
+      background: rgba(6, 182, 212, .1);
+      border-radius: 1px;
+      margin-top: 4px;
+      overflow: hidden;
+    }
+    .feature-progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #06B6D4, #14B8A6);
+      border-radius: 1px;
+      transition: width .3s;
+    }
+
+    /* Tech Stack */
+    .tech-section {
+      position: relative;
+      z-index: 5;
+      margin-top: 8px;
+      flex-shrink: 0;
+    }
+    .tech-header {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #64748B;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+    .tech-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .tech-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .08em;
+      padding: 3px 7px;
+      background: rgba(30, 41, 59, .4);
+      border: 1px solid #334155;
+      border-radius: 10px;
+      color: #94A3B8;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .tech-pill:active { 
+      background: rgba(6, 182, 212, .1); 
+      border-color: rgba(6, 182, 212, .3); 
+      color: #E2E8F0;
+    }
+    .tech-pill.accent { border-color: rgba(6, 182, 212, .3); color: #06B6D4; }
+
+    /* Command 示例 */
+    .cmd-section {
+      position: relative;
+      z-index: 5;
+      margin-top: 8px;
+      flex-shrink: 0;
+    }
+    .cmd-box {
+      background: rgba(15, 23, 42, .6);
+      border: 1px solid #1E293B;
+      border-radius: 8px;
+      padding: 10px;
+    }
+    .cmd-line {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .cmd-prompt { color: #64748B; font-size: 10px; }
+    .cmd-cmd { color: #06B6D4; font-size: 10px; }
+    .cmd-args { color: #94A3B8; font-size: 9px; }
+    .cmd-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    .cmd-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      color: #14B8A6;
+      border: 1px solid #14B8A6;
+      padding: 2px 6px;
+      border-radius: 2px;
+    }
+    .cmd-desc { font-family: 'Noto Sans SC', sans-serif; font-size: 7px; color: #475569; }
+
+    /* Bottom bar */
+    .bottombar {
+      position: relative;
+      z-index: 10;
+      margin-top: auto;
+      padding-top: 8px;
+      border-top: 1px solid rgba(6, 182, 212, .1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .github-link {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      color: #64748B;
+      text-decoration: none;
+      letter-spacing: .08em;
+      transition: color .2s;
+    }
+    .github-link:active { color: #E2E8F0; }
+    .github-link svg { width: 12px; height: 12px; fill: currentColor; }
+    .visit-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .1em;
+      color: #06B6D4;
+      border: 1px solid rgba(6, 182, 212, .35);
+      padding: 5px 10px;
+      border-radius: 4px;
+      background: rgba(6, 182, 212, .05);
+      cursor: pointer;
+      transition: all .2s;
+      text-decoration: none;
+    }
+    .visit-btn:active { background: #06B6D4; color: #050810; }
+
+    /* Overlay */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(5, 8, 16, .92);
+      backdrop-filter: blur(14px);
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      display: flex;
+      align-items: flex-end;
+      transition: opacity .35s;
+    }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+    .sheet {
+      width: 100%;
+      max-height: 75%;
+      background: #0F172A;
+      border-radius: 14px 14px 0 0;
+      transform: translateY(101%);
+      transition: transform .45s cubic-bezier(.7, 0, .3, 1);
+      padding: 16px 14px 20px;
+      overflow-y: auto;
+    }
+    .overlay.active .sheet { transform: translateY(0); }
+    .sheet-handle { width: 32px; height: 3px; background: #334155; border-radius: 2px; margin: 0 auto 12px; }
+    .sheet-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 16px;
+      font-weight: 500;
+      color: #E2E8F0;
+      letter-spacing: .04em;
+    }
+    .sheet-desc {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 11px;
+      color: #94A3B8;
+      line-height: 1.75;
+      margin-top: 10px;
+    }
+    .sheet-desc code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: #06B6D4;
+      background: rgba(6, 182, 212, .1);
+      padding: 1px 4px;
+      border-radius: 2px;
+    }
+    .sheet-points {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .sheet-point {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      color: #CBD5E1;
+      line-height: 1.55;
+    }
+    .sheet-point::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      background: #06B6D4;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+    .sheet-close {
+      margin-top: 14px;
+      width: 100%;
+      padding: 10px;
+      background: rgba(6, 182, 212, .08);
+      border: 1px solid rgba(6, 182, 212, .25);
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .15em;
+      color: #06B6D4;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .sheet-close:active { background: #06B6D4; color: #050810; }
+
+    /* Toast */
+    .toast {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #14B8A6;
+      color: #050810;
+      padding: 7px 14px;
+      border-radius: 5px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: all .3s;
+      z-index: 200;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* 入场动画 */
+    .reveal { opacity: 0; transform: translateY(10px); transition: all .45s cubic-bezier(.4, 0, .2, 1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <!-- Topbar -->
+    <div class="topbar reveal">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <span>Young's Insight</span>
+      </div>
+      <button class="share-btn" id="shareBtn">
+        SHARE <span class="arr">↗</span>
+      </button>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero reveal">
+      <div class="meta-row">
+        <span class="vol">MEMORY ADAPTOR</span>
+        <span>2026.07</span>
+      </div>
+      <div class="title-block">
+        <!-- 数据库印章 -->
+        <div class="db-stamp" id="stamp">
+          <svg viewBox="0 0 50 50">
+            <!-- 外层虚线圈 -->
+            <circle class="ring-outer" cx="25" cy="25" r="24" fill="none" stroke="#06B6D4" stroke-opacity="0.25" stroke-width="1" stroke-dasharray="4,3"/>
+            <!-- 主圆环 -->
+            <circle cx="25" cy="25" r="18" fill="rgba(6, 182, 212, 0.08)" stroke="#06B6D4" stroke-width="1.5"/>
+            <!-- 内层圆环 -->
+            <circle cx="25" cy="25" r="12" fill="none" stroke="#14B8A6" stroke-width="1" stroke-opacity="0.5"/>
+            <!-- 数据库图标 -->
+            <ellipse cx="25" cy="20" rx="7" ry="3" fill="none" stroke="#06B6D4" stroke-width="1.2"/>
+            <path d="M18 20 L18 30 Q25 33 32 30 L32 20" fill="none" stroke="#06B6D4" stroke-width="1.2"/>
+            <ellipse cx="25" cy="30" rx="7" ry="3" fill="none" stroke="#06B6D4" stroke-width="1.2"/>
+            <path d="M18 25 Q25 28 32 25" fill="none" stroke="#14B8A6" stroke-width="0.6" stroke-opacity="0.4"/>
+          </svg>
+        </div>
+        <div class="title-text">
+          <div class="paxm-title">PAXM<span class="dot">.</span></div>
+          <div class="superdesign-line">
+            <span class="superdesign">AI Agent Memory Adaptor</span>
+            <span class="v-tag">OPEN SOURCE</span>
+          </div>
+        </div>
+      </div>
+      <div class="tagline">为 AI Agent 提供统一的 <em>记忆适配层</em></div>
+    </div>
+
+    <!-- Intro -->
+    <div class="intro reveal">
+      <div class="intro-inner">
+        <div class="intro-line"></div>
+        <div class="intro-text">
+          统一不同 LLM 的记忆接口。<strong>PAXM</strong> 通过 MCP 协议为 Agent 提供跨会话记忆持久化，支持 SQLite、Postgres、向量库多后端。
+        </div>
+      </div>
+    </div>
+
+    <!-- 数据流管道图 -->
+    <div class="flow-section reveal">
+      <div class="flow-header">Data Flow Pipeline</div>
+      <div class="flow-diagram">
+        <svg class="flow-svg" viewBox="0 0 350 120" fill="none">
+          <!-- 第一层：AI Agent -->
+          <g class="flow-node" id="flow-agent">
+            <rect x="100" y="5" width="150" height="28" rx="5" fill="rgba(30, 41, 59, 0.6)" stroke="#334155" stroke-width="1"/>
+            <circle cx="115" cy="19" r="7" fill="rgba(6, 182, 212, 0.15)" stroke="#06B6D4" stroke-width="1"/>
+            <circle cx="115" cy="16" r="2" fill="#06B6D4"/>
+            <path d="M110 23 Q115 20 120 23" fill="none" stroke="#06B6D4" stroke-width="1"/>
+            <text x="175" y="23" font-family="JetBrains Mono, monospace" font-size="8" fill="#E2E8F0" text-anchor="middle">AI AGENT</text>
+          </g>
+          
+          <!-- 连接线 1 -->
+          <line x1="175" y1="35" x2="175" y2="45" stroke="#06B6D4" stroke-width="1.5" stroke-dasharray="4,3" class="flow-arrow">
+            <animate attributeName="stroke-dashoffset" from="7" to="0" dur="0.8s" repeatCount="indefinite"/>
+          </line>
+          <circle cx="175" cy="40" r="2" fill="#06B6D4" class="pulse-dot"/>
+          
+          <!-- 第二层：PAXM Adaptor -->
+          <g class="flow-node" id="flow-adaptor">
+            <rect x="75" y="48" width="200" height="35" rx="6" fill="rgba(6, 182, 212, 0.1)" stroke="#06B6D4" stroke-width="1.5"/>
+            <circle cx="95" cy="65" r="10" fill="rgba(6, 182, 212, 0.15)"/>
+            <text x="95" y="68" font-family="Georgia, serif" font-size="12" fill="#06B6D4" text-anchor="middle">P</text>
+            <text x="175" y="62" font-family="JetBrains Mono, monospace" font-size="9" fill="#E2E8F0" text-anchor="middle">PAXM ADAPTOR</text>
+            <text x="175" y="75" font-family="JetBrains Mono, monospace" font-size="6" fill="#64748B" text-anchor="middle">MCP Protocol</text>
+          </g>
+          
+          <!-- 连接线 2 - 分叉 -->
+          <line x1="175" y1="85" x2="175" y2="95" stroke="#14B8A6" stroke-width="1.5"/>
+          <circle cx="175" cy="95" r="3" fill="#14B8A6">
+            <animate attributeName="r" values="2;4;2" dur="1s" repeatCount="indefinite"/>
+          </circle>
+          
+          <!-- 分叉线 -->
+          <path d="M175 95 L60 110" stroke="#F59E0B" stroke-width="1" stroke-dasharray="3,2" class="flow-arrow">
+            <animate attributeName="stroke-dashoffset" from="5" to="0" dur="0.6s" repeatCount="indefinite"/>
+          </path>
+          <line x1="175" y1="95" x2="175" y2="110" stroke="#14B8A6" stroke-width="1" stroke-dasharray="3,2" class="flow-arrow">
+            <animate attributeName="stroke-dashoffset" from="5" to="0" dur="0.6s" repeatCount="indefinite"/>
+          </line>
+          <path d="M175 95 L290 110" stroke="#3B82F6" stroke-width="1" stroke-dasharray="3,2" class="flow-arrow">
+            <animate attributeName="stroke-dashoffset" from="5" to="0" dur="0.6s" repeatCount="indefinite"/>
+          </path>
+          
+          <!-- 第三层：存储后端 -->
+          <!-- SQLite -->
+          <g class="flow-node" id="flow-sqlite">
+            <rect x="10" y="105" width="70" height="14" rx="3" fill="rgba(245, 158, 11, 0.08)" stroke="#F59E0B" stroke-width="0.8"/>
+            <circle cx="20" cy="112" r="3" fill="#F59E0B" class="pulse-dot" style="animation-delay: 0.2s"/>
+            <text x="55" y="116" font-family="JetBrains Mono, monospace" font-size="7" fill="#E2E8F0" text-anchor="middle">SQLite</text>
+          </g>
+          
+          <!-- Postgres -->
+          <g class="flow-node" id="flow-postgres">
+            <rect x="140" y="105" width="70" height="14" rx="3" fill="rgba(20, 184, 166, 0.08)" stroke="#14B8A6" stroke-width="0.8"/>
+            <circle cx="150" cy="112" r="3" fill="#14B8A6" class="pulse-dot" style="animation-delay: 0.5s"/>
+            <text x="185" y="116" font-family="JetBrains Mono, monospace" font-size="7" fill="#E2E8F0" text-anchor="middle">Postgres</text>
+          </g>
+          
+          <!-- Vector -->
+          <g class="flow-node" id="flow-vector">
+            <rect x="270" y="105" width="70" height="14" rx="3" fill="rgba(59, 130, 246, 0.08)" stroke="#3B82F6" stroke-width="0.8"/>
+            <circle cx="280" cy="112" r="3" fill="#3B82F6" class="pulse-dot" style="animation-delay: 0.8s"/>
+            <text x="315" y="116" font-family="JetBrains Mono, monospace" font-size="7" fill="#E2E8F0" text-anchor="middle">Vector</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-section reveal">
+      <div class="stats-header">
+        <span class="stats-title">Metrics</span>
+        <span class="stats-badge">MCP PROTOCOL</span>
+      </div>
+      <div class="stats-chart">
+        <div class="stat-card" data-stat="backends" style="--stat-color: #06B6D4">
+          <div class="stat-num"><span class="accent">3</span></div>
+          <div class="stat-label">Backends</div>
+        </div>
+        <div class="stat-card" data-stat="protocol" style="--stat-color: #14B8A6">
+          <div class="stat-num">1</div>
+          <div class="stat-label">MCP Proto</div>
+        </div>
+        <div class="stat-card" data-stat="sessions" style="--stat-color: #06B6D4">
+          <div class="stat-num">∞</div>
+          <div class="stat-label">Sessions</div>
+        </div>
+        <div class="stat-card" data-stat="config" style="--stat-color: #14B8A6">
+          <div class="stat-num" style="color: #14B8A6">0</div>
+          <div class="stat-label">Config Req</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <div class="features reveal">
+      <div class="feature" data-f="0">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">记忆适配</div>
+          <div class="feature-desc">统一不同 LLM 的记忆接口</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 95%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="1">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">MCP 协议</div>
+          <div class="feature-desc">支持 Model Context Protocol</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 100%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="2">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">多后端支持</div>
+          <div class="feature-desc">SQLite、Postgres、向量库</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 85%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="3">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">会话管理</div>
+          <div class="feature-desc">跨会话记忆持久化</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 90%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+    </div>
+
+    <!-- Tech Stack -->
+    <div class="tech-section reveal">
+      <div class="tech-header">Tech Stack</div>
+      <div class="tech-pills">
+        <span class="tech-pill accent">Python</span>
+        <span class="tech-pill accent">MCP</span>
+        <span class="tech-pill">SQLite</span>
+        <span class="tech-pill">Postgres</span>
+      </div>
+    </div>
+
+    <!-- Command 示例 -->
+    <div class="cmd-section reveal">
+      <div class="cmd-box">
+        <div class="cmd-line">
+          <span class="cmd-prompt">$</span>
+          <span class="cmd-cmd">paxm recall</span>
+          <span class="cmd-args">--query "context" --limit 5</span>
+        </div>
+        <div class="cmd-meta">
+          <span class="cmd-badge">MCP READY</span>
+          <span class="cmd-desc">跨会话记忆检索</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="bottombar reveal">
+      <a href="https://github.com/your-org/paxm" target="_blank" class="github-link">
+        <svg viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        your-org/paxm
+      </a>
+      <a href="https://github.com/your-org/paxm" target="_blank" class="visit-btn">VISIT →</a>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title" id="sheetTitle"></div>
+        <div class="sheet-desc" id="sheetDesc"></div>
+        <div class="sheet-points" id="sheetPoints"></div>
+        <button class="sheet-close" id="sheetClose">CLOSE</button>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script>
+    // Data
+    const features = [
+      {
+        title: '记忆适配',
+        desc: '统一不同 LLM 的记忆接口。无论底层是 Claude、GPT 还是其他模型，PAXM 提供一致的记忆读写 API，Agent 无需关心后端差异。',
+        points: ['统一 read/write/recall 接口', '适配 Claude、GPT、Gemini 等', '记忆格式自动转换', '零侵入接入，不改 Agent 代码']
+      },
+      {
+        title: 'MCP 协议',
+        desc: '原生支持 Model Context Protocol。PAXM 作为 MCP Server 运行，任何兼容 MCP 的 Agent 框架可直接连接使用。',
+        points: ['MCP Server 标准实现', 'tools/resources/prompts 三类能力', '与 Claude Code、Cursor 等无缝集成', '协议层保证互操作性']
+      },
+      {
+        title: '多后端支持',
+        desc: '灵活的存储后端选择。开发用 SQLite 零配置启动，生产用 Postgres 高并发，语义搜索用向量库。',
+        points: ['SQLite: 零配置，本地开发首选', 'Postgres: 生产级，支持高并发', '向量库: 语义搜索与相似度召回', '后端可热切换，数据自动迁移']
+      },
+      {
+        title: '会话管理',
+        desc: '跨会话记忆持久化。Agent 重启、切换会话后仍能召回之前的记忆，实现真正的长期记忆能力。',
+        points: ['会话自动保存与恢复', '跨会话记忆关联', '时间线视图回溯历史', '记忆衰减与优先级管理']
+      }
+    ];
+
+    const statsInfo = {
+      backends: '3 种存储后端：SQLite（零配置本地开发）、Postgres（生产级高并发）、向量库（语义搜索与相似度召回）。后端可热切换。',
+      protocol: '基于 MCP (Model Context Protocol) 标准。PAXM 作为 MCP Server 运行，提供 tools、resources、prompts 三类能力。',
+      sessions: '无限会话支持。跨会话记忆持久化，Agent 重启后仍能召回之前的记忆。',
+      config: '零配置要求。Agent 无需修改代码即可接入 PAXM，通过 MCP 协议自动发现并使用记忆能力。'
+    };
+
+    const flowInfo = {
+      agent: 'AI Agent 通过 MCP 协议与 PAXM 交互。无需关心底层存储实现，只需调用统一的记忆读写接口。',
+      adaptor: 'PAXM Adaptor 是核心适配层。接收 Agent 的记忆请求，根据配置选择存储后端，处理格式转换与持久化。',
+      sqlite: 'SQLite 是零配置本地存储后端。数据文件即拷即用，适合本地开发和小规模部署。',
+      postgres: 'Postgres 是生产级关系数据库。支持高并发、复杂查询，适合大规模生产环境。',
+      vector: '向量数据库支持语义搜索与相似度召回。存储记忆的向量表示，实现智能记忆检索。'
+    };
+
+    // Elements
+    const overlay = document.getElementById('overlay');
+    const sheetTitle = document.getElementById('sheetTitle');
+    const sheetDesc = document.getElementById('sheetDesc');
+    const sheetPoints = document.getElementById('sheetPoints');
+    const sheetClose = document.getElementById('sheetClose');
+    const toast = document.getElementById('toast');
+    const shareBtn = document.getElementById('shareBtn');
+    const stamp = document.getElementById('stamp');
+
+    // Reveal animation
+    setTimeout(() => {
+      document.querySelectorAll('.reveal').forEach((el, i) => {
+        setTimeout(() => el.classList.add('visible'), i * 60);
+      });
+    }, 100);
+
+    // Feature click
+    document.querySelectorAll('.feature').forEach(el => {
+      el.addEventListener('click', () => {
+        const i = +el.dataset.f;
+        const f = features[i];
+        sheetTitle.textContent = f.title;
+        sheetDesc.textContent = f.desc;
+        sheetPoints.innerHTML = f.points.map(p => `<div class="sheet-point">${p}</div>`).join('');
+        overlay.classList.add('active');
+      });
+    });
+
+    // Stat click
+    document.querySelectorAll('.stat-card').forEach(el => {
+      el.addEventListener('click', () => {
+        const key = el.dataset.stat;
+        const info = statsInfo[key];
+        if (info) {
+          sheetTitle.textContent = key.charAt(0).toUpperCase() + key.slice(1);
+          sheetDesc.textContent = info;
+          sheetPoints.innerHTML = '';
+          overlay.classList.add('active');
+        }
+      });
+    });
+
+    // Flow node click
+    document.querySelectorAll('.flow-node').forEach(el => {
+      el.addEventListener('click', () => {
+        const id = el.id.replace('flow-', '');
+        const info = flowInfo[id];
+        if (info) {
+          const titles = { agent: 'AI Agent', adaptor: 'PAXM Adaptor', sqlite: 'SQLite', postgres: 'Postgres', vector: 'Vector DB' };
+          sheetTitle.textContent = titles[id] || id;
+          sheetDesc.textContent = info;
+          sheetPoints.innerHTML = '';
+          overlay.classList.add('active');
+        }
+      });
+    });
+
+    // Stamp click
+    stamp.addEventListener('click', () => {
+      sheetTitle.textContent = 'PAXM (AI Agent Memory Adaptor)';
+      sheetDesc.innerHTML = '为 AI Agent 提供统一的记忆适配层。<br><br>PAXM 通过 <code>MCP</code> 协议为 Agent 提供跨会话记忆持久化能力。统一不同 LLM 的记忆接口，支持 SQLite、Postgres、向量库多后端。';
+      sheetPoints.innerHTML = '';
+      overlay.classList.add('active');
+    });
+
+    // Close sheet
+    sheetClose.addEventListener('click', () => overlay.classList.remove('active'));
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('active'); });
+
+    // Share
+    shareBtn.addEventListener('click', async () => {
+      const url = window.location.href;
+      if (navigator.share) {
+        try { await navigator.share({ title: document.title, url }); } catch {}
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.textContent = '链接已复制';
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+      }
+    });
+  </script>
+</body>
+</html>

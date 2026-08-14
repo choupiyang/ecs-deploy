@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0A0A0F">
+  <title>Buzz — Human + Agent Workspace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.cn">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.cn/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Noto+Serif+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0A0A0F;
+      --bg-2: #12121A;
+      --accent: #FFB830;
+      --accent-light: #FFD070;
+      --text: #F0F0F0;
+      --muted: #6B6B7B;
+      --success: #22C55E;
+      --warning: #F59E0B;
+      --surface: #1A1A24;
+      --glow: #FFB830;
+      --serif: 'Cormorant Garamond', serif;
+      --cn: 'Noto Serif SC', serif;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Noto Sans SC', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; background: #050508; font-family: 'Noto Sans SC', sans-serif; color: #F0F0F0; -webkit-font-smoothing: antialiased; }
+    body { display: flex; align-items: center; justify-content: center; }
+
+    /* 舞台 */
+    .stage {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      height: min(100vh, calc(100vw * 16 / 9));
+      width: min(100vw, calc(100vh * 9 / 16));
+      background: #0A0A0F;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,.6);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 16px 10px;
+    }
+
+    /* 背景光晕 */
+    .stage::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 75% 8%, rgba(255, 184, 48, .15) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 35% at 15% 55%, rgba(255, 184, 48, .08) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 50% 100%, rgba(34, 197, 94, .05) 0%, transparent 60%);
+    }
+
+    /* 网格纹理 */
+    .stage::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(rgba(240, 240, 240, .012) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(240, 240, 240, .012) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    /* 3D 蜜蜂容器 */
+    .bee-3d-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 180px;
+      z-index: 1;
+      pointer-events: none;
+    }
+    .bee-3d-container canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* 顶部条 */
+    .topbar {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .16em;
+      color: #6B6B7B;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(240, 240, 240, .06);
+    }
+    .brand { display: flex; align-items: center; gap: 6px; color: #F0F0F0; }
+    .brand-dot { width: 5px; height: 5px; background: #FFB830; border-radius: 50%; box-shadow: 0 0 8px #FFB830; animation: pulse 2.2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .3; transform: scale(.6); } }
+    .share-btn {
+      background: none;
+      border: 1px solid rgba(240, 240, 240, .2);
+      padding: 4px 8px 3px;
+      font: inherit;
+      color: #F0F0F0;
+      cursor: pointer;
+      letter-spacing: .12em;
+      transition: all .3s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 7.5px;
+    }
+    .share-btn:active { background: #FFB830; color: #0A0A0F; border-color: #FFB830; }
+    .share-btn .arr { color: #FFB830; transition: transform .3s; }
+    .share-btn:active .arr { color: #0A0A0F; transform: translate(2px, -2px); }
+
+    /* Hero */
+    .hero { position: relative; z-index: 5; flex-shrink: 0; margin-top: 10px; }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #6B6B7B;
+      text-transform: uppercase;
+      padding-bottom: 6px;
+    }
+    .meta-row .vol { color: #FFB830; font-weight: 500; position: relative; }
+    .meta-row .vol::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; background: #FFB830; }
+
+    .title-block { position: relative; margin-top: 4px; display: flex; align-items: flex-start; gap: 3px; }
+    .buzz-stamp {
+      position: relative;
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+      margin-top: 3px;
+      border: 1.5px solid #FFB830;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Noto Serif SC', serif;
+      font-weight: 900;
+      font-size: 17px;
+      color: #FFB830;
+      cursor: pointer;
+      transition: transform .4s cubic-bezier(.7, 0, .3, 1);
+      background: rgba(255, 184, 48, .06);
+    }
+    .buzz-stamp:active { transform: rotate(180deg) scale(.9); }
+    .buzz-stamp::before {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border: 1px dashed rgba(255, 184, 48, .3);
+      border-radius: 10px;
+      animation: spin 20s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .title-text { flex: 1; min-width: 0; }
+    .buzz-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 500;
+      font-size: 36px;
+      line-height: .95;
+      letter-spacing: .02em;
+      color: #F0F0F0;
+    }
+    .buzz-title .dot { color: #FFB830; }
+    .superdesign-line {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-top: 1px;
+    }
+    .superdesign {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 400;
+      font-style: italic;
+      font-size: 13px;
+      color: #6B6B7B;
+      letter-spacing: .04em;
+    }
+    .v-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      color: #22C55E;
+      border: 1px solid #22C55E;
+      padding: 1px 4px;
+      letter-spacing: .1em;
+    }
+
+    .tagline {
+      margin-top: 5px;
+      font-family: 'Noto Serif SC', serif;
+      font-weight: 300;
+      font-size: 10px;
+      color: #F0F0F0;
+      letter-spacing: .05em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tagline::before { content: ''; width: 12px; height: 1px; background: #FFB830; flex-shrink: 0; }
+    .tagline em { font-style: normal; color: #FFB830; font-weight: 500; }
+
+    /* Intro */
+    .intro { position: relative; z-index: 5; margin-top: 8px; flex-shrink: 0; }
+    .intro-inner {
+      display: flex;
+      gap: 8px;
+      padding: 8px 10px;
+      background: rgba(26, 26, 36, .4);
+      border-radius: 6px;
+      border: 1px solid rgba(255, 184, 48, .08);
+    }
+    .intro-line { width: 2px; background: linear-gradient(180deg, #FFB830, #22C55E); border-radius: 1px; flex-shrink: 0; }
+    .intro-text {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 9px;
+      line-height: 1.65;
+      color: #B0B0B8;
+      letter-spacing: .02em;
+    }
+    .intro-text strong { color: #F0F0F0; font-weight: 500; }
+
+    /* Stats with Chart */
+    .stats-section {
+      position: relative;
+      z-index: 5;
+      margin-top: 8px;
+      flex-shrink: 0;
+    }
+    .stats-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .stats-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #6B6B7B;
+      text-transform: uppercase;
+    }
+    .stats-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      letter-spacing: .1em;
+      color: #22C55E;
+      border: 1px solid #22C55E;
+      padding: 1px 5px;
+      border-radius: 2px;
+    }
+    
+    .stats-chart {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+    }
+    .stat-card {
+      background: rgba(26, 26, 36, .3);
+      border: 1px solid rgba(240, 240, 240, .05);
+      border-radius: 6px;
+      padding: 7px 5px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .25s;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card:active { background: rgba(255, 184, 48, .08); border-color: rgba(255, 184, 48, .2); }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--stat-color, #FFB830), transparent);
+      opacity: 0;
+      transition: opacity .3s;
+    }
+    .stat-card:active::before { opacity: 1; }
+    .stat-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px;
+      font-weight: 600;
+      color: #F0F0F0;
+    }
+    .stat-num .accent { color: #FFB830; }
+    .stat-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 6px;
+      letter-spacing: .12em;
+      color: #6B6B7B;
+      text-transform: uppercase;
+      margin-top: 1px;
+    }
+    .stat-mini-chart {
+      margin-top: 4px;
+      height: 12px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 1px;
+    }
+    .stat-bar {
+      width: 3px;
+      background: rgba(255, 184, 48, .3);
+      border-radius: 1px;
+      transition: height .3s, background .3s;
+    }
+    .stat-card:active .stat-bar { background: rgba(255, 184, 48, .6); }
+
+    /* Flow Diagram */
+    .flow-section {
+      position: relative;
+      z-index: 5;
+      margin-top: 8px;
+      flex-shrink: 0;
+    }
+    .flow-header {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #6B6B7B;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .flow-header::after { content: ''; flex: 1; height: 1px; background: rgba(240, 240, 240, .06); }
+    
+    .flow-diagram {
+      background: rgba(26, 26, 36, .25);
+      border: 1px solid rgba(240, 240, 240, .05);
+      border-radius: 8px;
+      padding: 10px;
+      position: relative;
+    }
+    .flow-svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .flow-node {
+      cursor: pointer;
+      transition: transform .2s;
+    }
+    .flow-node:active { transform: scale(.95); }
+    .flow-arrow {
+      animation: flowPulse 2s ease-in-out infinite;
+    }
+    @keyframes flowPulse {
+      0%, 100% { opacity: .4; }
+      50% { opacity: 1; }
+    }
+
+    /* Features */
+    .features {
+      position: relative;
+      z-index: 5;
+      margin-top: 8px;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .feature {
+      flex: 1;
+      background: rgba(26, 26, 36, .3);
+      border: 1px solid rgba(240, 240, 240, .05);
+      border-radius: 6px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .feature:active { background: rgba(255, 184, 48, .06); border-color: rgba(255, 184, 48, .2); }
+    .feature-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: rgba(255, 184, 48, .06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .feature-icon svg { width: 15px; height: 15px; stroke: #FFB830; fill: none; stroke-width: 1.5; }
+    .feature-icon::after {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 184, 48, .15);
+      opacity: 0;
+      transition: opacity .3s;
+    }
+    .feature:active .feature-icon::after { opacity: 1; }
+    .feature-content { flex: 1; min-width: 0; }
+    .feature-title {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      color: #F0F0F0;
+      letter-spacing: .02em;
+    }
+    .feature-desc {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 8px;
+      color: #6B6B7B;
+      margin-top: 1px;
+    }
+    .feature-arrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: #FFB830;
+      opacity: .4;
+      transition: all .25s;
+    }
+    .feature:active .feature-arrow { opacity: 1; transform: translateX(2px); }
+    
+    /* Feature progress indicator */
+    .feature-progress {
+      width: 100%;
+      height: 2px;
+      background: rgba(255, 184, 48, .1);
+      border-radius: 1px;
+      margin-top: 4px;
+      overflow: hidden;
+    }
+    .feature-progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #FFB830, #22C55E);
+      border-radius: 1px;
+      transition: width .3s;
+    }
+
+    /* Tech Stack Pills */
+    .tech-section {
+      position: relative;
+      z-index: 5;
+      margin-top: 8px;
+      flex-shrink: 0;
+    }
+    .tech-header {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .2em;
+      color: #6B6B7B;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+    .tech-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .tech-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7px;
+      letter-spacing: .08em;
+      padding: 3px 7px;
+      background: rgba(26, 26, 36, .35);
+      border: 1px solid rgba(240, 240, 240, .08);
+      border-radius: 10px;
+      color: #B0B0B8;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .tech-pill:active { 
+      background: rgba(255, 184, 48, .1); 
+      border-color: rgba(255, 184, 48, .3); 
+      color: #F0F0F0;
+    }
+    .tech-pill.accent { border-color: rgba(255, 184, 48, .25); color: #FFD070; }
+
+    /* Bottom bar */
+    .bottombar {
+      position: relative;
+      z-index: 10;
+      margin-top: auto;
+      padding-top: 8px;
+      border-top: 1px solid rgba(240, 240, 240, .06);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .github-link {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      color: #6B6B7B;
+      text-decoration: none;
+      letter-spacing: .08em;
+      transition: color .2s;
+    }
+    .github-link:active { color: #FFB830; }
+    .github-link svg { width: 12px; height: 12px; fill: currentColor; }
+    .visit-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: .1em;
+      color: #FFB830;
+      border: 1px solid rgba(255, 184, 48, .35);
+      padding: 5px 10px;
+      border-radius: 4px;
+      background: rgba(255, 184, 48, .05);
+      cursor: pointer;
+      transition: all .2s;
+      text-decoration: none;
+    }
+    .visit-btn:active { background: #FFB830; color: #0A0A0F; }
+
+    /* Overlay */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(10, 10, 15, .92);
+      backdrop-filter: blur(14px);
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      display: flex;
+      align-items: flex-end;
+      transition: opacity .35s;
+    }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+    .sheet {
+      width: 100%;
+      max-height: 75%;
+      background: #12121A;
+      border-radius: 14px 14px 0 0;
+      transform: translateY(101%);
+      transition: transform .45s cubic-bezier(.7, 0, .3, 1);
+      padding: 16px 14px 20px;
+      overflow-y: auto;
+    }
+    .overlay.active .sheet { transform: translateY(0); }
+    .sheet-handle { width: 32px; height: 3px; background: #3A3A4A; border-radius: 2px; margin: 0 auto 12px; }
+    .sheet-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 16px;
+      font-weight: 500;
+      color: #F0F0F0;
+      letter-spacing: .04em;
+    }
+    .sheet-desc {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 11px;
+      color: #B0B0B8;
+      line-height: 1.75;
+      margin-top: 10px;
+    }
+    .sheet-desc code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: #FFB830;
+      background: rgba(255, 184, 48, .1);
+      padding: 1px 4px;
+      border-radius: 2px;
+    }
+    .sheet-points {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .sheet-point {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      color: #D0D0D8;
+      line-height: 1.55;
+    }
+    .sheet-point::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      background: #FFB830;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+    .sheet-close {
+      margin-top: 14px;
+      width: 100%;
+      padding: 10px;
+      background: rgba(255, 184, 48, .08);
+      border: 1px solid rgba(255, 184, 48, .25);
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .15em;
+      color: #FFB830;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .sheet-close:active { background: #FFB830; color: #0A0A0F; }
+
+    /* Toast */
+    .toast {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #22C55E;
+      color: #0A0A0F;
+      padding: 7px 14px;
+      border-radius: 5px;
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: all .3s;
+      z-index: 200;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* 入场动画 */
+    .reveal { opacity: 0; transform: translateY(10px); transition: all .45s cubic-bezier(.4, 0, .2, 1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    
+    /* 动态图表动画 */
+    @keyframes chartGrow {
+      from { transform: scaleY(0); }
+      to { transform: scaleY(1); }
+    }
+    .chart-animate { animation: chartGrow .6s cubic-bezier(.4, 0, .2, 1) forwards; }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <!-- 3D Bee Container -->
+    <div class="bee-3d-container" id="bee3d"></div>
+    
+    <!-- Topbar -->
+    <div class="topbar reveal">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <span>Young's Insight</span>
+      </div>
+      <button class="share-btn" id="shareBtn">
+        SHARE <span class="arr">↗</span>
+      </button>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero reveal">
+      <div class="meta-row">
+        <span class="vol">HUMAN + AGENT</span>
+        <span>2026.07.22</span>
+      </div>
+      <div class="title-block">
+        <div class="buzz-stamp" id="stamp">B</div>
+        <div class="title-text">
+          <div class="buzz-title">Buzz<span class="dot">.</span></div>
+          <div class="superdesign-line">
+            <span class="superdesign">by Block · Jack Dorsey</span>
+            <span class="v-tag">APACHE 2.0</span>
+          </div>
+        </div>
+      </div>
+      <div class="tagline">Jack Dorsey 领衔打造的<em>人机协作平台</em></div>
+    </div>
+
+    <!-- Intro -->
+    <div class="intro reveal">
+      <div class="intro-inner">
+        <div class="intro-line"></div>
+        <div class="intro-text">
+          开源协作平台，让<strong>人类与 AI Agent</strong>在同一频道协作。基于 Nostr 协议，支持自托管、模型无关、端到端加密。
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats with Mini Charts -->
+    <div class="stats-section reveal">
+      <div class="stats-header">
+        <span class="stats-title">Metrics</span>
+        <span class="stats-badge">OPEN SOURCE</span>
+      </div>
+      <div class="stats-chart">
+        <div class="stat-card" data-stat="platforms" style="--stat-color: #FFB830">
+          <div class="stat-num"><span class="accent">3</span></div>
+          <div class="stat-label">Platforms</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 6px; animation-delay: .1s"></div>
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .15s"></div>
+            <div class="stat-bar chart-animate" style="height: 8px; animation-delay: .2s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="crates" style="--stat-color: #22C55E">
+          <div class="stat-num"><span class="accent">20</span>+</div>
+          <div class="stat-label">Crates</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 8px; animation-delay: .25s"></div>
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .3s"></div>
+            <div class="stat-bar chart-animate" style="height: 6px; animation-delay: .35s"></div>
+            <div class="stat-bar chart-animate" style="height: 9px; animation-delay: .4s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="agents" style="--stat-color: #FFB830">
+          <div class="stat-num"><span class="accent">3</span>+</div>
+          <div class="stat-label">ACP Agent</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .45s"></div>
+            <div class="stat-bar chart-animate" style="height: 7px; animation-delay: .5s"></div>
+            <div class="stat-bar chart-animate" style="height: 9px; animation-delay: .55s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="license" style="--stat-color: #22C55E">
+          <div class="stat-num" style="color: #22C55E">A2</div>
+          <div class="stat-label">License</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 10px; background: #22C55E; animation-delay: .6s"></div>
+            <div class="stat-bar chart-animate" style="height: 10px; background: #22C55E; animation-delay: .65s"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flow Diagram -->
+    <div class="flow-section reveal">
+      <div class="flow-header">Architecture Flow</div>
+      <div class="flow-diagram">
+        <svg class="flow-svg" viewBox="0 0 350 50" fill="none">
+          <!-- Node 1: Client -->
+          <g class="flow-node" id="flow-client">
+            <rect x="5" y="12" width="70" height="26" rx="5" fill="rgba(255, 184, 48, .08)" stroke="#FFB830" stroke-width="1" stroke-opacity=".4"/>
+            <text x="40" y="29" font-family="JetBrains Mono, monospace" font-size="7" fill="#F0F0F0" text-anchor="middle">CLIENT</text>
+          </g>
+          
+          <!-- Arrow 1 -->
+          <path class="flow-arrow" d="M78 25 L98 25" stroke="#FFB830" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#arrowhead)"/>
+          
+          <!-- Node 2: Relay -->
+          <g class="flow-node" id="flow-relay">
+            <rect x="102" y="8" width="80" height="34" rx="6" fill="rgba(255, 184, 48, .12)" stroke="#FFB830" stroke-width="1.2"/>
+            <text x="142" y="24" font-family="JetBrains Mono, monospace" font-size="7" fill="#FFB830" text-anchor="middle">NOSTR RELAY</text>
+            <text x="142" y="35" font-family="JetBrains Mono, monospace" font-size="5" fill="#6B6B7B" text-anchor="middle">self-hosted</text>
+          </g>
+          
+          <!-- Arrow 2 -->
+          <path class="flow-arrow" d="M185 25 L205 25" stroke="#22C55E" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#arrowhead2)" style="animation-delay: .3s"/>
+          
+          <!-- Node 3: Agent -->
+          <g class="flow-node" id="flow-agent">
+            <rect x="209" y="12" width="70" height="26" rx="5" fill="rgba(34, 197, 94, .08)" stroke="#22C55E" stroke-width="1" stroke-opacity=".4"/>
+            <text x="244" y="29" font-family="JetBrains Mono, monospace" font-size="7" fill="#F0F0F0" text-anchor="middle">AGENT</text>
+          </g>
+          
+          <!-- Arrow 3 -->
+          <path class="flow-arrow" d="M282 25 L295 25" stroke="#FFB830" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#arrowhead)" style="animation-delay: .6s"/>
+          
+          <!-- Node 4: Git -->
+          <g class="flow-node" id="flow-git">
+            <rect x="298" y="15" width="47" height="20" rx="4" fill="rgba(255, 184, 48, .08)" stroke="#FFB830" stroke-width=".8" stroke-opacity=".4"/>
+            <text x="321" y="28" font-family="JetBrains Mono, monospace" font-size="6" fill="#FFB830" text-anchor="middle">GIT</text>
+          </g>
+          
+          <!-- Arrowheads -->
+          <defs>
+            <marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L6,3 z" fill="#FFB830" fill-opacity=".6"/>
+            </marker>
+            <marker id="arrowhead2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L6,3 z" fill="#22C55E" fill-opacity=".6"/>
+            </marker>
+          </defs>
+          
+          <!-- Animated pulse dots -->
+          <circle cx="88" cy="25" r="2" fill="#FFB830">
+            <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="198" cy="25" r="2" fill="#22C55E">
+            <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0.5s"/>
+          </circle>
+          <circle cx="290" cy="25" r="2" fill="#FFB830">
+            <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="1s"/>
+          </circle>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Features with Progress -->
+    <div class="features reveal">
+      <div class="feature" data-f="0">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">人机同室协作</div>
+          <div class="feature-desc">Agent 作为成员加入频道，拥有独立密钥</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 95%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="1">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">Nostr 协议</div>
+          <div class="feature-desc">去中心化架构，自托管 Relay</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 100%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="2">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">端到端加密</div>
+          <div class="feature-desc">企业级安全，消息全程加密</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 100%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="3">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">多平台支持</div>
+          <div class="feature-desc">桌面端 macOS/Windows/Linux</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 85%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+    </div>
+
+    <!-- Tech Stack -->
+    <div class="tech-section reveal">
+      <div class="tech-header">Tech Stack</div>
+      <div class="tech-pills">
+        <span class="tech-pill accent">Rust</span>
+        <span class="tech-pill">Tauri</span>
+        <span class="tech-pill">React</span>
+        <span class="tech-pill">Postgres</span>
+        <span class="tech-pill">Redis</span>
+      </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="bottombar reveal">
+      <a href="https://github.com/block/buzz" target="_blank" class="github-link">
+        <svg viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        block/buzz
+      </a>
+      <a href="https://buzz.xyz" target="_blank" class="visit-btn">VISIT →</a>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title" id="sheetTitle"></div>
+        <div class="sheet-desc" id="sheetDesc"></div>
+        <div class="sheet-points" id="sheetPoints"></div>
+        <button class="sheet-close" id="sheetClose">CLOSE</button>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    // 3D Bee Character
+    const container = document.getElementById('bee3d');
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+
+    // Scene
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
+    camera.position.set(0, 0.5, 4);
+
+    const renderer = new THREE.WebGLRenderer({
+      alpha: true,
+      antialias: true
+    });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.appendChild(renderer.domElement);
+
+    // Lights
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+
+    const mainLight = new THREE.DirectionalLight(0xffffff, 1);
+    mainLight.position.set(5, 5, 5);
+    scene.add(mainLight);
+
+    const accentLight = new THREE.PointLight(0xFFB830, 0.6, 10);
+    accentLight.position.set(-3, 2, 3);
+    scene.add(accentLight);
+
+    const backLight = new THREE.PointLight(0x22C55E, 0.3, 10);
+    backLight.position.set(3, -2, -3);
+    scene.add(backLight);
+
+    // Materials
+    const bodyMaterial = new THREE.MeshStandardMaterial({
+      color: 0xFFB830,
+      roughness: 0.4,
+      metalness: 0.1
+    });
+
+    const stripeMaterial = new THREE.MeshStandardMaterial({
+      color: 0x0A0A0F,
+      roughness: 0.8
+    });
+
+    const eyeMaterial = new THREE.MeshStandardMaterial({
+      color: 0x0A0A0F,
+      roughness: 0.3
+    });
+
+    const wingMaterial = new THREE.MeshStandardMaterial({
+      color: 0xFFD070,
+      roughness: 0.3,
+      transparent: true,
+      opacity: 0.5,
+      side: THREE.DoubleSide
+    });
+
+    // Bee Group
+    const beeGroup = new THREE.Group();
+
+    // Body (ellipsoid)
+    const bodyGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+    const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+    body.scale.set(1, 1.2, 0.9);
+    body.position.y = -0.3;
+    beeGroup.add(body);
+
+    // Head
+    const headGeometry = new THREE.SphereGeometry(0.35, 32, 32);
+    const head = new THREE.Mesh(headGeometry, bodyMaterial);
+    head.position.y = 0.35;
+    beeGroup.add(head);
+
+    // Stripes
+    const stripeGeometry = new THREE.TorusGeometry(0.45, 0.08, 16, 32);
+    const stripe1 = new THREE.Mesh(stripeGeometry, stripeMaterial);
+    stripe1.rotation.x = Math.PI / 2;
+    stripe1.position.y = -0.15;
+    beeGroup.add(stripe1);
+
+    const stripe2 = new THREE.Mesh(stripeGeometry, stripeMaterial);
+    stripe2.rotation.x = Math.PI / 2;
+    stripe2.position.y = -0.35;
+    beeGroup.add(stripe2);
+
+    const stripe3 = new THREE.Mesh(stripeGeometry, stripeMaterial);
+    stripe3.rotation.x = Math.PI / 2;
+    stripe3.position.y = -0.55;
+    beeGroup.add(stripe3);
+
+    // Eyes
+    const eyeGeometry = new THREE.SphereGeometry(0.08, 16, 16);
+    const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+    leftEye.position.set(-0.15, 0.4, 0.28);
+    beeGroup.add(leftEye);
+
+    const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+    rightEye.position.set(0.15, 0.4, 0.28);
+    beeGroup.add(rightEye);
+
+    // Wings
+    const wingShape = new THREE.Shape();
+    wingShape.moveTo(0, 0);
+    wingShape.quadraticCurveTo(0.3, 0.4, 0.1, 0.6);
+    wingShape.quadraticCurveTo(-0.1, 0.5, 0, 0);
+
+    const wingGeometry = new THREE.ShapeGeometry(wingShape);
+    
+    const leftWing = new THREE.Mesh(wingGeometry, wingMaterial);
+    leftWing.position.set(-0.3, 0.1, 0);
+    leftWing.rotation.y = -0.3;
+    leftWing.rotation.x = 0.2;
+    beeGroup.add(leftWing);
+
+    const rightWing = new THREE.Mesh(wingGeometry, wingMaterial);
+    rightWing.position.set(0.3, 0.1, 0);
+    rightWing.rotation.y = 0.3;
+    rightWing.rotation.x = 0.2;
+    rightWing.scale.x = -1;
+    beeGroup.add(rightWing);
+
+    // Stinger
+    const stingerGeometry = new THREE.ConeGeometry(0.05, 0.15, 8);
+    const stinger = new THREE.Mesh(stingerGeometry, stripeMaterial);
+    stinger.position.y = -0.95;
+    stinger.rotation.x = Math.PI;
+    beeGroup.add(stinger);
+
+    // Antennae
+    const antennaGeometry = new THREE.CylinderGeometry(0.015, 0.01, 0.2, 8);
+    const leftAntenna = new THREE.Mesh(antennaGeometry, stripeMaterial);
+    leftAntenna.position.set(-0.1, 0.65, 0);
+    leftAntenna.rotation.z = 0.3;
+    beeGroup.add(leftAntenna);
+
+    const rightAntenna = new THREE.Mesh(antennaGeometry, stripeMaterial);
+    rightAntenna.position.set(0.1, 0.65, 0);
+    rightAntenna.rotation.z = -0.3;
+    beeGroup.add(rightAntenna);
+
+    // Position bee
+    beeGroup.position.set(1.2, 0.5, 0);
+    beeGroup.scale.set(1.2, 1.2, 1.2);
+    scene.add(beeGroup);
+
+    // Controls
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.enableZoom = false;
+    controls.enablePan = false;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 2;
+
+    // Animation
+    let time = 0;
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      time += 0.02;
+
+      // Floating animation
+      beeGroup.position.y = 0.5 + Math.sin(time) * 0.1;
+
+      // Wing flutter
+      leftWing.rotation.z = Math.sin(time * 15) * 0.2;
+      rightWing.rotation.z = -Math.sin(time * 15) * 0.2;
+
+      // Slight bob
+      beeGroup.rotation.x = Math.sin(time * 0.5) * 0.05;
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    // Resize
+    window.addEventListener('resize', () => {
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    });
+  </script>
+
+  <script>
+    // Data
+    const features = [
+      {
+        title: '人机同室协作',
+        desc: 'Agent 作为正式成员加入频道，拥有独立的密钥对和审计日志。与人类队友拥有相同的操作权限：创建频道、发送消息、运行工作流、编辑画布。',
+        points: ['Agent 独立身份认证', '完整审计追踪', '与人类同等权限']
+      },
+      {
+        title: 'Nostr 协议',
+        desc: '基于 Nostr 协议的去中心化设计。所有消息、反应、工作流步骤都以签名事件形式存储在单一事件日志中。自建 Relay，数据完全私有。',
+        points: ['Nostr NIP-01/42', '自托管 Relay', '端到端加密']
+      },
+      {
+        title: '端到端加密',
+        desc: '企业级安全保障。消息在发送前加密，只有目标接收者能够解密。支持多种加密算法，确保通信隐私。',
+        points: ['E2E 加密', '签名认证', '密钥轮换']
+      },
+      {
+        title: '多平台支持',
+        desc: '跨平台桌面客户端，支持 macOS、Windows、Linux。基于 Tauri 构建，比 Electron 更轻量、更安全。',
+        points: ['macOS 支持', 'Windows 支持', 'Linux 支持']
+      }
+    ];
+
+    const statsInfo = {
+      platforms: '支持 macOS、Windows、Linux 三大桌面平台，基于 Tauri 跨平台框架构建。',
+      crates: 'Rust 模块化设计，20+ crates 专注单一职责，代码质量高、测试覆盖完善。',
+      agents: '支持 Goose、Codex、Claude Code 等主流 AI Agent 通过 ACP 协议接入。',
+      license: 'Apache 2.0 开源协议，可自由使用、修改和分发。'
+    };
+
+    const flowInfo = {
+      client: 'Buzz 桌面客户端 (Tauri + React)，支持 macOS/Windows/Linux。',
+      relay: 'Nostr Relay 核心，处理 WS + REST 请求，NIP-01/42 认证，完全自托管。',
+      agent: 'AI Agent 通过 ACP 协议接入，支持 Goose/Codex/Claude Code。',
+      git: 'Git 托管后端，支持 NIP-34 补丁提交和仓库管理。'
+    };
+
+    const techInfo = {
+      Rust: '高性能后端核心，20+ crates 模块化设计',
+      Tauri: '跨平台桌面框架，比 Electron 更轻量',
+      React: '前端 UI 框架，支持桌面和移动端',
+      Postgres: '事件存储 + 全文搜索 (FTS)',
+      Redis: 'Pub/Sub + 实时状态'
+    };
+
+    // Elements
+    const overlay = document.getElementById('overlay');
+    const sheetTitle = document.getElementById('sheetTitle');
+    const sheetDesc = document.getElementById('sheetDesc');
+    const sheetPoints = document.getElementById('sheetPoints');
+    const sheetClose = document.getElementById('sheetClose');
+    const toast = document.getElementById('toast');
+    const shareBtn = document.getElementById('shareBtn');
+    const stamp = document.getElementById('stamp');
+
+    // Reveal animation
+    setTimeout(() => {
+      document.querySelectorAll('.reveal').forEach((el, i) => {
+        setTimeout(() => el.classList.add('visible'), i * 60);
+      });
+    }, 100);
+
+    // Feature click
+    document.querySelectorAll('.feature').forEach(el => {
+      el.addEventListener('click', () => {
+        const i = +el.dataset.f;
+        const f = features[i];
+        sheetTitle.textContent = f.title;
+        sheetDesc.textContent = f.desc;
+        sheetPoints.innerHTML = f.points.map(p => `<div class="sheet-point">${p}</div>`).join('');
+        overlay.classList.add('active');
+      });
+    });
+
+    // Stat click
+    document.querySelectorAll('.stat-card').forEach(el => {
+      el.addEventListener('click', () => {
+        const key = el.dataset.stat;
+        const info = statsInfo[key];
+        if (info) {
+          sheetTitle.textContent = key.charAt(0).toUpperCase() + key.slice(1);
+          sheetDesc.textContent = info;
+          sheetPoints.innerHTML = '';
+          overlay.classList.add('active');
+        }
+      });
+    });
+
+    // Flow node click
+    document.querySelectorAll('.flow-node').forEach(el => {
+      el.addEventListener('click', () => {
+        const id = el.id.replace('flow-', '');
+        const info = flowInfo[id];
+        if (info) {
+          const titles = { client: 'Client', relay: 'Nostr Relay', agent: 'Agent', git: 'Git' };
+          sheetTitle.textContent = titles[id] || id;
+          sheetDesc.textContent = info;
+          sheetPoints.innerHTML = '';
+          overlay.classList.add('active');
+        }
+      });
+    });
+
+    // Tech pill click
+    document.querySelectorAll('.tech-pill').forEach(el => {
+      el.addEventListener('click', () => {
+        const tech = el.textContent.trim();
+        const info = techInfo[tech];
+        if (info) {
+          sheetTitle.textContent = tech;
+          sheetDesc.textContent = info;
+          sheetPoints.innerHTML = '';
+          overlay.classList.add('active');
+        }
+      });
+    });
+
+    // Stamp click
+    stamp.addEventListener('click', () => {
+      sheetTitle.textContent = 'Buzz 🐝';
+      sheetDesc.innerHTML = 'Jack Dorsey (Twitter/Block 创始人) 领衔打造的开源团队协作平台。目标是<strong>减少对 Slack 和 GitHub 的依赖</strong>。';
+      sheetPoints.innerHTML = `
+        <div class="sheet-point">模型无关 — 支持 Goose/Codex/Claude Code</div>
+        <div class="sheet-point">去中心化 — Nostr 协议，自托管可控</div>
+        <div class="sheet-point">开源 — Apache 2.0 协议</div>
+        <div class="sheet-point">跨平台 — macOS/Windows/Linux 桌面客户端</div>
+      `;
+      overlay.classList.add('active');
+    });
+
+    // Close sheet
+    sheetClose.addEventListener('click', () => overlay.classList.remove('active'));
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('active'); });
+
+    // Share
+    shareBtn.addEventListener('click', async () => {
+      const text = 'Buzz — Human + Agent Workspace\\nJack Dorsey 打造的人机协作平台，基于 Nostr 协议';
+      const url = 'https://mindresonance.online/youngsinsight/pages/buzz.html';
+      const full = text + '\\n' + url;
+
+      try {
+        if (navigator.share) {
+          await navigator.share({ title: 'Buzz', text, url });
+          return;
+        }
+      } catch (e) {}
+
+      try {
+        await navigator.clipboard.writeText(full);
+        showToast('已复制标题与链接');
+      } catch (e) {
+        const ta = document.createElement('textarea');
+        ta.value = full;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('已复制标题与链接');
+      }
+    });
+
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+  </script>
+</body>
+</html>
