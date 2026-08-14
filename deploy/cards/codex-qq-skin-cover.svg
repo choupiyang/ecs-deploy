@@ -17,7 +17,6 @@
     <filter id="neon"><feGaussianBlur stdDeviation="2.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
   </defs>
   <rect width="200" height="356" fill="url(#bg)" rx="4"/>
-  <!-- Grid -->
   <g opacity=".09" stroke="#12B7F5" stroke-width=".3">
     <line x1="0" y1="66" x2="200" y2="66"/><line x1="0" y1="92" x2="200" y2="92"/>
     <line x1="0" y1="118" x2="200" y2="118"/><line x1="0" y1="144" x2="200" y2="144"/>
@@ -25,50 +24,34 @@
     <line x1="40" y1="46" x2="40" y2="188"/><line x1="80" y1="46" x2="80" y2="188"/>
     <line x1="120" y1="46" x2="120" y2="188"/><line x1="160" y1="46" x2="160" y2="188"/>
   </g>
-  <!-- 复古 QQ 聊天窗口 -->
   <g transform="translate(30,56)">
     <rect x="0" y="0" width="140" height="96" rx="4" fill="url(#winGrad)" stroke="#12B7F5" stroke-opacity=".65" stroke-width="1.2"/>
-    <!-- 标题栏 -->
     <rect x="0" y="0" width="140" height="16" rx="4" fill="#12B7F5" opacity=".22"/>
     <circle cx="10" cy="8" r="2.6" fill="#FF5F57"/>
     <circle cx="19" cy="8" r="2.6" fill="#FFB020"/>
     <circle cx="28" cy="8" r="2.6" fill="#28C840"/>
     <text x="70" y="11" text-anchor="middle" font-family="system-ui,sans-serif" font-size="6.5" fill="#BFE9FF" letter-spacing=".15">CODEX · QQ SKIN</text>
-    <!-- 侧栏头像 -->
     <circle cx="17" cy="42" r="8" fill="#12B7F5" opacity=".35"/>
     <path d="M11 44 q6 -10 12 0" stroke="#BFE9FF" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-    <!-- 消息气泡 -->
     <rect x="32" y="26" width="58" height="12" rx="6" fill="rgba(255,255,255,.09)"/>
     <rect x="32" y="44" width="76" height="12" rx="6" fill="rgba(18,183,245,.22)"/>
     <rect x="32" y="62" width="48" height="12" rx="6" fill="rgba(255,255,255,.09)"/>
-    <!-- 等级条: 星星月亮太阳 -->
     <g transform="translate(88,76)">
       <path d="M6 0l1.8 3.6 4 .6-2.9 2.8.7 4L6 9.3l-3.6 1.9.7-4L.2 4.2l4-.6z" fill="#FFB020" opacity=".95"/>
       <path d="M18 2l1 2 2.2.4-1.6 1.5.4 2.2-2-1-2 1 .4-2.2-1.6-1.5 2.2-.4z" fill="#C9D6E8" opacity=".8"/>
       <circle cx="28" cy="4" r="3.4" fill="#FFD34D" opacity=".9"/>
       <path d="M37 0l1.8 3.6 4 .6-2.9 2.8.7 4-3.6-1.9-3.6 1.9.7-4L31 4.2l4-.6z" fill="#FFB020" opacity=".5"/>
     </g>
-    <!-- 注入箭头 -->
     <path d="M70 -8 L70 -16" stroke="#4DE1FF" stroke-width="1.2" stroke-dasharray="2 2" opacity=".7"/>
     <path d="M66 -15 l4 -3 l4 3 z" fill="#4DE1FF" opacity=".8"/>
   </g>
-  <!-- 皮肤层叠 (后层窗口) -->
   <g transform="translate(52,30)" opacity=".25">
     <rect x="0" y="0" width="120" height="80" rx="4" fill="none" stroke="#4DE1FF" stroke-width=".8" transform="rotate(-6 60 40)"/>
   </g>
-  <!-- 底部数据线 -->
   <g transform="translate(18,190)" opacity=".16" fill="none" stroke="#12B7F5" stroke-width=".7">
     <polyline points="0,0 30,-10 52,4 82,-13 112,3 142,-8 164,7"/>
   </g>
-  <!-- Title -->
-  <text x="100" y="248" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" font-weight="800" fill="#12B7F5" letter-spacing="-.4" filter="url(#neon)">Codex QQ Skin</text>
-  <text x="100" y="264" text-anchor="middle" font-family="system-ui,sans-serif" font-size="6.5" fill="#94A3B8" letter-spacing=".25">CODEX 桌面皮肤生成器</text>
-  <text x="100" y="276" text-anchor="middle" font-family="system-ui,sans-serif" font-size="6.5" fill="#64748B" letter-spacing=".2">复古 QQ · 深度定制 · 本机统计</text>
   <rect x="60" y="288" width="80" height="2" rx="1" fill="url(#accent)" opacity=".65"/>
-  <!-- Bottom tags -->
   <g font-family="system-ui,sans-serif" font-size="5.5" fill="#475569" text-anchor="middle">
-    <text x="50" y="308">MAC+WIN</text><circle cx="50" cy="314" r="1.2" fill="#12B7F5" opacity=".7"/>
-    <text x="100" y="308">389★</text><circle cx="100" cy="314" r="1.2" fill="#4DE1FF" opacity=".7"/>
-    <text x="150" y="308">MIT</text><circle cx="150" cy="314" r="1.2" fill="#12B7F5" opacity=".7"/>
   </g>
 </svg>

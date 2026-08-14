@@ -21,19 +21,10 @@
       <path d="M16 0H0V16" fill="none" stroke="#1E293B" stroke-width="0.5"/>
     </pattern>
   </defs>
-
-  <!-- 背景 -->
   <rect width="200" height="356" fill="url(#bg)"/>
   <rect width="200" height="356" fill="url(#grid)" opacity="0.6"/>
-
-  <!-- 顶部栏 -->
   <rect x="0" y="0" width="200" height="2" fill="url(#accentGrad)" opacity="0.8"/>
-  <text x="16" y="24" font-family="monospace" font-size="7" fill="#475569" letter-spacing="2">CRAWL4AI</text>
-  <text x="184" y="24" font-family="monospace" font-size="7" fill="#22D3EE" text-anchor="end">77.6K★</text>
-
-  <!-- 蜘蛛网/爬虫意象（中心 DOM 节点 + 旋转抓取环，纯 SMIL 无依赖） -->
   <g transform="translate(100,132)">
-    <!-- 抓取环（虚线旋转） -->
     <g>
       <circle r="52" fill="none" stroke="#22D3EE" stroke-width="1" stroke-dasharray="4 5" opacity="0.5">
         <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="16s" repeatCount="indefinite"/>
@@ -44,14 +35,12 @@
         <animateTransform attributeName="transform" type="rotate" from="360 0 0" to="0 0 0" dur="22s" repeatCount="indefinite"/>
       </circle>
     </g>
-    <!-- 蜘蛛丝(径向) -->
     <g stroke="#334155" stroke-width="0.7" opacity="0.6">
       <line x1="0" y1="-52" x2="0" y2="52"/>
       <line x1="-52" y1="0" x2="52" y2="0"/>
       <line x1="-37" y1="-37" x2="37" y2="37"/>
       <line x1="37" y1="-37" x2="-37" y2="37"/>
     </g>
-    <!-- 中心 DOM 节点(网页结构) -->
     <g filter="url(#glow)">
       <circle r="17" fill="url(#coreGrad)" opacity="0.9">
         <animate attributeName="r" values="16;18.5;16" dur="2.8s" repeatCount="indefinite"/>
@@ -61,7 +50,6 @@
       <rect x="-6" y="0.8" width="12" height="2.4" rx="1" fill="#0B0F14" opacity="0.85"/>
       <rect x="-6" y="5.2" width="7" height="2.4" rx="1" fill="#0B0F14" opacity="0.5"/>
     </g>
-    <!-- 爬虫游标（蜘蛛点，独立组绕中心旋转） -->
     <g>
       <circle r="3.2" fill="#FDE047" opacity="0.95">
         <animateMotion dur="6s" repeatCount="indefinite" path="M0,-52 A52,52 0 1,1 -0.01,-52 Z"/>
@@ -73,8 +61,6 @@
       </circle>
     </g>
   </g>
-
-  <!-- 数据流脉冲 (底部向上) -->
   <g opacity="0.55">
     <rect x="30" y="242" width="2" height="14" rx="1" fill="#22D3EE">
       <animate attributeName="y" from="242" to="196" dur="2.4s" repeatCount="indefinite"/>
@@ -93,11 +79,5 @@
       <animate attributeName="opacity" from="0.8" to="0" dur="3.2s" repeatCount="indefinite" begin="0.2s"/>
     </rect>
   </g>
-
-  <!-- 底部标题区 -->
-  <rect x="0" y="316" width="200" height="40" fill="#0B0F14" opacity="0.9"/>
-  <text x="16" y="336" font-family="monospace" font-size="9" fill="#E2E8F0" font-weight="bold">Crawl4AI</text>
-  <text x="16" y="348" font-family="monospace" font-size="6.5" fill="#64748B">LLM-FRIENDLY WEB CRAWLER · OPEN SOURCE</text>
   <rect x="158" y="328" width="28" height="16" rx="3" fill="none" stroke="#22D3EE" stroke-width="1"/>
-  <text x="172" y="339" font-family="monospace" font-size="8" fill="#22D3EE" text-anchor="middle">AI</text>
 </svg>

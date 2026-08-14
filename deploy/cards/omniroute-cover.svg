@@ -25,19 +25,10 @@
       <path d="M16 0H0V16" fill="none" stroke="#123048" stroke-width="0.5"/>
     </pattern>
   </defs>
-
-  <!-- 背景 -->
   <rect width="200" height="356" fill="url(#bg)"/>
   <rect width="200" height="356" fill="url(#grid)" opacity="0.5"/>
-
-  <!-- 顶部栏 -->
   <rect x="0" y="0" width="200" height="2" fill="url(#accentGrad)" opacity="0.8"/>
-  <text x="16" y="24" font-family="monospace" font-size="7" fill="#4A5C7E" letter-spacing="2">OMNIROUTE</text>
-  <text x="184" y="24" font-family="monospace" font-size="7" fill="#FFC53D" text-anchor="end">46.2K★</text>
-
-  <!-- 中心: 路由网关核 + 多层提供商轨道 -->
   <g transform="translate(100,130)">
-    <!-- 三层轨道 -->
     <circle r="58" fill="none" stroke="#00D4AA" stroke-width="0.8" stroke-dasharray="3 5" opacity="0.5">
       <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="14s" repeatCount="indefinite"/>
     </circle>
@@ -47,8 +38,6 @@
     <circle r="70" fill="none" stroke="#8FA8C8" stroke-width="0.6" stroke-dasharray="1 6" opacity="0.3">
       <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="26s" repeatCount="indefinite"/>
     </circle>
-
-    <!-- 环绕节点（提供商） -->
     <g>
       <circle cx="0" cy="-58" r="5" fill="url(#nodeGrad)" filter="url(#glow)">
         <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="14s" repeatCount="indefinite"/>
@@ -74,20 +63,14 @@
         <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="-360 0 0" dur="26s" repeatCount="indefinite"/>
       </circle>
     </g>
-
-    <!-- 数据包脉冲 -->
     <circle cx="0" cy="0" r="3" fill="#5EF0D0" opacity="0">
       <animate attributeName="cx" values="0;48;48" dur="3s" repeatCount="indefinite"/>
       <animate attributeName="opacity" values="0;1;0" dur="3s" repeatCount="indefinite"/>
     </circle>
-
-    <!-- 连接线 -->
     <line x1="0" y1="0" x2="0" y2="-58" stroke="#00D4AA" stroke-width="0.6" opacity="0.3"/>
     <line x1="0" y1="0" x2="44" y2="0" stroke="#FFC53D" stroke-width="0.6" opacity="0.3"/>
     <line x1="0" y1="0" x2="0" y2="44" stroke="#00D4AA" stroke-width="0.6" opacity="0.3"/>
     <line x1="0" y1="0" x2="-44" y2="0" stroke="#5EF0D0" stroke-width="0.6" opacity="0.3"/>
-
-    <!-- 核心 -->
     <circle r="17" fill="url(#coreGrad)" filter="url(#glow)">
       <animate attributeName="r" values="15;18;15" dur="2.2s" repeatCount="indefinite"/>
     </circle>
@@ -95,21 +78,12 @@
       <animate attributeName="r" values="17;26;17" dur="2.2s" repeatCount="indefinite"/>
       <animate attributeName="opacity" values="0.6;0;0.6" dur="2.2s" repeatCount="indefinite"/>
     </circle>
-    <!-- 核内路由箭头 -->
     <path d="M-6 -8 L2 -8 L2 -4 L8 -10 L2 -16 L2 -12 L-6 -12 Z" fill="#0A5A48" opacity="0.9">
       <animate attributeName="opacity" values="0.5;1;0.5" dur="1.6s" repeatCount="indefinite"/>
     </path>
   </g>
 
-  <!-- 标题区 -->
 
-  <!-- 数据条 -->
-
-  <!-- 底部 -->
   <!-- 底部标题区（与首页 HTML 层标题不冲突） -->
-  <rect x="0" y="316" width="200" height="40" fill="#0D1424" opacity="0.92"/>
-  <text x="16" y="336" font-family="monospace" font-size="9" fill="#E8F6F1" font-weight="bold">OmniRoute</text>
-  <text x="16" y="348" font-family="monospace" font-size="6.5" fill="#5A6078">FREE AI GATEWAY</text>
   <rect x="150" y="326" width="36" height="17" rx="3" fill="none" stroke="#00D4AA" stroke-width="1"/>
-  <text x="168" y="338" font-family="monospace" font-size="6.5" fill="#00D4AA" text-anchor="middle">291 家提供商</text>
 </svg>
