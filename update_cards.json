@@ -1,16 +1,16 @@
 {
-  "id": "hermes-agent",
-  "title": "Hermes Agent",
-  "subtitle": "开源 AI Agent（Nous Research）：唯一内置学习闭环——经验→技能→记忆→画像自动进化 · 一个进程接入 12+ 消息平台 · 300+ 模型随便换 · 1 年 23 万★",
-  "image": "cards/hermes-agent-cover.svg",
-  "page": "pages/hermes-agent.html",
+  "id": "hermes-bot-mode",
+  "title": "Hermes Bot Mode",
+  "subtitle": "Hermes 桌面官方插件：把 Agent 变成一群有名字的机器人——70 种几何脸头像、每个 bot 自己的日程、@mention 互相派活、bot 之间带署名互发消息 · 零核心补丁 · 2 天 379★",
+  "image": "cards/hermes-bot-mode-cover.svg",
+  "page": "pages/hermes-bot-mode.html",
   "tags": [
     "AI Agent",
-    "开源",
-    "自进化",
-    "记忆",
+    "多Agent协作",
+    "桌面插件",
     "Nous Research",
-    "跨平台"
+    "开源",
+    "Bot"
   ],
   "date": "2026-08-15",
   "type": "recommendation"
