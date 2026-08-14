@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="356" viewBox="0 0 200 356">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0B0714"/>
+      <stop offset="1" stop-color="#1A1230"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6E40C9"/>
+      <stop offset="1" stop-color="#9D7BFF"/>
+    </linearGradient>
+    <radialGradient id="coreGrad" cx="0.35" cy="0.3" r="1">
+      <stop offset="0" stop-color="#C9B3FF"/>
+      <stop offset="0.5" stop-color="#6E40C9"/>
+      <stop offset="1" stop-color="#2A1B5E"/>
+    </radialGradient>
+    <radialGradient id="nodeGrad" cx="0.35" cy="0.3" r="1">
+      <stop offset="0" stop-color="#FFE98A"/>
+      <stop offset="1" stop-color="#FFD700"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <pattern id="grid" width="16" height="16" patternUnits="userSpaceOnUse">
+      <path d="M16 0H0V16" fill="none" stroke="#2A1B5E" stroke-width="0.5"/>
+    </pattern>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="200" height="356" fill="url(#bg)"/>
+  <rect width="200" height="356" fill="url(#grid)" opacity="0.5"/>
+
+  <!-- 顶部栏 -->
+  <rect x="0" y="0" width="200" height="2" fill="url(#accentGrad)" opacity="0.8"/>
+  <text x="16" y="24" font-family="monospace" font-size="7" fill="#5E5678" letter-spacing="2">SEMANTICA</text>
+  <text x="184" y="24" font-family="monospace" font-size="7" fill="#FFD700" text-anchor="end">5.2K★</text>
+
+  <!-- 中心: 图谱核心 + 环绕节点网络 -->
+  <g transform="translate(100,130)">
+    <!-- 外圈轨道 -->
+    <circle r="56" fill="none" stroke="#6E40C9" stroke-width="0.8" stroke-dasharray="3 5" opacity="0.5">
+      <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="16s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="42" fill="none" stroke="#9D7BFF" stroke-width="0.7" stroke-dasharray="2 4" opacity="0.4">
+      <animateTransform attributeName="transform" type="rotate" from="360 0 0" to="0 0 0" dur="22s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- 环绕节点（金点） -->
+    <g>
+      <circle cx="0" cy="-56" r="5" fill="url(#nodeGrad)" filter="url(#glow)">
+        <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="16s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+    <g>
+      <circle cx="56" cy="0" r="4" fill="url(#nodeGrad)" filter="url(#glow)">
+        <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="-360 0 0" dur="22s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+    <g>
+      <circle cx="0" cy="42" r="4.5" fill="url(#nodeGrad)" filter="url(#glow)" opacity="0.9">
+        <animateTransform attributeName="transform" type="rotate" from="360 0 0" to="0 0 0" dur="19s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+    <g>
+      <circle cx="-42" cy="0" r="3.5" fill="url(#nodeGrad)" filter="url(#glow)" opacity="0.85">
+        <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="13s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+
+    <!-- 连接线（从核心到节点，脉冲） -->
+    <line x1="0" y1="0" x2="0" y2="-56" stroke="#9D7BFF" stroke-width="0.6" opacity="0.35"/>
+    <line x1="0" y1="0" x2="56" y2="0" stroke="#9D7BFF" stroke-width="0.6" opacity="0.35"/>
+    <line x1="0" y1="0" x2="0" y2="42" stroke="#9D7BFF" stroke-width="0.6" opacity="0.35"/>
+    <line x1="0" y1="0" x2="-42" y2="0" stroke="#9D7BFF" stroke-width="0.6" opacity="0.35"/>
+
+    <!-- 核心 -->
+    <circle r="17" fill="url(#coreGrad)" filter="url(#glow)">
+      <animate attributeName="r" values="15;18;15" dur="2.6s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="17" fill="none" stroke="#C9B3FF" stroke-width="0.8" opacity="0.6">
+      <animate attributeName="r" values="17;26;17" dur="2.6s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.6;0;0.6" dur="2.6s" repeatCount="indefinite"/>
+    </circle>
+    <!-- 核内 DNA 双链 -->
+    <path d="M-6 -10 C 0 -5, 0 5, -6 10" stroke="#C9B3FF" stroke-width="1" fill="none" opacity="0.9">
+      <animate attributeName="opacity" values="0.4;1;0.4" dur="1.8s" repeatCount="indefinite"/>
+    </path>
+    <path d="M6 -10 C 0 -5, 0 5, 6 10" stroke="#FFD700" stroke-width="1" fill="none" opacity="0.9">
+      <animate attributeName="opacity" values="1;0.4;1" dur="1.8s" repeatCount="indefinite"/>
+    </path>
+  </g>
+
+  <!-- 标题区 -->
+  <text x="100" y="222" text-anchor="middle" font-family="monospace" font-size="7" fill="#9D7BFF" letter-spacing="1.5">GRAPH-NATIVE AI INFRASTRUCTURE</text>
+  <text x="100" y="238" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#9A92B8">AI Agent 的开源 Palantir · 决策可审计</text>
+
+  <!-- 数据条 -->
+  <rect x="24" y="288" width="152" height="24" rx="12" fill="#141020" stroke="#2A2342" stroke-width="0.8"/>
+  <text x="100" y="304" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#EDE9F6">6000× 节点搜索 · PROV-O 溯源 · MIT</text>
+
+  <!-- 底部 -->
+  <text x="100" y="338" text-anchor="middle" font-family="monospace" font-size="6.5" fill="#5E5678" letter-spacing="1">MIND RESONANCE · 反共识观察</text>
+</svg>

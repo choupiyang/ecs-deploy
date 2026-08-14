@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="356" viewBox="0 0 200 356">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#070B14"/>
+      <stop offset="1" stop-color="#0C1424"/>
+    </linearGradient>
+    <radialGradient id="orb" cx="0.38" cy="0.32" r="0.75">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="0.4" stop-color="#BDE8FF"/>
+      <stop offset="0.7" stop-color="#7DD3FC"/>
+      <stop offset="1" stop-color="#1a5a8a"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#7DD3FC" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#7DD3FC" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="16" height="16" patternUnits="userSpaceOnUse">
+      <path d="M16 0H0V16" fill="none" stroke="#7DD3FC" stroke-width="0.4" opacity="0.12"/>
+    </pattern>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="200" height="356" fill="url(#bg)"/>
+  <rect width="200" height="356" fill="url(#grid)"/>
+  <circle cx="100" cy="118" r="88" fill="url(#glow)"/>
+
+  <!-- 顶部栏 -->
+  <rect x="0" y="0" width="200" height="2" fill="#7DD3FC" opacity="0.8"/>
+  <text x="14" y="22" font-family="monospace" font-size="7" fill="#7E8AA3" letter-spacing="2">ELEMENTAL SANDBOX</text>
+  <text x="186" y="22" font-family="monospace" font-size="7" fill="#7DD3FC" text-anchor="end">455★</text>
+
+  <!-- 能量核 -->
+  <g transform="translate(100,120)">
+    <!-- 3 层能量环 -->
+    <g transform="rotateX(68deg)">
+      <ellipse rx="34" ry="34" fill="none" stroke="#7DD3FC" stroke-width="1.2" opacity="0.5">
+        <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="5s" repeatCount="indefinite"/>
+      </ellipse>
+      <ellipse rx="45" ry="45" fill="none" stroke="#8B7DFF" stroke-width="1" opacity="0.4" stroke-dasharray="6 5">
+        <animateTransform attributeName="transform" type="rotate" from="360" to="0" dur="7s" repeatCount="indefinite"/>
+      </ellipse>
+      <ellipse rx="56" ry="56" fill="none" stroke="#FF9E4F" stroke-width="0.8" opacity="0.3">
+        <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="9s" repeatCount="indefinite"/>
+      </ellipse>
+    </g>
+    <!-- 中心能量球 -->
+    <circle r="16" fill="url(#orb)">
+      <animate attributeName="r" values="15;17.5;15" dur="2.4s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="3.5" fill="#fff" opacity="0.9"/>
+    <!-- 5 元素卫星 -->
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="10s" repeatCount="indefinite"/>
+      <circle cx="48" cy="0" r="8" fill="#0B4A5C" stroke="#A5E8FF" stroke-width="1"/>
+      <text x="48" y="2.5" text-anchor="middle" font-size="5.5" font-family="sans-serif" fill="#A5E8FF">冰</text>
+    </g>
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="72" to="432" dur="10s" repeatCount="indefinite"/>
+      <circle cx="48" cy="0" r="8" fill="#2A2166" stroke="#8B7DFF" stroke-width="1"/>
+      <text x="48" y="2.5" text-anchor="middle" font-size="5.5" font-family="sans-serif" fill="#8B7DFF">雷</text>
+    </g>
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="144" to="504" dur="10s" repeatCount="indefinite"/>
+      <circle cx="48" cy="0" r="8" fill="#5C2A0B" stroke="#FF9E4F" stroke-width="1"/>
+      <text x="48" y="2.5" text-anchor="middle" font-size="5.5" font-family="sans-serif" fill="#FF9E4F">火</text>
+    </g>
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="216" to="576" dur="10s" repeatCount="indefinite"/>
+      <circle cx="48" cy="0" r="8" fill="#5C4A0B" stroke="#FFD75E" stroke-width="1"/>
+      <text x="48" y="2.5" text-anchor="middle" font-size="5.5" font-family="sans-serif" fill="#FFD75E">光</text>
+    </g>
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="288" to="648" dur="10s" repeatCount="indefinite"/>
+      <circle cx="48" cy="0" r="8" fill="#3B1A5C" stroke="#D38BFF" stroke-width="1"/>
+      <text x="48" y="2.5" text-anchor="middle" font-size="5.5" font-family="sans-serif" fill="#D38BFF">电</text>
+    </g>
+  </g>
+
+  <!-- 标题区 -->
+  <text x="100" y="214" text-anchor="middle" font-family="monospace" font-size="7" fill="#7DD3FC" letter-spacing="1.5">10 SPELLS · 0 TEXTURES · 938 SLIDERS</text>
+  <text x="100" y="230" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#7E8AA3">浏览器里的 VFX 实验室</text>
+
+  <!-- 数据条 -->
+  <rect x="24" y="278" width="152" height="24" rx="12" fill="#0A1322" stroke="#7DD3FC" stroke-width="0.7" opacity="0.8"/>
+  <text x="100" y="294" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#E8ECF4">Three.js · GLSL · GPU Particles</text>
+
+  <!-- 底部 -->
+  <text x="100" y="336" text-anchor="middle" font-family="monospace" font-size="6.5" fill="#4A5570" letter-spacing="1">MIND RESONANCE · 反共识观察</text>
+</svg>
