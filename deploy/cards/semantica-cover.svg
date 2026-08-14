@@ -91,14 +91,14 @@
   </g>
 
   <!-- 标题区 -->
-  <text x="100" y="236" text-anchor="middle" font-family="Georgia,serif" font-size="24" font-weight="bold" fill="#EDE9F6">Semantica</text>
-  <text x="100" y="252" text-anchor="middle" font-family="monospace" font-size="7" fill="#9D7BFF" letter-spacing="1.5">GRAPH-NATIVE AI INFRASTRUCTURE</text>
-  <text x="100" y="268" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#9A92B8">AI Agent 的开源 Palantir · 决策可审计</text>
 
   <!-- 数据条 -->
-  <rect x="24" y="288" width="152" height="24" rx="12" fill="#141020" stroke="#2A2342" stroke-width="0.8"/>
-  <text x="100" y="304" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#EDE9F6">6000× 节点搜索 · PROV-O 溯源 · MIT</text>
 
   <!-- 底部 -->
-  <text x="100" y="338" text-anchor="middle" font-family="monospace" font-size="6.5" fill="#5E5678" letter-spacing="1">MIND RESONANCE · 反共识观察</text>
+  <!-- 底部标题区（与首页 HTML 层标题不冲突） -->
+  <rect x="0" y="316" width="200" height="40" fill="#141020" opacity="0.92"/>
+  <text x="16" y="336" font-family="monospace" font-size="9" fill="#E8F6F1" font-weight="bold">Semantica</text>
+  <text x="16" y="348" font-family="monospace" font-size="6.5" fill="#5A6078">GRAPH-NATIVE AI INFRASTRUCTURE</text>
+  <rect x="150" y="326" width="36" height="17" rx="3" fill="none" stroke="#9D7BFF" stroke-width="1"/>
+  <text x="168" y="338" font-family="monospace" font-size="6.5" fill="#9D7BFF" text-anchor="middle">6000× 节点搜索</text>
 </svg>

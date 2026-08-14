@@ -77,14 +77,14 @@
   </g>
 
   <!-- 标题区 -->
-  <text x="100" y="228" text-anchor="middle" font-family="Georgia,serif" font-size="20" font-weight="bold" fill="#E8ECF4">Elemental Sandbox</text>
-  <text x="100" y="244" text-anchor="middle" font-family="monospace" font-size="7" fill="#7DD3FC" letter-spacing="1.5">10 SPELLS · 0 TEXTURES · 938 SLIDERS</text>
-  <text x="100" y="260" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#7E8AA3">浏览器里的 VFX 实验室</text>
 
   <!-- 数据条 -->
-  <rect x="24" y="278" width="152" height="24" rx="12" fill="#0A1322" stroke="#7DD3FC" stroke-width="0.7" opacity="0.8"/>
-  <text x="100" y="294" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#E8ECF4">Three.js · GLSL · GPU Particles</text>
 
   <!-- 底部 -->
-  <text x="100" y="336" text-anchor="middle" font-family="monospace" font-size="6.5" fill="#4A5570" letter-spacing="1">MIND RESONANCE · 反共识观察</text>
+  <!-- 底部标题区（与首页 HTML 层标题不冲突） -->
+  <rect x="0" y="316" width="200" height="40" fill="#0A1322" opacity="0.92"/>
+  <text x="16" y="336" font-family="monospace" font-size="9" fill="#E8F6F1" font-weight="bold">Elemental Sandbox</text>
+  <text x="16" y="348" font-family="monospace" font-size="6.5" fill="#5A6078">10 SPELLS · 938 SLIDERS</text>
+  <rect x="150" y="326" width="36" height="17" rx="3" fill="none" stroke="#7DD3FC" stroke-width="1"/>
+  <text x="168" y="338" font-family="monospace" font-size="6.5" fill="#7DD3FC" text-anchor="middle">Three.js · GLSL</text>
 </svg>
