@@ -1,16 +1,16 @@
 {
-  "id": "holaos",
-  "title": "holaOS",
-  "subtitle": "开源 Agent 电脑：Claude Code/Codex/holaOS 同住一台电脑共享一份记忆 · 100+ 集成 + MCP · 1.0 发布登顶 GitHub Trending #1",
-  "image": "cards/holaos-cover.svg",
-  "page": "pages/holaos.html",
+  "id": "macro",
+  "title": "Macro",
+  "subtitle": "开源团队工作系统：邮件+聊天+文档+任务+CRM+Agent 合一，@双向链接全打通 · 167 个 Rust 库 · a16z 投资 · AGPLv3 完全开源",
+  "image": "cards/macro-cover.svg",
+  "page": "pages/macro.html",
   "tags": [
-    "AI Agent",
-    "Agent OS",
-    "开源",
-    "共享记忆",
-    "Electron",
-    "MCP"
+    "团队协作",
+    "All-in-One",
+    "Rust",
+    "AGPLv3",
+    "a16z",
+    "AI Agent"
   ],
   "date": "2026-08-14",
   "type": "recommendation"
