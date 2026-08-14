@@ -86,13 +86,14 @@
   </g>
 
   <!-- 标题区 -->
-  <text x="100" y="226" text-anchor="middle" font-family="monospace" font-size="7" fill="#00E5A0" letter-spacing="1.5">SOCIAL CRAWLER · 免 JS 逆向</text>
-  <text x="100" y="242" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#8FA8C8">7 平台 · 登录态缓存 · IP 代理池</text>
 
   <!-- 数据条 -->
-  <rect x="24" y="290" width="152" height="24" rx="12" fill="#0D1A14" stroke="#1E2C4A" stroke-width="0.8"/>
-  <text x="100" y="306" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#E8F6F1">Playwright 桥接 · 6 种存储</text>
 
   <!-- 底部 -->
-  <text x="100" y="340" text-anchor="middle" font-family="monospace" font-size="6.5" fill="#4A5C7E" letter-spacing="1">MIND RESONANCE · 反共识观察</text>
+  <!-- 底部标题区（与首页 HTML 层标题不冲突） -->
+  <rect x="0" y="316" width="200" height="40" fill="#0D1A14" opacity="0.92"/>
+  <text x="16" y="336" font-family="monospace" font-size="9" fill="#E8F6F1" font-weight="bold">MediaCrawler</text>
+  <text x="16" y="348" font-family="monospace" font-size="6.5" fill="#5A6078">SOCIAL CRAWLER · 免 JS 逆向</text>
+  <rect x="150" y="326" width="36" height="17" rx="3" fill="none" stroke="#00E5A0" stroke-width="1"/>
+  <text x="168" y="338" font-family="monospace" font-size="6.5" fill="#00E5A0" text-anchor="middle">7 平台</text>
 </svg>

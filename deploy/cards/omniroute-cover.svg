@@ -102,13 +102,14 @@
   </g>
 
   <!-- 标题区 -->
-  <text x="100" y="222" text-anchor="middle" font-family="monospace" font-size="7" fill="#00D4AA" letter-spacing="1.5">NEVER STOP CODING · FREE AI GATEWAY</text>
-  <text x="100" y="238" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#8FA8C8">一个端点 → 291 家提供商 · 90+ 免费层</text>
 
   <!-- 数据条 -->
-  <rect x="24" y="288" width="152" height="24" rx="12" fill="#0D1424" stroke="#1E2C4A" stroke-width="0.8"/>
-  <text x="100" y="304" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#E8F6F1">89% 省 token · 自动降级 · MIT</text>
 
   <!-- 底部 -->
-  <text x="100" y="338" text-anchor="middle" font-family="monospace" font-size="6.5" fill="#4A5C7E" letter-spacing="1">MIND RESONANCE · 反共识观察</text>
+  <!-- 底部标题区（与首页 HTML 层标题不冲突） -->
+  <rect x="0" y="316" width="200" height="40" fill="#0D1424" opacity="0.92"/>
+  <text x="16" y="336" font-family="monospace" font-size="9" fill="#E8F6F1" font-weight="bold">OmniRoute</text>
+  <text x="16" y="348" font-family="monospace" font-size="6.5" fill="#5A6078">FREE AI GATEWAY</text>
+  <rect x="150" y="326" width="36" height="17" rx="3" fill="none" stroke="#00D4AA" stroke-width="1"/>
+  <text x="168" y="338" font-family="monospace" font-size="6.5" fill="#00D4AA" text-anchor="middle">291 家提供商</text>
 </svg>
