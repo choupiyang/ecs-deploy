@@ -73,9 +73,6 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'PingFang
 
 /* Hero 右侧 */
 .hero-side{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:5px;position:relative;z-index:3}
-.stamp{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;background:radial-gradient(circle at 35% 30%,rgba(139,92,246,.2),var(--bg-2));box-shadow:0 0 12px rgba(139,92,246,.15);cursor:pointer;transition:transform .15s;animation:stampSpin 12s linear infinite}
-.stamp:active{transform:scale(.9)}
-@keyframes stampSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
 .sp-title{font-size:21px;font-weight:800;color:var(--text);letter-spacing:.01em;line-height:1.15}
 .sp-title em{font-style:normal;color:var(--accent-light);text-shadow:0 0 18px rgba(139,92,246,.4)}
 .tagline{font-size:10px;color:var(--text-mute);line-height:1.55;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
@@ -248,7 +245,6 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'PingFang
       <div class="seal" id="seal">10 PLATFORMS · ONE CONSOLE</div>
     </div>
     <div class="hero-side">
-      <div class="stamp" id="stamp">🎛</div>
       <div class="sp-title">Hermes Studio<br><em>一个控制台，接 10 个平台</em></div>
       <div class="tagline">Hermes Agent 的桌面应用 + 本地控制台 + Web UI：聊天、可视化工作流、Cron、Kanban、<em>10 平台渠道</em>、语音、Coding Agent——<em>一切本地</em>，一个界面全管</div>
       <div class="hint-badge">轻触任何元素探索 · 拖动卡片看 3D 视差</div>
@@ -397,7 +393,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'PingFang
     el.addEventListener('click',function(){openSheet(el.getAttribute('data-k'))});
   });
   $('#termShow').addEventListener('click',function(){openSheet('stamp')});
-  $('#stamp').addEventListener('click',function(){openSheet('stamp')});
+  $('#seal').addEventListener('click',function(){openSheet('stamp')});
 
   /* toast */
   var toastTimer;
@@ -442,9 +438,9 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'PingFang
     },{passive:true});
   });
 
-  /* stamp 彩蛋：连点 5 次 → 平台加速 + 震动 */
+  /* seal 彩蛋：连点 5 次 → 平台全速接入 + 震动 */
   var stampClicks=0,stampTimer;
-  $('#stamp').addEventListener('click',function(){
+  $('#seal').addEventListener('click',function(){
     stampClicks++;
     clearTimeout(stampTimer);
     stampTimer=setTimeout(function(){stampClicks=0},1600);
