@@ -1,16 +1,16 @@
 {
-  "id": "hermes-bot-mode",
-  "title": "Hermes Bot Mode",
-  "subtitle": "Hermes 桌面官方插件：把 Agent 变成一群有名字的机器人——70 种几何脸头像、每个 bot 自己的日程、@mention 互相派活、bot 之间带署名互发消息 · 零核心补丁 · 2 天 379★",
-  "image": "cards/hermes-bot-mode-cover.svg",
-  "page": "pages/hermes-bot-mode.html",
+  "id": "ego-lite",
+  "title": "ego lite",
+  "subtitle": "最快的 AI Agent 浏览器：Agent 在自己 Space 里并行跑浏览器任务，你的标签页零打扰 · 继承 Chrome 登录态 · 代码基座快 2.5× · 零成本零配置 · 4 个月 10.5K★",
+  "image": "cards/ego-lite-cover.svg",
+  "page": "pages/ego-lite.html",
   "tags": [
     "AI Agent",
-    "多Agent协作",
-    "桌面插件",
-    "Nous Research",
+    "浏览器自动化",
+    "并行 Space",
     "开源",
-    "Bot"
+    "Chrome 内核",
+    "零配置"
   ],
   "date": "2026-08-15",
   "type": "recommendation"
