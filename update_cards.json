@@ -1,17 +1,17 @@
 {
-  "id": "anydoc",
-  "title": "anydoc",
-  "subtitle": "Firecrawl 出品：Word/PPT/Excel/PDF 等 14 种格式 → 统一 LLM 就绪 Markdown，中位 4.4ms · 纯 Rust 无云端 · 基准每个格式第一 · 四语言绑定 · 12 天 16.3K★",
-  "image": "cards/anydoc-cover.svg",
-  "page": "pages/anydoc.html",
+  "id": "hermes-studio",
+  "title": "Hermes Studio",
+  "subtitle": "Hermes Agent 的本地控制台：桌面应用 + Web UI，一个界面接 10 平台（微信扫码/飞书/钉钉）· 可视化工作流 · 多 Agent 群聊 · 语音全栈 · 4 个月 10.3K★",
+  "image": "cards/hermes-studio-cover.svg",
+  "page": "pages/hermes-studio.html",
   "tags": [
-    "文档转换",
-    "Markdown",
-    "Rust",
-    "LLM 生态",
-    "Agent Skill",
+    "Hermes Agent",
+    "控制台",
+    "多平台",
+    "Vue 3",
+    "本地优先",
     "开源"
   ],
-  "date": "2026-08-15",
+  "date": "2026-08-16",
   "type": "recommendation"
 }
