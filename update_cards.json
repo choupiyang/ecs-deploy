@@ -1,16 +1,16 @@
 {
-  "id": "ego-lite",
-  "title": "ego lite",
-  "subtitle": "最快的 AI Agent 浏览器：Agent 在自己 Space 里并行跑浏览器任务，你的标签页零打扰 · 继承 Chrome 登录态 · 代码基座快 2.5× · 零成本零配置 · 4 个月 10.5K★",
-  "image": "cards/ego-lite-cover.svg",
-  "page": "pages/ego-lite.html",
+  "id": "autoresearch",
+  "title": "autoresearch",
+  "subtitle": "Karpathy autoresearch（93.8K★）的 Claude Code 化——目标+指标+永不放弃的循环：Agent 自主 修改→验证→保留/回滚→重复，醒来就有结果 · 14 命令 · token -95% · 三平台 · 5 个月 5.8K★",
+  "image": "cards/autoresearch-cover.svg",
+  "page": "pages/autoresearch.html",
   "tags": [
     "AI Agent",
-    "浏览器自动化",
-    "并行 Space",
+    "自主迭代",
+    "Claude Code",
+    "Karpathy",
     "开源",
-    "Chrome 内核",
-    "零配置"
+    "技能"
   ],
   "date": "2026-08-15",
   "type": "recommendation"

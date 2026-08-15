@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0C0E12">
+<title>autoresearch · 永不停止的自主改进引擎</title>
+<style>
+:root{
+  --bg:#0C0E12; --bg-2:#11141A; --bg-3:#1A1F2A;
+  --accent:#FF9D5C; --accent-light:#FFD9A8; --plugin:#E85D3F;
+  --text:#F0EDE8; --text-mute:#8A8694; --border:rgba(255,157,92,.25);
+  --glow:rgba(255,157,92,.5);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'PingFang SC','Noto Sans SC',system-ui,sans-serif;user-select:none}
+.stage{
+  aspect-ratio:9/16;height:min(100svh,calc(100vw*16/9));width:min(100vw,calc(100svh*9/16));
+  margin:0 auto;position:relative;overflow:hidden;perspective:1000px;
+  display:flex;flex-direction:column;
+  background:
+  radial-gradient(120% 80% at 80% -10%,rgba(255,157,92,.09),transparent 55%),
+  radial-gradient(100% 70% at 10% 110%,rgba(232,93,63,.05),transparent 60%),var(--bg);
+}
+@supports not (height:100svh){.stage{height:min(100vh,calc(100vw*16/9))}}
+.stage::before{content:'';position:absolute;inset:0;background:
+  linear-gradient(rgba(255,157,92,.04) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(255,157,92,.04) 1px,transparent 1px);
+  background-size:26px 26px;transform:translateZ(-60px);pointer-events:none}
+.topbar{position:relative;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:10px 14px 0;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:6px;font-size:9px;color:var(--text-mute);letter-spacing:.14em}
+.brand i{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--glow);animation:bdot 2.4s ease-in-out infinite}
+@keyframes bdot{0%,100%{opacity:.5}50%{opacity:1}}
+.share{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--bg-2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s}
+.share:active{transform:scale(.92)}
+.share svg{width:13px;height:13px;fill:var(--accent)}
+
+/* 3D 改进循环：中心实验核 + 轨道 Modify/Verify/Keep/Repeat（主题：永不停止的循环） */
+.sp3d{width:118px;height:118px;flex-shrink:0;position:relative;transform-style:preserve-3d;animation:gfloat 6s ease-in-out infinite}
+@keyframes gfloat{0%,100%{transform:rotateX(12deg) rotateY(-8deg)}50%{transform:rotateX(12deg) rotateY(8deg)}}
+/* 中心实验核 */
+.sp3d .core{position:absolute;left:50%;top:50%;width:38px;height:38px;margin:-19px 0 0 -19px;border-radius:50%;z-index:3;
+  background:radial-gradient(circle at 35% 30%,#FFD9A8,#FF9D5C 45%,#B3402A 90%);
+  box-shadow:0 0 24px rgba(255,157,92,.55),inset 0 0 14px rgba(255,255,255,.25);animation:corePulse 3.2s ease-in-out infinite;
+  display:flex;align-items:center;justify-content:center;font-size:15px;color:#171B23}
+@keyframes corePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+.sp3d .core::after{content:'';position:absolute;inset:-7px;border-radius:50%;border:1.5px dashed rgba(255,217,168,.5);animation:ringRot 14s linear infinite}
+@keyframes ringRot{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+/* 三层轨道 */
+.sp3d .ring{position:absolute;left:50%;top:50%;border:1px solid rgba(255,157,92,.3);border-radius:50%;transform-style:preserve-3d}
+.sp3d .r1{width:76px;height:76px;margin:-38px 0 0 -38px;animation:rot1 9s linear infinite}
+.sp3d .r2{width:100px;height:100px;margin:-50px 0 0 -50px;border-color:rgba(232,93,63,.28);animation:rot2 14s linear infinite}
+.sp3d .r3{width:118px;height:118px;margin:-59px 0 0 -59px;border-color:rgba(255,217,168,.14);animation:rot3 22s linear infinite}
+@keyframes rot1{from{transform:rotateX(68deg) rotateZ(0)}to{transform:rotateX(68deg) rotateZ(360deg)}}
+@keyframes rot2{from{transform:rotateX(68deg) rotateZ(360deg)}to{transform:rotateX(68deg) rotateZ(0)}}
+@keyframes rot3{from{transform:rotateX(68deg) rotateZ(0)}to{transform:rotateX(68deg) rotateZ(360deg)}}
+/* 卫星（循环四步） */
+.sp3d .sat{position:absolute;left:50%;top:50%;width:17px;height:17px;margin:-8.5px 0 0 -8.5px;border-radius:50%;z-index:4;
+  display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#171B23;
+  background:radial-gradient(circle at 35% 30%,#fff,var(--accent) 60%);box-shadow:0 0 10px rgba(255,157,92,.5);animation:s1 9s linear infinite}
+.sp3d .sat.s2{width:14px;height:14px;margin:-7px 0 0 -7px;font-size:6px;background:radial-gradient(circle at 35% 30%,#fff,var(--plugin) 60%);box-shadow:0 0 10px rgba(232,93,63,.5);animation:s2 14s linear infinite}
+.sp3d .sat.s3{width:11px;height:11px;margin:-5.5px 0 0 -5.5px;font-size:5.5px;background:radial-gradient(circle at 35% 30%,#fff,#FFD9A8 60%);box-shadow:0 0 10px rgba(255,217,168,.5);animation:s3 22s linear infinite}
+@keyframes s1{from{transform:rotateX(68deg) rotateZ(0deg) translateX(38px) rotateZ(0deg)}to{transform:rotateX(68deg) rotateZ(360deg) translateX(38px) rotateZ(-360deg)}}
+@keyframes s2{from{transform:rotateX(68deg) rotateZ(180deg) translateX(50px) rotateZ(-180deg)}to{transform:rotateX(68deg) rotateZ(-180deg) translateX(50px) rotateZ(180deg)}}
+@keyframes s3{from{transform:rotateX(68deg) rotateZ(90deg) translateX(59px) rotateZ(-90deg)}to{transform:rotateX(68deg) rotateZ(450deg) translateX(59px) rotateZ(-450deg)}}
+/* 实验光点 */
+.sp3d .dlight{position:absolute;left:50%;top:50%;width:3px;height:3px;border-radius:50%;background:#fff;box-shadow:0 0 6px var(--accent);z-index:2;animation:dl 3.4s linear infinite}
+.sp3d .dlight.d2{animation-delay:1.7s;background:var(--plugin);box-shadow:0 0 6px var(--plugin)}
+@keyframes dl{0%{transform:rotate(0deg) translateX(30px);opacity:0}20%{opacity:1}80%{opacity:1}100%{transform:rotate(360deg) translateX(30px);opacity:0}}
+.sp3d .seal{position:absolute;bottom:2px;left:0;right:0;text-align:center;font-family:monospace;font-size:6px;letter-spacing:.13em;color:var(--text-mute);z-index:5;animation:sealGlow 3s ease-in-out infinite}
+@keyframes sealGlow{0%,100%{opacity:.7}50%{opacity:1;color:var(--accent-light)}}
+
+/* Hero 右侧 */
+.hero-side{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:5px;position:relative;z-index:3}
+.stamp{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;background:radial-gradient(circle at 35% 30%,rgba(255,157,92,.2),var(--bg-2));box-shadow:0 0 12px rgba(255,157,92,.15);cursor:pointer;transition:transform .15s;animation:stampSpin 12s linear infinite}
+.stamp:active{transform:scale(.9)}
+@keyframes stampSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.sp-title{font-size:22px;font-weight:800;color:var(--text);letter-spacing:.01em;line-height:1.15}
+.sp-title em{font-style:normal;color:var(--accent-light);text-shadow:0 0 18px rgba(255,157,92,.4)}
+.tagline{font-size:10px;color:var(--text-mute);line-height:1.55;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.tagline em{color:var(--accent-light);font-style:normal;font-weight:600}
+.hint-badge{display:inline-block;margin-top:5px;font-size:8px;color:var(--text-mute);letter-spacing:.06em;border:1px dashed var(--border);border-radius:20px;padding:3px 9px}
+
+.hero{position:relative;z-index:3;display:flex;align-items:center;gap:14px;padding:12px 16px 10px;flex-shrink:0}
+@media (max-height:850px) and (min-height:731px){
+  .hero{padding-top:8px;padding-bottom:6px;gap:11px}
+  .sp3d{width:104px;height:104px}
+  .sp-title{font-size:20px}
+  .tagline{font-size:9.5px}
+  .stats{padding:7px 16px 3px}
+  .flow{padding:6px 16px 1px}
+  .feats{padding:6px 16px 3px}
+  .tech{padding:6px 16px 3px}
+  .term-body{font-size:7.5px;line-height:1.65}
+  .quick{padding:6px 16px 3px;gap:5px}
+}
+@media (max-height:730px){
+  .hero{padding-top:6px;padding-bottom:4px;gap:10px}
+  .sp3d{width:88px;height:88px}
+  .sp3d .r3{display:none}
+  .sp3d .sat.s3{display:none}
+  .sp3d .core{width:30px;height:30px;margin:-15px 0 0 -15px;font-size:12px}
+  .sp-title{font-size:18px}
+  .tagline{font-size:9px;-webkit-line-clamp:2}
+  .stats{padding:6px 14px 2px;gap:4px}
+  .stat b{font-size:12px}
+  .flow{padding:5px 14px 0}
+  .fnode i{font-size:11px}
+  .fnode b{font-size:7px}
+  .feats{padding:5px 14px 2px;gap:4px}
+  .feat{padding:5px 7px}
+  .tech{padding:5px 14px 2px;gap:4px}
+  .bottombar{padding:7px 14px 9px}
+  .term-body{font-size:7px;line-height:1.55;padding:6px 9px;gap:1px}
+  .showcase{padding:3px 14px}
+  .quick{padding:5px 14px 2px;gap:4px}
+  .qitem{padding:5px 8px}
+  .qitem span{font-size:6.5px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+}
+
+/* 核心展示区：autoresearch 循环终端 */
+.showcase{position:relative;z-index:3;flex:0 1 auto;display:flex;flex-direction:column;padding:4px 16px;min-height:0}
+.term{flex:0 1 auto;display:flex;flex-direction:column;border:1px solid var(--border);border-radius:12px;background:rgba(17,20,26,.6);overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.35),inset 0 0 40px rgba(255,157,92,.03);cursor:pointer;transition:transform .15s}
+.term:active{transform:scale(.985)}
+.term-bar{display:flex;align-items:center;gap:5px;padding:7px 11px;border-bottom:1px solid var(--border);background:rgba(26,31,42,.5);flex-shrink:0}
+.term-bar i{width:7px;height:7px;border-radius:50%;display:block}
+.term-bar i:nth-child(1){background:#FF5F56}
+.term-bar i:nth-child(2){background:#FFBD2E}
+.term-bar i:nth-child(3){background:#27C93F}
+.term-bar span{margin-left:6px;font-family:monospace;font-size:8px;color:var(--text-mute);letter-spacing:.06em}
+.term-body{flex:1 1 auto;padding:10px 12px;font-family:monospace;font-size:8px;line-height:1.75;color:#8FA8BC;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+.term-body .ln{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;animation:lnIn .5s ease both}
+.term-body .ln .k{color:var(--accent)}
+.term-body .ln .g{color:#7DD4A8}
+.term-body .ln .b{color:var(--plugin)}
+.term-body .ln .y{color:var(--accent-light)}
+.term-body .ln.cursor::after{content:'▍';color:var(--accent);animation:cur 1s steps(2) infinite}
+@keyframes cur{0%,49%{opacity:1}50%,100%{opacity:0}}
+@keyframes lnIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+
+/* 社区口碑速览 */
+.quick{position:relative;z-index:3;flex:1 1 auto;display:flex;flex-direction:column;gap:6px;padding:8px 16px 4px;min-height:0;overflow-y:auto}
+.qitem{background:var(--bg-2);border:1px solid var(--border);border-radius:9px;padding:7px 10px;cursor:pointer;transition:transform .15s,box-shadow .2s;display:flex;align-items:center;gap:8px;flex:1 1 auto;min-height:34px}
+.qitem:active{transform:scale(.97)}
+.qitem i{font-style:normal;font-size:12px;flex-shrink:0;margin-top:0}
+.qitem div{min-width:0}
+.qitem b{display:block;font-size:8.5px;color:var(--text)}
+.qitem span{display:block;font-size:7px;color:var(--text-mute);margin-top:1.5px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.qitem.hotq{border-color:rgba(255,157,92,.5);background:linear-gradient(160deg,rgba(255,157,92,.12),var(--bg-2))}
+
+/* Stats */
+.stats{position:relative;z-index:3;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:10px 16px 4px;flex-shrink:0}
+.stat{background:var(--bg-2);border:1px solid var(--border);border-radius:9px;padding:7px 4px 6px;text-align:center;cursor:pointer;transition:transform .15s,box-shadow .2s}
+.stat:active{transform:scale(.94)}
+.stat b{display:block;font-size:13px;color:var(--accent-light);font-family:monospace;letter-spacing:.02em}
+.stat span{display:block;font-size:7px;color:var(--text-mute);margin-top:2px;letter-spacing:.04em}
+
+/* Flow */
+.flow{position:relative;z-index:3;padding:8px 16px 2px;flex-shrink:0}
+.flow-row{display:flex;align-items:center;gap:3px}
+.fnode{flex:1;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;padding:6px 2px;text-align:center;cursor:pointer;transition:transform .15s,background .2s}
+.fnode:active{transform:scale(.92)}
+.fnode i{display:block;font-style:normal;font-size:12px;margin-bottom:2px}
+.fnode b{display:block;font-size:7.5px;color:var(--text);font-weight:600}
+.fnode span{display:block;font-size:6px;color:var(--text-mute);margin-top:1px}
+.fnode.hot{border-color:rgba(255,157,92,.5);background:linear-gradient(160deg,rgba(255,157,92,.14),var(--bg-2));animation:fhot 2s ease-in-out infinite}
+@keyframes fhot{0%,100%{box-shadow:0 0 6px rgba(255,157,92,.1)}50%{box-shadow:0 0 14px rgba(255,157,92,.35)}}
+.farrow{color:var(--accent);font-size:9px;flex-shrink:0;opacity:.7}
+
+/* Features */
+.feats{position:relative;z-index:3;display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px 16px 4px;flex-shrink:0}
+.feat{background:var(--bg-2);border:1px solid var(--border);border-radius:9px;padding:7px 9px;cursor:pointer;transition:transform .15s,box-shadow .2s;display:flex;align-items:center;gap:7px}
+.feat:active{transform:scale(.95)}
+.feat i{font-style:normal;font-size:13px;flex-shrink:0}
+.feat div{min-width:0}
+.feat b{display:block;font-size:8.5px;color:var(--text)}
+.feat span{display:block;font-size:6.8px;color:var(--text-mute);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Tech */
+.tech{position:relative;z-index:3;display:flex;flex-wrap:wrap;gap:5px;padding:8px 16px 4px;flex-shrink:0}
+.pill{font-size:7.5px;color:var(--text-mute);border:1px solid var(--border);background:var(--bg-2);border-radius:20px;padding:3.5px 9px;cursor:pointer;transition:all .15s;letter-spacing:.03em}
+.pill:active{transform:scale(.93);background:rgba(255,157,92,.12);color:var(--accent-light)}
+
+/* Bottom */
+.bottombar{position:relative;z-index:3;display:flex;align-items:center;gap:8px;padding:10px 16px 12px;flex-shrink:0}
+.btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 0;border-radius:10px;font-size:9px;font-weight:600;cursor:pointer;transition:transform .15s,filter .2s;text-decoration:none;letter-spacing:.05em}
+.btn:active{transform:scale(.95)}
+.btn.primary{background:linear-gradient(135deg,var(--accent),#D14B2E);color:#171B23;box-shadow:0 4px 16px rgba(255,157,92,.3)}
+.btn.ghost{border:1px solid var(--border);color:var(--text);background:var(--bg-2)}
+.btn svg{width:12px;height:12px;fill:currentColor}
+
+/* Overlay */
+.overlay{position:fixed;inset:0;background:rgba(6,7,10,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);opacity:0;pointer-events:none;transition:opacity .35s;z-index:40}
+.overlay.show{opacity:1;pointer-events:auto}
+.sheet{position:absolute;bottom:0;left:50%;transform:translate(-50%,105%);width:min(94vw,calc(100svh*9/16*0.94));max-height:78svh;background:linear-gradient(180deg,#241D1A,#120E0C);border:1px solid rgba(255,157,92,.3);border-bottom:none;border-radius:20px 20px 0 0;padding:18px 20px 26px;transition:transform .45s cubic-bezier(.7,0,.3,1);z-index:50;overflow-y:auto;box-shadow:0 -12px 50px rgba(0,0,0,.5)}
+.sheet.show{transform:translate(-50%,0)}
+.sheet h3{font-size:15px;color:var(--text);margin-bottom:8px;line-height:1.4}
+.sheet h3 em{font-style:normal;color:var(--accent-light)}
+.sheet p{font-size:11px;color:#C8BCB4;line-height:1.75;margin-bottom:10px}
+.sheet ul{list-style:none;margin-bottom:10px}
+.sheet ul li{font-size:10.5px;color:#ACA49C;line-height:1.7;padding-left:14px;position:relative;margin-bottom:3px}
+.sheet ul li::before{content:'◆';position:absolute;left:0;top:1px;font-size:7px;color:var(--accent)}
+.sheet pre{background:rgba(10,8,6,.8);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:monospace;font-size:9.5px;color:#8FA8BC;line-height:1.7;overflow-x:auto;margin-bottom:10px;white-space:pre-wrap;word-break:break-all}
+.sheet .close{display:block;width:100%;padding:10px 0;border:none;border-radius:10px;background:linear-gradient(135deg,var(--accent),#D14B2E);color:#171B23;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.08em}
+.sheet .close:active{transform:scale(.97)}
+.sheet::-webkit-scrollbar{width:3px}
+.sheet::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+.toast{position:fixed;top:44px;left:50%;transform:translate(-50%,-16px);background:var(--bg-3);border:1px solid var(--border);color:var(--text);font-size:10px;padding:7px 14px;border-radius:20px;opacity:0;pointer-events:none;transition:all .3s;z-index:60;box-shadow:0 6px 20px rgba(0,0,0,.4);white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <div class="topbar">
+    <div class="brand"><i></i>AUTORESEARCH · IMPROVEMENT ENGINE</div>
+    <div class="share" id="shareBtn">
+      <svg viewBox="0 0 24 24"><path d="M18 16.1c-.8 0-1.5.3-2.1.8l-7.1-4.2c.1-.2.1-.4.1-.7s0-.5-.1-.7l7.1-4.2c.6.5 1.4.8 2.1.8 1.9 0 3.4-1.5 3.4-3.4S19.9 3.1 18 3.1s-3.4 1.5-3.4 3.4c0 .2 0 .5.1.7l-7.1 4.2c-.6-.5-1.4-.8-2.1-.8-1.9 0-3.4 1.5-3.4 3.4s1.5 3.4 3.4 3.4c.8 0 1.5-.3 2.1-.8l7.1 4.2c-.1.2-.1.4-.1.7 0 1.9 1.5 3.4 3.4 3.4s3.4-3.4 3.4-3.4z"/></svg>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="sp3d tilt-deep" id="sp3d">
+      <div class="core">♾</div>
+      <div class="ring r1"></div>
+      <div class="ring r2"></div>
+      <div class="ring r3"></div>
+      <div class="sat s1">M</div>
+      <div class="sat s2">V</div>
+      <div class="sat s3">K</div>
+      <div class="dlight d1"></div>
+      <div class="dlight d2"></div>
+      <div class="seal" id="seal">MODIFY · VERIFY · KEEP · REPEAT</div>
+    </div>
+    <div class="hero-side">
+      <div class="stamp" id="stamp">♾️</div>
+      <div class="sp-title">autoresearch<br><em>永不停止的改进</em></div>
+      <div class="tagline">Karpathy autoresearch 的 Claude Code 化：<em>目标 + 指标 + 永不放弃的循环</em>——Agent 自主 修改→验证→保留/回滚→重复，醒来就有结果</div>
+      <div class="hint-badge">轻触任何元素探索 · 拖动卡片看 3D 视差</div>
+    </div>
+  </div>
+
+  <div class="showcase">
+    <div class="term" id="termShow">
+      <div class="term-bar"><i></i><i></i><i></i><span>autoresearch · iteration 24/25</span></div>
+      <div class="term-body" id="termBody"></div>
+    </div>
+  </div>
+
+  <div class="quick">
+    <div class="qitem hotq" data-k="q1"><i>🚀</i><div><b>Karpathy 原版 93.8K★ 的 Claude 化</b><span>630 行 Python 一夜 100 次实验 → 推广到任何领域：代码/内容/营销/HR，只要有个能测的数字。5 个月 5.8K★</span></div></div>
+    <div class="qitem" data-k="q2"><i>⚡</i><div><b>v2.1 重构：token 降 95%</b><span>813 行 SKILL.md（~100K token/次）→ 41 行路由 + 12 个命令文件（~5-8K token/次）——能力不变，成本暴降，8-12 发布 v2.2.2</span></div></div>
+    <div class="qitem" data-k="q3"><i>🌱</i><div><b>生态蔓延：中文圈也长出来了</b><span>darwin-skill「让你的 Skill 无限进化」5.5K★（autoresearch 派生物）、codex-autoresearch 2.1K★——「改进循环」成了新范式</span></div></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat" data-k="stars"><b>5.8K</b><span>★ GitHub</span></div>
+    <div class="stat" data-k="token"><b>-95%</b><span>Token 成本</span></div>
+    <div class="stat" data-k="cmds"><b>14</b><span>个命令</span></div>
+    <div class="stat" data-k="iter"><b>100</b><span>实验/夜</span></div>
+  </div>
+
+  <div class="flow">
+    <div class="flow-row">
+      <div class="fnode" data-k="f1"><i>🔧</i><b>Modify</b><span>一次一改</span></div>
+      <div class="farrow">›</div>
+      <div class="fnode" data-k="f2"><i>🧪</i><b>Verify</b><span>机械验证</span></div>
+      <div class="farrow">›</div>
+      <div class="fnode" data-k="f3"><i>✅</i><b>Keep</b><span>好就留</span></div>
+      <div class="farrow">›</div>
+      <div class="fnode hot" data-k="f4"><i>🔁</i><b>Repeat</b><span>失败自动回滚</span></div>
+    </div>
+  </div>
+
+  <div class="feats">
+    <div class="feat" data-k="fe1"><i>🎯</i><div><b>目标导向编排</b><span>自由目标→自动选流水线</span></div></div>
+    <div class="feat" data-k="fe2"><i>🛡️</i><div><b>9 个安全 Hooks</b><span>隐私/危险命令/简化门</span></div></div>
+    <div class="feat" data-k="fe3"><i>🔀</i><div><b>三平台支持</b><span>Claude/OpenCode/Codex</span></div></div>
+    <div class="feat" data-k="fe4"><i>🧠</i><div><b>git 即记忆</b><span>实验提交自动回滚</span></div></div>
+  </div>
+
+  <div class="tech">
+    <div class="pill" data-k="t1">Claude Code Skill</div>
+    <div class="pill" data-k="t2">Shell</div>
+    <div class="pill" data-k="t3">MIT</div>
+    <div class="pill" data-k="t4">14 命令</div>
+    <div class="pill" data-k="t5">9 Hooks</div>
+    <div class="pill" data-k="t6">npx skills add</div>
+  </div>
+
+  <div class="bottombar">
+    <a class="btn primary" id="ghBtn" target="_blank"><svg viewBox="0 0 24 24"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.6 18.3 5 18.3 5c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"/></svg>GitHub</a>
+    <a class="btn ghost" id="siteBtn" target="_blank"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm7.9 9h-3.4a15.9 15.9 0 0 0-2.9-6.6A8 8 0 0 1 19.9 11zM12 4c1.6 1.9 2.7 4.2 3 7H9c.3-2.8 1.4-5.1 3-7zM4.1 11h3.4a15.9 15.9 0 0 1 2.9-6.6A8 8 0 0 0 4.1 11zm0 2a8 8 0 0 0 6.4 6.6A15.9 15.9 0 0 1 7.5 13H4.1zM9.7 15h4.6c-.4 2.6-1.5 4.8-3.3 6.6A15.3 15.3 0 0 1 9.7 15zm5.9 0h3.5a8 8 0 0 1-6.6 6.6A15.3 15.3 0 0 0 15.6 15z"/></svg>udit.co/projects/autoresearch</a>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+  <div class="sheet" id="sheet">
+    <h3 id="sTitle"></h3>
+    <div id="sBody"></div>
+    <button class="close" id="sClose">CLOSE ✕</button>
+  </div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+(function(){
+  var $=function(s){return document.querySelector(s)};
+  var html=document.documentElement;
+  html.className='js';
+
+  /* 终端打字效果：循环迭代 */
+  var LINES=[
+    {t:'$ /autoresearch',c:''},
+    {t:'Goal: 测试覆盖率 72% → 90%',c:'y'},
+    {t:'Metric: coverage %（越高越好）',c:'y'},
+    {t:'Verify: npm test --coverage | grep "All files"',c:'y'},
+    {t:'Iterations: 25',c:'y'},
+    {t:'→ 读全部上下文 · 建立基线 (it#0: 72.1%)',c:'g'},
+    {t:'→ it#1: 改 1 处 · 验证 73.4% · KEEP',c:'b'},
+    {t:'→ it#2: 改 1 处 · 验证 72.9% · REVERT',c:'b'},
+    {t:'→ it#24: 验证 89.8% · 接近目标',c:'g'},
+    {t:'✓ 25 轮完成 · 覆盖率 89.8% · 全部记录',c:'g'}
+  ];
+  var termBody=$('#termBody');
+  function typeTerm(){
+    termBody.innerHTML='';
+    LINES.forEach(function(l,i){
+      var d=document.createElement('div');
+      d.className='ln'+(i===LINES.length-1?' cursor':'');
+      var s=l.c.indexOf('g')>-1?'g':l.c.indexOf('b')>-1?'b':l.c.indexOf('y')>-1?'y':'k';
+      d.innerHTML='<span class="'+s+'">'+l.t+'</span>';
+      d.style.animationDelay=(i*0.35)+'s';
+      termBody.appendChild(d);
+    });
+  }
+  typeTerm();
+
+  /* 弹窗数据 */
+  var DATA={
+    stars:{t:'5.8K★ <em>GitHub Stars</em>',d:'uditgoenka/autoresearch 于 2026-03-13 创建，5 个月冲到 5,828★ / 445 forks / 24 watchers。它是 Karpathy autoresearch（93.8K★）的 Claude Code 化推广——把「630 行 Python 一夜 100 次实验」的原理推广到任何领域。2026-03-16 HN 发帖 3 分 1 评论（低调起步，靠生态口碑涨起来）。',p:['5,828★ / 445 forks / 24 watchers','2026-03-13 创建 · Shell','Karpathy 原版 93.8K★','HN 3-16 发帖 3 分 1 评论','8-12 v2.2.2 稳定版发布']},
+    token:{t:'-95% <em>Token 成本</em>',d:'v2.1.0 重大架构重建：813 行 SKILL.md（每次调用 ~100K token）→ 41 行路由文件 + 12 个自包含命令文件（每个 94-120 行，~5-8K token）。能力面不变，token 降 95%——这是「技能工程」的教科书案例：大而全的 monolith 不如薄路由 + 按需加载。',p:['813 行 → 41 行路由 + 12 命令文件','~100K token/次 → ~5-8K token/次','能力面完全不变','「薄路由 + 按需加载」范式','v2.1.0 发布（2026-06）']},
+    cmds:{t:'14 <em>个命令</em>',d:'一整个命令家族：/autoresearch（核心循环 + 自由目标编排）、:plan（目标→配置）、:debug（假设驱动抓 bug）、:fix（错误清零）、:security（STRIDE+OWASP 红队）、:ship（8 阶段发布）、:scenario（12 维边界用例）、:predict（5 专家辩论）、:learn（文档生成）、:reason（对抗辩论）、:probe（需求探针）、:improve（ICP 研究+PRD）、:evals（趋势分析）、:regression（回归门禁）。',p:['核心：/autoresearch 循环 + 编排','plan/debug/fix/security/ship','scenario/predict/learn/reason/probe','improve/evals/regression','通用 flag：Iterations: N / unlimited / --chain']},
+    iter:{t:'100 <em>实验/夜（原版）</em>',d:'Karpathy 原版证明：630 行 Python 脚本一夜自动跑 100 次 ML 实验，靠五条原则——单一指标、受限范围、快速验证、自动回滚、git 当记忆。autoresearch 把这套推广到代码、内容、营销、销售、HR、DevOps——任何有个能测的数字的领域。',p:['原版：630 行 Python · 一夜 100 实验','五原则：单一指标/受限范围/快速验证/自动回滚/git 记忆','推广到任意领域','「你不需要 AGI，需要目标+指标+不放弃的循环」','You don\'t need AGI. You need a goal, a metric, and a loop that never quits.']},
+    f1:{t:'🎯 <em>目标导向编排</em>',d:'v2.2.0 起：不用写 Metric/Verify，直接给自由形式目标——Agent 自动选流水线（plan→loop→evals→regression…）跑到条件满足。经典模式也保留：明确 Goal/Scope/Metric/Verify 四件套 + Iterations: N。',p:['v2.2.0 编排器：自由目标自动选流水线','经典四件套：Goal/Scope/Metric/Verify','迭代数默认有界，unlimited 需显式开启','--chain 命令链：probe→plan→autoresearch','handoff.json 跨命令交接']},
+    f2:{t:'🛡️ <em>9 个安全 Hooks</em>',d:'scout-block 挡 node_modules/.git 塞爆上下文；privacy-block 挡 .env/SSH 密钥被读；dangerous-cmd-block 挡 force-push/rm -rf/git reset --hard；iteration-context 压缩后注入 TSV 迭代数据；subagent-context 给子代理循环状态；simplify-gate 400 LOC 警告/800 LOC 拦截；stop-notify 结束通知（可 webhook）。全默认开启，可按 AR_DISABLE_* 单独关。',p:['9 个 hook：scout/privacy/dangerous-cmd 等','全默认开 · AR_DISABLE_* 单独关','simplify-gate：400 LOC 警告 / 800 LOC 拦截','.ckignore 自定义屏蔽目录','Slack webhook 完成通知']},
+    f3:{t:'🔀 <em>三平台支持</em>',d:'Claude Code（npx skills add 或 /plugin install）、OpenCode（./scripts/install.sh --opencode，命令用下划线 /autoresearch_debug）、OpenAI Codex（install.sh --codex，$autoresearch mention 语法 + 关键字子命令）。hook 完整度：Claude Code 全量，OpenCode/Codex 核心 skill 无 hook 对齐。',p:['Claude Code：npx skills add uditgoenka/autoresearch','OpenCode：--opencode 安装 · 下划线命令','Codex：--codex 安装 · $autoresearch 语法','hook 完整度：Claude 全量，其他核心无 hook','14 命令三平台全可用']},
+    f4:{t:'🧠 <em>git 即记忆</em>',d:'每条铁律 #7：每次实验以 experiment: 前缀 commit，迭代前 Agent 读 git log + git diff 决定下一步。改进累积、失败自动 git revert、TSV 记录全部结果——git 不只是版本控制，是整个实验记忆体。',p:['实验 commit 前缀 experiment:','迭代前读 git log + git diff','改进全累积 · 失败自动 revert','TSV 格式记录结果','「Every improvement stacks. Every failure auto-reverts.」']},
+    fe1:{t:'🎯 <em>目标导向编排（v2.2）</em>',d:'v2.2.0 起：不用写 Metric/Verify，直接给自由形式目标——Agent 自动选流水线（plan→loop→evals→regression…）跑到条件满足。经典模式也保留：明确 Goal/Scope/Metric/Verify 四件套 + Iterations: N。',p:['v2.2.0 编排器：自由目标自动选流水线','经典四件套：Goal/Scope/Metric/Verify','迭代数默认有界，unlimited 需显式开启','--chain 命令链：probe→plan→autoresearch','handoff.json 跨命令交接']},
+    fe2:{t:'🛡️ <em>9 个安全 Hooks</em>',d:'scout-block 挡 node_modules/.git 塞爆上下文；privacy-block 挡 .env/SSH 密钥被读；dangerous-cmd-block 挡 force-push/rm -rf/git reset --hard；simplify-gate 400 LOC 警告/800 LOC 拦截；stop-notify 结束通知（可 webhook）。全默认开启，AR_DISABLE_* 单独关。',p:['9 个 hook：scout/privacy/dangerous-cmd 等','全默认开 · AR_DISABLE_* 单独关','simplify-gate：400 LOC 警告 / 800 LOC 拦截','.ckignore 自定义屏蔽目录','Slack webhook 完成通知']},
+    fe3:{t:'🔀 <em>三平台支持</em>',d:'Claude Code（npx skills add 或 /plugin install）、OpenCode（install.sh --opencode，命令用下划线）、OpenAI Codex（install.sh --codex，$autoresearch mention 语法）。hook 完整度：Claude Code 全量，OpenCode/Codex 核心 skill 无 hook 对齐。',p:['Claude Code：npx skills add uditgoenka/autoresearch','OpenCode：--opencode 安装 · 下划线命令','Codex：--codex 安装 · $autoresearch 语法','hook 完整度：Claude 全量，其他核心无 hook','14 命令三平台全可用']},
+    fe4:{t:'🧠 <em>git 即记忆 + 自动回滚</em>',d:'8 条铁律的核心工程：一次一改（原子变更）、机械验证（无主观「看起来不错」）、自动回滚（失败立即 revert）、git 当记忆（experiment: 前缀提交）。改进全累积，失败零成本——这是循环能「永不停止」的根基。',p:['一次一改：原子变更','机械验证：只用指标不用感觉','自动回滚：失败立即 revert','git 当记忆：experiment: 前缀','「Simplicity wins：同等结果更少代码 = 保留」']},
+    q1:{t:'🚀 <em>Karpathy 93.8K★ 原版的 Claude 化</em>',d:'原版 karpathy/autoresearch 93.8K★ 证明「约束+机械指标+自主迭代=复利收益」。autoresearch 把它从 ML 推广到任何领域，5 个月 5.8K★。生态已形成：darwin-skill「让你的 Skill 无限进化」5.5K★、codex-autoresearch 2.1K★ 都是直接派生物——「改进循环」正在成为 agent 技能的新范式。',p:['原版 93.8K★ · 630 行 Python','Claude 化推广到任意领域','darwin-skill 5.5K★（中文圈派生物）','codex-autoresearch 2.1K★','「改进循环」= agent 技能新范式']},
+    q2:{t:'⚡ <em>v2.1 重构：token 降 95%</em>',d:'这是社区最被称道的工程决策：一次性 monolith 技能文件换成薄路由 + 按需加载命令文件。同样能力，95% 的 token 节省。8-12 v2.2.2 稳定版发布（stabilization release），含 8 阶段 ship 门禁、portable hook guardrails。',p:['813 行 → 41 行 + 12 文件','~100K → ~5-8K token/次','v2.2.2：stabilization release（8-12）','v2.2.0：目标导向编排器（6-20）','v2.1.4：回归稳定性门禁']},
+    q3:{t:'🌱 <em>生态蔓延：中文圈也长出来了</em>',d:'最有力的口碑是「被抄」：alchaincyf/darwin-skill（5.5K★）直接标注 Autoresearch-inspired，做成了「评估→改进→测试→保留或回滚」的 Skill 进化系统；leo-lilinxiao/codex-autoresearch（2.1K★）移植到 Codex。生态衍生项目加起来超过主仓库——范式比项目跑得远。',p:['darwin-skill 5.5K★（Autoresearch-inspired）','codex-autoresearch 2.1K★','autoresearch-skill 979★','「被抄」是开源最强口碑','衍生生态合计 > 主仓库']},
+    t1:{t:'Claude Code <em>Skill 生态</em>',d:'核心是 Claude Code skill + 命令体系。npx skills add 安装后 14 命令全可用（需重启会话，平台限制）。/plugin marketplace add + /plugin install 是官方插件路径。',p:['npx skills add uditgoenka/autoresearch','/plugin marketplace add + install','装完需新会话（参考文件解析限制）','/plugin update 免重装升级','~/.claude/skills 全局安装']},
+    t2:{t:'Shell <em>技术栈</em>',d:'仓库语言标 Shell——skill 本质是 markdown 指令 + 少量脚本（install.sh 引导安装、release.md 发布检查）。轻量、无依赖、纯指令。',p:['Shell 主导 + Markdown 指令','install.sh 引导安装（--claude/--opencode/--codex）','无运行时依赖','repository size 938KB']},
+    t3:{t:'MIT <em>协议</em>',d:'完全 MIT 开源。作者 @iuditg 还有 PayPal 赞助入口——典型个人开源项目形态：免费、开放、社区驱动。',p:['MIT · 完全开放','作者：Udit Goenka (@iuditg)','PayPal 赞助入口','社区 PR 活跃（8-12 批量合并）']},
+    t4:{t:'14 <em>命令家族</em>',d:'不是 1 个命令，是 14 个：循环（autoresearch）、规划（plan）、调试（debug）、修复（fix）、安全（security）、发布（ship）、边界（scenario）、预测（predict）、学习（learn）、推理（reason）、探针（probe）、改进（improve）、评估（evals）、回归（regression）。每个都有默认迭代数。',p:['核心循环 + 13 个子命令','默认迭代数：15-25 不等','--chain 串联多命令','--evals / --evals-interval 自动评估','交互式 setup：无参数调用自动询问']},
+    t5:{t:'9 <em>安全 Hooks</em>',d:'Claude Code hook surface：PreToolUse 三挡（scout-block/privacy-block/dangerous-cmd-block）+ UserPromptSubmit 两枚（iteration-context/dev-rules-reminder）+ SubagentStart + SessionStart + SessionEnd + simplify-gate。防御纵深，非安全沙箱。',p:['PreToolUse：scout/privacy/dangerous-cmd','UserPromptSubmit：iteration-context/dev-rules','simplify-gate：LOC 门槛','SessionStart/End：init/notify','全默认开启']},
+    t6:{t:'npx skills add <em>安装</em>',d:'推荐安装方式：npx skills add uditgoenka/autoresearch——一条命令装进 Claude Code，14 命令重启后可用。走 agentskills.io 生态标准（与 Hermes 技能系统同源）。',p:['npx skills add 一条命令','重启 Claude Code 后生效','agentskills.io 标准','与 Hermes/OpenClaw 技能生态互通','或 git clone + cp 手动装']},
+    stamp:{t:'♾️ <em>autoresearch 的故事</em>',d:'2026-02，Andrej Karpathy 发布 autoresearch：630 行 Python，让 Agent 一夜自动跑 100 次 ML 实验——单一指标、受限范围、快速验证、自动回滚、git 当记忆。一个月后（3-13），Udit Goenka 把它 Claude Code 化并推广到任意领域：不是「让 AI 写代码」，是「给 AI 一个目标、一个指标、一个永不放弃的循环」，然后睡觉。v2.1 把 813 行 monolith 重构为薄路由（token -95%），v2.2 加目标导向编排。5 个月 5.8K★，衍生生态（darwin-skill/codex-autoresearch）合计超过主仓库——「改进循环」成了 agent 技能的新范式。',p:['2026-02 Karpathy 原版（630 行）','3-13 Udit Goenka Claude 化发布','「Set the GOAL → Agent runs the LOOP → 你醒来有结果」','v2.1 token -95% · v2.2 编排器','5 个月 5.8K★ · 生态蔓延']}
+  };
+
+  /* 弹窗系统 */
+  var overlay=$('#overlay'),sheet=$('#sheet');
+  function openSheet(key){
+    var d=DATA[key];if(!d)return;
+    $('#sTitle').innerHTML=d.t;
+    var body='<p>'+d.d+'</p>';
+    if(d.p&&d.p.length){body+='<ul>';d.p.forEach(function(x){body+='<li>'+x+'</li>'});body+='</ul>';}
+    $('#sBody').innerHTML=body;
+    sheet.classList.add('show');overlay.classList.add('show');
+  }
+  function closeSheet(){sheet.classList.remove('show');overlay.classList.remove('show')}
+  $('#sClose').addEventListener('click',closeSheet);
+  overlay.addEventListener('click',closeSheet);
+  document.querySelectorAll('[data-k]').forEach(function(el){
+    el.addEventListener('click',function(){openSheet(el.getAttribute('data-k'))});
+  });
+  $('#termShow').addEventListener('click',function(){openSheet('stamp')});
+  $('#stamp').addEventListener('click',function(){openSheet('stamp')});
+
+  /* toast */
+  var toastTimer;
+  function showToast(msg){
+    var t=$('#toast');t.textContent=msg;t.classList.add('show');
+    clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.classList.remove('show')},2200);
+  }
+
+  /* 分享 */
+  var SHARE_TEXT='autoresearch：Karpathy 原版（93.8K★）的 Claude Code 化——目标+指标+永不放弃的循环，Agent 自主 修改→验证→保留/回滚→重复，醒来就有结果。14 命令、token -95%、三平台支持，5 个月 5.8K★\nhttps://mindresonance.online/youngsinsight/pages/autoresearch.html\n\n你可以用任何AI工具订阅我的博客文章：https://mindresonance.online/youngsinsight/subscribe.html';
+  $('#shareBtn').addEventListener('click',function(){
+    if(navigator.share){navigator.share({title:'autoresearch · 永不停止的改进引擎',text:SHARE_TEXT}).catch(function(){})}
+    else{
+      var ta=document.createElement('textarea');ta.value=SHARE_TEXT;document.body.appendChild(ta);ta.select();
+      try{document.execCommand('copy');showToast('已复制：介绍 + 链接 + 订阅推荐')}catch(e){}
+      document.body.removeChild(ta);
+    }
+  });
+
+  /* 彩蛋：stamp 连点 5 次 → 循环全速（实验加速） */
+  var stampCount=0;
+  $('#stamp').addEventListener('click',function(){
+    stampCount++;
+    if(stampCount>=5){
+      stampCount=0;
+      var sats=document.querySelectorAll('#sp3d .sat');
+      sats.forEach(function(s){s.style.animationDuration='0.6s'});
+      var core=$('#sp3d .core');
+      core.style.animation='corePulse 0.5s ease-in-out 4';
+      showToast('♾️ 循环全速：Modify→Verify→Keep→Repeat');
+      if(navigator.vibrate)navigator.vibrate([20,40,20]);
+      setTimeout(function(){sats.forEach(function(s){s.style.animationDuration=''})},3000);
+    }
+  });
+
+  /* 3D 视差 tilt */
+  var stage=$('#stage');
+  var tiltEls=document.querySelectorAll('.tilt-deep');
+  var last=0;
+  function applyTilt(x,y){
+    var r=stage.getBoundingClientRect();
+    var dx=(x-r.left)/r.width-0.5,dy=(y-r.top)/r.height-0.5;
+    tiltEls.forEach(function(el){
+      el.style.transform='rotateX('+(-dy*10)+'deg) rotateY('+(dx*12)+'deg)';
+    });
+  }
+  stage.addEventListener('touchmove',function(e){
+    var t=e.touches[0],now=performance.now();
+    if(now-last<16)return;last=now;
+    applyTilt(t.clientX,t.clientY);
+  },{passive:true});
+  stage.addEventListener('mousemove',function(e){
+    var now=performance.now();
+    if(now-last<16)return;last=now;
+    applyTilt(e.clientX,e.clientY);
+  });
+  stage.addEventListener('mouseleave',function(){
+    tiltEls.forEach(function(el){el.style.transform=''});
+  });
+
+  /* 外链 */
+  $('#ghBtn').href='https://github.com/uditgoenka/autoresearch';
+  $('#siteBtn').href='https://udit.co/projects/autoresearch';
+})();
+</script>
+</body>
+</html>
