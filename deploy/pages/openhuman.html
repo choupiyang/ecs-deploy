@@ -81,46 +81,60 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'PingFang
 .tagline em{color:var(--accent-light);font-style:normal;font-weight:600}
 .hint-badge{display:inline-block;margin-top:5px;font-size:8px;color:var(--text-mute);letter-spacing:.06em;border:1px dashed var(--border);border-radius:20px;padding:3px 9px}
 
-.hero{position:relative;z-index:3;display:flex;align-items:center;gap:14px;padding:12px 16px 10px;flex-shrink:0}
-@media (max-height:850px) and (min-height:731px){
-  .hero{padding-top:8px;padding-bottom:6px;gap:11px}
-  .sp3d{width:104px;height:104px}
+.hero{position:relative;z-index:3;display:flex;align-items:center;gap:12px;padding:8px 16px 6px;flex-shrink:0}
+@media (max-height:950px) and (min-height:851px){
+  .hero{padding-top:6px;padding-bottom:4px;gap:10px}
+  .sp3d{width:96px;height:96px}
   .sp-title{font-size:19px}
   .tagline{font-size:9.5px}
-  .stats{padding:7px 16px 3px}
-  .flow{padding:6px 16px 1px}
-  .feats{padding:6px 16px 3px}
-  .tech{padding:6px 16px 3px}
-  .term-body{font-size:7.5px;line-height:1.65}
+  .stats{padding:6px 16px 3px}
+  .flow{padding:5px 16px 1px}
+  .feats{padding:5px 16px 3px}
+  .tech{padding:5px 16px 3px}
+  .term-body{font-size:7.5px;line-height:2}
+  .quick{padding:6px 16px 3px;gap:5px}
+}
+@media (max-height:850px) and (min-height:731px){
+  .hero{padding-top:6px;padding-bottom:4px;gap:10px}
+  .sp3d{width:90px;height:90px}
+  .sp-title{font-size:18px}
+  .tagline{font-size:9.5px}
+  .stats{padding:6px 16px 3px}
+  .flow{padding:5px 16px 1px}
+  .feats{padding:5px 16px 3px}
+  .tech{padding:5px 16px 3px}
+  .term-body{font-size:7.5px;line-height:2}
   .quick{padding:6px 16px 3px;gap:5px}
 }
 @media (max-height:730px){
-  .hero{padding-top:6px;padding-bottom:4px;gap:10px}
-  .sp3d{width:88px;height:88px}
+  .hero{padding-top:5px;padding-bottom:3px;gap:9px}
+  .sp3d{width:76px;height:76px}
   .sp3d .r3{display:none}
   .sp3d .sat.s3{display:none}
-  .sp3d .core{width:34px;height:34px;margin:-17px 0 0 -17px;font-size:15px}
-  .sp-title{font-size:17px}
+  .sp3d .core{width:28px;height:28px;margin:-14px 0 0 -14px;font-size:13px}
+  .stamp{width:24px;height:24px;font-size:11px}
+  .sp-title{font-size:16px}
   .tagline{font-size:9px;-webkit-line-clamp:2}
-  .stats{padding:6px 14px 2px;gap:4px}
+  .hint-badge{display:none}
+  .stats{padding:5px 14px 2px;gap:4px}
   .stat b{font-size:12px}
-  .flow{padding:5px 14px 0}
+  .flow{padding:4px 14px 0}
   .fnode i{font-size:11px}
   .fnode b{font-size:7px}
-  .feats{padding:5px 14px 2px;gap:4px}
+  .feats{padding:4px 14px 2px;gap:4px}
   .feat{padding:5px 7px}
-  .tech{padding:5px 14px 2px;gap:4px}
-  .bottombar{padding:7px 14px 9px}
-  .term-body{font-size:7px;line-height:1.55;padding:6px 9px;gap:1px}
-  .showcase{padding:3px 14px}
-  .quick{padding:5px 14px 2px;gap:4px}
+  .tech{padding:4px 14px 2px;gap:4px}
+  .bottombar{padding:6px 14px 8px}
+  .term-body{font-size:7px;line-height:1.9;padding:6px 9px;gap:1px}
+  .showcase{padding:2px 14px}
+  .quick{padding:4px 14px 2px;gap:4px}
   .qitem{padding:5px 8px}
   .qitem span{font-size:6.5px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
 }
 
 /* 核心展示区：大脑上下文构建终端 */
-.showcase{position:relative;z-index:3;flex:0 1 auto;display:flex;flex-direction:column;padding:4px 16px;min-height:0}
-.term{flex:0 1 auto;display:flex;flex-direction:column;border:1px solid var(--border);border-radius:12px;background:rgba(13,21,18,.6);overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.35),inset 0 0 40px rgba(52,211,153,.03);cursor:pointer;transition:transform .15s}
+.showcase{position:relative;z-index:3;flex:1 1 auto;display:flex;flex-direction:column;padding:4px 16px;min-height:0}
+.term{flex:1 1 auto;display:flex;flex-direction:column;border:1px solid var(--border);border-radius:12px;background:rgba(13,21,18,.6);overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.35),inset 0 0 40px rgba(52,211,153,.03);cursor:pointer;transition:transform .15s;min-height:0}
 .term:active{transform:scale(.985)}
 .term-bar{display:flex;align-items:center;gap:5px;padding:7px 11px;border-bottom:1px solid var(--border);background:rgba(20,32,26,.5);flex-shrink:0}
 .term-bar i{width:7px;height:7px;border-radius:50%;display:block}
@@ -128,8 +142,8 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'PingFang
 .term-bar i:nth-child(2){background:#FFBD2E}
 .term-bar i:nth-child(3){background:#27C93F}
 .term-bar span{margin-left:6px;font-family:monospace;font-size:8px;color:var(--text-mute);letter-spacing:.06em}
-.term-body{flex:1 1 auto;padding:10px 12px;font-family:monospace;font-size:8px;line-height:1.75;color:#9CAE9F;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
-.term-body .ln{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;animation:lnIn .5s ease both}
+.term-body{flex:1 1 auto;padding:10px 12px;font-family:monospace;font-size:8px;line-height:1.9;color:#9CAE9F;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+.term-body .ln{white-space:normal;word-break:break-all;overflow:visible;text-overflow:clip;animation:lnIn .5s ease both}
 .term-body .ln .k{color:var(--accent)}
 .term-body .ln .g{color:#22D3EE}
 .term-body .ln .b{color:var(--plugin)}
@@ -139,7 +153,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'PingFang
 @keyframes lnIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
 
 /* 社区口碑速览 */
-.quick{position:relative;z-index:3;flex:1 1 auto;display:flex;flex-direction:column;gap:6px;padding:8px 16px 4px;min-height:0;overflow-y:auto}
+.quick{position:relative;z-index:3;flex:0 1 auto;display:flex;flex-direction:column;gap:6px;padding:8px 16px 4px;min-height:0;overflow-y:auto}
 .qitem{background:var(--bg-2);border:1px solid var(--border);border-radius:9px;padding:7px 10px;cursor:pointer;transition:transform .15s,box-shadow .2s;display:flex;align-items:center;gap:8px;flex:1 1 auto;min-height:34px}
 .qitem:active{transform:scale(.97)}
 .qitem i{font-style:normal;font-size:12px;flex-shrink:0;margin-top:0}
