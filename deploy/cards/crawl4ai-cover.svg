@@ -96,12 +96,13 @@
 
   <!-- 标题区 (Semantica 式) -->
   <text x="100" y="236" text-anchor="middle" font-family="Georgia,serif" font-size="24" font-weight="bold" fill="#E2E8F0">Crawl4AI</text>
-  <text x="100" y="252" text-anchor="middle" font-family="monospace" font-size="7" fill="#22D3EE" letter-spacing="1.5">LLM-FRIENDLY WEB CRAWLER · OPEN SOURCE</text>
-  <text x="100" y="268" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#7C8CA3">为 LLM 而生的网页爬虫 · 77.6K★</text>
+  <text x="100" y="252" text-anchor="middle" font-family="monospace" font-size="7" fill="#22D3EE" letter-spacing="1.5">LLM-FRIENDLY WEB CRAWLER</text>
+  <text x="100" y="263" text-anchor="middle" font-family="monospace" font-size="6" fill="#22D3EE" letter-spacing="1">OPEN SOURCE · 77.6K★</text>
+  <text x="100" y="278" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#7C8CA3">为 LLM 而生的网页爬虫</text>
 
   <!-- 数据条 -->
-  <rect x="24" y="288" width="152" height="24" rx="12" fill="#0F141B" stroke="#334155" stroke-width="0.8"/>
-  <text x="100" y="304" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#E2E8F0">77.6K★ · LLM-FRIENDLY · OPEN SOURCE</text>
+  <rect x="24" y="292" width="152" height="22" rx="11" fill="#0F141B" stroke="#334155" stroke-width="0.8"/>
+  <text x="100" y="307" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#E2E8F0">77.6K★ · MIT · Python</text>
 
   <!-- 底部 -->
   <text x="100" y="338" text-anchor="middle" font-family="monospace" font-size="6.5" fill="#475569" letter-spacing="1">MIND RESONANCE · 反共识观察</text>

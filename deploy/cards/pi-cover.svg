@@ -27,7 +27,7 @@
   <!-- 顶部栏 -->
   <rect x="0" y="0" width="200" height="2" fill="#E8B63E" opacity="0.8"/>
   <g font-family="monospace" font-size="7" letter-spacing="2" fill="#6B7280">
-    <text x="16" y="24">EAREENDIL-WORKS · AI AGENT TOOLKIT</text>
+    <text x="16" y="24">EAREENDIL-WORKS · TOOLKIT</text>
     <text x="184" y="24" text-anchor="end" fill="#E8B63E">85.2K★</text>
   </g>
 

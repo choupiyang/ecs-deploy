@@ -89,13 +89,13 @@
   </g>
 
   <!-- 标题区 (Semantica 式) -->
-  <text x="100" y="236" text-anchor="middle" font-family="Georgia,serif" font-size="24" font-weight="bold" fill="#F2F4F8">DeepSeek-Reasonix</text>
-  <text x="100" y="252" text-anchor="middle" font-family="monospace" font-size="7" fill="#67E8F9" letter-spacing="1.5">OPEN SOURCE · MIT · GO</text>
-  <text x="100" y="268" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#7C8AA5">可以一直开着跑的编码 Agent</text>
+  <text x="100" y="236" text-anchor="middle" font-family="Georgia,serif" font-size="24" font-weight="bold" fill="#F2F4F8">DeepSeek<tspan x="100" dy="19">Reasonix</tspan></text>
+  <text x="100" y="276" text-anchor="middle" font-family="monospace" font-size="7" fill="#67E8F9" letter-spacing="1.5">OPEN SOURCE · MIT · GO</text>
+  <text x="100" y="290" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#7C8AA5">可以一直开着跑的编码 Agent</text>
 
   <!-- 数据条 -->
-  <rect x="24" y="288" width="152" height="24" rx="12" fill="#0C1322" stroke="#2A3A5C" stroke-width="0.8"/>
-  <text x="100" y="304" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#F2F4F8">32.8K★ · checkpoint · $0.043/会话</text>
+  <rect x="24" y="306" width="152" height="24" rx="12" fill="#0C1322" stroke="#2A3A5C" stroke-width="0.8"/>
+  <text x="100" y="322" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#F2F4F8">32.8K★ · checkpoint · $0.043/会话</text>
 
   <!-- 底部 -->
   <text x="100" y="338" text-anchor="middle" font-family="monospace" font-size="6.5" fill="#6B7A99" letter-spacing="1">MIND RESONANCE · 反共识观察</text>

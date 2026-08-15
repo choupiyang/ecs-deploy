@@ -109,13 +109,13 @@
   </g>
 
   <!-- 标题区 (Semantica) -->
-  <text x="100" y="236" text-anchor="middle" font-family="Georgia,serif" font-size="24" font-weight="bold" fill="#F0EDF8">Hermes Bot Mode</text>
-  <text x="100" y="252" text-anchor="middle" font-family="monospace" font-size="7" fill="#A78BFA" letter-spacing="1.5">AGENT ROSTER · BOT-TO-BOT</text>
-  <text x="100" y="268" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#9A92B8">把 Agent 变成一群有名字的机器人</text>
+  <text x="100" y="236" text-anchor="middle" font-family="Georgia,serif" font-size="24" font-weight="bold" fill="#F0EDF8">Hermes<tspan x="100" dy="19">Bot Mode</tspan></text>
+  <text x="100" y="276" text-anchor="middle" font-family="monospace" font-size="7" fill="#A78BFA" letter-spacing="1.5">AGENT ROSTER · BOT-TO-BOT</text>
+  <text x="100" y="290" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#9A92B8">把 Agent 变成一群有名字的机器人</text>
 
   <!-- 数据条 -->
-  <rect x="24" y="288" width="152" height="24" rx="12" fill="#141024" stroke="#2A2350" stroke-width="0.8"/>
-  <text x="100" y="304" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#F0EDF8">379★ · 8-13 发布 · MIT</text>
+  <rect x="24" y="306" width="152" height="24" rx="12" fill="#141024" stroke="#2A2350" stroke-width="0.8"/>
+  <text x="100" y="322" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#F0EDF8">379★ · 8-13 发布 · MIT</text>
 
   <!-- 底部 -->
   <text x="100" y="338" text-anchor="middle" font-family="monospace" font-size="6.5" fill="#6E6490" letter-spacing="1">MIND RESONANCE · 反共识观察</text>

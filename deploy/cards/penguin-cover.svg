@@ -57,7 +57,7 @@
     </g>
   </g>
   <!-- 构建箭头 -->
-  <g transform="translate(30,210)" opacity=".85">
+  <g transform="translate(30,196)" opacity=".85">
     <rect x="0" y="0" width="56" height="16" rx="8" fill="none" stroke="#4FC3F7" stroke-width=".9"/>
     <text x="28" y="11" text-anchor="middle" font-family="system-ui,sans-serif" font-size="5.5" fill="#8FB8D8">一句话描述</text>
     <path d="M60 8 L74 8" stroke="#4FC3F7" stroke-width="1"/>
@@ -67,13 +67,13 @@
   </g>
 
   <!-- 标题区 (Semantica) -->
-  <text x="100" y="236" text-anchor="middle" font-family="Georgia,serif" font-size="24" font-weight="bold" fill="#E8F4FD">PenguinHarness</text>
-  <text x="100" y="252" text-anchor="middle" font-family="monospace" font-size="7" fill="#4FC3F7" letter-spacing="1.5">AUTOMATED AGENT BUILDER</text>
-  <text x="100" y="268" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#9AB8D4">一句话 · 自动构建完整应用</text>
+  <text x="100" y="236" text-anchor="middle" font-family="Georgia,serif" font-size="24" font-weight="bold" fill="#E8F4FD">Penguin<tspan x="100" dy="19">Harness</tspan></text>
+  <text x="100" y="276" text-anchor="middle" font-family="monospace" font-size="7" fill="#4FC3F7" letter-spacing="1.5">AUTOMATED AGENT BUILDER</text>
+  <text x="100" y="290" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#9AB8D4">一句话 · 自动构建完整应用</text>
 
   <!-- 数据条 -->
-  <rect x="24" y="288" width="152" height="24" rx="12" fill="#0A1420" stroke="#1E3A52" stroke-width="0.8"/>
-  <text x="100" y="304" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#E8F4FD">490★ · $0.02/构建 · APACHE-2.0</text>
+  <rect x="24" y="306" width="152" height="24" rx="12" fill="#0A1420" stroke="#1E3A52" stroke-width="0.8"/>
+  <text x="100" y="322" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#E8F4FD">490★ · $0.02/构建 · APACHE-2.0</text>
 
   <!-- 底部 -->
   <text x="100" y="338" text-anchor="middle" font-family="monospace" font-size="6.5" fill="#5E86A8" letter-spacing="1">MIND RESONANCE · 反共识观察</text>
