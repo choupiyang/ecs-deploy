@@ -1,16 +1,16 @@
 {
-  "id": "autoresearch",
-  "title": "autoresearch",
-  "subtitle": "Karpathy autoresearch（93.8K★）的 Claude Code 化——目标+指标+永不放弃的循环：Agent 自主 修改→验证→保留/回滚→重复，醒来就有结果 · 14 命令 · token -95% · 三平台 · 5 个月 5.8K★",
-  "image": "cards/autoresearch-cover.svg",
-  "page": "pages/autoresearch.html",
+  "id": "anydoc",
+  "title": "anydoc",
+  "subtitle": "Firecrawl 出品：Word/PPT/Excel/PDF 等 14 种格式 → 统一 LLM 就绪 Markdown，中位 4.4ms · 纯 Rust 无云端 · 基准每个格式第一 · 四语言绑定 · 12 天 16.3K★",
+  "image": "cards/anydoc-cover.svg",
+  "page": "pages/anydoc.html",
   "tags": [
-    "AI Agent",
-    "自主迭代",
-    "Claude Code",
-    "Karpathy",
-    "开源",
-    "技能"
+    "文档转换",
+    "Markdown",
+    "Rust",
+    "LLM 生态",
+    "Agent Skill",
+    "开源"
   ],
   "date": "2026-08-15",
   "type": "recommendation"

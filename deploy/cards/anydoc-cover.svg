@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 356" width="200" height="356">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0A0E14"/>
+      <stop offset="50%" stop-color="#0F1420"/>
+      <stop offset="100%" stop-color="#151B2E"/>
+    </linearGradient>
+    <linearGradient id="convGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FF6B3D"/>
+      <stop offset="100%" stop-color="#E8410C"/>
+    </linearGradient>
+    <radialGradient id="coreGrad" cx="0.35" cy="0.3" r="1">
+      <stop offset="0%" stop-color="#FFB199"/>
+      <stop offset="0.55" stop-color="#FF6B3D"/>
+      <stop offset="100%" stop-color="#A3280A"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <pattern id="grid" width="16" height="16" patternUnits="userSpaceOnUse">
+      <path d="M16 0H0V16" fill="none" stroke="#232A3E" stroke-width="0.5"/>
+    </pattern>
+  </defs>
+
+  <rect width="200" height="356" fill="url(#bg)"/>
+  <rect width="200" height="356" fill="url(#grid)" opacity="0.5"/>
+
+  <!-- 顶部栏 -->
+  <rect x="0" y="0" width="200" height="2" fill="url(#convGrad)" opacity="0.8"/>
+  <text x="16" y="24" font-family="monospace" font-size="7" fill="#5E6884" letter-spacing="2">FIRECRAWL · DOC → MD</text>
+  <text x="184" y="24" font-family="monospace" font-size="7" fill="#FF6B3D" text-anchor="end">16.3K★</text>
+
+  <!-- 中心: 文档流转换器（左侧格式文件 → 中心转换核 → 右侧 Markdown） -->
+  <g transform="translate(100,126)">
+    <!-- 外轨道（转换流） -->
+    <circle r="58" fill="none" stroke="#FF6B3D" stroke-width="0.8" stroke-dasharray="3 5" opacity="0.45">
+      <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="18s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="44" fill="none" stroke="#FFB199" stroke-width="0.7" stroke-dasharray="2 4" opacity="0.35">
+      <animateTransform attributeName="transform" type="rotate" from="360 0 0" to="0 0 0" dur="24s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- 左侧输入文档图标（docx/pptx/xlsx/pdf） -->
+    <g>
+      <rect x="-58" y="-14" width="17" height="22" rx="2" fill="#0D1322" stroke="#FF6B3D" stroke-width="0.8"/>
+      <rect x="-55.5" y="-10.5" width="12" height="2" rx="1" fill="#FF6B3D" opacity="0.8"/>
+      <rect x="-55.5" y="-6.5" width="12" height="2" rx="1" fill="#FF6B3D" opacity="0.5"/>
+      <text x="-49.5" y="1.5" text-anchor="middle" font-family="sans-serif" font-size="4.5" fill="#FFB199">DOC</text>
+    </g>
+    <g>
+      <rect x="-44" y="-26" width="17" height="22" rx="2" fill="#0D1322" stroke="#FF6B3D" stroke-width="0.8">
+        <animate attributeName="x" values="-44;-41;-44" dur="3s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="-41.5" y="-22.5" width="12" height="2" rx="1" fill="#FF6B3D" opacity="0.8"/>
+      <text x="-35.5" y="-10.5" text-anchor="middle" font-family="sans-serif" font-size="4.5" fill="#FFB199">PDF</text>
+    </g>
+
+    <!-- 右侧输出 Markdown -->
+    <g>
+      <rect x="44" y="-16" width="19" height="26" rx="2" fill="#0D1322" stroke="#7DD4A8" stroke-width="0.8"/>
+      <text x="53.5" y="-3" text-anchor="middle" font-family="monospace" font-size="4.5" fill="#7DD4A8"># MD</text>
+      <rect x="47" y="2" width="13" height="1.6" rx="0.8" fill="#7DD4A8" opacity="0.5"/>
+      <rect x="47" y="5" width="10" height="1.6" rx="0.8" fill="#7DD4A8" opacity="0.35"/>
+      <text x="53.5" y="8" text-anchor="middle" font-family="monospace" font-size="4.5" fill="#7DD4A8">.md</text>
+    </g>
+    <!-- 转换箭头（左→右） -->
+    <g stroke="#7DD4A8" stroke-width="0.8" opacity="0.6">
+      <line x1="-24" y1="-8" x2="40" y2="-8"/>
+      <path d="M38 -13 l6 5 l-6 5 l-3 -3.5 z" fill="#7DD4A8" stroke="none">
+        <animate attributeName="opacity" values="0.3;1;0.3" dur="1.6s" repeatCount="indefinite"/>
+      </path>
+    </g>
+
+    <!-- 中心转换核 -->
+    <circle r="15" fill="url(#coreGrad)" filter="url(#glow)">
+      <animate attributeName="r" values="13;16;13" dur="2.6s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="15" fill="none" stroke="#FFB199" stroke-width="0.8" opacity="0.6">
+      <animate attributeName="r" values="15;24;15" dur="2.6s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.6;0;0.6" dur="2.6s" repeatCount="indefinite"/>
+    </circle>
+    <!-- 核内 ⚡ 闪电（转换速度） -->
+    <path d="M2 -10 L-5 1 L-1 1 L-3 10 L6 -1 L1 -1 Z" fill="#0A0E14" opacity="0.85">
+      <animate attributeName="opacity" values="0.5;1;0.5" dur="1.8s" repeatCount="indefinite"/>
+    </path>
+
+    <!-- 轨道卫星：格式徽章 -->
+    <circle cx="0" cy="-58" r="4.5" fill="url(#coreGrad)" filter="url(#glow)">
+      <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="18s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="58" cy="0" r="4" fill="#7DD4A8" filter="url(#glow)">
+      <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="-360 0 0" dur="24s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="-58" cy="0" r="3.8" fill="#FFB199" filter="url(#glow)" opacity="0.9">
+      <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="14s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- 标题区 (Semantica) -->
+  <text x="100" y="236" text-anchor="middle" font-family="Georgia,serif" font-size="24" font-weight="bold" fill="#F2F0F4">anydoc</text>
+  <text x="100" y="252" text-anchor="middle" font-family="monospace" font-size="7" fill="#FF6B3D" letter-spacing="1.5">14 FORMATS → CLEAN MARKDOWN</text>
+  <text x="100" y="268" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#8B93A8">任何办公文档 → LLM 就绪 Markdown</text>
+
+  <!-- 数据条 -->
+  <rect x="24" y="288" width="152" height="24" rx="12" fill="#0F1420" stroke="#232A3E" stroke-width="0.8"/>
+  <text x="100" y="304" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#F2F0F4">16.3K★ · 4.4ms · Rust · MIT</text>
+
+  <!-- 底部 -->
+  <text x="100" y="338" text-anchor="middle" font-family="monospace" font-size="6.5" fill="#5E6884" letter-spacing="1">MIND RESONANCE · 反共识观察</text>
+</svg>

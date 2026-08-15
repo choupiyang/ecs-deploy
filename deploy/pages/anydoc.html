@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0A0E14">
+<title>anydoc · 任何文档 → 干净 Markdown</title>
+<style>
+:root{
+  --bg:#0A0E14; --bg-2:#0F1420; --bg-3:#1A2132;
+  --accent:#FF6B3D; --accent-light:#FFB199; --plugin:#7DD4A8;
+  --text:#F2F0F4; --text-mute:#8B93A8; --border:rgba(255,107,61,.25);
+  --glow:rgba(255,107,61,.5);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'PingFang SC','Noto Sans SC',system-ui,sans-serif;user-select:none}
+.stage{
+  aspect-ratio:9/16;height:min(100svh,calc(100vw*16/9));width:min(100vw,calc(100svh*9/16));
+  margin:0 auto;position:relative;overflow:hidden;perspective:1000px;
+  display:flex;flex-direction:column;
+  background:
+  radial-gradient(120% 80% at 80% -10%,rgba(255,107,61,.09),transparent 55%),
+  radial-gradient(100% 70% at 10% 110%,rgba(125,212,168,.05),transparent 60%),var(--bg);
+}
+@supports not (height:100svh){.stage{height:min(100vh,calc(100vw*16/9))}}
+.stage::before{content:'';position:absolute;inset:0;background:
+  linear-gradient(rgba(255,107,61,.04) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(255,107,61,.04) 1px,transparent 1px);
+  background-size:26px 26px;transform:translateZ(-60px);pointer-events:none}
+.topbar{position:relative;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:10px 14px 0;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:6px;font-size:9px;color:var(--text-mute);letter-spacing:.14em}
+.brand i{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--glow);animation:bdot 2.4s ease-in-out infinite}
+@keyframes bdot{0%,100%{opacity:.5}50%{opacity:1}}
+.share{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--bg-2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s}
+.share:active{transform:scale(.92)}
+.share svg{width:13px;height:13px;fill:var(--accent)}
+
+/* 3D 文档流转换器（主题：任何文档 → 干净 Markdown） */
+.sp3d{width:118px;height:118px;flex-shrink:0;position:relative;transform-style:preserve-3d;animation:gfloat 6s ease-in-out infinite}
+@keyframes gfloat{0%,100%{transform:rotateX(12deg) rotateY(-8deg)}50%{transform:rotateX(12deg) rotateY(8deg)}}
+/* 中心转换核 */
+.sp3d .core{position:absolute;left:50%;top:50%;width:38px;height:38px;margin:-19px 0 0 -19px;border-radius:50%;z-index:3;
+  background:radial-gradient(circle at 35% 30%,#FFB199,#FF6B3D 45%,#A3280A 90%);
+  box-shadow:0 0 24px rgba(255,107,61,.55),inset 0 0 14px rgba(255,255,255,.25);animation:corePulse 3.2s ease-in-out infinite;
+  display:flex;align-items:center;justify-content:center;font-size:16px;color:#0A0E14}
+@keyframes corePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+.sp3d .core::after{content:'';position:absolute;inset:-7px;border-radius:50%;border:1.5px dashed rgba(255,177,153,.5);animation:ringRot 14s linear infinite}
+@keyframes ringRot{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+/* 三层轨道 */
+.sp3d .ring{position:absolute;left:50%;top:50%;border:1px solid rgba(255,107,61,.3);border-radius:50%;transform-style:preserve-3d}
+.sp3d .r1{width:76px;height:76px;margin:-38px 0 0 -38px;animation:rot1 9s linear infinite}
+.sp3d .r2{width:100px;height:100px;margin:-50px 0 0 -50px;border-color:rgba(125,212,168,.25);animation:rot2 14s linear infinite}
+.sp3d .r3{width:118px;height:118px;margin:-59px 0 0 -59px;border-color:rgba(255,177,153,.14);animation:rot3 22s linear infinite}
+@keyframes rot1{from{transform:rotateX(68deg) rotateZ(0)}to{transform:rotateX(68deg) rotateZ(360deg)}}
+@keyframes rot2{from{transform:rotateX(68deg) rotateZ(360deg)}to{transform:rotateX(68deg) rotateZ(0)}}
+@keyframes rot3{from{transform:rotateX(68deg) rotateZ(0)}to{transform:rotateX(68deg) rotateZ(360deg)}}
+/* 卫星（格式徽章） */
+.sp3d .sat{position:absolute;left:50%;top:50%;width:17px;height:17px;margin:-8.5px 0 0 -8.5px;border-radius:50%;z-index:4;
+  display:flex;align-items:center;justify-content:center;font-size:6px;font-weight:700;color:#0A0E14;
+  background:radial-gradient(circle at 35% 30%,#fff,var(--accent) 60%);box-shadow:0 0 10px rgba(255,107,61,.5);animation:s1 9s linear infinite}
+.sp3d .sat.s2{width:14px;height:14px;margin:-7px 0 0 -7px;font-size:5.5px;background:radial-gradient(circle at 35% 30%,#fff,var(--plugin) 60%);box-shadow:0 0 10px rgba(125,212,168,.5);animation:s2 14s linear infinite}
+.sp3d .sat.s3{width:11px;height:11px;margin:-5.5px 0 0 -5.5px;font-size:5px;background:radial-gradient(circle at 35% 30%,#fff,#FFB199 60%);box-shadow:0 0 10px rgba(255,177,153,.5);animation:s3 22s linear infinite}
+@keyframes s1{from{transform:rotateX(68deg) rotateZ(0deg) translateX(38px) rotateZ(0deg)}to{transform:rotateX(68deg) rotateZ(360deg) translateX(38px) rotateZ(-360deg)}}
+@keyframes s2{from{transform:rotateX(68deg) rotateZ(180deg) translateX(50px) rotateZ(-180deg)}to{transform:rotateX(68deg) rotateZ(-180deg) translateX(50px) rotateZ(180deg)}}
+@keyframes s3{from{transform:rotateX(68deg) rotateZ(90deg) translateX(59px) rotateZ(-90deg)}to{transform:rotateX(68deg) rotateZ(450deg) translateX(59px) rotateZ(-450deg)}}
+/* 转换光点 */
+.sp3d .dlight{position:absolute;left:50%;top:50%;width:3px;height:3px;border-radius:50%;background:#fff;box-shadow:0 0 6px var(--accent);z-index:2;animation:dl 3.4s linear infinite}
+.sp3d .dlight.d2{animation-delay:1.7s;background:var(--plugin);box-shadow:0 0 6px var(--plugin)}
+@keyframes dl{0%{transform:rotate(0deg) translateX(30px);opacity:0}20%{opacity:1}80%{opacity:1}100%{transform:rotate(360deg) translateX(30px);opacity:0}}
+.sp3d .seal{position:absolute;bottom:2px;left:0;right:0;text-align:center;font-family:monospace;font-size:6px;letter-spacing:.13em;color:var(--text-mute);z-index:5;animation:sealGlow 3s ease-in-out infinite}
+@keyframes sealGlow{0%,100%{opacity:.7}50%{opacity:1;color:var(--accent-light)}}
+
+/* Hero 右侧 */
+.hero-side{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:5px;position:relative;z-index:3}
+.stamp{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;background:radial-gradient(circle at 35% 30%,rgba(255,107,61,.2),var(--bg-2));box-shadow:0 0 12px rgba(255,107,61,.15);cursor:pointer;transition:transform .15s;animation:stampSpin 12s linear infinite}
+.stamp:active{transform:scale(.9)}
+@keyframes stampSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.sp-title{font-size:22px;font-weight:800;color:var(--text);letter-spacing:.01em;line-height:1.15}
+.sp-title em{font-style:normal;color:var(--accent-light);text-shadow:0 0 18px rgba(255,107,61,.4)}
+.tagline{font-size:10px;color:var(--text-mute);line-height:1.55;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.tagline em{color:var(--accent-light);font-style:normal;font-weight:600}
+.hint-badge{display:inline-block;margin-top:5px;font-size:8px;color:var(--text-mute);letter-spacing:.06em;border:1px dashed var(--border);border-radius:20px;padding:3px 9px}
+
+.hero{position:relative;z-index:3;display:flex;align-items:center;gap:14px;padding:12px 16px 10px;flex-shrink:0}
+@media (max-height:850px) and (min-height:731px){
+  .hero{padding-top:8px;padding-bottom:6px;gap:11px}
+  .sp3d{width:104px;height:104px}
+  .sp-title{font-size:20px}
+  .tagline{font-size:9.5px}
+  .stats{padding:7px 16px 3px}
+  .flow{padding:6px 16px 1px}
+  .feats{padding:6px 16px 3px}
+  .tech{padding:6px 16px 3px}
+  .term-body{font-size:7.5px;line-height:1.65}
+  .quick{padding:6px 16px 3px;gap:5px}
+}
+@media (max-height:730px){
+  .hero{padding-top:6px;padding-bottom:4px;gap:10px}
+  .sp3d{width:88px;height:88px}
+  .sp3d .r3{display:none}
+  .sp3d .sat.s3{display:none}
+  .sp3d .core{width:30px;height:30px;margin:-15px 0 0 -15px;font-size:13px}
+  .sp-title{font-size:18px}
+  .tagline{font-size:9px;-webkit-line-clamp:2}
+  .stats{padding:6px 14px 2px;gap:4px}
+  .stat b{font-size:12px}
+  .flow{padding:5px 14px 0}
+  .fnode i{font-size:11px}
+  .fnode b{font-size:7px}
+  .feats{padding:5px 14px 2px;gap:4px}
+  .feat{padding:5px 7px}
+  .tech{padding:5px 14px 2px;gap:4px}
+  .bottombar{padding:7px 14px 9px}
+  .term-body{font-size:7px;line-height:1.55;padding:6px 9px;gap:1px}
+  .showcase{padding:3px 14px}
+  .quick{padding:5px 14px 2px;gap:4px}
+  .qitem{padding:5px 8px}
+  .qitem span{font-size:6.5px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+}
+
+/* 核心展示区：anydoc 转换终端 */
+.showcase{position:relative;z-index:3;flex:0 1 auto;display:flex;flex-direction:column;padding:4px 16px;min-height:0}
+.term{flex:0 1 auto;display:flex;flex-direction:column;border:1px solid var(--border);border-radius:12px;background:rgba(15,20,32,.6);overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.35),inset 0 0 40px rgba(255,107,61,.03);cursor:pointer;transition:transform .15s}
+.term:active{transform:scale(.985)}
+.term-bar{display:flex;align-items:center;gap:5px;padding:7px 11px;border-bottom:1px solid var(--border);background:rgba(26,33,50,.5);flex-shrink:0}
+.term-bar i{width:7px;height:7px;border-radius:50%;display:block}
+.term-bar i:nth-child(1){background:#FF5F56}
+.term-bar i:nth-child(2){background:#FFBD2E}
+.term-bar i:nth-child(3){background:#27C93F}
+.term-bar span{margin-left:6px;font-family:monospace;font-size:8px;color:var(--text-mute);letter-spacing:.06em}
+.term-body{flex:1 1 auto;padding:10px 12px;font-family:monospace;font-size:8px;line-height:1.75;color:#8FA8BC;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+.term-body .ln{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;animation:lnIn .5s ease both}
+.term-body .ln .k{color:var(--accent)}
+.term-body .ln .g{color:#7DD4A8}
+.term-body .ln .b{color:var(--plugin)}
+.term-body .ln .y{color:var(--accent-light)}
+.term-body .ln.cursor::after{content:'▍';color:var(--accent);animation:cur 1s steps(2) infinite}
+@keyframes cur{0%,49%{opacity:1}50%,100%{opacity:0}}
+@keyframes lnIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+
+/* 社区口碑速览 */
+.quick{position:relative;z-index:3;flex:1 1 auto;display:flex;flex-direction:column;gap:6px;padding:8px 16px 4px;min-height:0;overflow-y:auto}
+.qitem{background:var(--bg-2);border:1px solid var(--border);border-radius:9px;padding:7px 10px;cursor:pointer;transition:transform .15s,box-shadow .2s;display:flex;align-items:center;gap:8px;flex:1 1 auto;min-height:34px}
+.qitem:active{transform:scale(.97)}
+.qitem i{font-style:normal;font-size:12px;flex-shrink:0;margin-top:0}
+.qitem div{min-width:0}
+.qitem b{display:block;font-size:8.5px;color:var(--text)}
+.qitem span{display:block;font-size:7px;color:var(--text-mute);margin-top:1.5px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.qitem.hotq{border-color:rgba(255,107,61,.5);background:linear-gradient(160deg,rgba(255,107,61,.12),var(--bg-2))}
+
+/* Stats */
+.stats{position:relative;z-index:3;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:10px 16px 4px;flex-shrink:0}
+.stat{background:var(--bg-2);border:1px solid var(--border);border-radius:9px;padding:7px 4px 6px;text-align:center;cursor:pointer;transition:transform .15s,box-shadow .2s}
+.stat:active{transform:scale(.94)}
+.stat b{display:block;font-size:13px;color:var(--accent-light);font-family:monospace;letter-spacing:.02em}
+.stat span{display:block;font-size:7px;color:var(--text-mute);margin-top:2px;letter-spacing:.04em}
+
+/* Flow */
+.flow{position:relative;z-index:3;padding:8px 16px 2px;flex-shrink:0}
+.flow-row{display:flex;align-items:center;gap:3px}
+.fnode{flex:1;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;padding:6px 2px;text-align:center;cursor:pointer;transition:transform .15s,background .2s}
+.fnode:active{transform:scale(.92)}
+.fnode i{display:block;font-style:normal;font-size:12px;margin-bottom:2px}
+.fnode b{display:block;font-size:7.5px;color:var(--text);font-weight:600}
+.fnode span{display:block;font-size:6px;color:var(--text-mute);margin-top:1px}
+.fnode.hot{border-color:rgba(255,107,61,.5);background:linear-gradient(160deg,rgba(255,107,61,.14),var(--bg-2));animation:fhot 2s ease-in-out infinite}
+@keyframes fhot{0%,100%{box-shadow:0 0 6px rgba(255,107,61,.1)}50%{box-shadow:0 0 14px rgba(255,107,61,.35)}}
+.farrow{color:var(--accent);font-size:9px;flex-shrink:0;opacity:.7}
+
+/* Features */
+.feats{position:relative;z-index:3;display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px 16px 4px;flex-shrink:0}
+.feat{background:var(--bg-2);border:1px solid var(--border);border-radius:9px;padding:7px 9px;cursor:pointer;transition:transform .15s,box-shadow .2s;display:flex;align-items:center;gap:7px}
+.feat:active{transform:scale(.95)}
+.feat i{font-style:normal;font-size:13px;flex-shrink:0}
+.feat div{min-width:0}
+.feat b{display:block;font-size:8.5px;color:var(--text)}
+.feat span{display:block;font-size:6.8px;color:var(--text-mute);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Tech */
+.tech{position:relative;z-index:3;display:flex;flex-wrap:wrap;gap:5px;padding:8px 16px 4px;flex-shrink:0}
+.pill{font-size:7.5px;color:var(--text-mute);border:1px solid var(--border);background:var(--bg-2);border-radius:20px;padding:3.5px 9px;cursor:pointer;transition:all .15s;letter-spacing:.03em}
+.pill:active{transform:scale(.93);background:rgba(255,107,61,.12);color:var(--accent-light)}
+
+/* Bottom */
+.bottombar{position:relative;z-index:3;display:flex;align-items:center;gap:8px;padding:10px 16px 12px;flex-shrink:0}
+.btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 0;border-radius:10px;font-size:9px;font-weight:600;cursor:pointer;transition:transform .15s,filter .2s;text-decoration:none;letter-spacing:.05em}
+.btn:active{transform:scale(.95)}
+.btn.primary{background:linear-gradient(135deg,var(--accent),#E8410C);color:#0A0E14;box-shadow:0 4px 16px rgba(255,107,61,.3)}
+.btn.ghost{border:1px solid var(--border);color:var(--text);background:var(--bg-2)}
+.btn svg{width:12px;height:12px;fill:currentColor}
+
+/* Overlay */
+.overlay{position:fixed;inset:0;background:rgba(4,6,10,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);opacity:0;pointer-events:none;transition:opacity .35s;z-index:40}
+.overlay.show{opacity:1;pointer-events:auto}
+.sheet{position:absolute;bottom:0;left:50%;transform:translate(-50%,105%);width:min(94vw,calc(100svh*9/16*0.94));max-height:78svh;background:linear-gradient(180deg,#201A1F,#100C0E);border:1px solid rgba(255,107,61,.3);border-bottom:none;border-radius:20px 20px 0 0;padding:18px 20px 26px;transition:transform .45s cubic-bezier(.7,0,.3,1);z-index:50;overflow-y:auto;box-shadow:0 -12px 50px rgba(0,0,0,.5)}
+.sheet.show{transform:translate(-50%,0)}
+.sheet h3{font-size:15px;color:var(--text);margin-bottom:8px;line-height:1.4}
+.sheet h3 em{font-style:normal;color:var(--accent-light)}
+.sheet p{font-size:11px;color:#C8C4C4;line-height:1.75;margin-bottom:10px}
+.sheet ul{list-style:none;margin-bottom:10px}
+.sheet ul li{font-size:10.5px;color:#ACA8B0;line-height:1.7;padding-left:14px;position:relative;margin-bottom:3px}
+.sheet ul li::before{content:'◆';position:absolute;left:0;top:1px;font-size:7px;color:var(--accent)}
+.sheet pre{background:rgba(8,10,16,.8);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:monospace;font-size:9.5px;color:#8FA8BC;line-height:1.7;overflow-x:auto;margin-bottom:10px;white-space:pre-wrap;word-break:break-all}
+.sheet .close{display:block;width:100%;padding:10px 0;border:none;border-radius:10px;background:linear-gradient(135deg,var(--accent),#E8410C);color:#0A0E14;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.08em}
+.sheet .close:active{transform:scale(.97)}
+.sheet::-webkit-scrollbar{width:3px}
+.sheet::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+.toast{position:fixed;top:44px;left:50%;transform:translate(-50%,-16px);background:var(--bg-3);border:1px solid var(--border);color:var(--text);font-size:10px;padding:7px 14px;border-radius:20px;opacity:0;pointer-events:none;transition:all .3s;z-index:60;box-shadow:0 6px 20px rgba(0,0,0,.4);white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <div class="topbar">
+    <div class="brand"><i></i>ANYDOC · DOC → MD</div>
+    <div class="share" id="shareBtn">
+      <svg viewBox="0 0 24 24"><path d="M18 16.1c-.8 0-1.5.3-2.1.8l-7.1-4.2c.1-.2.1-.4.1-.7s0-.5-.1-.7l7.1-4.2c.6.5 1.4.8 2.1.8 1.9 0 3.4-1.5 3.4-3.4S19.9 3.1 18 3.1s-3.4 1.5-3.4 3.4c0 .2 0 .5.1.7l-7.1 4.2c-.6-.5-1.4-.8-2.1-.8-1.9 0-3.4 1.5-3.4 3.4s1.5 3.4 3.4 3.4c.8 0 1.5-.3 2.1-.8l7.1 4.2c-.1.2-.1.4-.1.7 0 1.9 1.5 3.4 3.4 3.4s3.4-3.4 3.4-3.4z"/></svg>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="sp3d tilt-deep" id="sp3d">
+      <div class="core">⚡</div>
+      <div class="ring r1"></div>
+      <div class="ring r2"></div>
+      <div class="ring r3"></div>
+      <div class="sat s1">DOC</div>
+      <div class="sat s2">PDF</div>
+      <div class="sat s3">XLS</div>
+      <div class="dlight d1"></div>
+      <div class="dlight d2"></div>
+      <div class="seal" id="seal">14 FORMATS · ONE CLEAN OUTPUT</div>
+    </div>
+    <div class="hero-side">
+      <div class="stamp" id="stamp">📄</div>
+      <div class="sp-title">anydoc<br><em>任何文档 → 干净 MD</em></div>
+      <div class="tagline">Firecrawl 出品：Word/PPT/Excel/PDF 等 <em>14 种格式</em> → 统一 LLM 就绪 Markdown，中位 <em>4.4ms</em>——纯 Rust，无 ML 无云端，浏览器里也能跑</div>
+      <div class="hint-badge">轻触任何元素探索 · 拖动卡片看 3D 视差</div>
+    </div>
+  </div>
+
+  <div class="showcase">
+    <div class="term" id="termShow">
+      <div class="term-bar"><i></i><i></i><i></i><span>anydoc · report.docx → stdout</span></div>
+      <div class="term-body" id="termBody"></div>
+    </div>
+  </div>
+
+  <div class="quick">
+    <div class="qitem hotq" data-k="q1"><i>🚀</i><div><b>12 天 16.3K★ · 超级黑马</b><span>2026-08-03 创建，12 天冲到 16,255★——Firecrawl（167K★）出品加持 + 基准屠榜，HN 两次发帖但热度全在 GitHub 星数</span></div></div>
+    <div class="qitem" data-k="q2"><i>🏆</i><div><b>基准屠榜：4.4ms · 综合 81 分</b><span>对 6 个竞品（LibreOffice/unstructured/markitdown/pandoc/docling/mammoth）100 份真实文档：14/14 格式全支持、每项格式都拿第一、中位 4.4ms——比 LibreOffice 快 256 倍</span></div></div>
+    <div class="qitem" data-k="q3"><i>🤖</i><div><b>Agent Skill：npx 即装</b><span>内置 agentskills.io 标准技能，一条 npx skills add firecrawl/anydoc 让任何 agent（Claude Code/Codex/Cursor/OpenCode）能读办公文档——和 Hermes 技能生态同源</span></div></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat" data-k="stars"><b>16.3K</b><span>★ GitHub</span></div>
+    <div class="stat" data-k="speed"><b>4.4ms</b><span>中位转换</span></div>
+    <div class="stat" data-k="fmt"><b>14</b><span>种格式</span></div>
+    <div class="stat" data-k="score"><b>81</b><span>基准分</span></div>
+  </div>
+
+  <div class="flow">
+    <div class="flow-row">
+      <div class="fnode" data-k="f1"><i>📄</i><b>输入文档</b><span>Word/PPT/Excel</span></div>
+      <div class="farrow">›</div>
+      <div class="fnode" data-k="f2"><i>🔍</i><b>内容识别</b><span>从字节读格式</span></div>
+      <div class="farrow">›</div>
+      <div class="fnode" data-k="f3"><i>⚡</i><b>转换核</b><span>统一文档模型</span></div>
+      <div class="farrow">›</div>
+      <div class="fnode hot" data-k="f4"><i>📝</i><b>输出 MD</b><span>GitHub-Flavored</span></div>
+    </div>
+  </div>
+
+  <div class="feats">
+    <div class="feat" data-k="fe1"><i>⚡</i><div><b>纯 Rust 无 ML</b><span>中位 4.4ms/文档</span></div></div>
+    <div class="feat" data-k="fe2"><i>🔍</i><div><b>内容识别格式</b><span>错标文件也能转</span></div></div>
+    <div class="feat" data-k="fe3"><i>🌐</i><div><b>WASM 浏览器版</b><span>文件不出本机</span></div></div>
+    <div class="feat" data-k="fe4"><i>📦</i><div><b>四语言绑定</b><span>Rust/Node/Py/WASM</span></div></div>
+  </div>
+
+  <div class="tech">
+    <div class="pill" data-k="t1">Rust</div>
+    <div class="pill" data-k="t2">MIT</div>
+    <div class="pill" data-k="t3">PDF 内置</div>
+    <div class="pill" data-k="t4">Agent Skill</div>
+    <div class="pill" data-k="t5">WebAssembly</div>
+    <div class="pill" data-k="t6">Firecrawl 出品</div>
+  </div>
+
+  <div class="bottombar">
+    <a class="btn primary" id="ghBtn" target="_blank"><svg viewBox="0 0 24 24"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.6 18.3 5 18.3 5c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"/></svg>GitHub</a>
+    <a class="btn ghost" id="siteBtn" target="_blank"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm7.9 9h-3.4a15.9 15.9 0 0 0-2.9-6.6A8 8 0 0 1 19.9 11zM12 4c1.6 1.9 2.7 4.2 3 7H9c.3-2.8 1.4-5.1 3-7zM4.1 11h3.4a15.9 15.9 0 0 1 2.9-6.6A8 8 0 0 0 4.1 11zm0 2a8 8 0 0 0 6.4 6.6A15.9 15.9 0 0 1 7.5 13H4.1zM9.7 15h4.6c-.4 2.6-1.5 4.8-3.3 6.6A15.3 15.3 0 0 1 9.7 15zm5.9 0h3.5a8 8 0 0 1-6.6 6.6A15.3 15.3 0 0 0 15.6 15z"/></svg>浏览器试用</a>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+  <div class="sheet" id="sheet">
+    <h3 id="sTitle"></h3>
+    <div id="sBody"></div>
+    <button class="close" id="sClose">CLOSE ✕</button>
+  </div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+(function(){
+  var $=function(s){return document.querySelector(s)};
+  var html=document.documentElement;
+  html.className='js';
+
+  /* 终端打字效果：转换过程 */
+  var LINES=[
+    {t:'$ npx @firecrawl/anydoc report.docx',c:''},
+    {t:'→ 读取字节 · 识别格式: DOCX',c:'b'},
+    {t:'→ 解析到统一文档模型',c:'y'},
+    {t:'→ 渲染 GitHub-Flavored Markdown',c:'y'},
+    {t:'# 季度报告',c:'g'},
+    {t:'',c:''},
+    {t:'| 指标 | Q2 | Q3 |',c:'g'},
+    {t:'|------|----|----|',c:'g'},
+    {t:'| 营收 | 1.2M | 1.8M |',c:'g'},
+    {t:'✓ 完成 · 3.9ms · 无云端',c:'g'}
+  ];
+  var termBody=$('#termBody');
+  function typeTerm(){
+    termBody.innerHTML='';
+    LINES.forEach(function(l,i){
+      var d=document.createElement('div');
+      d.className='ln'+(i===LINES.length-1?' cursor':'');
+      var s=l.c.indexOf('g')>-1?'g':l.c.indexOf('b')>-1?'b':l.c.indexOf('y')>-1?'y':'k';
+      d.innerHTML='<span class="'+s+'">'+(l.t||'&nbsp;')+'</span>';
+      d.style.animationDelay=(i*0.35)+'s';
+      termBody.appendChild(d);
+    });
+  }
+  typeTerm();
+
+  /* 弹窗数据 */
+  var DATA={
+    stars:{t:'16.3K★ <em>GitHub Stars</em>',d:'firecrawl/anydoc 于 2026-08-03 创建，12 天冲到 16,255★ / 903 forks / 42 watchers——2026 年最快的开源黑马之一。Firecrawl 母公司（167K★）出品，自带分发流量；HN 两次发帖（8-05 4分、8-11 3分）热度不高，说明星数是靠实际使用口碑滚起来的，不是靠发布营销。',p:['16,255★ / 903 forks / 42 watchers','2026-08-03 创建 · 12 天 16K★','Rust · MIT','HN 两次发帖（4分/3分）','Firecrawl 母公司 167K★']},
+    speed:{t:'4.4ms <em>中位转换 · 官方基准</em>',d:'官方基准：100 份真实文档（14 格式）vs 6 个竞品，中位转换 4.4ms——比最快的 markitdown（134.8ms）快 30 倍，比 LibreOffice（1129.5ms）快 256 倍。无 ML 模型、无外部服务、纯 Rust，是它快的根本。',p:['100 份真实文档 · 14 格式','中位 4.4ms（vs markitdown 134.8ms）','比 LibreOffice 快 256 倍','纯 Rust · 无 ML · 无外部服务','Ryzen 9 9950X3D 基准环境']},
+    fmt:{t:'14 <em>种格式全支持</em>',d:'Word（.doc/.docx/.docm）、PowerPoint（.ppt/.pps/.pot/.pptx/.pptm/.ppsx/.ppsm）、Excel（.xls/.xlsx/.xlsm/.xlsb）、OpenDocument（.odt/.ods/.odp）、RTF、EPUB、CSV、PDF——基准里唯一 14/14 全支持的转换器。竞品覆盖：LibreOffice 12、unstructured 8、markitdown 6、pandoc 5。',p:['Word：doc/docx/docm','PowerPoint：ppt/pps/pot/pptx/pptm/ppsx/ppsm','Excel：xls/xlsx/xlsm/xlsb','OpenDocument：odt/ods/odp','+ RTF/EPUB/CSV/PDF · 14/14 唯一']},
+    score:{t:'81 <em>综合分 · 每个格式都第一</em>',d:'LLM 评委（Claude Sonnet 5）盲评：每对输出互换两次消位置偏差，共 482 个判定。anydoc 综合 81（completeness 87/structure 79/formatting 78/cleanliness 81）；竞品最高 markitdown 65。分格式看：docx 88、rtf 88、doc 87、odp 86——14 个格式每个都拿第一。',p:['LLM 评委盲评 · 482 判定','综合 81 vs 竞品最高 65','每个格式都第一（14/14）','completeness 87 / structure 79','ground truth：LibreOffice 渲染前 6 页']},
+    f1:{t:'📄 <em>输入：混合文档</em>',d:'CLI 一条命令：npx @firecrawl/anydoc report.docx（stdout）或 -o 输出文件。混合文档批处理正是它的最佳场景——基准里唯一能处理全部 14 格式的，管线接到什么格式都能转。',p:['npx @firecrawl/anydoc report.docx','-o slides.md 输出文件','混合格式批处理最佳场景','唯一 14/14 全支持','LLM-ready 输出']},
+    f2:{t:'🔍 <em>内容识别格式</em>',d:'格式从字节本身读：PDF header、RTF open group、OLE stream names、ZIP package mimetype——错标扩展名的文件也能正确转换（CSV 这种无签名格式才需要显式命名）。',p:['从字节识别：PDF header/OLE/RTF/ZIP','错标文件照样转对','CSV 无签名需显式命名','to_markdown_bytes(bytes, "csv")','内容检测优于扩展名']},
+    f3:{t:'⚡ <em>统一文档模型</em>',d:'架构核心：每种格式解析进同一个 document model，一个 Markdown 序列化器输出——所以 2003 年的 .doc 和昨天的 .pptx 转出来的 escaping/表格/标题锚点/脚注行为完全一致。',p:['所有格式 → 同一 document model','一个 Markdown 序列化器','2003 .doc 与昨天 .pptx 行为一致','完整结构：标题/列表/表格/脚注/备注','单一输出 = 可预测']},
+    f4:{t:'📝 <em>输出：GitHub-Flavored MD</em>',d:'完整结构保留：带锚点的标题、粗斜删除线、行内代码/代码块、链接与内部交叉引用、带源编号的嵌套列表、合并单元格表格、引用块、脚注尾注、演讲者备注。图片输出 alt text，原始字节留在文档模型上。',p:['GitHub-Flavored Markdown','表格合并单元格/表头行','脚注/尾注/演讲者备注','图片 → alt text + 原始字节','外部 URL 图片 → 普通 MD 图片']},
+    fe1:{t:'⚡ <em>纯 Rust · 无 ML 无云端</em>',d:'没有任何 ML 模型、不调外部服务——纯 Rust 解析。这就是 4.4ms 的根源，也意味着完全本地、完全离线、零成本。Node.js 绑定跑在 libuv 线程池不阻塞事件循环；Python 绑定释放 GIL 其他线程继续跑。',p:['纯 Rust · 无 ML 模型','不调外部服务 · 完全本地','Node：libuv 线程池不阻塞','Python：释放 GIL','中位 4.4ms/文档']},
+    fe2:{t:'🔍 <em>内容识别格式</em>',d:'格式从字节本身读：PDF header、RTF open group、OLE stream names、ZIP package mimetype——错标扩展名的文件也能正确转换（CSV 这种无签名格式才需要显式命名）。',p:['从字节识别：PDF header/OLE/RTF/ZIP','错标文件照样转对','CSV 无签名需显式命名','to_markdown_bytes(bytes, "csv")','内容检测优于扩展名']},
+    fe3:{t:'🌐 <em>WASM 浏览器版</em>',d:'demo 页（firecrawl.github.io/anydoc）跑 WebAssembly——文件在本地转换，绝不上传服务器。隐私敏感文档直接在浏览器处理，是它"零云端"理念的延伸。',p:['WASM 本地转换','文件不出机器','firecrawl.github.io/anydoc 试用','隐私敏感场景友好','npm @firecrawl/anydoc-wasm']},
+    fe4:{t:'📦 <em>四语言绑定</em>',d:'Rust（cargo add anydoc）、Node.js（npm @firecrawl/anydoc）、Python（pip firecrawl-anydoc）、浏览器（WASM）。API 一致：toMarkdown / toMarkdownBytes / toDocument 三个入口。TypeScript 类型和 Python stubs 随包发布。',p:['Rust：cargo add anydoc','Node：npm @firecrawl/anydoc','Python：pip firecrawl-anydoc','浏览器：@firecrawl/anydoc-wasm','toMarkdown/toMarkdownBytes/toDocument 统一 API']},
+    q1:{t:'🚀 <em>12 天 16.3K★ · 超级黑马</em>',d:'2026-08-03 创建，8-15 已 16,255★，日均 ~1300★——文档转换这个看似"无聊"的赛道，因为 LLM 时代"把办公文档喂给模型"的需求爆发。Firecrawl 167K★ 的品牌背书 + 开源免费 + 基准屠榜，是速度的来源。',p:['12 天 16.3K★（日均 ~1300）','文档转换赛道 · LLM 时代需求爆发','Firecrawl 品牌背书（167K★）','开源免费 · 基准屠榜','HN 热度低 = 真实使用口碑']},
+    q2:{t:'🏆 <em>基准屠榜：4.4ms · 综合 81 分</em>',d:'6 竞品 × 100 真实文档 × 482 盲评判定：14/14 格式、中位 4.4ms、综合 81 分、每个格式都第一。最接近的 markitdown 只有 6/14 格式、65 分、134.8ms。注意：这是官方自测基准（LLM 盲评方法公开、可复现），社区尚未独立复测。',p:['官方自测 · 方法公开可复现','14/14 格式 · 每格式第一','81 分 vs markitdown 65','4.4ms vs 134.8ms（快 30 倍）','待社区独立复测']},
+    q3:{t:'🤖 <em>Agent Skill：npx 即装</em>',d:'内置 agentskills.io 标准 Agent Skill：npx skills add firecrawl/anydoc，任何 agent（Claude Code/Codex/Cursor/OpenCode/其他兼容）都能读办公文档——和你用的 Hermes 技能生态同源。它已经直接支撑 Firecrawl Parse 的文档转换。',p:['npx skills add firecrawl/anydoc','agentskills.io 标准','Claude Code/Codex/Cursor/OpenCode 兼容','支撑 Firecrawl Parse 云端 API','本地转换 + 云端 OCR 互补']},
+    t1:{t:'Rust <em>技术栈</em>',d:'纯 Rust 实现——快（4.4ms）、无运行时依赖、可编译 WASM。Node/Python 绑定走原生扩展，浏览器版走 WebAssembly。repository size 仅 643KB，非常轻。',p:['纯 Rust · 无 ML 无外部服务','cargo add anydoc','编译到 WASM（浏览器版）','repository size 643KB','Node/Python 原生绑定']},
+    t2:{t:'MIT <em>协议</em>',d:'完全 MIT 开源，免费商用。Firecrawl 的商业模式是云端 API（Parse），开源库是引流和生态建设——"开源最强 + 云端省事"双轨。',p:['MIT · 免费商用','Firecrawl 云端 API 商业变现','开源库 + 云端 OCR 互补','PDF 扫描页需云端 OCR']},
+    t3:{t:'PDF <em>内置支持</em>',d:'文本型 PDF 本地转换（通过 pdf-inspector），无需 OCR 服务。扫描型 PDF 需要 Firecrawl 云端 OCR——这是开源版唯一的能力边界。',p:['文本 PDF：本地转 · 无需 OCR','pdf-inspector 引擎（Firecrawl 另一开源项目）','扫描 PDF → 云端 OCR 补充','v0.1.9 更新 pdf-inspector 1.14.2']},
+    t4:{t:'Agent Skill <em>技能分发</em>',d:'anydoc 以 Agent Skill 形式分发（agentskills.io），skill 文件教 agent 用 CLI 转文档。这条生态路径与 Hermes 的技能系统同源——未来任何 agent 都能直接"读懂"办公文档。',p:['skills/convert-documents-to-markdown/','agentskills.io 标准','Claude Code/Codex/Cursor/OpenCode','与 Hermes 技能生态互通','npx skills add 一条命令']},
+    t5:{t:'WebAssembly <em>浏览器版</em>',d:'demo 页（firecrawl.github.io/anydoc）跑 WASM——文件在本地转换，绝不上传。隐私敏感文档直接在浏览器处理，是它"零云端"理念的延伸。',p:['WASM 本地转换','文件不出机器','firecrawl.github.io/anydoc 试用','隐私敏感场景友好','npm @firecrawl/anydoc-wasm']},
+    t6:{t:'Firecrawl <em>出品</em>',d:'Firecrawl（167K★）是"网页上下文 API"独角兽级开源项目，anydoc 是其文档解析版图的延伸。有母公司资源加持：pdf-inspector 复用、Parse API 承接、品牌分发。',p:['Firecrawl 167K★ · 网页抓取龙头','pdf-inspector 技术复用','Firecrawl Parse 云端承接','「开源库 + 云端 API」双轨','品牌自带分发流量']},
+    stamp:{t:'📄 <em>anydoc 的故事</em>',d:'2026-08-03，Firecrawl 发布 anydoc：一个 Rust 库，把任何办公文档转成干净的 GitHub-Flavored Markdown。目标明确——LLM 时代最痛的问题之一就是"喂给模型之前，先得把 docx/pptx/xls 变成模型能读的东西"。它用单一文档模型统一 14 种格式，中位 4.4ms 完成转换，基准里每个格式都拿第一。12 天 16K★——不是靠营销，是每个被 Excel 表格折磨过的开发者转完就 Star。',p:['2026-08-03 发布 · Rust','LLM 时代：办公文档 → 模型可读','单一文档模型统一 14 格式','4.4ms · 基准每个格式第一','12 天 16.3K★ · 口碑驱动']}
+  };
+
+  /* 弹窗系统 */
+  var overlay=$('#overlay'),sheet=$('#sheet');
+  function openSheet(key){
+    var d=DATA[key];if(!d)return;
+    $('#sTitle').innerHTML=d.t;
+    var body='<p>'+d.d+'</p>';
+    if(d.p&&d.p.length){body+='<ul>';d.p.forEach(function(x){body+='<li>'+x+'</li>'});body+='</ul>';}
+    $('#sBody').innerHTML=body;
+    sheet.classList.add('show');overlay.classList.add('show');
+  }
+  function closeSheet(){sheet.classList.remove('show');overlay.classList.remove('show')}
+  $('#sClose').addEventListener('click',closeSheet);
+  overlay.addEventListener('click',closeSheet);
+  document.querySelectorAll('[data-k]').forEach(function(el){
+    el.addEventListener('click',function(){openSheet(el.getAttribute('data-k'))});
+  });
+  $('#termShow').addEventListener('click',function(){openSheet('stamp')});
+  $('#stamp').addEventListener('click',function(){openSheet('stamp')});
+
+  /* toast */
+  var toastTimer;
+  function showToast(msg){
+    var t=$('#toast');t.textContent=msg;t.classList.add('show');
+    clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.classList.remove('show')},2200);
+  }
+
+  /* 分享 */
+  var SHARE_TEXT='anydoc：Firecrawl 出品的 Rust 库，Word/PPT/Excel/PDF 等 14 种格式 → 干净 Markdown，中位 4.4ms、基准每个格式第一，纯本地无云端，还能浏览器 WASM 跑。12 天 16.3K★\nhttps://mindresonance.online/youngsinsight/pages/anydoc.html\n\n你可以用任何AI工具订阅我的博客文章：https://mindresonance.online/youngsinsight/subscribe.html';
+  $('#shareBtn').addEventListener('click',function(){
+    if(navigator.share){navigator.share({title:'anydoc · 任何文档 → 干净 Markdown',text:SHARE_TEXT}).catch(function(){})}
+    else{
+      var ta=document.createElement('textarea');ta.value=SHARE_TEXT;document.body.appendChild(ta);ta.select();
+      try{document.execCommand('copy');showToast('已复制：介绍 + 链接 + 订阅推荐')}catch(e){}
+      document.body.removeChild(ta);
+    }
+  });
+
+  /* 彩蛋：stamp 连点 5 次 → 全格式转换 */
+  var stampCount=0;
+  $('#stamp').addEventListener('click',function(){
+    stampCount++;
+    if(stampCount>=5){
+      stampCount=0;
+      var sats=document.querySelectorAll('#sp3d .sat');
+      sats.forEach(function(s){s.style.animationDuration='0.6s'});
+      var core=$('#sp3d .core');
+      core.style.animation='corePulse 0.5s ease-in-out 4';
+      showToast('⚡ 14 格式全速转换：4.4ms 每份');
+      if(navigator.vibrate)navigator.vibrate([20,40,20]);
+      setTimeout(function(){sats.forEach(function(s){s.style.animationDuration=''})},3000);
+    }
+  });
+
+  /* 3D 视差 tilt */
+  var stage=$('#stage');
+  var tiltEls=document.querySelectorAll('.tilt-deep');
+  var last=0;
+  function applyTilt(x,y){
+    var r=stage.getBoundingClientRect();
+    var dx=(x-r.left)/r.width-0.5,dy=(y-r.top)/r.height-0.5;
+    tiltEls.forEach(function(el){
+      el.style.transform='rotateX('+(-dy*10)+'deg) rotateY('+(dx*12)+'deg)';
+    });
+  }
+  stage.addEventListener('touchmove',function(e){
+    var t=e.touches[0],now=performance.now();
+    if(now-last<16)return;last=now;
+    applyTilt(t.clientX,t.clientY);
+  },{passive:true});
+  stage.addEventListener('mousemove',function(e){
+    var now=performance.now();
+    if(now-last<16)return;last=now;
+    applyTilt(e.clientX,e.clientY);
+  });
+  stage.addEventListener('mouseleave',function(){
+    tiltEls.forEach(function(el){el.style.transform=''});
+  });
+
+  /* 外链 */
+  $('#ghBtn').href='https://github.com/firecrawl/anydoc';
+  $('#siteBtn').href='https://firecrawl.github.io/anydoc/';
+})();
+</script>
+</body>
+</html>
