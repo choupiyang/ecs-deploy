@@ -1,16 +1,16 @@
 {
-  "id": "hermes-studio",
-  "title": "Hermes Studio",
-  "subtitle": "Hermes Agent 的本地控制台：桌面应用 + Web UI，一个界面接 10 平台（微信扫码/飞书/钉钉）· 可视化工作流 · 多 Agent 群聊 · 语音全栈 · 4 个月 10.3K★",
-  "image": "cards/hermes-studio-cover.svg",
-  "page": "pages/hermes-studio.html",
+  "id": "openhuman",
+  "title": "OpenHuman",
+  "subtitle": "个人 AI 超级智能：大脑（本地记忆树+Obsidian）+ 编排器（agent 舰队图执行）+ 深度研究员 · 100+ OAuth / 5K MCP / 90K Skills · 发布 9 天 Trending #1 · 36.3K★",
+  "image": "cards/openhuman-cover.svg",
+  "page": "pages/openhuman.html",
   "tags": [
-    "Hermes Agent",
-    "控制台",
-    "多平台",
-    "Vue 3",
+    "个人 AI",
+    "记忆树",
+    "Agent 编排",
+    "Rust",
     "本地优先",
-    "开源"
+    "Karpathy"
   ],
   "date": "2026-08-16",
   "type": "recommendation"
