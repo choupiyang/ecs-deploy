@@ -94,11 +94,11 @@ html,body{background:#1E1B12;font-family:-apple-system,BlinkMacSystemFont,'PingF
 .panel{flex:1;min-height:0;display:none;flex-direction:column;gap:6px}
 .panel.on{display:flex}
 .panel-shots{position:relative}
-.shot-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;border-radius:14px;border:2px solid #6B6448;background:#1E1B12;box-shadow:0 6px 24px rgba(0,0,0,.4),0 0 30px rgba(232,146,58,.06)}
-.shot-frame{position:relative;width:100%;height:100%;overflow:hidden;cursor:zoom-in}
+.shot-stage{flex:1;min-height:0;display:flex;align-items:stretch;justify-content:center;gap:8px;position:relative;overflow:hidden}
+.shot-frame{position:relative;flex:1;min-width:0;min-height:0;border-radius:14px;overflow:hidden;cursor:zoom-in;border:2px solid #6B6448;background:#1E1B12;box-shadow:0 6px 24px rgba(0,0,0,.4),0 0 24px rgba(232,146,58,.05)}
 .shot-frame img{width:100%;height:100%;object-fit:cover;display:block}
-.shot-frame::after{content:'';position:absolute;left:0;right:0;top:0;bottom:0;background:radial-gradient(120% 90% at 50% 20%,rgba(30,27,18,.05),rgba(30,27,18,.55) 85%);pointer-events:none}
-.shot-frame .shi{position:absolute;right:8px;bottom:8px;font-size:8.5px;color:#F5EFE2;background:rgba(30,27,18,.82);padding:3px 10px;border-radius:12px;z-index:2;letter-spacing:.05em}
+.shot-frame::after{content:'';position:absolute;left:0;right:0;top:0;bottom:0;background:radial-gradient(120% 90% at 50% 20%,rgba(30,27,18,.05),rgba(30,27,18,.5) 88%);pointer-events:none}
+.shot-frame .shi{position:absolute;right:6px;bottom:6px;font-size:8px;color:#F5EFE2;background:rgba(30,27,18,.82);padding:2px 8px;border-radius:10px;z-index:2;letter-spacing:.03em}
 .shots-tabs{display:flex;gap:6px;flex-shrink:0}
 .shot-tab{
   flex:1;text-align:center;font-family:monospace;font-size:7.5px;color:var(--text-dim);
@@ -270,18 +270,20 @@ html,body{background:#1E1B12;font-family:-apple-system,BlinkMacSystemFont,'PingF
     </div>
     <div class="panel panel-shots on" id="panel-shots">
       <div class="shot-stage">
-        <div class="shot-frame" id="shotFrame">
-          <img id="shotImg" src="../cards/catonchair/shot1.jpg" alt="Cat On Chair 专注番茄钟">
-          <div class="shi" id="shotLabel">专注番茄钟</div>
+        <div class="shot-frame" id="shotFrameL">
+          <img id="shotImgL" src="../cards/catonchair/shot1.jpg" alt="Cat On Chair 专注番茄钟">
+          <div class="shi" id="shotLabelL">专注番茄钟</div>
+        </div>
+        <div class="shot-frame" id="shotFrameR">
+          <img id="shotImgR" src="../cards/catonchair/shot3.jpg" alt="Cat On Chair 猫咪房间">
+          <div class="shi" id="shotLabelR">猫咪房间</div>
         </div>
       </div>
       <div class="shots-tabs">
-        <span class="shot-tab on" data-shot="0">番茄钟</span>
-        <span class="shot-tab" data-shot="1">猫咪房间</span>
-        <span class="shot-tab" data-shot="2">心流陪伴</span>
-        <span class="shot-tab" data-shot="3">装饰收集</span>
+        <span class="shot-tab on" data-group="0">番茄钟 · 猫咪</span>
+        <span class="shot-tab" data-group="1">心流 · 装饰</span>
       </div>
-      <div class="gal-hint">▲ 轻触截图放大 · 切换 tab 看场景</div>
+      <div class="gal-hint">▲ 轻触截图放大 · 看更多场景</div>
     </div>
     <div class="panel panel-design" id="panel-design">
       <div class="mm" id="mindShow">
@@ -462,30 +464,35 @@ html,body{background:#1E1B12;font-family:-apple-system,BlinkMacSystemFont,'PingF
   overlay.addEventListener('click',function(e){if(e.target===overlay) closeSheet();});
   $('#seal').addEventListener('click',function(){openSheet('story');});
 
-  // ── 截图画廊：切换 + 放大 ──
-  var SHOTS=[
-    {src:'../cards/catonchair/shot1.jpg',label:'专注番茄钟'},
-    {src:'../cards/catonchair/shot3.jpg',label:'猫咪房间'},
-    {src:'../cards/catonchair/shot6.jpg',label:'心流陪伴'},
-    {src:'../cards/catonchair/shot8.jpg',label:'装饰收集'}
+  // ── 截图画廊：双列并排显示 2 张，按组切换 + 点击放大 ──
+  var GROUPS=[
+    [{src:'../cards/catonchair/shot1.jpg',label:'专注番茄钟'},{src:'../cards/catonchair/shot3.jpg',label:'猫咪房间'}],
+    [{src:'../cards/catonchair/shot6.jpg',label:'心流陪伴'},{src:'../cards/catonchair/shot8.jpg',label:'装饰收集'}]
   ];
-  var shotIdx=0;
-  function setShot(i){
-    shotIdx=i;
-    $('#shotImg').src=SHOTS[i].src;
-    $('#shotLabel').textContent=SHOTS[i].label;
+  var groupIdx=0;
+  var ZOOM=[
+    ['../cards/catonchair/shot1.jpg','../cards/catonchair/shot3.jpg'],
+    ['../cards/catonchair/shot6.jpg','../cards/catonchair/shot8.jpg']
+  ];
+  function setGroup(i){
+    groupIdx=i;
+    var g=GROUPS[i];
+    $('#shotImgL').src=g[0].src; $('#shotLabelL').textContent=g[0].label;
+    $('#shotImgR').src=g[1].src; $('#shotLabelR').textContent=g[1].label;
     document.querySelectorAll('.shot-tab').forEach(function(t,ti){
-      t.classList.toggle('on',ti===i);
+      t.classList.toggle('on',parseInt(t.dataset.group,10)===i);
     });
   }
   document.querySelectorAll('.shot-tab').forEach(function(t){
-    t.addEventListener('click',function(){setShot(parseInt(t.dataset.shot,10));});
+    t.addEventListener('click',function(){setGroup(parseInt(t.dataset.group,10));});
   });
   var zoom=$('#zoom');
-  $('#shotFrame').addEventListener('click',function(){
-    $('#zoomImg').src=SHOTS[shotIdx].src;
+  function openZoom(idx){
+    $('#zoomImg').src=ZOOM[groupIdx][idx];
     zoom.classList.add('active');
-  });
+  }
+  $('#shotFrameL').addEventListener('click',function(){openZoom(0);});
+  $('#shotFrameR').addEventListener('click',function(){openZoom(1);});
   $('#zoomClose').addEventListener('click',function(){zoom.classList.remove('active');});
   zoom.addEventListener('click',function(e){if(e.target===zoom) zoom.classList.remove('active');});
 
