@@ -1,16 +1,16 @@
 {
-  "id": "openhuman",
-  "title": "OpenHuman",
-  "subtitle": "个人 AI 超级智能：大脑（本地记忆树+Obsidian）+ 编排器（agent 舰队图执行）+ 深度研究员 · 100+ OAuth / 5K MCP / 90K Skills · 发布 9 天 Trending #1 · 36.3K★",
-  "image": "cards/openhuman-cover.svg",
-  "page": "pages/openhuman.html",
+  "id": "catonchair",
+  "title": "Cat On Chair",
+  "subtitle": "辞掉 $200K 用 AI Coding 做出的治愈系番茄钟 · 猫咪陪伴专注 · 月入 $18K / 年 $216K · 美区评分 4.93 · 127K+ 下载",
+  "image": "cards/catonchair-cover.svg",
+  "page": "pages/catonchair.html",
   "tags": [
-    "个人 AI",
-    "记忆树",
-    "Agent 编排",
-    "Rust",
-    "本地优先",
-    "Karpathy"
+    "专注番茄钟",
+    "ADHD",
+    "AI Coding",
+    "一人公司",
+    "独立开发者",
+    "宠物陪伴"
   ],
   "date": "2026-08-16",
   "type": "recommendation"
