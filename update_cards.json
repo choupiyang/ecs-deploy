@@ -1,16 +1,16 @@
 {
-  "id": "higress",
-  "title": "Higress",
-  "subtitle": "生产级 AI 原生 API 网关 · 统一连接 100+ LLM · 托管 MCP Server · Wasm 插件扩展 · 源自阿里 · CNCF Sandbox · 9.1K★",
-  "image": "cards/higress-cover.svg",
-  "page": "pages/higress.html",
+  "id": "opensquilla",
+  "title": "OpenSquilla",
+  "subtitle": "Token-Efficient AI Agent · 同预算更高智能密度 · SquillaRouter 本地路由省 60-80% token · PinchBench 25任务成本 $0.7 vs 单一模型 $6.2 · 6.6K★",
+  "image": "cards/opensquilla-cover.svg",
+  "page": "pages/opensquilla.html",
   "tags": [
-    "AI 网关",
-    "API Gateway",
-    "MCP",
-    "Wasm",
-    "CNCF",
-    "云原生"
+    "AI Agent",
+    "Token-Efficient",
+    "智能路由",
+    "路由",
+    "开源",
+    "微内核"
   ],
   "date": "2026-08-16",
   "type": "recommendation"

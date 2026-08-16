@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0A0A0A">
+<title>OpenSquilla · Token-Efficient AI Agent</title>
+<style>
+:root{
+  --bg:#0D0D0D; --bg-card:#141414; --bg-2:#1A1A1A;
+  --accent:#ED6000; --accent-light:#FF7A26; --accent-glow:rgba(237,96,0,.3);
+  --text:#F5F0E8; --text-dim:#B8A898; --text-mute:#7A6E60;
+  --border:#2E2A24; --warn:#FFB300;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:#070707;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Noto Sans SC',sans-serif;overflow:hidden;height:100%}
+
+/* ── 9:16 舞台（黑橙）─ */
+.stage{
+  position:relative;aspect-ratio:9/16;
+  height:min(100svh, calc(100vw * 16 / 9));
+  width:min(100vw, calc(100svh * 9 / 16));
+  margin:0 auto;
+  background:radial-gradient(130% 90% at 50% 0%, #23130A 0%, var(--bg) 55%);
+  overflow:hidden;perspective:1000px;transform-style:preserve-3d;
+  display:flex;flex-direction:column;user-select:none;
+  color:var(--text);
+}
+@supports not (height:100svh){.stage{height:min(100vh, calc(100vw * 16 / 9));}}
+.tilt-deep{transform:translateZ(-60px)}
+.tilt-mid{transform:translateZ(0)}
+
+/* ── Topbar ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 0;flex-shrink:0;z-index:5}
+.brand{font-family:monospace;font-size:10px;letter-spacing:.26em;color:var(--accent-light);display:flex;align-items:center;gap:8px}
+.brand .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent-glow);animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.share-btn{background:none;border:1px solid var(--border);color:var(--text-dim);width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;font-size:15px}
+.share-btn:active{transform:scale(.9);border-color:var(--accent);color:var(--accent)}
+
+/* ── Hero ── */
+.hero{display:flex;align-items:center;gap:15px;padding:16px 20px 8px;flex-shrink:0;z-index:4}
+.hero-side{flex:1;min-width:0}
+.meta-row{display:flex;justify-content:space-between;align-items:center;font-family:monospace;font-size:8px;letter-spacing:.14em;color:var(--text-mute);margin-bottom:8px}
+.vol{color:var(--accent);letter-spacing:.16em}
+.title-block{display:flex;align-items:flex-start;gap:9px}
+.osq-stamp{width:34px;height:34px;flex-shrink:0;border-radius:12px;background:linear-gradient(135deg,var(--accent),#B44500);color:#fff;font-weight:900;font-size:15px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 14px var(--accent-glow);transition:transform .2s}
+.osq-stamp:active{transform:scale(.9) rotate(10deg)}
+.title-text{min-width:0}
+.osq-title{font-size:23px;font-weight:800;letter-spacing:.01em;color:var(--text);line-height:1.1}
+.osq-title .dot{color:var(--accent)}
+.superdesign-line{display:flex;align-items:center;gap:7px;margin-top:3px;flex-wrap:wrap}
+.superdesign{font-size:8.5px;color:var(--text-mute);letter-spacing:.06em;font-family:monospace}
+.v-tag{font-family:monospace;font-size:7.5px;padding:2px 6px;border-radius:4px;background:rgba(237,96,0,.1);border:1px solid rgba(237,96,0,.3);color:var(--accent-light)}
+.tagline{font-size:11px;color:var(--text-dim);line-height:1.6;margin-top:7px}
+.tagline em{color:var(--accent-light);font-style:normal;font-weight:600}
+.hint-badge{font-size:8.5px;color:var(--text-mute);margin-top:5px;letter-spacing:.04em}
+.hint-badge::before{content:'▲ ';color:var(--accent)}
+
+/* ── 3D：智能路由分流 ── */
+.osq3d{position:relative;flex-shrink:0;width:106px;height:106px;z-index:2;pointer-events:none;transform-style:preserve-3d}
+.osq3d .ring{position:absolute;top:50%;left:50%;border-radius:50%;transform-style:preserve-3d}
+.osq3d .ring.r1{width:88px;height:88px;margin:-44px 0 0 -44px;border:1.5px dashed rgba(237,96,0,.4);animation:spinR1 18s linear infinite}
+.osq3d .ring.r2{width:68px;height:68px;margin:-34px 0 0 -34px;border:1.5px solid rgba(237,96,0,.5);animation:spinR2 26s linear infinite reverse}
+.osq3d .ring.r3{width:50px;height:50px;margin:-25px 0 0 -25px;border:1px solid rgba(255,122,38,.6);animation:spinR1 11s linear infinite}
+@keyframes spinR1{from{transform:rotateX(66deg) rotateZ(0)}to{transform:rotateX(66deg) rotateZ(360deg)}}
+@keyframes spinR2{from{transform:rotateX(66deg) rotateZ(0)}to{transform:rotateX(66deg) rotateZ(-360deg)}}
+.osq3d .core{position:absolute;top:50%;left:50%;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FF7A26,#ED6000 55%,#B44500);box-shadow:0 0 22px var(--accent-glow),0 0 46px rgba(237,96,0,.3);animation:corePulse 2.6s ease-in-out infinite;display:flex;align-items:center;justify-content:center}
+@keyframes corePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.osq3d .core .ci{font-size:12px}
+.osqnode{position:absolute;top:50%;left:50%;font-size:9px;z-index:2;background:var(--bg-2);border:1px solid var(--accent);border-radius:8px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+.osq3d .n1{animation:tOrbit1 11s linear infinite;border-color:#3DBB8F}
+.osq3d .n2{animation:tOrbit2 15s linear infinite;border-color:#7CBE52}
+.osq3d .n3{animation:tOrbit3 13s linear infinite;border-color:#5AA8FF}
+.osq3d .n4{animation:tOrbit1 18s linear infinite reverse;border-color:#E8923A}
+@keyframes tOrbit1{0%{transform:rotateX(66deg) rotateZ(0) translateX(44px)}100%{transform:rotateX(66deg) rotateZ(360deg) translateX(44px)}}
+@keyframes tOrbit2{0%{transform:rotateX(66deg) rotateZ(0) translateX(34px)}100%{transform:rotateX(66deg) rotateZ(-360deg) translateX(34px)}}
+@keyframes tOrbit3{0%{transform:rotateX(66deg) rotateZ(0) translateX(44px)}100%{transform:rotateX(66deg) rotateZ(720deg) translateX(44px)}}
+
+/* ── 核心展示区 ── */
+.showcase{flex:1 1 auto;display:flex;flex-direction:column;padding:2px 20px 8px;min-height:0;z-index:3;position:relative}
+.show-tabs{display:flex;gap:6px;flex-shrink:0;margin-bottom:6px}
+.show-tab{flex:1;text-align:center;font-size:9px;font-weight:700;letter-spacing:.03em;padding:7px 0;border-radius:9px;cursor:pointer;color:var(--text-dim);border:1px solid var(--border);background:rgba(26,26,26,.5);transition:all .2s}
+.show-tab.on{color:#fff;background:linear-gradient(135deg,var(--accent),#B44500);border-color:var(--accent);box-shadow:0 2px 10px var(--accent-glow)}
+.show-tab:active{transform:scale(.95)}
+.panel{flex:1;min-height:0;display:none;flex-direction:column;gap:6px}
+.panel.on{display:flex}
+.panel-shots{position:relative}
+.shot-stage{flex:1;min-height:0;display:flex;align-items:stretch;justify-content:center;gap:7px;position:relative;overflow:hidden}
+.shot-frame{position:relative;flex:1;min-width:0;min-height:0;border-radius:12px;overflow:hidden;cursor:zoom-in;border:2px solid var(--border);background:#111;box-shadow:0 6px 20px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center}
+.shot-frame img{max-width:100%;max-height:100%;display:block}
+.shot-frame .shi{position:absolute;right:6px;bottom:6px;font-size:8px;color:#fff;background:rgba(0,0,0,.75);padding:2px 8px;border-radius:10px;z-index:2;letter-spacing:.03em}
+.shots-tabs{display:flex;gap:6px;flex-shrink:0}
+.shot-tab{flex:1;text-align:center;font-family:monospace;font-size:7.5px;color:var(--text-dim);border:1px solid var(--border);padding:5px 0;border-radius:9px;cursor:pointer;background:rgba(26,26,26,.5);transition:all .2s;letter-spacing:.03em}
+.shot-tab.on{border-color:var(--accent);color:var(--accent-light);background:rgba(237,96,0,.1);box-shadow:0 0 8px rgba(237,96,0,.15)}
+.shot-tab:active{transform:scale(.93)}
+.gal-hint{flex-shrink:0;text-align:center;font-family:monospace;font-size:7px;color:var(--accent);opacity:.85;letter-spacing:.05em;animation:blink 2.5s ease-in-out infinite}
+
+/* 设计思路面板 */
+.mm{flex:1;min-height:0;background:rgba(20,20,20,.9);border:1px solid var(--border);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.mm-head{display:flex;align-items:center;gap:7px;padding:8px 12px;border-bottom:1px solid var(--border);flex-shrink:0;background:rgba(237,96,0,.05)}
+.mm-head .gdot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent-glow);animation:blink 2s ease-in-out infinite}
+.mm-head .gname{font-family:monospace;font-size:8px;color:var(--text-mute);letter-spacing:.1em}
+.mm-body{flex:1;padding:8px 10px;overflow:hidden;display:flex;flex-direction:column;gap:6px}
+.mm-node{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:9px;background:rgba(26,26,26,.6);border-left:3px solid var(--accent);cursor:pointer;transition:all .2s}
+.mm-node:nth-child(2){border-left-color:#3DBB8F}
+.mm-node:nth-child(3){border-left-color:#5AA8FF}
+.mm-node:nth-child(4){border-left-color:#E8923A}
+.mm-node:active{transform:scale(.97);background:rgba(237,96,0,.1)}
+.mm-node .ic{width:22px;height:22px;flex-shrink:0;border-radius:6px;background:rgba(237,96,0,.12);display:flex;align-items:center;justify-content:center;font-size:12px}
+.mm-node .nt{font-size:10.5px;color:var(--text);font-weight:700}
+.mm-node .nd{font-size:8px;color:var(--text-dim);margin-top:1px;line-height:1.4}
+.mm-foot{padding:7px 12px;border-top:1px solid var(--border);text-align:center;font-size:9px;color:var(--accent);cursor:pointer;flex-shrink:0;letter-spacing:.03em}
+.mm-foot:active{background:rgba(237,96,0,.08)}
+
+/* zoom */
+.zoom{position:absolute;inset:0;background:rgba(5,5,5,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .3s;z-index:40;display:flex;align-items:center;justify-content:center;padding:20px}
+.zoom.active{opacity:1;pointer-events:auto}
+.zoom img{max-width:86%;max-height:88%;border-radius:14px;box-shadow:0 10px 50px rgba(0,0,0,.6)}
+.zoom-close{position:absolute;top:18px;right:18px;width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:#141414;color:var(--text);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.zoom-close:active{transform:scale(.9)}
+
+/* Stat */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 20px 8px;flex-shrink:0;z-index:3}
+.stat-card{background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:8px 6px;text-align:center;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.stat-card:active{transform:scale(.94);border-color:var(--accent)}
+.stat-card::before{content:'';position:absolute;left:0;right:0;top:0;height:2px;background:var(--accent);opacity:.4}
+.stat-num{font-size:11.5px;font-weight:800;color:var(--text);font-family:monospace;letter-spacing:-.02em}
+.stat-num .accent{color:var(--accent-light)}
+.stat-label{font-size:7px;color:var(--text-mute);margin-top:3px;letter-spacing:.02em}
+
+/* Flow */
+.flow{padding:0 20px 8px;flex-shrink:0;z-index:3}
+.flow svg{display:block;width:100%;height:auto}
+.flow-node{cursor:pointer;transition:opacity .2s}
+.flow-node:hover{opacity:.75}
+.flow-node text{font-size:7px;fill:var(--text-dim);font-family:monospace}
+.flow-node .ic{fill:var(--bg-2);stroke:var(--accent);stroke-width:1.2}
+.flow-line{stroke:var(--border);stroke-width:1.5;fill:none}
+
+/* Features */
+.features{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;padding:0 20px 8px;flex-shrink:0;z-index:3}
+.feature{background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:8px 10px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;min-width:0}
+.feature:active{transform:scale(.95);border-color:var(--accent)}
+.feature .ficon{width:22px;height:22px;flex-shrink:0;border-radius:6px;background:rgba(237,96,0,.1);display:flex;align-items:center;justify-content:center;font-size:11px}
+.feature .ftxt{min-width:0}
+.feature .ft{font-size:10.5px;color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.feature .fd{font-size:8px;color:var(--text-mute);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Tech Pills */
+.tech{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:0 20px 10px;flex-shrink:0;z-index:3;max-width:100%}
+.tech-pill{font-family:monospace;font-size:8px;color:var(--text-dim);border:1px solid var(--border);border-radius:20px;padding:3px 9px;cursor:pointer;transition:all .2s;background:var(--bg-2);max-width:100%;box-sizing:border-box}
+.tech-pill:active{transform:scale(.92);color:var(--accent);border-color:var(--accent)}
+
+/* Bottom Bar */
+.bottombar{display:flex;gap:10px;padding:0 20px 16px;flex-shrink:0;z-index:3}
+.bbtn{flex:1;text-align:center;padding:10px 8px;border-radius:10px;font-size:10.5px;font-weight:600;text-decoration:none;transition:all .2s;letter-spacing:.03em}
+.bbtn:active{transform:scale(.95)}
+.bbtn.gh{background:var(--bg-2);color:var(--text);border:1px solid var(--border)}
+.bbtn.gh:active{border-color:var(--accent)}
+.bbtn.site{background:linear-gradient(135deg,var(--accent),#B44500);color:#fff;box-shadow:0 4px 18px var(--accent-glow)}
+
+/* Overlay */
+.overlay{position:absolute;inset:0;background:rgba(8,8,8,.6);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);opacity:0;pointer-events:none;transition:opacity .35s;z-index:20;display:flex;align-items:flex-end}
+.overlay.active{opacity:1;pointer-events:auto}
+.sheet{width:100%;background:var(--bg-card);border-top:1px solid var(--border);border-radius:20px 20px 0 0;padding:12px 22px 30px;transform:translateY(100%);transition:transform .45s cubic-bezier(.7,0,.3,1);max-height:80%;overflow-y:auto;position:relative}
+.overlay.active .sheet{transform:translateY(0)}
+.sheet-handle{width:36px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 14px}
+.sheet-title{font-size:16px;font-weight:800;color:var(--text);line-height:1.4;margin-bottom:10px}
+.sheet-title em{color:var(--accent);font-style:normal}
+.sheet-desc{font-size:12px;color:var(--text-dim);line-height:1.8;margin-bottom:12px}
+.sheet-points{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.sheet-point{font-size:11px;color:var(--text-dim);line-height:1.6;padding-left:14px;position:relative}
+.sheet-point::before{content:'▸';position:absolute;left:0;color:var(--accent)}
+.sheet-code{font-family:'SF Mono',Consolas,monospace;font-size:9.5px;line-height:1.7;color:#FFC9A3;background:#160A04;border:1px solid rgba(237,96,0,.2);border-radius:10px;padding:12px 14px;margin-bottom:14px;white-space:pre-wrap;word-break:break-all}
+.sheet-close{width:100%;padding:12px;border-radius:10px;border:none;cursor:pointer;background:linear-gradient(135deg,var(--accent),#B44500);color:#fff;font-size:12px;font-weight:800;letter-spacing:.2em;transition:transform .15s}
+.sheet-close:active{transform:scale(.97)}
+
+/* Toast */
+.toast{position:absolute;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:rgba(12,12,12,.95);border:1px solid rgba(237,96,0,.3);color:var(--text);font-size:11px;padding:10px 18px;border-radius:30px;opacity:0;transition:all .35s cubic-bezier(.7,0,.3,1);z-index:30;white-space:nowrap;pointer-events:none;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* 小屏 */
+@media (max-height:730px){
+  .hero{padding-top:12px;padding-bottom:6px;gap:12px}
+  .osq3d{width:84px;height:84px}
+  .osq3d .ring.r1{width:70px;height:70px;margin:-35px 0 0 -35px}
+  .osq3d .ring.r2{width:54px;height:54px;margin:-27px 0 0 -27px}
+  .osq3d .ring.r3{width:40px;height:40px;margin:-20px 0 0 -20px}
+  @keyframes tO1S{0%{transform:rotateX(66deg) rotateZ(0) translateX(35px)}100%{transform:rotateX(66deg) rotateZ(360deg) translateX(35px)}}
+  @keyframes tO2S{0%{transform:rotateX(66deg) rotateZ(0) translateX(27px)}100%{transform:rotateX(66deg) rotateZ(-360deg) translateX(27px)}}
+  @keyframes tO3S{0%{transform:rotateX(66deg) rotateZ(0) translateX(35px)}100%{transform:rotateX(66deg) rotateZ(720deg) translateX(35px)}}
+  .osq3d .n1{animation:tO1S 11s linear infinite}
+  .osq3d .n2{animation:tO2S 15s linear infinite}
+  .osq3d .n3{animation:tO3S 13s linear infinite}
+  .osq3d .n4{animation:tO1S 18s linear infinite reverse}
+  .osq-title{font-size:20px}
+  .tagline{font-size:10.5px}
+  .stat-num{font-size:10.5px}
+  .feature .ft{font-size:9.5px}
+  .features{padding:0 20px 6px;gap:5px}
+  .feature{padding:6px 8px}
+  .stats{padding-bottom:6px}
+  .flow{padding-bottom:6px}
+  .showcase{padding-top:0}
+}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+
+  <!-- Topbar -->
+  <div class="topbar tilt-mid">
+    <div class="brand"><span class="dot"></span>OPEN SQUILLA</div>
+    <button class="share-btn" id="shareBtn" aria-label="分享">↗</button>
+  </div>
+
+  <!-- Hero -->
+  <div class="hero reveal">
+    <div class="hero-side tilt-mid">
+      <div class="meta-row">
+        <span class="vol">TOKEN-EFIFICIENT AGENT</span>
+        <span>6.6K★ · 522 fork</span>
+      </div>
+      <div class="title-block">
+        <div class="osq-stamp" id="seal">🪴</div>
+        <div class="title-text">
+          <div class="osq-title">OpenSquilla<span class="dot">.</span></div>
+          <div class="superdesign-line">
+            <span class="superdesign">OPENSOURCE · APACHE-2.0</span>
+            <span class="v-tag">智能路由</span>
+          </div>
+        </div>
+      </div>
+      <div class="tagline">微内核 AI Agent——<em>同预算，更高智能密度</em>：本地路由让简单活找便宜模型，贵的只留给复杂轮</div>
+      <div class="hint-badge">轻触任何元素拆解 · 拖动卡片看 3D 视差</div>
+    </div>
+    <div class="osq3d tilt-deep" id="osq3d">
+      <div class="ring r1"></div>
+      <div class="ring r2"></div>
+      <div class="ring r3"></div>
+      <div class="core"><span class="ci">🪄</span></div>
+      <div class="osqnode n1">⚙️</div>
+      <div class="osqnode n2">🧠</div>
+      <div class="osqnode n3">📝</div>
+      <div class="osqnode n4">🔍</div>
+    </div>
+  </div>
+
+  <!-- 核心展示区 -->
+  <div class="showcase tilt-mid">
+    <div class="show-tabs">
+      <span class="show-tab on" data-panel="shots">🖼 网关展示</span>
+      <span class="show-tab" data-panel="design">🧠 设计思路</span>
+    </div>
+    <div class="panel panel-shots on" id="panel-shots">
+      <div class="shot-stage">
+        <div class="shot-frame" id="shotFrameL">
+          <img id="shotImgL" src="../cards/opensquilla/logo.png" alt="OpenSquilla logo">
+          <div class="shi" id="shotLabelL">OpenSquilla</div>
+        </div>
+        <div class="shot-frame" id="shotFrameR">
+          <img id="shotImgR" src="../cards/opensquilla/orange.png" alt="品牌视觉">
+          <div class="shi" id="shotLabelR">品牌</div>
+        </div>
+      </div>
+      <div class="shots-tabs">
+        <span class="shot-tab on" data-group="0">Logo · 品牌</span>
+        <span class="shot-tab" data-group="1">更多</span>
+      </div>
+      <div class="gal-hint">▲ 轻触放大 · 看更多</div>
+    </div>
+    <div class="panel panel-design" id="panel-design">
+      <div class="mm" id="mindShow">
+        <div class="mm-head">
+          <span class="gdot"></span><span class="gname">为什么省 60-80% token</span>
+        </div>
+        <div class="mm-body">
+          <div class="mm-node" data-sheet="fe1"><div class="ic">🔀</div><div class="ntx"><div class="nt">智能路由</div><div class="nd">SquillaRouter 本地分类</div></div></div>
+          <div class="mm-node" data-sheet="fe2"><div class="ic">🧠</div><div class="ntx"><div class="nt">持久记忆</div><div class="nd">MEMORY.md + 语义召回</div></div></div>
+          <div class="mm-node" data-sheet="fe3"><div class="ic">🔐</div><div class="ntx"><div class="nt">分层沙箱</div><div class="nd">三级策略隔离</div></div></div>
+          <div class="mm-node" data-sheet="fe4"><div class="ic">🎯</div><div class="ntx"><div class="nt">自适应推理</div><div class="nd">复杂才开长思考</div></div></div>
+        </div>
+        <div class="mm-foot" data-sheet="design">→ 查看完整技术拆解</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- zoom -->
+  <div class="zoom" id="zoom">
+    <img id="zoomImg" src="" alt="放大预览">
+    <button class="zoom-close" id="zoomClose" aria-label="关闭">✕</button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats tilt-mid">
+    <div class="stat-card" data-sheet="save">
+      <div class="stat-num"><span class="accent">60-80%</span></div>
+      <div class="stat-label">Token 成本省</div>
+    </div>
+    <div class="stat-card" data-sheet="bench">
+      <div class="stat-num"><span class="accent">0.92</span></div>
+      <div class="stat-label">PinchBench 分</div>
+    </div>
+    <div class="stat-card" data-sheet="cost">
+      <div class="stat-num"><span class="accent">$0.7</span></div>
+      <div class="stat-label">25任务总成本</div>
+    </div>
+    <div class="stat-card" data-sheet="star">
+      <div class="stat-num"><span class="accent">6.6K</span></div>
+      <div class="stat-label">GitHub ★</div>
+    </div>
+  </div>
+
+  <!-- Flow -->
+  <div class="flow tilt-mid">
+    <svg viewBox="0 0 330 44" fill="none">
+      <line class="flow-line" x1="55" y1="22" x2="100" y2="22"/>
+      <path class="flow-line" d="M100 22 L108 18 V26 Z" fill="var(--accent)"/>
+      <line class="flow-line" x1="140" y1="22" x2="185" y2="22"/>
+      <path class="flow-line" d="M185 22 L193 18 V26 Z" fill="var(--accent)"/>
+      <line class="flow-line" x1="225" y1="22" x2="270" y2="22"/>
+      <path class="flow-line" d="M270 22 L278 18 V26 Z" fill="var(--accent)"/>
+      <g class="flow-node" data-sheet="f1">
+        <rect class="ic" x="3" y="8" width="52" height="28" rx="8"/>
+        <text x="29" y="26" text-anchor="middle">任务进来</text>
+      </g>
+      <g class="flow-node" data-sheet="f2">
+        <rect class="ic" x="108" y="8" width="32" height="28" rx="8"/>
+        <text x="124" y="26" text-anchor="middle">本地评分</text>
+      </g>
+      <g class="flow-node" data-sheet="f3">
+        <rect class="ic" x="193" y="8" width="32" height="28" rx="8"/>
+        <text x="209" y="26" text-anchor="middle">四档路由</text>
+      </g>
+      <g class="flow-node" data-sheet="f4">
+        <rect class="ic" x="278" y="8" width="49" height="28" rx="8" stroke="#E8923A"/>
+        <text x="302" y="26" text-anchor="middle">最省模型</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- Features -->
+  <div class="features tilt-mid">
+    <div class="feature" data-sheet="fe1">
+      <div class="ficon">🔀</div>
+      <div class="ftxt"><div class="ft">智能路由</div><div class="fd">SquillaRouter 本地</div></div>
+    </div>
+    <div class="feature" data-sheet="fe2">
+      <div class="ficon">🧠</div>
+      <div class="ftxt"><div class="ft">持久记忆</div><div class="fd">本地语义召回</div></div>
+    </div>
+    <div class="feature" data-sheet="fe3">
+      <div class="ficon">🔐</div>
+      <div class="ftxt"><div class="ft">分层沙箱</div><div class="fd">三级安全策略</div></div>
+    </div>
+    <div class="feature" data-sheet="fe4">
+      <div class="ficon">🎯</div>
+      <div class="ftxt"><div class="ft">自适应推理</div><div class="fd">复杂才长思考</div></div>
+    </div>
+  </div>
+
+  <!-- Tech Pills -->
+  <div class="tech tilt-mid">
+    <span class="tech-pill" data-sheet="tech">SquillaRouter</span>
+    <span class="tech-pill" data-sheet="tech2">LightGBM+ONNX</span>
+    <span class="tech-pill" data-sheet="quant">20+ 模型供应商</span>
+    <span class="tech-pill" data-sheet="p2">MCP 客户端</span>
+    <span class="tech-pill" data-sheet="t3">SQLite 记忆</span>
+  </div>
+
+  <!-- Bottom Bar -->
+  <div class="bottombar tilt-mid">
+    <a class="bbtn gh" href="https://github.com/opensquilla/opensquilla" target="_blank" rel="noopener">GitHub</a>
+    <a class="bbtn site" href="https://opensquilla.ai/" target="_blank" rel="noopener">官网</a>
+  </div>
+
+  <!-- Overlay -->
+  <div class="overlay" id="overlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" id="sheetTitle"></div>
+      <div class="sheet-desc" id="sheetDesc"></div>
+      <div class="sheet-code" id="sheetCode" style="display:none"></div>
+      <div class="sheet-points" id="sheetPoints"></div>
+      <button class="sheet-close" id="sheetClose">CLOSE</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var $=function(s){return document.querySelector(s)};
+  var stage=$('#stage'), overlay=$('#overlay'), sheetTitle=$('#sheetTitle'),
+      sheetDesc=$('#sheetDesc'), sheetPoints=$('#sheetPoints'), sheetCode=$('#sheetCode'),
+      toast=$('#toast');
+
+  var DATA={
+    story:{title:'OpenSquilla <em>· 同预算，更高智能密度</em>',desc:'OpenSquilla（opensquilla/opensquilla）是主打 token 效率的微内核 AI Agent。核心是一套模型路由，把每轮对话按复杂度分派给最便宜的够用模型；持久本地记忆、分层沙箱、内置搜索、on-device embeddings，全跑在同一个 turn 循环里。口号"Same budget, more capability, better results"——用路由把贵的模型省下来，只给真正难的轮次。',points:['Token-Efficient AI Agent','微内核架构','本地模型路由 SquillaRouter','持久本地记忆 + 分层沙箱','20+ 模型供应商','Apache-2.0 · 6,561★']},
+    save:{title:'60-80% <em>· Token 成本节省</em>',desc:'官网主打 60-80% token 成本节省。靠 SquillaRouter 把简单轮次（闲聊/复述/查格式）交给便宜的 C0-C1 档模型，只有真正复杂的任务（长代码、推理、长上下文）才用贵的大模型。',points:['官网宣称 60-80% token 省','简单轮次用便宜档模型','复杂轮次才用贵模型','本地评分决策不出本机','PinchBench 实证']},
+    bench:{title:'0.92 <em>· PinchBench 得分几乎追平</em>',desc:'PinchBench 1.2.1（25 任务）OpenSquilla 平均得分 0.9251，OpenClaw（单一 Claude Opus 4.7）0.9255——几乎打平。但 token 上是 1.72M vs 3.07M input，成本 $0.688 vs $6.233。',points:['OpenSquilla 0.9251','OpenClaw 0.9255','得分差仅 0.004','Input tokens 1.72M vs 3.07M','成本 $0.688 vs $6.233']},
+    cost:{title:'$0.7 <em>· 25 任务总成本</em>',desc:'同样跑通 PinchBench 25 个任务，OpenSquilla 路由多模型只要 $0.688，而 OpenClaw 单一 Opus 4.7 要 $6.233——便宜整整 9 倍。这就是"路由省成本"的硬实证。',points:['OpenSquilla 总成本 $0.688','OpenClaw 总成本 $6.233','节省约 89%','多模型 ensemble','智能密度最大化']},
+    star:{title:'6,561★ <em>· 开源热度</em>',desc:'2026-05 创建，三个月达 6,561★、522 fork。背靠 TokenRhythm 商业生态，综合开源的社区传播与商业产品化。',points:['GitHub 6,561★ · 522 fork','2026-05-06 创建','Apache-2.0','Python 3.12+','v0.5.3 稳定版','Backed by TokenRhythm']},
+    design:{title:'技术拆解 <em>· 高效 Agent 的四层心法</em>',desc:'OpenSquilla 的"高效"不是单一技巧，而是架构层从路由到记忆到沙箱到推理的四层叠加，共同把 token 花在刀刃上。',points:['① 智能路由 —— 本地分类，简单活找便宜模型，贵模型只留给复杂轮次','② 持久记忆 —— MEMORY.md + SQLite 语义召回，减少重复上下文','③ 分层沙箱 —— Standard/Strict/Locked 三级安全，加 our规则','④ 自适应推理 —— 只有复杂度高的轮才开长思考与完整系统提示','核心：把 token 当作稀缺资源精确分配'],code:'设计心法一句话：\n不是让一个强模型硬扛所有任务，\n而是让"每个任务都对Model强度"，\n把贵的算力精准留给真正难的轮——\n同预算，做更多，做得更好。'},
+    fe1:{title:'智能路由 <em>· SquillaRouter 本地分类</em>',desc:'SquillaRouter 是本地 LightGBM + ONNX 分类器，对每轮按长度、语言、代码、关键词和语义嵌入打分，路由到四档（C0-C3）最便宜的够用模型。分类全程在设备本地跑，prompt 不出本机做这个决策。',points:['LightGBM + ONNX 分类器','四档 C0-C3 模型路由','长度/语言/代码/语义打分','本地 on-device 分类','prompt 不出本机']},
+    fe2:{title:'持久记忆 <em>· 本地语义召回</em>',desc:'一份精选 MEMORY.md + 带日期的 Markdown 笔记，SQLite 全文搜索 + sqlite-vec 语义召回。Embeddings 默认 on-device（ONNX），可换成 OpenAI/Ollama。可选指数衰减和"dream"定期整合。',points:['MEMORY.md + 日期笔记','SQLite FTS + sqlite-vec','on-device 嵌入默认','OpenAI/Ollama 可换','指数衰减 + 整合']},
+    fe3:{title:'分层沙箱 <em>· 三级安全策略</em>',desc:'Standard / Strict / Locked 三级策略的权限矩阵。Linux 用 Bubblewrap 隔离代码执行、macOS 走 Seatbelt（生成 SBPL 配置）、Windows 用原生 backend。拒绝记录自动暂停自治运行，工具结果 XML 转义防提示注入。',points:['Standard/Strict/Locked 三级','Linux Bubblewrap 隔离','macOS Seatbelt SBPL','Windows 原生 backend','拒绝 ledger 自动暂停']},
+    fe4:{title:'自适应推理 <em>· 复杂才长思考</em>',desc:'只有路由判定复杂的轮次才请求扩展推理；系统提示也随复杂度缩放——简单轮次用精简指令，复杂轮次给完整指令。不是每个任务都烧满 token。',points:['按路由打分决定长思考','系统提示随复杂度缩放','简单轮次精简指令','复杂轮次完整指令','省在"不该烧的地方"']},
+    f1:{title:'入口 · <em>任务进来</em>',desc:'Web UI、CLI、聊天渠道（Slack/Telegram/Discord/飞书/钉钉/QQ 等）都走同一个 turn 循环。',points:['10+ 渠道统一','同一 TurnRunner','工具分发一致']},
+    f2:{title:'本地评分 · <em>不出本机</em>',desc:'SquillaRouter 在设备本地给任务打分，判断复杂度。prompt 不为此离开本机。',points:['本地 LightGBM+ONNX','复杂度打分','隐私优先']},
+    f3:{title:'四档路由 · <em>C0-C3</em>',desc:'按分数映射到四档模型，最便宜够用优先，复杂任务升级。',points:['C0-C3 四档','主+备选模型','ensemble 可选']},
+    f4:{title:'最省模型 · <em>够用就好</em>',desc:'回落到最便宜能满足需求的模型，贵的留给真正难的轮次。',points:['最便宜够用优先','节省 token/成本','性能不损']},
+    tech:{title:'SquillaRouter',desc:'OpenSquilla 的本地模型路由。LightGBM + ONNX 分类器跑在设备上，用语义嵌入给每轮打分，路由到四档模型。替代传统"一个模型打天下"。',points:['LightGBM + ONNX','on-device 分类','四档 C0-C3','语义嵌入打分','不开网络做决策']},
+    tech2:{title:'LightGBM + ONNX',desc:'路由的分类器技术栈。LightGBM 做梯度提升打分，ONNX Runtime 跑推理。偏好本地轻量、秒级响应。',points:['LightGBM 打分','ONNX Runtime 推理','本地秒级响应','随 recommended extra 安装']},
+    quant:{title:'20+ 模型供应商',desc:'TokenRhythm、OpenRouter、OpenAI、Anthropic、Ollama、DeepSeek、Gemini、DashScope/Qwen、Moonshot、Mistral、Groq、智谱、SiliconFlow、vLLM、LM Studio 等 20+ 后端，主+备选切换。',points:['20+ LLM 后端','国内外模型全覆盖','主+备厂商切换','首次 onboarding 验证']},
+    p2:{title:'MCP 客户端',desc:'OpenSquilla 是 MCP 客户端，也能作为 MCP server 运行。15 个内置 skill 按需加载，可创作/安装/发布。',points:['MCP 客户端/服务端','15 内置 skills 按需','可创作发布','mcp extra 可选']},
+    t3:{title:'SQLite 记忆',desc:'持久记忆用 SQLite 存全文+向量，MEMORY.md 精选 + 日期笔记。',points:['SQLite 全文搜索','sqlite-vec 语义召回','on-device 嵌入','减少重复上下文']}
+  };
+
+  function openSheet(key){
+    var d=DATA[key]; if(!d) return;
+    sheetTitle.innerHTML=d.title;
+    sheetDesc.textContent=d.desc;
+    if(d.code){sheetCode.style.display='block';sheetCode.textContent=d.code;}
+    else{sheetCode.style.display='none';}
+    sheetPoints.innerHTML=d.points.map(function(p){return '<div class="sheet-point">'+p+'</div>';}).join('');
+    overlay.classList.add('active');
+    if(navigator.vibrate) navigator.vibrate(15);
+  }
+  function closeSheet(){overlay.classList.remove('active');}
+
+  document.querySelectorAll('[data-sheet]').forEach(function(el){
+    el.addEventListener('click',function(){openSheet(this.getAttribute('data-sheet'));});
+  });
+  $('#sheetClose').addEventListener('click',closeSheet);
+  overlay.addEventListener('click',function(e){if(e.target===overlay) closeSheet();});
+  $('#seal').addEventListener('click',function(){openSheet('story');});
+
+  // ── 截图页：双列 + 组切换 ──
+  var GROUPS=[
+    [{src:'../cards/opensquilla/logo.png',label:'OpenSquilla'},{src:'../cards/opensquilla/orange.png',label:'品牌视觉'}]
+  ];
+  var groupIdx=0;
+  var ZN=[]
+  function setGroup(i){
+    groupIdx=i;
+    var g=GROUPS[i];
+    $('#shotImgL').src=g[0].src; $('#shotLabelL').textContent=g[0].label;
+    $('#shotImgR').src=g[1].src; $('#shotLabelR').textContent=g[1].label;
+  }
+  document.querySelectorAll('.shot-tab').forEach(function(t){
+    t.addEventListener('click',function(){setGroup(parseInt(t.dataset.group,10));});
+  });
+  var zoom=$('#zoom');
+  function openZoom(idx){
+    $('#zoomImg').src=GROUPS[groupIdx][idx].src;
+    zoom.classList.add('active');
+  }
+  $('#shotFrameL').addEventListener('click',function(){openZoom(0);});
+  $('#shotFrameR').addEventListener('click',function(){openZoom(1);});
+  $('#zoomClose').addEventListener('click',function(){zoom.classList.remove('active');});
+  zoom.addEventListener('click',function(e){if(e.target===zoom) zoom.classList.remove('active');});
+
+  // ── 双面板切换 ──
+  function showPanel(p){
+    document.querySelectorAll('.show-tab').forEach(function(t){t.classList.toggle('on',t.dataset.panel===p);});
+    document.querySelectorAll('.panel').forEach(function(pn){pn.classList.toggle('on',pn.id==='panel-'+p);});
+  }
+  document.querySelectorAll('.show-tab').forEach(function(t){
+    t.addEventListener('click',function(){showPanel(this.dataset.panel);});
+  });
+
+  var shareBtn=$('#shareBtn');
+  function shareText(){
+    return 'OpenSquilla：Token-Efficient AI Agent——同预算更高智能密度，SquillaRouter 把 25 任务成本打到 $0.7（OpenClaw 要 $6.2），省 60-80% token。\nhttps://mindresonance.online/youngsinsight/pages/opensquilla.html\n\n你可以用任何AI工具订阅我的博客文章：https://mindresonance.online/youngsinsight/subscribe.html';
+  }
+  function showToast(msg){
+    toast.textContent=msg;
+    toast.classList.add('show');
+    setTimeout(function(){toast.classList.remove('show');},2200);
+  }
+  shareBtn.addEventListener('click',function(){
+    var text=shareText();
+    if(navigator.share){
+      navigator.share({title:'OpenSquilla · Token-Efficient AI Agent',text:text}).catch(function(){});
+    }else if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){showToast('已复制：介绍 + 链接 + 订阅推荐');});
+    }else{
+      var ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();
+      try{document.execCommand('copy');showToast('已复制：介绍 + 链接 + 订阅推荐');}catch(e){}
+      document.body.removeChild(ta);
+    }
+  });
+
+  var tiltRaf=null;
+  function onTilt(x,y){
+    if(tiltRaf) return;
+    tiltRaf=requestAnimationFrame(function(){
+      var w=stage.clientWidth,h=stage.clientHeight;
+      var nx=(x/w)*2-1, ny=(y/h)*2-1;
+      stage.style.transform='rotateX('+(-ny*6)+'deg) rotateY('+(nx*6)+'deg)';
+      tiltRaf=null;
+    });
+  }
+  stage.addEventListener('mousemove',function(e){
+    var r=stage.getBoundingClientRect();onTilt(e.clientX-r.left,e.clientY-r.top);
+  });
+  stage.addEventListener('touchmove',function(e){
+    var t=e.touches[0];if(!t)return;
+    var r=stage.getBoundingClientRect();onTilt(t.clientX-r.left,t.clientY-r.top);
+  },{passive:true});
+  stage.addEventListener('mouseleave',function(){stage.style.transform='rotateX(0) rotateY(0)';});
+
+  var sealCount=0;
+  $('#seal').addEventListener('click',function(){
+    sealCount++;
+    if(sealCount>=5){
+      sealCount=0;
+      var spin=0,iv=setInterval(function(){
+        spin+=18;var s=$('#seal');s.style.transform='rotate('+spin+'deg) scale(1.2)';
+        if(spin>=360){clearInterval(iv);s.style.transform='';}
+      },16);
+      showToast('🪄 智能路由，好钢用在刀刃上！');
+      if(navigator.vibrate) navigator.vibrate([20,40,20]);
+    }
+  });
+
+  setTimeout(function(){
+    var el=document.querySelector('.gal-hint');if(el){el.style.animation='none';el.style.opacity='1';}
+  },4000);
+})();
+</script>
+</body>
+</html>
