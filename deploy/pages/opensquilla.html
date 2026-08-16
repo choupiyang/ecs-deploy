@@ -57,25 +57,43 @@ html,body{background:#070707;font-family:-apple-system,BlinkMacSystemFont,'PingF
 .hint-badge{font-size:8.5px;color:var(--text-mute);margin-top:5px;letter-spacing:.04em}
 .hint-badge::before{content:'▲ ';color:var(--accent)}
 
-/* ── 3D：智能路由分流 ── */
-.osq3d{position:relative;flex-shrink:0;width:106px;height:106px;z-index:2;pointer-events:none;transform-style:preserve-3d}
-.osq3d .ring{position:absolute;top:50%;left:50%;border-radius:50%;transform-style:preserve-3d}
-.osq3d .ring.r1{width:88px;height:88px;margin:-44px 0 0 -44px;border:1.5px dashed rgba(237,96,0,.4);animation:spinR1 18s linear infinite}
-.osq3d .ring.r2{width:68px;height:68px;margin:-34px 0 0 -34px;border:1.5px solid rgba(237,96,0,.5);animation:spinR2 26s linear infinite reverse}
-.osq3d .ring.r3{width:50px;height:50px;margin:-25px 0 0 -25px;border:1px solid rgba(255,122,38,.6);animation:spinR1 11s linear infinite}
-@keyframes spinR1{from{transform:rotateX(66deg) rotateZ(0)}to{transform:rotateX(66deg) rotateZ(360deg)}}
-@keyframes spinR2{from{transform:rotateX(66deg) rotateZ(0)}to{transform:rotateX(66deg) rotateZ(-360deg)}}
-.osq3d .core{position:absolute;top:50%;left:50%;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FF7A26,#ED6000 55%,#B44500);box-shadow:0 0 22px var(--accent-glow),0 0 46px rgba(237,96,0,.3);animation:corePulse 2.6s ease-in-out infinite;display:flex;align-items:center;justify-content:center}
-@keyframes corePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
-.osq3d .core .ci{font-size:12px}
-.osqnode{position:absolute;top:50%;left:50%;font-size:9px;z-index:2;background:var(--bg-2);border:1px solid var(--accent);border-radius:8px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.5)}
-.osq3d .n1{animation:tOrbit1 11s linear infinite;border-color:#3DBB8F}
-.osq3d .n2{animation:tOrbit2 15s linear infinite;border-color:#7CBE52}
-.osq3d .n3{animation:tOrbit3 13s linear infinite;border-color:#5AA8FF}
-.osq3d .n4{animation:tOrbit1 18s linear infinite reverse;border-color:#E8923A}
-@keyframes tOrbit1{0%{transform:rotateX(66deg) rotateZ(0) translateX(44px)}100%{transform:rotateX(66deg) rotateZ(360deg) translateX(44px)}}
-@keyframes tOrbit2{0%{transform:rotateX(66deg) rotateZ(0) translateX(34px)}100%{transform:rotateX(66deg) rotateZ(-360deg) translateX(34px)}}
-@keyframes tOrbit3{0%{transform:rotateX(66deg) rotateZ(0) translateX(44px)}100%{transform:rotateX(66deg) rotateZ(720deg) translateX(44px)}}
+/* ── 3D：预算漏斗 · 任务点沿直线被吞入最优路径 ── */
+.osq3d{position:relative;flex-shrink:0;width:106px;height:106px;z-index:2;pointer-events:none;overflow:visible}
+.osq3d .funnel{position:absolute;top:50%;left:50%;width:56px;height:56px;margin:-28px 0 0 -28px}
+.osq3d .funnel .tri{position:absolute;top:8px;left:50%;width:0;height:0;margin-left:-10px;border-left:10px solid transparent;border-right:10px solid transparent;border-top:30px solid rgba(237,96,0,.9);filter:drop-shadow(0 4px 10px rgba(237,96,0,.4));animation:funnelPulse 3.2s ease-in-out infinite}
+.osq3d .funnel .fn-out{position:absolute;bottom:0;left:50%;width:34px;height:5px;margin-left:-17px;background:linear-gradient(90deg,#FF7A26,#ED6000);border-radius:3px;box-shadow:0 0 10px var(--accent-glow)}
+@keyframes funnelPulse{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.osq3d .foct{position:absolute;top:50%;left:50%;width:13px;height:13px;margin:-6.5px 0 0 -6.5px;border-radius:50%;background:radial-gradient(circle,#FFD9B0,#ED6000 60%,#A83E00);box-shadow:0 0 12px var(--accent-glow);animation:octPulse 2.4s ease-in-out infinite}
+@keyframes octPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.25)}}
+/* 4 个 token 点从四角沿直线射向中心（非环形） */
+.osq3d .tk{position:absolute;width:6px;height:6px;border-radius:50%;background:#FF9A55;box-shadow:0 0 6px var(--accent-glow);opacity:0}
+.osq3d .tk1{left:10px;top:14px;animation:tkIn1 2.8s ease-in infinite}
+.osq3d .tk2{right:12px;top:22px;animation:tkIn2 3.4s ease-in infinite}
+.osq3d .tk3{right:16px;bottom:20px;animation:tkIn3 3.0s ease-in infinite}
+.osq3d .tk4{left:14px;bottom:16px;animation:tkIn4 3.7s ease-in infinite}
+@keyframes tkIn1{0%{transform:translate(0,0);opacity:0}
+  8%{opacity:.9}
+  62%{transform:translate(38px,38px);opacity:.9}
+  72%{transform:translate(41px,39px);opacity:0}
+  100%{transform:translate(41px,39px);opacity:0}}
+@keyframes tkIn2{0%{transform:translate(0,0);opacity:0}
+  8%{opacity:.9}
+  62%{transform:translate(-38px,30px);opacity:.9}
+  72%{transform:translate(-40px,31px);opacity:0}
+  100%{transform:translate(-40px,31px);opacity:0}}
+@keyframes tkIn3{0%{transform:translate(0,0);opacity:0}
+  8%{opacity:.9}
+  62%{transform:translate(-36px,-32px);opacity:.9}
+  72%{transform:translate(-38px,-34px);opacity:0}
+  100%{transform:translate(-38px,-34px);opacity:0}}
+@keyframes tkIn4{0%{transform:translate(0,0);opacity:0}
+  8%{opacity:.9}
+  62%{transform:translate(36px,-36px);opacity:.9}
+  72%{transform:translate(38px,-37px);opacity:0}
+  100%{transform:translate(38px,-37px);opacity:0}}
+.osq3d .savetag{position:absolute;left:-2px;bottom:-4px;font-family:monospace;font-size:7px;color:#7CBE52;letter-spacing:.05em;background:rgba(0,0,0,.6);padding:1px 6px;border-radius:8px;border:1px solid rgba(124,190,82,.3);animation:savetag 3s ease-in-out infinite}
+.osq3d .savetag .w{color:#ED6000}
+@keyframes savetag{0%,100%{opacity:.6}50%{opacity:1}}
 
 /* ── 核心展示区 ── */
 .showcase{flex:1 1 auto;display:flex;flex-direction:column;padding:2px 20px 8px;min-height:0;z-index:3;position:relative}
@@ -86,10 +104,10 @@ html,body{background:#070707;font-family:-apple-system,BlinkMacSystemFont,'PingF
 .panel{flex:1;min-height:0;display:none;flex-direction:column;gap:6px}
 .panel.on{display:flex}
 .panel-shots{position:relative}
-.shot-stage{flex:1;min-height:0;display:flex;align-items:stretch;justify-content:center;gap:7px;position:relative;overflow:hidden}
-.shot-frame{position:relative;flex:1;min-width:0;min-height:0;border-radius:12px;overflow:hidden;cursor:zoom-in;border:2px solid var(--border);background:#111;box-shadow:0 6px 20px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center}
-.shot-frame img{max-width:100%;max-height:100%;display:block}
-.shot-frame .shi{position:absolute;right:6px;bottom:6px;font-size:8px;color:#fff;background:rgba(0,0,0,.75);padding:2px 8px;border-radius:10px;z-index:2;letter-spacing:.03em}
+.shot-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.shot-frame{position:relative;width:100%;height:100%;border-radius:12px;overflow:hidden;cursor:zoom-in;border:2px solid var(--border);background:#111;box-shadow:0 6px 20px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center}
+.shot-frame img{max-width:78%;max-height:82%;display:block}
+.shot-frame .shi{position:absolute;right:8px;bottom:8px;font-size:8px;color:#fff;background:rgba(0,0,0,.75);padding:2px 9px;border-radius:10px;z-index:2;letter-spacing:.03em}
 .shots-tabs{display:flex;gap:6px;flex-shrink:0}
 .shot-tab{flex:1;text-align:center;font-family:monospace;font-size:7.5px;color:var(--text-dim);border:1px solid var(--border);padding:5px 0;border-radius:9px;cursor:pointer;background:rgba(26,26,26,.5);transition:all .2s;letter-spacing:.03em}
 .shot-tab.on{border-color:var(--accent);color:var(--accent-light);background:rgba(237,96,0,.1);box-shadow:0 0 8px rgba(237,96,0,.15)}
@@ -184,16 +202,20 @@ html,body{background:#070707;font-family:-apple-system,BlinkMacSystemFont,'PingF
 @media (max-height:730px){
   .hero{padding-top:12px;padding-bottom:6px;gap:12px}
   .osq3d{width:84px;height:84px}
-  .osq3d .ring.r1{width:70px;height:70px;margin:-35px 0 0 -35px}
-  .osq3d .ring.r2{width:54px;height:54px;margin:-27px 0 0 -27px}
-  .osq3d .ring.r3{width:40px;height:40px;margin:-20px 0 0 -20px}
-  @keyframes tO1S{0%{transform:rotateX(66deg) rotateZ(0) translateX(35px)}100%{transform:rotateX(66deg) rotateZ(360deg) translateX(35px)}}
-  @keyframes tO2S{0%{transform:rotateX(66deg) rotateZ(0) translateX(27px)}100%{transform:rotateX(66deg) rotateZ(-360deg) translateX(27px)}}
-  @keyframes tO3S{0%{transform:rotateX(66deg) rotateZ(0) translateX(35px)}100%{transform:rotateX(66deg) rotateZ(720deg) translateX(35px)}}
-  .osq3d .n1{animation:tO1S 11s linear infinite}
-  .osq3d .n2{animation:tO2S 15s linear infinite}
-  .osq3d .n3{animation:tO3S 13s linear infinite}
-  .osq3d .n4{animation:tO1S 18s linear infinite reverse}
+  .osq3d .funnel{width:44px;height:44px;margin:-22px 0 0 -22px}
+  .osq3d .funnel .tri{margin-left:-9px;border-left:9px solid transparent;border-right:9px solid transparent;border-top:26px solid rgba(237,96,0,.9)}
+  .osq3d .tk1{left:8px;top:12px}
+  .osq3d .tk2{right:10px;top:18px}
+  .osq3d .tk3{right:13px;bottom:16px}
+  .osq3d .tk4{left:11px;bottom:13px}
+  @keyframes tkIn1S{0%{transform:translate(0,0);opacity:0}8%{opacity:.9}62%{transform:translate(30px,30px);opacity:.9}72%{transform:translate(32px,31px);opacity:0}100%{transform:translate(32px,31px);opacity:0}}
+  @keyframes tkIn2S{0%{transform:translate(0,0);opacity:0}8%{opacity:.9}62%{transform:translate(-30px,24px);opacity:.9}72%{transform:translate(-31px,25px);opacity:0}100%{transform:translate(-31px,25px);opacity:0}}
+  @keyframes tkIn3S{0%{transform:translate(0,0);opacity:0}8%{opacity:.9}62%{transform:translate(-28px,-25px);opacity:.9}72%{transform:translate(-29px,-26px);opacity:0}100%{transform:translate(-29px,-26px);opacity:0}}
+  @keyframes tkIn4S{0%{transform:translate(0,0);opacity:0}8%{opacity:.9}62%{transform:translate(28px,-28px);opacity:.9}72%{transform:translate(29px,-29px);opacity:0}100%{transform:translate(29px,-29px);opacity:0}}
+  .osq3d .tk1{animation:tkIn1S 2.8s ease-in infinite}
+  .osq3d .tk2{animation:tkIn2S 3.4s ease-in infinite}
+  .osq3d .tk3{animation:tkIn3S 3.0s ease-in infinite}
+  .osq3d .tk4{animation:tkIn4S 3.7s ease-in infinite}
   .osq-title{font-size:20px}
   .tagline{font-size:10.5px}
   .stat-num{font-size:10.5px}
@@ -236,14 +258,16 @@ html,body{background:#070707;font-family:-apple-system,BlinkMacSystemFont,'PingF
       <div class="hint-badge">轻触任何元素拆解 · 拖动卡片看 3D 视差</div>
     </div>
     <div class="osq3d tilt-deep" id="osq3d">
-      <div class="ring r1"></div>
-      <div class="ring r2"></div>
-      <div class="ring r3"></div>
-      <div class="core"><span class="ci">🪄</span></div>
-      <div class="osqnode n1">⚙️</div>
-      <div class="osqnode n2">🧠</div>
-      <div class="osqnode n3">📝</div>
-      <div class="osqnode n4">🔍</div>
+      <div class="funnel">
+        <div class="tri"></div>
+        <div class="fn-out"></div>
+      </div>
+      <div class="foct"></div>
+      <div class="tk tk1"></div>
+      <div class="tk tk2"></div>
+      <div class="tk tk3"></div>
+      <div class="tk tk4"></div>
+      <div class="savetag">省 <span class="w">60-80%</span> token</div>
     </div>
   </div>
 
@@ -255,20 +279,16 @@ html,body{background:#070707;font-family:-apple-system,BlinkMacSystemFont,'PingF
     </div>
     <div class="panel panel-shots on" id="panel-shots">
       <div class="shot-stage">
-        <div class="shot-frame" id="shotFrameL">
-          <img id="shotImgL" src="../cards/opensquilla/logo.png" alt="OpenSquilla logo">
-          <div class="shi" id="shotLabelL">OpenSquilla</div>
-        </div>
-        <div class="shot-frame" id="shotFrameR">
-          <img id="shotImgR" src="../cards/opensquilla/orange.png" alt="品牌视觉">
-          <div class="shi" id="shotLabelR">品牌</div>
+        <div class="shot-frame" id="shotMain">
+          <img id="shotImgMain" src="../cards/opensquilla/logo.png" alt="OpenSquilla logo">
+          <div class="shi" id="shotLabelMain">OpenSquilla 品牌</div>
         </div>
       </div>
       <div class="shots-tabs">
-        <span class="shot-tab on" data-group="0">Logo · 品牌</span>
-        <span class="shot-tab" data-group="1">更多</span>
+        <span class="shot-tab on" data-group="0">Logo</span>
+        <span class="shot-tab" data-group="1">品牌视觉</span>
       </div>
-      <div class="gal-hint">▲ 轻触放大 · 看更多</div>
+      <div class="gal-hint">▲ 轻触放大</div>
     </div>
     <div class="panel panel-design" id="panel-design">
       <div class="mm" id="mindShow">
@@ -440,28 +460,29 @@ html,body{background:#070707;font-family:-apple-system,BlinkMacSystemFont,'PingF
   overlay.addEventListener('click',function(e){if(e.target===overlay) closeSheet();});
   $('#seal').addEventListener('click',function(){openSheet('story');});
 
-  // ── 截图页：双列 + 组切换 ──
+  // ── 截图页：单栏 + 组切换 ──
   var GROUPS=[
-    [{src:'../cards/opensquilla/logo.png',label:'OpenSquilla'},{src:'../cards/opensquilla/orange.png',label:'品牌视觉'}]
+    {src:'../cards/opensquilla/logo.png',label:'OpenSquilla Logo'},
+    {src:'../cards/opensquilla/orange.png',label:'品牌视觉'}
   ];
   var groupIdx=0;
-  var ZN=[]
   function setGroup(i){
     groupIdx=i;
     var g=GROUPS[i];
-    $('#shotImgL').src=g[0].src; $('#shotLabelL').textContent=g[0].label;
-    $('#shotImgR').src=g[1].src; $('#shotLabelR').textContent=g[1].label;
+    $('#shotImgMain').src=g.src; $('#shotLabelMain').textContent=g.label;
+    document.querySelectorAll('.shot-tab').forEach(function(t,ti){
+      t.classList.toggle('on',parseInt(t.dataset.group,10)===i);
+    });
   }
   document.querySelectorAll('.shot-tab').forEach(function(t){
     t.addEventListener('click',function(){setGroup(parseInt(t.dataset.group,10));});
   });
   var zoom=$('#zoom');
-  function openZoom(idx){
-    $('#zoomImg').src=GROUPS[groupIdx][idx].src;
+  function openZoom(){
+    $('#zoomImg').src=GROUPS[groupIdx].src;
     zoom.classList.add('active');
   }
-  $('#shotFrameL').addEventListener('click',function(){openZoom(0);});
-  $('#shotFrameR').addEventListener('click',function(){openZoom(1);});
+  $('#shotMain').addEventListener('click',function(){openZoom();});
   $('#zoomClose').addEventListener('click',function(){zoom.classList.remove('active');});
   zoom.addEventListener('click',function(e){if(e.target===zoom) zoom.classList.remove('active');});
 
