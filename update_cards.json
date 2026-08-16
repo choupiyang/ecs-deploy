@@ -1,16 +1,16 @@
 {
-  "id": "needle",
-  "title": "Needle 2",
-  "subtitle": "把 45M 参数 Agent 塞进 14MB 的开源端侧工具调用模型 · 大海捞针精准调工具 · 28MB 内存跑完整会话 · 手机/穿戴/机器人可用 · MIT",
-  "image": "cards/needle-cover.svg",
-  "page": "pages/needle.html",
+  "id": "higress",
+  "title": "Higress",
+  "subtitle": "生产级 AI 原生 API 网关 · 统一连接 100+ LLM · 托管 MCP Server · Wasm 插件扩展 · 源自阿里 · CNCF Sandbox · 9.1K★",
+  "image": "cards/higress-cover.svg",
+  "page": "pages/higress.html",
   "tags": [
-    "端侧 LLM",
-    "工具调用",
-    "Simple Attention Net",
-    "Cactus Compute",
-    "量化",
-    "on-device AI"
+    "AI 网关",
+    "API Gateway",
+    "MCP",
+    "Wasm",
+    "CNCF",
+    "云原生"
   ],
   "date": "2026-08-16",
   "type": "recommendation"
