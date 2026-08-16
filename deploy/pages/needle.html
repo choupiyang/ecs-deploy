@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0A0F0A">
+<title>Needle 2 · 14MB 端侧 Agent 大海捞针精准调工具</title>
+<style>
+:root{
+  --bg:#0C0F0C; --bg-card:#141A14; --bg-2:#10150F;
+  --accent:#7CBE52; --accent-light:#A6E07E; --accent-glow:rgba(124,190,82,.35);
+  --text:#EDF2E8; --text-dim:#A8BBA0; --text-mute:#6E8064;
+  --border:#24301F; --warn:#E8923A;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:#060806;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Noto Sans SC',sans-serif;overflow:hidden;height:100%}
+
+/* ── 9:16 舞台 ── */
+.stage{
+  position:relative;aspect-ratio:9/16;
+  height:min(100svh, calc(100vw * 16 / 9));
+  width:min(100vw, calc(100svh * 9 / 16));
+  margin:0 auto;
+  background:radial-gradient(130% 90% at 50% 0%, #1A2416 0%, var(--bg) 58%);
+  overflow:hidden;perspective:1000px;transform-style:preserve-3d;
+  display:flex;flex-direction:column;user-select:none;
+  color:var(--text);
+}
+@supports not (height:100svh){.stage{height:min(100vh, calc(100vw * 16 / 9));}}
+.tilt-deep{transform:translateZ(-60px)}
+.tilt-mid{transform:translateZ(0)}
+
+/* ── Topbar ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 0;flex-shrink:0;z-index:5}
+.brand{font-family:monospace;font-size:10px;letter-spacing:.3em;color:var(--accent-light);display:flex;align-items:center;gap:8px}
+.brand .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent-glow);animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.share-btn{background:none;border:1px solid var(--border);color:var(--text-dim);width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;font-size:15px}
+.share-btn:active{transform:scale(.9);border-color:var(--accent);color:var(--accent)}
+
+/* ── Hero ── */
+.hero{display:flex;align-items:center;gap:16px;padding:16px 20px 8px;flex-shrink:0;z-index:4}
+.hero-side{flex:1;min-width:0}
+.meta-row{display:flex;justify-content:space-between;align-items:center;font-family:monospace;font-size:8px;letter-spacing:.14em;color:var(--text-mute);margin-bottom:8px}
+.vol{color:var(--accent);letter-spacing:.22em}
+.title-block{display:flex;align-items:flex-start;gap:9px}
+.nd-stamp{width:34px;height:34px;flex-shrink:0;border-radius:12px;background:linear-gradient(135deg,var(--accent),#4A8F2E);color:#0A0F0A;font-weight:900;font-size:15px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 14px var(--accent-glow);transition:transform .2s}
+.nd-stamp:active{transform:scale(.9) rotate(10deg)}
+.title-text{min-width:0}
+.nd-title{font-size:23px;font-weight:800;letter-spacing:.01em;color:var(--text);line-height:1.1}
+.nd-title .dot{color:var(--accent)}
+.superdesign-line{display:flex;align-items:center;gap:7px;margin-top:3px;flex-wrap:wrap}
+.superdesign{font-size:8.5px;color:var(--text-mute);letter-spacing:.06em;font-family:monospace}
+.v-tag{font-family:monospace;font-size:7.5px;padding:2px 6px;border-radius:4px;background:var(--bg-2);border:1px solid var(--border);color:var(--text-dim)}
+.v-tag.green{color:var(--accent);border-color:rgba(124,190,82,.3)}
+.tagline{font-size:11px;color:var(--text-dim);line-height:1.6;margin-top:7px}
+.tagline em{color:var(--accent-light);font-style:normal}
+.hint-badge{font-size:8.5px;color:var(--text-mute);margin-top:5px;letter-spacing:.04em}
+.hint-badge::before{content:'▲ ';color:var(--accent)}
+
+/* ── 3D：针尖命中（海量工具 → 精准调用）── */
+.nd3d{position:relative;flex-shrink:0;width:104px;height:104px;z-index:2;pointer-events:none;transform-style:preserve-3d}
+.nd3d .ring{position:absolute;top:50%;left:50%;border-radius:50%;transform-style:preserve-3d}
+.nd3d .ring.r1{width:86px;height:86px;margin:-43px 0 0 -43px;border:1px dashed rgba(124,190,82,.4);animation:spinR1 16s linear infinite}
+.nd3d .ring.r2{width:66px;height:66px;margin:-33px 0 0 -33px;border:1px solid rgba(124,190,82,.28);animation:spinR2 24s linear infinite reverse}
+.nd3d .ring.r3{width:48px;height:48px;margin:-24px 0 0 -24px;border:1px dotted rgba(124,190,82,.55);animation:spinR1 10s linear infinite}
+@keyframes spinR1{from{transform:rotateX(66deg) rotateZ(0)}to{transform:rotateX(66deg) rotateZ(360deg)}}
+@keyframes spinR2{from{transform:rotateX(66deg) rotateZ(0)}to{transform:rotateX(66deg) rotateZ(-360deg)}}
+.nd3d .needle{position:absolute;top:50%;left:50%;width:6px;height:52px;margin:-52px 0 0 -3px;z-index:3;transform-origin:50% 100%;animation:needleDrop 3.2s ease-in-out infinite}
+.nd3d .needle::before{content:'';position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid var(--accent)}
+.nd3d .needle .shaft{position:absolute;top:0;left:50%;transform:translateX(-50%);width:2px;height:100%;background:linear-gradient(var(--accent-light),var(--accent));box-shadow:0 0 6px var(--accent-glow)}
+@keyframes needleDrop{
+  0%,100%{transform:rotate(0) translateY(0)}
+  50%{transform:rotate(12deg) translateY(3px)}
+}
+.nd3d .core{position:absolute;top:50%;left:50%;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#A6E07E,#7CBE52 55%,#4A8F2E);box-shadow:0 0 20px var(--accent-glow),0 0 44px rgba(124,190,82,.3);animation:corePulse 2.6s ease-in-out infinite;display:flex;align-items:center;justify-content:center;font-size:12px}
+@keyframes corePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.toolbit{position:absolute;top:50%;left:50%;font-size:8px;z-index:2}
+.nd3d .tb1{animation:tOrbit1 9s linear infinite}
+.nd3d .tb2{animation:tOrbit2 13s linear infinite}
+.nd3d .tb3{animation:tOrbit3 11s linear infinite}
+.nd3d .tb4{animation:tOrbit1 15s linear infinite reverse}
+@keyframes tOrbit1{0%{transform:rotateX(66deg) rotateZ(0) translateX(43px)}100%{transform:rotateX(66deg) rotateZ(360deg) translateX(43px)}}
+@keyframes tOrbit2{0%{transform:rotateX(66deg) rotateZ(0) translateX(33px)}100%{transform:rotateX(66deg) rotateZ(-360deg) translateX(33px)}}
+@keyframes tOrbit3{0%{transform:rotateX(66deg) rotateZ(0) translateX(43px)}100%{transform:rotateX(66deg) rotateZ(720deg) translateX(43px)}}
+
+/* ── 核心展示区：Tab 切换 ── */
+.showcase{flex:1 1 auto;display:flex;flex-direction:column;padding:2px 20px 8px;min-height:0;z-index:3;position:relative}
+.show-tabs{display:flex;gap:6px;flex-shrink:0;margin-bottom:6px}
+.show-tab{flex:1;text-align:center;font-size:9px;font-weight:700;letter-spacing:.03em;padding:7px 0;border-radius:9px;cursor:pointer;color:var(--text-dim);border:1px solid var(--border);background:rgba(16,21,15,.5);transition:all .2s}
+.show-tab.on{color:#0A0F0A;background:linear-gradient(135deg,var(--accent),#4A8F2E);border-color:var(--accent);box-shadow:0 2px 10px var(--accent-glow)}
+.show-tab:active{transform:scale(.95)}
+.panel{flex:1;min-height:0;display:none;flex-direction:column;gap:6px}
+.panel.on{display:flex}
+.panel-shots{position:relative}
+.shot-stage{flex:1;min-height:0;display:flex;align-items:stretch;justify-content:center;gap:7px;position:relative;overflow:hidden}
+.shot-frame{position:relative;flex:1;min-width:0;min-height:0;border-radius:12px;overflow:hidden;cursor:zoom-in;border:2px solid #24301F;background:#10150F;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+.shot-frame img{width:100%;height:100%;object-fit:cover;display:block}
+.shot-frame .shi{position:absolute;right:6px;bottom:6px;font-size:8px;color:#EDF2E8;background:rgba(8,10,8,.8);padding:2px 8px;border-radius:10px;z-index:2;letter-spacing:.03em}
+.shots-tabs{display:flex;gap:6px;flex-shrink:0}
+.shot-tab{flex:1;text-align:center;font-family:monospace;font-size:7.5px;color:var(--text-dim);border:1px solid var(--border);padding:5px 0;border-radius:9px;cursor:pointer;background:rgba(16,21,15,.5);transition:all .2s;letter-spacing:.03em}
+.shot-tab.on{border-color:var(--accent);color:var(--text);background:rgba(124,190,82,.12);box-shadow:0 0 8px rgba(124,190,82,.15)}
+.shot-tab:active{transform:scale(.93)}
+.gal-hint{flex-shrink:0;text-align:center;font-family:monospace;font-size:7px;color:var(--accent);opacity:.8;letter-spacing:.05em;animation:blink 2.5s ease-in-out infinite}
+
+/* 设计思路面板 */
+.mm{flex:1;min-height:0;background:rgba(16,21,15,.85);border:1px solid var(--border);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.mm-head{display:flex;align-items:center;gap:7px;padding:8px 12px;border-bottom:1px solid var(--border);flex-shrink:0;background:rgba(20,26,20,.5)}
+.mm-head .gdot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent-glow);animation:blink 2s ease-in-out infinite}
+.mm-head .gname{font-family:monospace;font-size:8px;color:var(--text-dim);letter-spacing:.1em}
+.mm-body{flex:1;padding:8px 10px;overflow:hidden;display:flex;flex-direction:column;gap:6px}
+.mm-node{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:9px;background:rgba(16,21,15,.6);border-left:3px solid var(--accent);cursor:pointer;transition:all .2s}
+.mm-node:nth-child(2){border-left-color:#A6E07E}
+.mm-node:nth-child(3){border-left-color:#7CBE52}
+.mm-node:nth-child(4){border-left-color:#E8923A}
+.mm-node:active{transform:scale(.97);background:rgba(124,190,82,.12)}
+.mm-node .ic{width:22px;height:22px;flex-shrink:0;border-radius:6px;background:rgba(124,190,82,.12);display:flex;align-items:center;justify-content:center;font-size:12px}
+.mm-node .nt{font-size:10.5px;color:var(--text);font-weight:700}
+.mm-node .nd{font-size:8px;color:var(--text-dim);margin-top:1px;line-height:1.4}
+.mm-foot{padding:7px 12px;border-top:1px solid var(--border);text-align:center;font-size:9px;color:var(--accent);cursor:pointer;flex-shrink:0;letter-spacing:.03em}
+.mm-foot:active{background:rgba(124,190,82,.1)}
+
+/* zoom */
+.zoom{position:absolute;inset:0;background:rgba(4,6,4,.9);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .3s;z-index:40;display:flex;align-items:center;justify-content:center;padding:20px}
+.zoom.active{opacity:1;pointer-events:auto}
+.zoom img{max-width:80%;max-height:88%;border-radius:14px;box-shadow:0 10px 50px rgba(0,0,0,.6)}
+.zoom-close{position:absolute;top:18px;right:18px;width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--bg-card);color:var(--text);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.zoom-close:active{transform:scale(.9)}
+
+/* Stat */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 20px 8px;flex-shrink:0;z-index:3}
+.stat-card{background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:8px 6px;text-align:center;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.stat-card:active{transform:scale(.94);border-color:var(--accent)}
+.stat-card::before{content:'';position:absolute;left:0;right:0;top:0;height:2px;background:var(--accent);opacity:.4}
+.stat-num{font-size:11.5px;font-weight:800;color:var(--text);font-family:monospace;letter-spacing:-.02em}
+.stat-num .accent{color:var(--accent)}
+.stat-label{font-size:7px;color:var(--text-mute);margin-top:3px;letter-spacing:.02em}
+
+/* Flow */
+.flow{padding:0 20px 8px;flex-shrink:0;z-index:3}
+.flow svg{display:block;width:100%;height:auto}
+.flow-node{cursor:pointer;transition:opacity .2s}
+.flow-node:hover{opacity:.75}
+.flow-node text{font-size:7px;fill:var(--text-dim);font-family:monospace}
+.flow-node .ic{fill:var(--bg-2);stroke:var(--accent);stroke-width:1}
+.flow-line{stroke:var(--border);stroke-width:1;fill:none}
+
+/* Features */
+.features{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;padding:0 20px 8px;flex-shrink:0;z-index:3}
+.feature{background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:8px 10px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;min-width:0}
+.feature:active{transform:scale(.95);border-color:var(--accent)}
+.feature .ficon{width:22px;height:22px;flex-shrink:0;border-radius:6px;background:rgba(124,190,82,.1);display:flex;align-items:center;justify-content:center;font-size:11px}
+.feature .ftxt{min-width:0}
+.feature .ft{font-size:10.5px;color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.feature .fd{font-size:8px;color:var(--text-mute);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Tech Pills */
+.tech{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:0 20px 10px;flex-shrink:0;z-index:3;max-width:100%}
+.tech-pill{font-family:monospace;font-size:8px;color:var(--text-dim);border:1px solid var(--border);border-radius:20px;padding:3px 9px;cursor:pointer;transition:all .2s;background:var(--bg-2);max-width:100%;box-sizing:border-box}
+.tech-pill:active{transform:scale(.92);color:var(--accent);border-color:var(--accent)}
+
+/* Bottom Bar */
+.bottombar{display:flex;gap:10px;padding:0 20px 16px;flex-shrink:0;z-index:3}
+.bbtn{flex:1;text-align:center;padding:10px 8px;border-radius:10px;font-size:10.5px;font-weight:600;text-decoration:none;transition:all .2s;letter-spacing:.03em}
+.bbtn:active{transform:scale(.95)}
+.bbtn.gh{background:var(--bg-2);color:var(--text);border:1px solid var(--border)}
+.bbtn.gh:active{border-color:var(--accent)}
+.bbtn.site{background:linear-gradient(135deg,var(--accent),#4A8F2E);color:#0A0F0A;box-shadow:0 4px 18px var(--accent-glow)}
+
+/* Overlay */
+.overlay{position:absolute;inset:0;background:rgba(5,7,5,.6);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);opacity:0;pointer-events:none;transition:opacity .35s;z-index:20;display:flex;align-items:flex-end}
+.overlay.active{opacity:1;pointer-events:auto}
+.sheet{width:100%;background:var(--bg-card);border-top:1px solid var(--border);border-radius:20px 20px 0 0;padding:12px 22px 30px;transform:translateY(100%);transition:transform .45s cubic-bezier(.7,0,.3,1);max-height:80%;overflow-y:auto;position:relative}
+.overlay.active .sheet{transform:translateY(0)}
+.sheet-handle{width:36px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 14px}
+.sheet-title{font-size:16px;font-weight:800;color:var(--text);line-height:1.4;margin-bottom:10px}
+.sheet-title em{color:var(--accent);font-style:normal}
+.sheet-desc{font-size:12px;color:var(--text-dim);line-height:1.8;margin-bottom:12px}
+.sheet-points{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.sheet-point{font-size:11px;color:var(--text-dim);line-height:1.6;padding-left:14px;position:relative}
+.sheet-point::before{content:'▸';position:absolute;left:0;color:var(--accent)}
+.sheet-code{font-family:'SF Mono',Consolas,monospace;font-size:9.5px;line-height:1.7;color:#B8E69A;background:#0C140C;border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:14px;white-space:pre-wrap;word-break:break-all}
+.sheet-close{width:100%;padding:12px;border-radius:10px;border:none;cursor:pointer;background:linear-gradient(135deg,var(--accent),#4A8F2E);color:#0A0F0A;font-size:12px;font-weight:800;letter-spacing:.2em;transition:transform .15s}
+.sheet-close:active{transform:scale(.97)}
+
+/* Toast */
+.toast{position:absolute;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:rgba(8,10,8,.95);border:1px solid var(--border);color:var(--text);font-size:11px;padding:10px 18px;border-radius:30px;opacity:0;transition:all .35s cubic-bezier(.7,0,.3,1);z-index:30;white-space:nowrap;pointer-events:none;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* 小屏压缩 */
+@media (max-height:730px){
+  .hero{padding-top:12px;padding-bottom:6px;gap:12px}
+  .nd3d{width:84px;height:84px}
+  .nd3d .ring.r1{width:68px;height:68px;margin:-34px 0 0 -34px}
+  .nd3d .ring.r2{width:52px;height:52px;margin:-26px 0 0 -26px}
+  .nd3d .ring.r3{width:38px;height:38px;margin:-19px 0 0 -19px}
+  .nd3d .needle{width:5px;height:42px;margin:-42px 0 0 -2.5px}
+  @keyframes tOrbit1S{0%{transform:rotateX(66deg) rotateZ(0) translateX(34px)}100%{transform:rotateX(66deg) rotateZ(360deg) translateX(34px)}}
+  @keyframes tOrbit2S{0%{transform:rotateX(66deg) rotateZ(0) translateX(26px)}100%{transform:rotateX(66deg) rotateZ(-360deg) translateX(26px)}}
+  @keyframes tOrbit3S{0%{transform:rotateX(66deg) rotateZ(0) translateX(34px)}100%{transform:rotateX(66deg) rotateZ(720deg) translateX(34px)}}
+  .nd3d .tb1{animation:tOrbit1S 9s linear infinite}
+  .nd3d .tb2{animation:tOrbit2S 13s linear infinite}
+  .nd3d .tb3{animation:tOrbit3S 11s linear infinite}
+  .nd3d .tb4{animation:tOrbit1S 15s linear infinite reverse}
+  .nd-title{font-size:20px}
+  .tagline{font-size:10.5px}
+  .stat-num{font-size:10.5px}
+  .feature .ft{font-size:9.5px}
+  .features{padding:0 20px 6px;gap:5px}
+  .feature{padding:6px 8px}
+  .stats{padding-bottom:6px}
+  .flow{padding-bottom:6px}
+  .showcase{padding-top:0}
+}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+
+  <!-- Topbar -->
+  <div class="topbar tilt-mid">
+    <div class="brand"><span class="dot"></span>CACTUS · NEEDLE</div>
+    <button class="share-btn" id="shareBtn" aria-label="分享">↗</button>
+  </div>
+
+  <!-- Hero -->
+  <div class="hero reveal">
+    <div class="hero-side tilt-mid">
+      <div class="meta-row">
+        <span class="vol">14MB AGENTIC LLM</span>
+        <span>6.1K★ · HH</span>
+      </div>
+      <div class="title-block">
+        <div class="nd-stamp" id="seal">🧵</div>
+        <div class="title-text">
+          <div class="nd-title">Needle 2<span class="dot">.</span></div>
+          <div class="superdesign-line">
+            <span class="superdesign">CACTUS COMPUTE</span>
+            <span class="v-tag green">工具调用</span>
+          </div>
+        </div>
+      </div>
+      <div class="tagline">45M 参数塞进 <em>14MB</em> 的端侧 Agent——在海量工具里<em>精准调用</em>那一个，28MB 内存跑完整会话</div>
+      <div class="hint-badge">轻触任何元素拆解 · 拖动卡片看 3D 视差</div>
+    </div>
+    <div class="nd3d tilt-deep" id="nd3d">
+      <div class="ring r1"></div>
+      <div class="ring r2"></div>
+      <div class="ring r3"></div>
+      <div class="needle"><div class="shaft"></div></div>
+      <div class="core">🧠</div>
+      <div class="toolbit tb1">⚙️</div>
+      <div class="toolbit tb2">🧮</div>
+      <div class="toolbit tb3">🔍</div>
+      <div class="toolbit tb4">📋</div>
+    </div>
+  </div>
+
+  <!-- 核心展示区：Tab 切换 -->
+  <div class="showcase tilt-mid">
+    <div class="show-tabs">
+      <span class="show-tab on" data-panel="shots">🖼 架构图</span>
+      <span class="show-tab" data-panel="design">🧠 设计思路</span>
+    </div>
+    <div class="panel panel-shots on" id="panel-shots">
+      <div class="shot-stage">
+        <div class="shot-frame" id="shotFrameL">
+          <img id="shotImgL" src="../cards/needle/architecture.png" alt="Simple Attention Network 架构">
+          <div class="shi" id="shotLabelL">架构</div>
+        </div>
+        <div class="shot-frame" id="shotFrameR">
+          <img id="shotImgR" src="../cards/needle/frontier.png" alt="尺寸-质量前沿">
+          <div class="shi" id="shotLabelR">前沿对比</div>
+        </div>
+      </div>
+      <div class="shots-tabs">
+        <span class="shot-tab on" data-group="0">架构 · 前沿</span>
+        <span class="shot-tab" data-group="1">引擎 · Banner</span>
+      </div>
+      <div class="gal-hint">▲ 轻触放大 · 看更多</div>
+    </div>
+    <div class="panel panel-design" id="panel-design">
+      <div class="mm" id="mindShow">
+        <div class="mm-head">
+          <span class="gdot"></span><span class="gname">技术拆解 · 为什么能塞进 14MB</span>
+        </div>
+        <div class="mm-body">
+          <div class="mm-node" data-sheet="fe1"><div class="ic">🧮</div><div class="ntx"><div class="nt">Simple Attention Net</div><div class="nd">Hadamard MLP 替代 FFN</div></div></div>
+          <div class="mm-node" data-sheet="fe2"><div class="ic">🧠</div><div class="ntx"><div class="nt">Engram 记忆</div><div class="nd">哈希 n-gram KV 记忆</div></div></div>
+          <div class="mm-node" data-sheet="fe3"><div class="ic">🪙</div><div class="ntx"><div class="nt">CQ2 量化</div><div class="nd">2bit 压缩，f16 的1/8</div></div></div>
+          <div class="mm-node" data-sheet="fe4"><div class="ic">🔒</div><div class="ntx"><div class="nt">Confidence 门控</div><div class="nd">不知道就请求云端</div></div></div>
+        </div>
+        <div class="mm-foot" data-sheet="design">→ 查看完整技术拆解</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- zoom -->
+  <div class="zoom" id="zoom">
+    <img id="zoomImg" src="" alt="放大预览">
+    <button class="zoom-close" id="zoomClose" aria-label="关闭">✕</button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats tilt-mid">
+    <div class="stat-card" data-sheet="star">
+      <div class="stat-num"><span class="accent">6.1K</span></div>
+      <div class="stat-label">GitHub ★</div>
+    </div>
+    <div class="stat-card" data-sheet="size">
+      <div class="stat-num"><span class="accent">14MB</span></div>
+      <div class="stat-label">模型体积</div>
+    </div>
+    <div class="stat-card" data-sheet="params">
+      <div class="stat-num"><span class="accent">45M</span></div>
+      <div class="stat-label">参数</div>
+    </div>
+    <div class="stat-card" data-sheet="memory">
+      <div class="stat-num"><span class="accent">28MB</span></div>
+      <div class="stat-label">会话内存</div>
+    </div>
+  </div>
+
+  <!-- Flow -->
+  <div class="flow tilt-mid">
+    <svg viewBox="0 0 330 44" fill="none">
+      <line class="flow-line" x1="55" y1="22" x2="100" y2="22"/>
+      <path class="flow-line" d="M100 22 L108 18 V26 Z" fill="var(--accent)"/>
+      <line class="flow-line" x1="140" y1="22" x2="185" y2="22"/>
+      <path class="flow-line" d="M185 22 L193 18 V26 Z" fill="var(--accent)"/>
+      <line class="flow-line" x1="225" y1="22" x2="270" y2="22"/>
+      <path class="flow-line" d="M270 22 L278 18 V26 Z" fill="var(--accent)"/>
+      <g class="flow-node" data-sheet="f1">
+        <rect class="ic" x="3" y="8" width="52" height="28" rx="8"/>
+        <text x="29" y="26" text-anchor="middle">描述工具</text>
+      </g>
+      <g class="flow-node" data-sheet="f2">
+        <rect class="ic" x="108" y="8" width="32" height="28" rx="8"/>
+        <text x="124" y="26" text-anchor="middle">语法约束</text>
+      </g>
+      <g class="flow-node" data-sheet="f3">
+        <rect class="ic" x="193" y="8" width="32" height="28" rx="8"/>
+        <text x="209" y="26" text-anchor="middle">检索子集</text>
+      </g>
+      <g class="flow-node" data-sheet="f4">
+        <rect class="ic" x="278" y="8" width="49" height="28" rx="8" stroke="#E8923A"/>
+        <text x="302" y="26" text-anchor="middle">JSON 返回</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- Features -->
+  <div class="features tilt-mid">
+    <div class="feature" data-sheet="fe1">
+      <div class="ficon">🧮</div>
+      <div class="ftxt"><div class="ft">Simple Attention Net</div><div class="fd">Hadamard MLP 替代 FFN</div></div>
+    </div>
+    <div class="feature" data-sheet="fe2">
+      <div class="ficon">🧠</div>
+      <div class="ftxt"><div class="ft">Engram 记忆</div><div class="fd">哈希 KV 记忆点</div></div>
+    </div>
+    <div class="feature" data-sheet="fe3">
+      <div class="ficon">🪙</div>
+      <div class="ftxt"><div class="ft">CQ2 量化</div><div class="fd">2bit·f16的1/8</div></div>
+    </div>
+    <div class="feature" data-sheet="fe4">
+      <div class="ficon">🔒</div>
+      <div class="ftxt"><div class="ft">Confidence 门控</div><div class="fd">不知道就请教云端</div></div>
+    </div>
+  </div>
+
+  <!-- Tech Pills -->
+  <div class="tech tilt-mid">
+    <span class="tech-pill" data-sheet="tech">Simple Attention Net</span>
+    <span class="tech-pill" data-sheet="tech2">JAX 训练</span>
+    <span class="tech-pill" data-sheet="quant">CQ2 量化</span>
+    <span class="tech-pill" data-sheet="p2">LoRA 微调</span>
+    <span class="tech-pill" data-sheet="t3">多端二进制</span>
+  </div>
+
+  <!-- Bottom Bar -->
+  <div class="bottombar tilt-mid">
+    <a class="bbtn gh" href="https://github.com/cactus-compute/needle" target="_blank" rel="noopener">GitHub</a>
+    <a class="bbtn site" href="https://cactuscompute.com" target="_blank" rel="noopener">官网</a>
+  </div>
+
+  <!-- Overlay -->
+  <div class="overlay" id="overlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" id="sheetTitle"></div>
+      <div class="sheet-desc" id="sheetDesc"></div>
+      <div class="sheet-code" id="sheetCode" style="display:none"></div>
+      <div class="sheet-points" id="sheetPoints"></div>
+      <button class="sheet-close" id="sheetClose">CLOSE</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var $=function(s){return document.querySelector(s)};
+  var stage=$('#stage'), overlay=$('#overlay'), sheetTitle=$('#sheetTitle'),
+      sheetDesc=$('#sheetDesc'), sheetPoints=$('#sheetPoints'), sheetCode=$('#sheetCode'),
+      toast=$('#toast');
+
+  var DATA={
+    story:{title:'Needle 2 <em>· 一个塞进 14MB 的端侧 Agent</em>',desc:'cactus-compute/needle 是 Cactus Compute（仙人掌计算）开源的端侧工具调用模型第二代。整个项目建在"Simple Attention Network"研究发现上：用更省的架构把模型压到极小，再叠 CQ2 量化，装进单一 14MB 二进制。名字"Needle"取自"大海捞针"——在海量工具描述里，精准捞起该调用的那一个。',points:['Cactus Compute 出品','第二代（Needle 2）','45M 参数 · 14MB 二进制','工具调用 / 设备操控 / 结构化提取','基于 Simple Attention Network 论文 (arXiv:2607.18363)','端侧 LLM：手机/穿戴/智能家居/机器人']},
+    star:{title:'6,188★ <em>· 端侧 AI 热度</em>',desc:'GitHub 6,188 star、411 fork，2 月底创建至今半年内达成。官网同步称 4.2k+ star（GitHub 数字更新更快）。在端侧小模型赛道属于头部热度。',points:['GitHub 6,188★ · 411 fork','488 downloads (HF)','125 likes (HF)','半年达成（2026-02 创建）','HuggingFace 84 个多端二进制文件']},
+    size:{title:'14MB <em>· 单个二进制的极致</em>',desc:'整个模型是一个 14MB 的独立引擎二进制，权重直接 bake 进引擎里，没有单独模型文件要管理，推理完全离线不出网。这是"自我包含"设计的极端案例。',points:['单个 14MB 二进制','权重内嵌引擎，无分离文件','推理零网络请求','离线/隔离部署友好','CQ2-bit 量化压缩']},
+    params:{title:'45M <em>· 参数换可用性</em>',desc:'45M 参数对传统小模型是"极小"，但通过架构与量化设计，在工具调用 benchmark 上能与 270M 的 FunctionGemma、230M 的 LFM2.5、Apple FM 互有胜负——用 5x-70x 更小尺寸打平这些大它几十倍的模型。',points:['45M 参数','基准对打 270M/230M 级模型','尺寸小 5x-70x','2-bit vs 他们的 f16','质量-体积前沿领先']},
+    memory:{title:'28MB <em>· 完整会话内存</em>',desc:'不是说模型 14MB 就完事——跑一个完整会话只需要约 28MB RAM。关键在"有界内存"设计：256-token 滑动窗口 + 工具钉作 KV sink，让内存不随对话变长而增长，稳定在 28MB。',points:['完整会话 ~28MB RAM','256-token 滑动窗口','工具钉作 KV sink','内存不随会话增长','对嵌入式设备关键']},
+    design:{title:'技术拆解 <em>· 四板斧塞进 14MB</em>',desc:'Needle 2 不是简单剪枝小模型，而是从架构到量化的系统性极致压缩。四个方面共同把"能做工具调用的 LLM"塞进 14MB。',points:['① Simple Attention Network —— Hadamard MLP 替代 FFN，省内存省计算','② Engram K/V 记忆 —— 哈希 n-gram 表，两处触发，增效','③ CQ2-bit 量化 —— 2bit 压缩，相对 f16 的 1/8','④ Confidence 门控 —— 学一个置信度头，低置信度果断求云端','架构极简 + 量化极致 = 端侧可用'],code:'设计心法一句话：\n不是把大模型变小，而是为"端侧可用"从零想一个更省的架构。\n省到极致，才敢把能力塞进 14MB。'},
+    fe1:{title:'Simple Attention Network <em>· 为端侧从零想</em>',desc:'核心创新。用 Hadamard MLP 替代传统 FFN（Walsh-Hadamard 变换是固定矩阵，n log n 时间、无权重可读），GQA 注意力 + engram KV 记忆 + 多路 hyper-connection。每秒 N 参数藏的省，换来的是能在手机/穿戴设备上跑的 Agent。',points:['Hadamard MLP 替代 FFN','GQA 注意力等重度压缩','Engram key-value 记忆','多路 hyper-connection','arXiv:2607.18363 有完整消融']},
+    fe2:{title:'Engram 记忆 <em>· 哈希 KV 记忆点</em>',desc:'核心用哈希 n-gram 表做 key-value 记忆（在两层触发），近似传统 KV 缓存但省得多。配合 256-token 滑动窗口，让"记忆"不随会话膨胀。',points:['哈希 n-gram KV 表','近似传统 KV 缓存','两层 engram 站点触发','配合滑动窗口','记忆有界不膨胀']},
+    fe3:{title:'CQ2-bit 量化 <em>· 2bit 的极端</em>',desc:'Cactus Quants 的 2-bit 量化。模型 benchmark 上与其他 270M 级模型打平，但权重只要 f16 的 1/8。这是"用精度换体积"在端侧的极致。',points:['2-bit 量化 (CQ2)','相对 f16 权重 1/8','质量不塌陷','默认按层位图导出','4-bit 兜底']},
+    fe4:{title:'Confidence 门控 <em>· 知道何时不知道</em>',desc:'学到内置置信度头，每个响应带校准的置信度分数。设定阈值：高于就执行，低于就果断升级给云端。这是官网"On-device AI with cloud fallback"的落地——端侧不够就请云端。',points:['内置置信度头','每个响应带校准分数','设定阈值执行/升级','端侧+云端混合','"知道何时该说不"']},
+    f1:{title:'Step 1 · <em>描述工具</em>',desc:'Needle 靠读工具描述决定调什么、怎么填参数。"描述得好就赢全场"——签名给参数类型，docstring 是工具描述，@needle.tool 装饰器即注册。',points:['@needle.tool 装饰函数','签名=参数类型','docstring=工具描述','run() 完成调用循环','Python 直连']},
+    f2:{title:'Step 2 · <em>语法约束</em>',desc:'文本进、JSON 出。从你声明的 schema 编译字节级 grammar，约束每个 token 只生成合法结构。不是"模型凭感觉造 JSON"，而是语法上就不可能错。',points:['文本进 JSON 出','字节级 grammar 约束','从 schema 编译','token 级别限制','结构化零幻觉']},
+    f3:{title:'Step 3 · <em>工具检索</em>',desc:'声明一个大目录，内置检索头每回合只渲染 top-5 工具，语法约束局限在该子集内。海量工具不拖慢模型——像搜索引擎一样先召回再精调。',points:['大目录声明','检索头选 top-5','语法约束局限子集','"大海捞针"的落点','海量工具不拖累推理']},
+    f4:{title:'Step 4 · <em>JSON 返回</em>',desc:'结构化输出直接回传，附上已执行工具的 results。整条链路：输into→约束→调用→回传，全在端侧 28MB 内完成。',points:['结构化 JSON 返回','附带工具执行结果','端侧全程完成','零网络依赖']},
+    tech:{title:'Simple Attention Net',desc:'论文 arXiv:2607.18363 定义的端侧小模型配方。设计核心是用更省的算子组合替代标准 Transformer 组件，在极小参数规模下保住工具调用能力。',points:['Hadamard MLP 替代 FFN','GQA 注意力','Engram KV 记忆','多路 hyper-connection','有完整消融实验']},
+    tech2:{title:'JAX 训练',desc:'训练纯 JAX，任何支持的加速器都能跑。NVIDIA 用 CUDA 版、Apple Silicon 用 metal 版，命令即训。推理引擎权重无关，LoRA 合并后直接跑。',points:['纯 JAX 训练','CUDA / metal / CPU 通用','更奇怪的 LoRA 微调','引擎权重无关','pip install 即用']},
+    quant:{title:'CQ2 量化',desc:'Cactus 自研 2-bit 量化，把 f16 权重的 1/8 塞进同样质量。默认按 checkpoint 层位图导出，4-bit 兜底。这是 45M 能进 14MB 的最后一环。',points:['CQ2-bit 量化','f16 的 1/8','质量不塌陷','层位图导出','4-bit 兜底']},
+    p2:{title:'LoRA 微调',desc:'needle finetune 命令，默认 lora-rank 16 / alpha 32，epochs 3。10 分钟辩论——数据适配后 build 成 tuned .cact 直接跑，无需重编译。',points:['needle finetune 命令','lora-rank 16 / alpha 32','merge 进 base 量化','.cact 权重无关运行','无需重编译']},
+    t3:{title:'多端二进制',desc:'HuggingFace 仓库提供 android-arm64 / armv7 / riscv64 等多端预编译，把"端侧"落到实处——真能烧进手机、穿戴、MCU、机器人。',points:['android-arm64 已提供','armv7 / riscv64 预编译','MCU / 穿戴 / 机器人','真正端侧部署','隔离离线可用']}
+  };
+
+  function openSheet(key){
+    var d=DATA[key]; if(!d) return;
+    sheetTitle.innerHTML=d.title;
+    sheetDesc.textContent=d.desc;
+    if(d.code){sheetCode.style.display='block';sheetCode.textContent=d.code;}
+    else{sheetCode.style.display='none';}
+    sheetPoints.innerHTML=d.points.map(function(p){return '<div class="sheet-point">'+p+'</div>';}).join('');
+    overlay.classList.add('active');
+    if(navigator.vibrate) navigator.vibrate(15);
+  }
+  function closeSheet(){overlay.classList.remove('active');}
+
+  document.querySelectorAll('[data-sheet]').forEach(function(el){
+    el.addEventListener('click',function(){openSheet(this.getAttribute('data-sheet'));});
+  });
+  $('#sheetClose').addEventListener('click',closeSheet);
+  overlay.addEventListener('click',function(e){if(e.target===overlay) closeSheet();});
+  $('#seal').addEventListener('click',function(){openSheet('story');});
+
+  // ── 截图画廊：双列 + 组切换 ──
+  var GROUPS=[
+    [{src:'../cards/needle/architecture.png',label:'架构'},{src:'../cards/needle/frontier.png',label:'前沿对比'}],
+    [{src:'../cards/needle/banner.png',label:'Needle Banner'},{src:'../cards/needle/architecture.png',label:'架构'}]
+  ];
+  var groupIdx=0;
+  var ZM=[
+    ['../cards/needle/architecture.png','../cards/needle/frontier.png'],
+    ['../cards/needle/banner.png','../cards/needle/architecture.png']
+  ];
+  function setGroup(i){
+    groupIdx=i;
+    var g=GROUPS[i];
+    $('#shotImgL').src=g[0].src; $('#shotLabelL').textContent=g[0].label;
+    $('#shotImgR').src=g[1].src; $('#shotLabelR').textContent=g[1].label;
+    document.querySelectorAll('.shot-tab').forEach(function(t,ti){
+      t.classList.toggle('on',parseInt(t.dataset.group,10)===i);
+    });
+  }
+  document.querySelectorAll('.shot-tab').forEach(function(t){
+    t.addEventListener('click',function(){setGroup(parseInt(t.dataset.group,10));});
+  });
+  var zoom=$('#zoom');
+  function openZoom(idx){
+    $('#zoomImg').src=ZM[groupIdx][idx];
+    zoom.classList.add('active');
+  }
+  $('#shotFrameL').addEventListener('click',function(){openZoom(0);});
+  $('#shotFrameR').addEventListener('click',function(){openZoom(1);});
+  $('#zoomClose').addEventListener('click',function(){zoom.classList.remove('active');});
+  zoom.addEventListener('click',function(e){if(e.target===zoom) zoom.classList.remove('active');});
+
+  // ── 双面板切换 ──
+  function showPanel(p){
+    document.querySelectorAll('.show-tab').forEach(function(t){t.classList.toggle('on',t.dataset.panel===p);});
+    document.querySelectorAll('.panel').forEach(function(pn){pn.classList.toggle('on',pn.id==='panel-'+p);});
+  }
+  document.querySelectorAll('.show-tab').forEach(function(t){
+    t.addEventListener('click',function(){showPanel(this.dataset.panel);});
+  });
+
+  var shareBtn=$('#shareBtn');
+  function shareText(){
+    return 'Needle 2：把 45M 参数 Agent 塞进 14MB 的端侧工具调用模型——Cactus 用"大海捞针"精准调用，28MB 内存跑完整会话，手机/穿戴/机器人可用。\nhttps://mindresonance.online/youngsinsight/pages/needle.html\n\n你可以用任何AI工具订阅我的博客文章：https://mindresonance.online/youngsinsight/subscribe.html';
+  }
+  function showToast(msg){
+    toast.textContent=msg;
+    toast.classList.add('show');
+    setTimeout(function(){toast.classList.remove('show');},2200);
+  }
+  shareBtn.addEventListener('click',function(){
+    var text=shareText();
+    if(navigator.share){
+      navigator.share({title:'Needle 2 · 14MB 端侧 Agent 大海捞针',text:text}).catch(function(){});
+    }else if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){showToast('已复制：介绍 + 链接 + 订阅推荐');});
+    }else{
+      var ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();
+      try{document.execCommand('copy');showToast('已复制：介绍 + 链接 + 订阅推荐');}catch(e){}
+      document.body.removeChild(ta);
+    }
+  });
+
+  var tiltRaf=null;
+  function onTilt(x,y){
+    if(tiltRaf) return;
+    tiltRaf=requestAnimationFrame(function(){
+      var w=stage.clientWidth,h=stage.clientHeight;
+      var nx=(x/w)*2-1, ny=(y/h)*2-1;
+      stage.style.transform='rotateX('+(-ny*6)+'deg) rotateY('+(nx*6)+'deg)';
+      tiltRaf=null;
+    });
+  }
+  stage.addEventListener('mousemove',function(e){
+    var r=stage.getBoundingClientRect();onTilt(e.clientX-r.left,e.clientY-r.top);
+  });
+  stage.addEventListener('touchmove',function(e){
+    var t=e.touches[0];if(!t)return;
+    var r=stage.getBoundingClientRect();onTilt(t.clientX-r.left,t.clientY-r.top);
+  },{passive:true});
+  stage.addEventListener('mouseleave',function(){stage.style.transform='rotateX(0) rotateY(0)';});
+
+  var sealCount=0;
+  $('#seal').addEventListener('click',function(){
+    sealCount++;
+    if(sealCount>=5){
+      sealCount=0;
+      var spin=0,iv=setInterval(function(){
+        spin+=18;var s=$('#seal');s.style.transform='rotate('+spin+'deg) scale(1.2)';
+        if(spin>=360){clearInterval(iv);s.style.transform='';}
+      },16);
+      showToast('🧵 大海捞针，针尖命中！');
+      if(navigator.vibrate) navigator.vibrate([20,40,20]);
+    }
+  });
+
+  setTimeout(function(){
+    var el=document.querySelector('.gal-hint');if(el){el.style.animation='none';el.style.opacity='1';}
+  },4000);
+})();
+</script>
+</body>
+</html>

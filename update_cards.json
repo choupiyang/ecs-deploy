@@ -1,16 +1,16 @@
 {
-  "id": "catonchair",
-  "title": "Cat On Chair",
-  "subtitle": "辞掉 $200K 用 AI Coding 做出的治愈系番茄钟 · 猫咪陪伴专注 · 月入 $18K / 年 $216K · 美区评分 4.93 · 127K+ 下载",
-  "image": "cards/catonchair-cover.svg",
-  "page": "pages/catonchair.html",
+  "id": "needle",
+  "title": "Needle 2",
+  "subtitle": "把 45M 参数 Agent 塞进 14MB 的开源端侧工具调用模型 · 大海捞针精准调工具 · 28MB 内存跑完整会话 · 手机/穿戴/机器人可用 · MIT",
+  "image": "cards/needle-cover.svg",
+  "page": "pages/needle.html",
   "tags": [
-    "专注番茄钟",
-    "ADHD",
-    "AI Coding",
-    "一人公司",
-    "独立开发者",
-    "宠物陪伴"
+    "端侧 LLM",
+    "工具调用",
+    "Simple Attention Net",
+    "Cactus Compute",
+    "量化",
+    "on-device AI"
   ],
   "date": "2026-08-16",
   "type": "recommendation"
