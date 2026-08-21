@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b0a10">
+<title>收听 · Vapi：让每通电话都像人</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&family=Noto+Serif+SC:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0a10; --bg-2:#13121c; --bg-3:#1c1a2a;
+  --accent:#00d4aa; --accent-dim:#008870;
+  --text:#e8e4d9; --text-dim:rgba(232,228,217,.6); --text-mute:rgba(232,228,217,.35);
+  --line:rgba(232,228,217,.08);
+  --gold:#ffd60a; --blue:#6c5ce7;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;overflow-x:hidden}
+.serif{font-family:'Playfair Display','Noto Serif SC',serif}
+
+/* ── 顶部返回条 ── */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
+  padding:14px 20px;padding-top:calc(14px + env(safe-area-inset-top));background:rgba(11,10,16,.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.topbar a{color:var(--text-dim);text-decoration:none;font-size:13px;display:flex;align-items:center;gap:6px;transition:color .3s}
+.topbar a:hover{color:var(--accent)}
+.topbar .brand{font-size:11px;letter-spacing:.3em;color:var(--text-mute);text-transform:uppercase}
+
+/* ── 封面 ── */
+.cover{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:120px 24px 60px;position:relative;text-align:center}
+.cover::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 40%,rgba(0,212,170,.06),transparent 70%);pointer-events:none}
+.cover .kicker{font-size:11px;letter-spacing:.5em;color:var(--accent);text-transform:uppercase;margin-bottom:28px;animation:fadeUp 1s ease both}
+.cover h1{font-size:clamp(32px,8vw,60px);line-height:1.25;font-weight:900;letter-spacing:.02em;animation:fadeUp 1s ease .15s both}
+.cover h1 .num{color:var(--accent);font-family:'Playfair Display',serif;font-style:italic}
+.cover .sub{font-family:'Playfair Display','Noto Serif SC',serif;font-style:italic;font-size:clamp(16px,3.6vw,24px);color:var(--text-dim);margin-top:16px;animation:fadeUp 1s ease .3s both}
+.cover .meta{display:flex;gap:24px;margin-top:36px;font-size:12px;color:var(--text-mute);letter-spacing:.15em;animation:fadeUp 1s ease .45s both}
+.cover .scroll-hint{position:absolute;bottom:28px;font-size:10px;letter-spacing:.4em;color:var(--text-mute);animation:bob 2.2s ease-in-out infinite}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+
+/* ── 播放器 ── */
+.player-wrap{max-width:720px;margin:0 auto;padding:40px 20px 20px}
+.player-card{background:var(--bg-2);border:1px solid var(--line);border-radius:24px;padding:28px 24px;position:relative;overflow:hidden}
+.player-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.6}
+.viz{height:88px;display:flex;align-items:flex-end;justify-content:center;gap:3px;margin-bottom:20px}
+.viz i{width:4px;border-radius:2px;background:linear-gradient(180deg,var(--accent),var(--accent-dim));opacity:.35;transition:opacity .15s;animation:none}
+.viz i.on{opacity:1;animation:eq 1.1s ease-in-out infinite}
+.viz i.on:nth-child(2n){animation-delay:.12s}.viz i.on:nth-child(3n){animation-delay:.24s}.viz i.on:nth-child(4n){animation-delay:.36s}.viz i.on:nth-child(5n){animation-delay:.48s}
+@keyframes eq{0%,100%{transform:scaleY(.25)}50%{transform:scaleY(1)}}
+.timerow{display:flex;justify-content:space-between;font-size:11px;color:var(--text-mute);font-variant-numeric:tabular-nums;margin-bottom:6px}
+.timerow .cur{color:var(--accent)}
+.progress{position:relative;height:26px;display:flex;align-items:center;cursor:pointer}
+.progress .track{flex:1;height:4px;border-radius:2px;background:var(--bg-3);position:relative;overflow:visible}
+.progress .fill{position:absolute;left:0;top:0;bottom:0;width:0%;border-radius:2px;background:var(--accent)}
+.progress .knob{position:absolute;top:50%;left:0;width:14px;height:14px;border-radius:50%;background:var(--accent);transform:translate(-50%,-50%);box-shadow:0 0 12px rgba(0,212,170,.5);opacity:0;transition:opacity .2s}
+.progress:hover .knob,.progress.drag .knob{opacity:1}
+.controls{display:flex;align-items:center;justify-content:center;gap:28px;margin-top:18px}
+.ctl{background:none;border:none;color:var(--text-dim);cursor:pointer;transition:color .2s,transform .1s;padding:8px}
+.ctl:hover{color:var(--accent)}
+.ctl:active{transform:scale(.92)}
+.ctl.main{width:72px;height:72px;border-radius:50%;background:var(--accent);color:#0b0a10;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 32px rgba(0,212,170,.28)}
+.ctl.main:hover{color:#0b0a10;transform:scale(1.04)}
+.ctl.main:active{transform:scale(.96)}
+.ctl svg{display:block}
+.speedwrap{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:14px}
+.speed{font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid var(--line);color:var(--text-dim);background:none;cursor:pointer;transition:all .2s;font-family:'Noto Sans SC',sans-serif}
+.speed.on{border-color:var(--accent);color:var(--accent);background:rgba(0,212,170,.08)}
+
+/* ── 字幕 ── */
+.subtitle-wrap{max-width:720px;margin:0 auto;padding:30px 20px 10px}
+.subtitle-box{background:var(--bg-2);border:1px solid var(--line);border-radius:20px;padding:26px 24px;min-height:130px;display:flex;align-items:center;justify-content:center}
+.subtitle-box .st{font-size:clamp(15px,3.4vw,19px);line-height:1.9;color:var(--text-dim);text-align:center;transition:color .3s;font-family:'Noto Serif SC',serif}
+.subtitle-box .st.on{color:var(--text)}
+.subtitle-box .st b{color:var(--accent);font-weight:700}
+
+/* ── 章节时间轴 ── */
+.timeline{max-width:720px;margin:0 auto;padding:44px 20px 10px}
+.tl-title{font-size:12px;letter-spacing:.35em;color:var(--text-mute);text-transform:uppercase;margin-bottom:24px;display:flex;align-items:center;gap:14px}
+.tl-title::after{content:'';flex:1;height:1px;background:var(--line)}
+.tl{position:relative;padding-left:28px}
+.tl::before{content:'';position:absolute;left:7px;top:6px;bottom:6px;width:1px;background:var(--line)}
+.tl-item{position:relative;margin-bottom:22px;cursor:pointer;user-select:none}
+.tl-item::before{content:'';position:absolute;left:-28px;top:7px;width:9px;height:9px;border-radius:50%;background:var(--bg-3);border:2px solid var(--text-mute);transition:all .25s}
+.tl-item:hover::before,.tl-item.active::before{background:var(--accent);border-color:var(--accent);box-shadow:0 0 10px rgba(0,212,170,.5)}
+.tl-item .t{font-size:11px;color:var(--accent);font-variant-numeric:tabular-nums;font-family:'Playfair Display',serif;letter-spacing:.05em}
+.tl-item .n{font-family:'Playfair Display',serif;font-size:22px;color:var(--text);font-weight:700;margin:2px 0}
+.tl-item .d{font-size:12px;color:var(--text-dim);line-height:1.6}
+.tl-item:hover .n{color:var(--accent)}
+
+/* ── 金句墙 ── */
+.quotes{max-width:720px;margin:0 auto;padding:44px 20px 10px}
+.q-title{font-size:12px;letter-spacing:.35em;color:var(--text-mute);text-transform:uppercase;margin-bottom:24px;display:flex;align-items:center;gap:14px}
+.q-title::after{content:'';flex:1;height:1px;background:var(--line)}
+.q-card{background:var(--bg-2);border:1px solid var(--line);border-radius:16px;padding:22px 22px 16px;margin-bottom:14px;position:relative;transition:border-color .25s}
+.q-card:hover{border-color:var(--accent-dim)}
+.q-card .txt{font-family:'Noto Serif SC',serif;font-size:15px;line-height:1.9;color:var(--text)}
+.q-card .txt::before{content:'「';color:var(--accent);font-family:'Playfair Display',serif;font-size:22px;vertical-align:-4px}
+.q-card .txt::after{content:'」';color:var(--accent);font-family:'Playfair Display',serif;font-size:22px;vertical-align:-4px}
+.q-card .act{display:flex;justify-content:flex-end;gap:16px;margin-top:10px}
+.q-card .act button{background:none;border:none;color:var(--text-mute);font-size:11px;cursor:pointer;transition:color .2s;font-family:'Noto Sans SC',sans-serif;display:flex;align-items:center;gap:4px}
+.q-card .act button:hover{color:var(--accent)}
+.q-card.copied{border-color:var(--accent)}
+
+/* ── 结尾 ── */
+.finale{max-width:720px;margin:0 auto;padding:60px 24px 40px;text-align:center}
+.finale .big{font-family:'Playfair Display','Noto Serif SC',serif;font-style:italic;font-size:clamp(22px,5vw,34px);line-height:1.6;color:var(--text)}
+.finale .big b{color:var(--accent);font-weight:700}
+.subscribe{margin-top:36px;display:inline-flex;align-items:center;gap:10px;padding:14px 26px;border-radius:40px;border:1px solid var(--accent-dim);color:var(--accent);text-decoration:none;font-size:13px;letter-spacing:.08em;transition:all .25s;background:rgba(0,212,170,.05)}
+.subscribe:hover{background:var(--accent);color:#0b0a10}
+.article-link{display:block;margin-top:18px;color:var(--text-dim);font-size:12px;text-decoration:none;transition:color .2s}
+.article-link:hover{color:var(--accent)}
+footer{padding:40px 20px calc(40px + env(safe-area-inset-bottom));text-align:center;font-size:10px;color:var(--text-mute);letter-spacing:.2em;border-top:1px solid var(--line);margin-top:40px}
+
+html.js .reveal{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s ease}
+html.js .reveal.in{opacity:1;transform:translateY(0)}
+
+.loading-mask{position:fixed;inset:0;background:var(--bg);z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .6s}
+.loading-mask.hide{opacity:0;pointer-events:none}
+.loading-mask .ring{width:44px;height:44px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-mask p{font-size:12px;color:var(--text-mute);letter-spacing:.2em}
+</style>
+</head>
+<body>
+
+<div class="loading-mask" id="loadingMask">
+  <div class="ring"></div>
+  <p>正在加载音频…</p>
+</div>
+
+<div class="topbar">
+  <a href="../vapi.html">← 返回图文版</a>
+  <span class="brand">反共识观察 · VOL.08</span>
+</div>
+
+<section class="cover">
+  <div class="kicker">VOICE AGENT INFRA</div>
+  <h1>让每通电话<br>都像 <span class="num">人</span></h1>
+  <div class="sub">Vapi — 语音 AI 领域的 Twilio</div>
+  <div class="meta"><span>洋哥 × 小颖</span><span>6:18</span><span>$72M Series B</span></div>
+  <div class="scroll-hint">SCROLL</div>
+</section>
+
+<section class="player-wrap reveal">
+  <div class="player-card">
+    <div class="viz" id="viz"></div>
+    <div class="timerow"><span class="cur" id="curTime">00:00</span><span id="durTime">00:00</span></div>
+    <div class="progress" id="progress">
+      <div class="track"><div class="fill" id="fill"></div><div class="knob" id="knob"></div></div>
+    </div>
+    <div class="controls">
+      <button class="ctl" id="btnBack" aria-label="后退10秒"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg></button>
+      <button class="ctl main" id="btnPlay" aria-label="播放">
+        <svg id="iconPlay" width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        <svg id="iconPause" width="30" height="30" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+      </button>
+      <button class="ctl" id="btnFwd" aria-label="前进10秒"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg></button>
+    </div>
+    <div class="speedwrap">
+      <button class="speed" data-s="1">1x</button>
+      <button class="speed" data-s="1.25">1.25x</button>
+      <button class="speed" data-s="1.5">1.5x</button>
+      <button class="speed" data-s="2">2x</button>
+    </div>
+  </div>
+</section>
+
+<section class="subtitle-wrap reveal">
+  <div class="subtitle-box"><div class="st" id="subtitle">点击播放，开始收听《反共识观察》</div></div>
+</section>
+
+<section class="timeline reveal">
+  <div class="tl-title">章节时间轴</div>
+  <div class="tl" id="tl"></div>
+</section>
+
+<section class="quotes reveal">
+  <div class="q-title">金句墙</div>
+  <div class="q-card"><div class="txt">不训练自己的AI模型，而是做管道。STT、LLM、TTS全用第三方的，只做一个模型编排层。这在AI公司中是反常规的。</div><div class="act"><button onclick="copyQuote(this)">复制金句</button></div></div>
+  <div class="q-card"><div class="txt">他们花三年做会议笔记，积累语音工程know-how。这些工程经验比融资更重要的护城河。</div><div class="act"><button onclick="copyQuote(this)">复制金句</button></div></div>
+  <div class="q-card"><div class="txt">Amazon Ring从评估40家竞品到全量上线仅用两周，说明产品已过PoC阶段，进入替换阶段。</div><div class="act"><button onclick="copyQuote(this)">复制金句</button></div></div>
+  <div class="q-card"><div class="txt">管道公司的生存法则不是"做得比上游好"，而是"让上游不值得自己做"。</div><div class="act"><button onclick="copyQuote(this)">复制金句</button></div></div>
+  <div class="q-card"><div class="txt">一个行业做深，行业know-how比平台技术更难复制。</div><div class="act"><button onclick="copyQuote(this)">复制金句</button></div></div>
+  <div class="q-card"><div class="txt">先烧掉前三年，再建一个新公司。这不是通常意义的pivot，而是burn it down and rebuild。</div><div class="act"><button onclick="copyQuote(this)">复制金句</button></div></div>
+</section>
+
+<section class="finale">
+  <div class="big reveal">管道公司活得久，但活得累<br>生存法则：<b>让上游不值得自己做</b></div>
+  <a class="subscribe reveal" href="https://mindresonance.online/youngsinsight/subscribe.html">你可以用任何 AI 工具订阅我的博客文章 →</a>
+  <a class="article-link reveal" href="../vapi.html">← 返回图文版《Vapi：让每通电话都像人》</a>
+</section>
+
+<footer>MIND RESONANCE · 反共识观察 · VOL.08 / 2026</footer>
+
+<audio id="audio" preload="metadata" src="/youngsinsight/audio/vapi.mp3?v=1"></audio>
+
+<script>
+document.documentElement.className='js';
+(function(){
+'use strict';
+var audio=document.getElementById('audio');
+var btnPlay=document.getElementById('btnPlay');
+var iconPlay=document.getElementById('iconPlay');
+var iconPause=document.getElementById('iconPause');
+var curTime=document.getElementById('curTime');
+var durTime=document.getElementById('durTime');
+var progress=document.getElementById('progress');
+var fill=document.getElementById('fill');
+var knob=document.getElementById('knob');
+var subtitle=document.getElementById('subtitle');
+var viz=document.getElementById('viz');
+var loadingMask=document.getElementById('loadingMask');
+
+var NBAR=48;
+for(var i=0;i<NBAR;i++){var b=document.createElement('i');viz.appendChild(b);}
+var bars=viz.children;
+
+var actx=null, analyser=null, dataArr=null;
+try{
+  actx=new (window.AudioContext||window.webkitAudioContext)();
+  analyser=actx.createAnalyser();
+  analyser.fftSize=128;
+  dataArr=new Uint8Array(analyser.frequencyBinCount);
+  var src=actx.createMediaElementSource(audio);
+  src.connect(analyser);
+  analyser.connect(actx.destination);
+}catch(e){actx=null;analyser=null;dataArr=null;}
+
+function startVisuals(){
+  for(var i=0;i<NBAR;i++){bars[i].style.height=(20+Math.random()*60)+'%';}
+  if(actx && analyser){
+    var draw=function(){
+      if(audio.paused) return;
+      analyser.getByteFrequencyData(dataArr);
+      for(var j=0;j<NBAR;j++){
+        var v=dataArr[Math.floor(j*dataArr.length/NBAR)]/255;
+        bars[j].style.height=Math.max(14,v*95)+'%';
+        bars[j].className=v>0.08?'on':'';
+      }
+      requestAnimationFrame(draw);
+    };
+    requestAnimationFrame(draw);
+  }else{
+    setInterval(function(){
+      if(audio.paused) return;
+      for(var j=0;j<NBAR;j++){
+        bars[j].style.height=(22+Math.random()*70)+'%';
+        bars[j].className='on';
+      }
+    },140);
+  }
+}
+
+var subtitles=[
+[0,'欢迎收听《反共识观察》，我是洋哥，今天很高兴和小颖一起聊聊语音A I领域的反共识视角。'],
+[8,'我是小颖，洋哥的\"十万个为什么\"担当！哇，今天咱们要聊什么呀？听起来很有意思！'],
+[15,'今天我们来聊聊Vapi，这家被称为\"语音A I领域Twilio\"的公司，他们做的不是让A I变得更像人，而是让A I能\"打电话\"。咦，这听起来好像没什么特别的？'],
+[28,'打电话？不就是A I接电话打电话嘛！有什么特别的呀？人家感觉很多公司都能做这个呢！'],
+[35,'关键在于他们的定位——面向开发者的语音A I Agent平台。用几行A P I，就能让企业拥有一个能\"打电话\"的A I员工。这不是简单的电话机器人，而是一个完整的语音A I基础设施。'],
+[49,'哇！几行代码就能搞定？那不就像搭积木一样简单嘛！不过，为什么说这是反共识呢？'],
+[57,'反共识在于，他们不训练自己的A I模型，而是做\"管道\"。STT、L L M、T T S全用第三方的，只做一个模型编排层。这在A I公司中是反常规的。'],
+[72,'不做自己的模型？哎呀，那不是要被大厂欺负嘛！人家都拼命做自己的模型，他们却反其道而行之！'],
+[80,'没错，这就是反共识的智慧。创始人Jordan和Nikhil，两位滑铁卢大学的工程师，前三年花了三年做会议笔记，积累语音工程know-how，然后在2023年全力转向语音A I。'],
+[94,'三年只做会议笔记？哼，听起来好浪费哦！但是等等，他们为什么做会议笔记呢？'],
+[102,'因为会议笔记让他们深入理解了语音转录的难点——延迟、中断、上下文理解。这些工程经验比融资更重要的护城河。'],
+[111,'哦！原来是这样！就像你学游泳，不是直接跳进深水区，而是先从水边练习打水花嘛！好聪明！'],
+[121,'他们还有个有趣的验证方式。C E O Jordan曾印了\"Harmon\"（A I心理治疗师）的名片在旧金山公交车上发给陌生人，验证A I语音对话的真实体感。'],
+[132,'哇！好疯狂的做法！直接在真实场景测试！这比在实验室里可厉害多了！不过，他们的产品具体能做什么呢？'],
+[141,'客服接听、主动外呼、候选人面试、保险/金融合规对话。Amazon Ring从评估40家竞品到全量上线仅用两周，说明产品已过\"PoC阶段\"，进入\"替换阶段\"。'],
+[156,'两周！这么快！客户不是试用，而是直接把真实业务迁上去！这听起来好厉害！不过，技术路线真的不训练模型吗？'],
+[166,'确实不训练自己的STT/L L M/T T S，而是做一个模型编排层。STT用OpenAI Whisper、Deepgram；L L M用OpenAI GPT-4o、Anthropic Claude；T T S用ElevenLabs、PlayHT。'],
+[183,'嚯！全是行业顶尖模型！那他们不担心被这些大厂替代吗？感觉好危险呀！'],
+[190,'这正是反共识的关键——他们不做模型，而是专注于企业级治理：合规、审计、人工升级、可观测性。就像Twilio不做网络，而是做通信A P I。'],
+[202,'哦！原来如此！就像做菜的人不种菜，而是专注于烹饪技巧！那商业模式呢？'],
+[211,'SaaS + 用量计费混合模式，只收\"管道费\"$0.05/分钟，不收模型费（BYOK）。这种模式让毛利是\"固定比例抽成\"而非\"加价转卖\"。'],
+[223,'哇！这么透明！但是价格这么低，他们怎么赚钱呢？人家感觉好薄利多销的样子！'],
+[232,'看似薄利，但换来的是极高的开发者粘性与口碑传播。就像AWS云服务，虽然单一利润不高，但生态粘性强。'],
+[242,'哦！我明白了！就像便利店，单次利润不高，但客户天天来！那中国市场有什么可以借鉴的呢？'],
+[250,'中国创业者可以借鉴三个方向：垂直行业A I语音Agent服务商、微信生态A I语音/视频客服、A I语音质检+合规平台。'],
+[260,'垂直行业？就像专门做医疗A I电话或保险A I销售？哎呀，这个思路好！巨头可能看不上这些小领域！'],
+[269,'没错。中国的特殊性在于监管差异、渠道差异、巨头挤压和价格敏感。Vapi的$0.05/分钟在中国缺乏竞争力。'],
+[280,'嗯嗯！那风险呢？感觉这种模式风险不小！'],
+[284,'四重结构性风险：模型层护城河缺失、竞争加剧、合规与责任风险、\"通话即训练\"闭环未兑现。特别是当OpenAI等大厂自推语音Agent时，可能被原生集成替代。'],
+[299,'哎呀，感觉好危险！就像开奶茶店，结果可口可乐自己开加盟店了！那他们怎么应对呢？'],
+[308,'Vapi的应对是\"做得比模型厂商更好\"，专注于企业级治理这种\"脏活累活\"。这给中国创业者一条重要启示：管道公司活得久，但活得累，生存法则是\"让上游不值得自己做\"。'],
+[323,'哦！也就是说，与其跟巨头正面硬碰，不如做巨头懒得做的\"脏活累活\"！太聪明了！'],
+[332,'是的，最后一条反共识的启示是：中国创业者的机会不在通用平台，而在巨头看不上、痛到客户愿意为不完美买单的垂直场景——一个行业做深，行业know-how比平台技术更难复制。'],
+[348,'哇！懂了！就像做街边小吃，不跟五星级酒店比豪华，而是比街坊邻居的口味！太有道理了！'],
+[357,'如果你喜欢《反共识观察》的视角，欢迎在播放页下方订阅《见洋知新》，我们下期见。'],
+[364,'对对，订阅《见洋知新》，一起看透真相！下次聊什么呢？好期待呀！'],
+];
+
+var chapters=[
+[0,'开场','语音AI领域的Twilio'],
+[15,'反共识定位','不做模型做管道'],
+[80,'前三年','滑铁卢工程师的会议笔记'],
+[121,'产品能力','Amazon Ring两周全量上线'],
+[166,'技术路线','模型编排层的三道壁垒'],
+[211,'商业模式','$0.05管道费与BYOK'],
+[250,'中国市场','三个可借鉴方向'],
+[284,'风险','四重结构性风险'],
+[332,'总结','管道公司活得久但活得累']
+];
+
+var tl=document.getElementById('tl');
+chapters.forEach(function(c,i){
+  var it=document.createElement('div');
+  it.className='tl-item reveal';
+  it.dataset.t=c[0];
+  var mm=String(Math.floor(c[0]/60)).padStart(2,'0');
+  var ss=String(Math.floor(c[0]%60)).padStart(2,'0');
+  it.innerHTML='<div class="t">'+mm+':'+ss+'</div><div class="n">'+c[1]+'</div><div class="d">'+c[2]+'</div>';
+  it.addEventListener('click',function(){audio.currentTime=parseFloat(this.dataset.t);seekVisuals();if(audio.paused){audio.play();}});
+  tl.appendChild(it);
+});
+var tlItems=tl.querySelectorAll('.tl-item');
+
+function fmt(s){
+  s=Math.max(0,Math.floor(s));
+  var m=Math.floor(s/60), ss=s%60;
+  return String(m).padStart(2,'0')+':'+String(ss).padStart(2,'0');
+}
+
+function setPlaying(p){
+  if(p){
+    iconPlay.style.display='none';iconPause.style.display='block';
+    startVisuals();
+  }else{
+    iconPlay.style.display='block';iconPause.style.display='none';
+    for(var i=0;i<NBAR;i++){bars[i].className='';bars[i].style.height='30%';}
+  }
+}
+btnPlay.addEventListener('click',function(){
+  if(audio.paused){audio.play();}else{audio.pause();}
+  if(actx && actx.state==='suspended'){actx.resume();}
+});
+audio.addEventListener('play',function(){setPlaying(true);});
+audio.addEventListener('pause',function(){setPlaying(false);});
+audio.addEventListener('ended',function(){setPlaying(false);subtitle.innerHTML='收听结束 — <b>欢迎回到图文版继续阅读</b>';});
+
+audio.addEventListener('timeupdate',function(){
+  if(isNaN(audio.duration)) return;
+  var pct=audio.currentTime/audio.duration*100;
+  fill.style.width=pct+'%';
+  knob.style.left=pct+'%';
+  curTime.textContent=fmt(audio.currentTime);
+  var ct=audio.currentTime;
+  var txt='';
+  for(var i=subtitles.length-1;i>=0;i--){
+    if(ct>=subtitles[i][0]){txt=subtitles[i][1];break;}
+  }
+  if(txt){
+    subtitle.innerHTML=txt.replace(/A I/g,'<b>AI</b>');
+    subtitle.className='st on';
+  }
+  var active=-1;
+  for(var j=chapters.length-1;j>=0;j--){
+    if(ct>=chapters[j][0]){active=j;break;}
+  }
+  for(var k=0;k<tlItems.length;k++){
+    tlItems[k].classList.toggle('active',k===active);
+  }
+});
+audio.addEventListener('loadedmetadata',function(){
+  if(!isNaN(audio.duration)){durTime.textContent=fmt(audio.duration);}
+});
+
+var dragging=false;
+progress.addEventListener('pointerdown',function(e){dragging=true;progress.classList.add('drag');seekFromEvent(e);progress.setPointerCapture(e.pointerId);});
+progress.addEventListener('pointermove',function(e){if(dragging)seekFromEvent(e);});
+progress.addEventListener('pointerup',function(e){if(dragging){dragging=false;progress.classList.remove('drag');seekFromEvent(e);}});
+function seekFromEvent(e){
+  var r=progress.getBoundingClientRect();
+  var pct=(e.clientX-r.left)/r.width;
+  pct=Math.max(0,Math.min(1,pct));
+  if(!isNaN(audio.duration)){audio.currentTime=pct*audio.duration;}
+  fill.style.width=pct*100+'%';knob.style.left=pct*100+'%';
+}
+
+document.getElementById('btnBack').addEventListener('click',function(){audio.currentTime=Math.max(0,audio.currentTime-10);seekVisuals();});
+document.getElementById('btnFwd').addEventListener('click',function(){if(!isNaN(audio.duration))audio.currentTime=Math.min(audio.duration,audio.currentTime+10);seekVisuals();});
+function seekVisuals(){if(!isNaN(audio.duration)){var p=audio.currentTime/audio.duration*100;fill.style.width=p+'%';knob.style.left=p+'%';}}
+
+var speeds=document.querySelectorAll('.speed');
+speeds.forEach(function(s){
+  s.addEventListener('click',function(){
+    audio.playbackRate=parseFloat(this.dataset.s);
+    speeds.forEach(function(x){x.classList.remove('on');});
+    this.classList.add('on');
+  });
+});
+speeds[0].classList.add('on');
+
+audio.addEventListener('canplay',function(){
+  setTimeout(function(){loadingMask.classList.add('hide');},400);
+});
+audio.addEventListener('error',function(){
+  loadingMask.querySelector('p').textContent='音频加载失败，请检查网络';
+  setTimeout(function(){loadingMask.classList.add('hide');},1500);
+});
+setTimeout(function(){loadingMask.classList.add('hide');},3500);
+if(audio.readyState>=3){setTimeout(function(){loadingMask.classList.add('hide');},400);}
+
+var io=new IntersectionObserver(function(es){
+  es.forEach(function(e){
+    if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}
+  });
+},{threshold:.08});
+document.querySelectorAll('.reveal').forEach(function(el){io.observe(el);});
+
+window.copyQuote=function(btn){
+  var card=btn.closest('.q-card');
+  var txt=card.querySelector('.txt').textContent;
+  var done=function(){
+    card.classList.add('copied');
+    btn.textContent='✓ 已复制';
+    setTimeout(function(){card.classList.remove('copied');btn.textContent='复制金句';},1600);
+  };
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done).catch(function(){
+      fallbackCopy(txt,done);
+    });
+  }else{fallbackCopy(txt,done);}
+};
+function fallbackCopy(text,cb){
+  var ta=document.createElement('textarea');
+  ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');cb();}catch(e){}
+  document.body.removeChild(ta);
+}
+})();
+</script>
+</body>
+</html>
