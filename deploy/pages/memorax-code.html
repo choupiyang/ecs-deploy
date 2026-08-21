@@ -90,30 +90,57 @@ html,body{background:#04070F;font-family:-apple-system,BlinkMacSystemFont,'PingF
 .mx3d .recall{position:absolute;top:50%;left:50%;width:4px;height:4px;margin:-2px 0 0 -2px;border-radius:50%;background:#93C5FD;box-shadow:0 0 8px #60A5FA;opacity:0;animation:recallIn 3.6s ease-in infinite}
 @keyframes recallIn{0%{transform:translateX(44px);opacity:0}12%{opacity:1}55%{transform:translateX(8px);opacity:1}70%{transform:translateX(0) scale(1.6);opacity:0}100%{transform:translateX(0);opacity:0}}
 
-/* ── 核心展示区：记忆终端（flex 弹性撑满）── */
+/* ── 核心展示区：对比条 + 四层记忆墙（flex 弹性撑满）── */
 .showcase{flex:1 1 auto;display:flex;flex-direction:column;padding:0 20px 6px;min-height:0;z-index:3;position:relative}
-.term{
-  flex:1 1 auto;min-height:60px;display:flex;flex-direction:column;
-  background:rgba(6,11,24,.92);border:1px solid var(--border);border-radius:12px;
-  overflow:hidden;cursor:pointer;transition:border-color .2s;
+
+/* 对比条：OFF vs ON（官方实测 -48%） */
+.compare{
+  display:flex;align-items:stretch;gap:7px;flex-shrink:0;cursor:pointer;
+  background:rgba(13,21,48,.85);border:1px solid var(--border);border-radius:12px;
+  padding:7px 9px;margin-bottom:7px;transition:border-color .2s;
 }
-.term:active{border-color:var(--accent)}
-.term-bar{display:flex;align-items:center;gap:5px;padding:6px 10px;border-bottom:1px solid var(--border);flex-shrink:0}
-.tdot{width:7px;height:7px;border-radius:50%}
-.tdot.r{background:#F87171}.tdot.y{background:#FBBF24}.tdot.g{background:#34D399}
-.term-title{font-family:monospace;font-size:7.5px;color:var(--text-mute);margin-left:6px;letter-spacing:.08em}
-.term-body{flex:1 1 auto;padding:8px 12px;font-family:'SF Mono',Consolas,monospace;font-size:8.5px;line-height:1.7;color:#C7D6F5;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-start}
-.tl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tl .pm{color:var(--accent-light)}
-.tl .cmd{color:#E8EEFF}
-.tl .out{color:var(--text-dim)}
-.tl .ok{color:#34D399}
-.tl .rec{color:var(--mem1)}
-.tl .mem{color:var(--mem2)}
-.tl .per{color:var(--mem3)}
-.tl .pro{color:var(--mem4)}
-.tl .blink{display:inline-block;width:5px;height:9px;background:var(--accent);vertical-align:-1px;animation:blink .9s step-end infinite}
-.showcase-hint{position:absolute;bottom:10px;right:22px;font-family:monospace;font-size:7px;color:var(--accent);opacity:.8;letter-spacing:.06em;animation:blink 2.5s ease-in-out infinite;z-index:4}
+.compare:active{border-color:var(--accent)}
+.cmp-col{flex:1;min-width:0;text-align:center;padding:3px 2px}
+.cmp-col.off .cmp-tag{color:#64748B}
+.cmp-col.off .cmp-num{color:#94A3B8}
+.cmp-col.on .cmp-tag{color:var(--accent-light)}
+.cmp-col.on .cmp-num{color:var(--accent-light)}
+.cmp-tag{font-size:7.5px;letter-spacing:.05em;font-family:monospace}
+.cmp-num{font-size:17px;font-weight:900;margin-top:1px;font-family:monospace}
+.cmp-sub{font-size:6.8px;color:var(--text-mute);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cmp-win{flex-shrink:0;text-align:center;padding:3px 8px;margin:-3px -2px;background:linear-gradient(150deg,rgba(37,99,235,.22),rgba(29,78,216,.12));border-radius:10px;border:1px solid rgba(37,99,235,.4);min-width:52px;justify-content:center;align-items:center;display:flex;flex-direction:column}
+.cw-num{font-size:20px;font-weight:900;color:var(--accent-light);font-family:monospace;line-height:1;text-shadow:0 0 18px var(--accent-glow)}
+.cw-lbl{font-size:6.8px;color:var(--text-dim);margin-top:3px}
+.cw-src{font-size:6px;color:var(--text-mute);margin-top:1px;font-family:monospace}
+
+/* 四层记忆墙（最大卖点，弹性 2×2） */
+.memwall{
+  flex:1 1 auto;min-height:0;
+  display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:1fr;gap:7px;
+}
+.mcell{
+  background:var(--bg-2);border:1px solid var(--border);border-radius:11px;
+  padding:8px 10px;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;min-height:0;position:relative;overflow:hidden;
+}
+.mcell:active{transform:scale(.95);border-color:var(--mc)}
+.mcell::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--mc);opacity:.85;box-shadow:0 0 12px var(--mc)}
+.mc-head{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.mc-ico{font-size:11px;line-height:1}
+.mc-en{font-family:monospace;font-size:6.5px;letter-spacing:.14em;color:var(--mc);flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.mc-name{font-size:11px;font-weight:800;color:var(--text);margin-top:5px;flex-shrink:0}
+.mc-desc{font-size:7px;color:var(--text-mute);margin-top:2px;line-height:1.5;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc-arrow{position:absolute;right:8px;bottom:6px;font-size:8px;color:var(--mc);opacity:.7}
+
+/* 迷你终端：氛围 */
+.term-mini{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0;
+  background:rgba(6,11,24,.85);border:1px solid var(--border);border-radius:10px;
+  padding:6px 12px;margin-top:7px;
+}
+.tm-cmd{font-family:'SF Mono',Consolas,monospace;font-size:8px;color:#C7D6F5;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.tm-cmd .pm{color:var(--accent-light)}
+.tm-tag{font-size:7px;color:var(--text-mute);flex-shrink:0;font-family:monospace}
+.showcase-hint{position:absolute;bottom:8px;right:22px;font-family:monospace;font-size:7px;color:var(--accent);opacity:.8;letter-spacing:.06em;animation:blink 2.5s ease-in-out infinite;z-index:4}
 
 /* ── Stats ── */
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;padding:0 20px 7px;flex-shrink:0;z-index:3}
@@ -191,8 +218,13 @@ html,body{background:#04070F;font-family:-apple-system,BlinkMacSystemFont,'PingF
   .tagline{font-size:9.5px}
   .stat-num{font-size:11px}
   .feature .ft{font-size:8.5px}
-  .term-body{font-size:7.8px}
-  .flow-node text{font-size:6px}
+  .compare{padding:5px 8px}
+  .cmp-num{font-size:15px}
+  .cw-num{font-size:17px}
+  .mcell{padding:5px 8px}
+  .mc-name{font-size:9.5px;margin-top:3px}
+  .mc-desc{display:none}
+  .term-mini{padding:4px 10px}
 }
 </style>
 </head>
@@ -239,24 +271,57 @@ html,body{background:#04070F;font-family:-apple-system,BlinkMacSystemFont,'PingF
     </div>
   </div>
 
-  <!-- 核心展示区：记忆终端（flex 弹性撑满） -->
+  <!-- 核心展示区：对比条 + 四层记忆墙（弹性撑满） -->
   <div class="showcase tilt-mid">
-    <div class="term" id="term" data-sheet="term">
-      <div class="term-bar">
-        <span class="tdot r"></span><span class="tdot y"></span><span class="tdot g"></span>
-        <span class="term-title">memorax-code — cross-session memory</span>
+    <!-- 对比条：关记忆 vs 开记忆（官方实测） -->
+    <div class="compare" id="compare" data-sheet="perf">
+      <div class="cmp-col off">
+        <div class="cmp-tag">OFF · 关记忆</div>
+        <div class="cmp-num">5 步</div>
+        <div class="cmp-sub">重新摸索·失败重试</div>
       </div>
-      <div class="term-body">
-        <div class="tl"><span class="pm">$</span> <span class="cmd">memorax-code recall</span></div>
-        <div class="tl"><span class="out">◆ Recalled for this task:</span></div>
-        <div class="tl"><span class="rec">▸ Issue #42 root cause: race condition →<span class="ok"> avoid in recall code</span></span></div>
-        <div class="tl"><span class="mem">▸ Entry: src/index.ts · Arch: monorepo</span></div>
-        <div class="tl"><span class="per">▸ Profile: zh-CN · explain concisely</span></div>
-        <div class="tl"><span class="pro">▸ Gate: run tests before PR</span></div>
-        <div class="tl"><span class="pm">$</span> <span class="cmd">memorax-code remember<span class="blink"></span></span></div>
+      <div class="cmp-win">
+        <div class="cw-num">-48%</div>
+        <div class="cw-lbl">任务耗时</div>
+        <div class="cw-src">官方实测</div>
+      </div>
+      <div class="cmp-col on">
+        <div class="cmp-tag">ON · 开记忆</div>
+        <div class="cmp-num">3 步</div>
+        <div class="cmp-sub">带经验继续·一次成功</div>
       </div>
     </div>
-    <div class="showcase-hint">▲ 终端可点 · 四层召回演示</div>
+
+    <!-- 四层记忆墙：最大卖点 -->
+    <div class="memwall">
+      <div class="mcell" data-sheet="fc1" style="--mc:#22D3EE">
+        <div class="mc-head"><span class="mc-ico">⚡</span><span class="mc-en">CODING</span></div>
+        <div class="mc-name">工程经验</div>
+        <div class="mc-desc">修复·失败·设计理由·坑</div>
+      </div>
+      <div class="mcell" data-sheet="fc2" style="--mc:#A78BFA">
+        <div class="mc-head"><span class="mc-ico">🗂️</span><span class="mc-en">REPO</span></div>
+        <div class="mc-name">仓库知识</div>
+        <div class="mc-desc">架构地图·模块归属·证据</div>
+      </div>
+      <div class="mcell" data-sheet="fc3" style="--mc:#F472B6">
+        <div class="mc-head"><span class="mc-ico">👤</span><span class="mc-en">PERSONAL</span></div>
+        <div class="mc-name">个人偏好</div>
+        <div class="mc-desc">语言·语气·协作习惯</div>
+      </div>
+      <div class="mcell" data-sheet="fc4" style="--mc:#FBBF24">
+        <div class="mc-head"><span class="mc-ico">📋</span><span class="mc-en">PROCEDURE</span></div>
+        <div class="mc-name">流程标准</div>
+        <div class="mc-desc">步骤·清单·验收门禁</div>
+      </div>
+    </div>
+
+    <!-- 迷你终端：氛围收尾 -->
+    <div class="term-mini">
+      <span class="tm-cmd"><span class="pm">$</span>&nbsp;memorax-code recall<span class="blink"></span></span>
+      <span class="tm-tag">▶ 四层按需召回</span>
+    </div>
+    <div class="showcase-hint">▲ OFF/ON 对比与四层记忆均可点</div>
   </div>
 
   <!-- Stats -->
@@ -273,9 +338,9 @@ html,body{background:#04070F;font-family:-apple-system,BlinkMacSystemFont,'PingF
       <div class="stat-num"><span class="accent">4</span>层</div>
       <div class="stat-label">记忆边界</div>
     </div>
-    <div class="stat-card" data-sheet="perf">
-      <div class="stat-num">-<span class="accent">48</span>%</div>
-      <div class="stat-label">任务耗时</div>
+    <div class="stat-card" data-sheet="npmv">
+      <div class="stat-num">npm <span class="accent">0.1.5</span></div>
+      <div class="stat-label">6 版本迭代</div>
     </div>
   </div>
 
@@ -442,6 +507,11 @@ html,body{background:#04070F;font-family:-apple-system,BlinkMacSystemFont,'PingF
       desc:'全局 npm 包，一条命令完成安装与连接。0.1.5 于 2026-08-20 发布，6 个版本迭代。',
       code:'npm install -g @memorax/memorax-code\nmemorax-code setup',
       points:['全局安装 + setup 自动检测 Agent','--existing-account 绑定已有账号','更新: memorax-code update','卸载: memorax-code uninstall（保留本地数据）','Node.js 20+（24 LTS 推荐）']
+    },
+    npmv:{
+      title:'npm 0.1.5 <em>· 两周 6 个版本</em>',
+      desc:'发布 3 周跑了 6 个 npm 版本（0.1.x → 0.1.5），最新 0.1.5 于 2026-08-20 发布——8 月 21 日 GitHub 仍在高频合并（当天 4+ 次 commit/merge），迭代速度是"记忆层"基建该有的样子：快速修 bug、加客户端支持。',
+      points:['6 版本·latest 0.1.5（2026-08-20）','安装: npm install -g @memorax/memorax-code','2026-08-21 仍每日高频提交','社区 PR：#43 DSH、#53 OpenCode 诊断、#76 DSH worker','#81 Hermes shell-hook 集成（open）']
     },
     p_node:{
       title:'Node 20+ <em>· Python 3 可选</em>',
