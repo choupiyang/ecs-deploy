@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0A0C10">
+  <title>Fall Detection — 老人跌倒实时检测（遮挡恢复·零误报·纯CPU边缘AI）</title>
+  <link rel="preconnect" href="https://fonts.googleapis.cn">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.cn/css2?family=Noto+Serif+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0A0C10;
+      --accent: #FF4757;
+      --accent-light: #FF7B85;
+      --ok: #3DBB8F;
+      --amber: #F5B041;
+      --text: #F0F2F5;
+      --muted: #6E7683;
+      --surface: #101820;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; background: #07090C; font-family: 'Noto Sans SC', sans-serif; color: #F0F2F5; -webkit-font-smoothing: antialiased; }
+    body { display: flex; align-items: center; justify-content: center; }
+
+    .stage {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      height: min(100svh, calc(100vw * 16 / 9));
+      width: min(100vw, calc(100svh * 9 / 16));
+      background: #0A0C10;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,.6);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 16px 10px;
+      perspective: 1000px;
+    }
+    @supports not (height: 100svh) { .stage { height: min(100vh, calc(100vw * 16 / 9)); width: min(100vw, calc(100vh * 9 / 16)); } }
+    .stage::before {
+      content: '';
+      position: absolute; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 38% at 78% 2%, rgba(255, 71, 87, .10) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 35% at 8% 45%, rgba(61, 187, 143, .05) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 50% 100%, rgba(16, 24, 32, .95) 0%, transparent 60%);
+    }
+    .stage::after {
+      content: '';
+      position: absolute; inset: 0; pointer-events: none; z-index: 0;
+      background-image:
+        linear-gradient(rgba(240, 242, 245, .012) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(240, 242, 245, .012) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    .topbar {
+      position: relative; z-index: 10;
+      display: flex; justify-content: space-between; align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px; letter-spacing: .16em; color: #6E7683;
+      text-transform: uppercase; flex-shrink: 0;
+      padding-bottom: 8px; border-bottom: 1px solid rgba(240, 242, 245, .06);
+    }
+    .brand { display: flex; align-items: center; gap: 6px; color: #F0F2F5; }
+    .brand-dot { width: 5px; height: 5px; background: #FF4757; border-radius: 50%; box-shadow: 0 0 8px #FF4757; animation: pulse 2.2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .3; transform: scale(.6); } }
+    .share-btn {
+      background: none; border: 1px solid rgba(240, 242, 245, .2);
+      padding: 4px 8px 3px; font: inherit; color: #F0F2F5;
+      cursor: pointer; letter-spacing: .12em; transition: all .3s;
+      display: flex; align-items: center; gap: 4px; font-size: 7.5px;
+    }
+    .share-btn:active { background: #FF4757; color: #0A0C10; border-color: #FF4757; }
+
+    .hero { position: relative; z-index: 5; flex-shrink: 0; margin-top: 8px; display: flex; gap: 12px; align-items: stretch; transform-style: preserve-3d; }
+    .hero-side { flex: 1; min-width: 0; }
+    .meta-row {
+      display: flex; justify-content: space-between; align-items: center;
+      font-family: 'JetBrains Mono', monospace; font-size: 7px; letter-spacing: .2em;
+      color: #6E7683; margin-bottom: 4px;
+    }
+    .vol { color: #FF7B85; }
+    .title-block { display: flex; align-items: flex-start; gap: 8px; }
+    .fd-stamp {
+      width: 38px; height: 38px; border-radius: 50%;
+      border: 1.5px solid rgba(255, 71, 87, .6);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Noto Serif SC', serif; font-size: 16px; font-weight: 900;
+      color: #FF4757; flex-shrink: 0; position: relative;
+      box-shadow: 0 0 18px rgba(255, 71, 87, .2) inset, 0 0 12px rgba(255, 71, 87, .12);
+      cursor: pointer; transition: transform .3s;
+    }
+    .fd-stamp::before {
+      content: ''; position: absolute; inset: -4px; border-radius: 50%;
+      border: 1px dashed rgba(255, 123, 133, .35); animation: spin 9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .title-text { min-width: 0; }
+    .fd-title {
+      font-family: 'Noto Serif SC', serif; font-size: 21px; font-weight: 900;
+      letter-spacing: -.02em; line-height: 1.05; color: #F0F2F5;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .fd-title .dot { color: #FF4757; }
+    .by-line { display: flex; align-items: center; gap: 8px; margin-top: 3px; flex-wrap: wrap; }
+    .by { font-family: 'JetBrains Mono', monospace; font-size: 7px; letter-spacing: .14em; color: #9AA3AD; max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .v-tag {
+      font-family: 'JetBrains Mono', monospace; font-size: 6px; letter-spacing: .14em;
+      color: #FF7B85; border: 1px solid rgba(255, 123, 133, .3);
+      padding: 1px 5px; border-radius: 2px; background: rgba(255, 123, 133, .06);
+    }
+    .tagline { margin-top: 5px; font-family: 'Noto Sans SC', sans-serif; font-size: 10px; color: #D5DAE0; line-height: 1.45; }
+    .tagline em { color: #FF4757; font-style: normal; font-weight: 500; }
+
+    /* HUD 取景器 + 跌倒骨架动画 */
+    .hud3d { width: 108px; flex-shrink: 0; position: relative; transform-style: preserve-3d; transform: rotateX(8deg); cursor: pointer; }
+    .hud-inner {
+      position: absolute; inset: 0;
+      background: linear-gradient(145deg, #10161D, #0A0E13);
+      border: 1px solid rgba(255, 71, 87, .25);
+      border-radius: 10px; overflow: hidden;
+      box-shadow: 0 0 24px rgba(255, 71, 87, .08), inset 0 0 30px rgba(61, 187, 143, .03);
+    }
+    .corner { position: absolute; width: 10px; height: 10px; border-color: #3DBB8F; border-style: solid; opacity: .8; }
+    .corner.tl { top: 6px; left: 6px; border-width: 1.5px 0 0 1.5px; }
+    .corner.tr { top: 6px; right: 6px; border-width: 1.5px 1.5px 0 0; }
+    .corner.bl { bottom: 20px; left: 6px; border-width: 0 0 1.5px 1.5px; }
+    .corner.br { bottom: 20px; right: 6px; border-width: 0 1.5px 1.5px 0; }
+    .scanline { position: absolute; left: 6%; width: 88%; height: 1px; background: linear-gradient(90deg, transparent, rgba(61, 187, 143, .5), transparent); animation: scan 3s linear infinite; }
+    @keyframes scan { 0% { top: 12%; } 100% { top: 82%; } }
+    .skel-wrap { position: absolute; left: 50%; bottom: 26px; width: 60px; height: 62px; transform: translateX(-58%); transform-origin: 50% 92%; animation: skelFall 4.4s ease-in-out infinite; }
+    @keyframes skelFall {
+      0%, 16% { transform: translateX(-58%) rotate(0deg); }
+      32%, 52% { transform: translateX(-46%) rotate(74deg); }
+      70%, 100% { transform: translateX(-58%) rotate(0deg); }
+    }
+    .skel-svg { width: 100%; height: 100%; display: block; }
+    .alert-ring {
+      position: absolute; left: 62%; bottom: 22px; width: 34px; height: 34px;
+      border: 1.5px solid #FF4757; border-radius: 50%;
+      box-shadow: 0 0 12px rgba(255, 71, 87, .5);
+      animation: ringVis 4.4s ease-in-out infinite;
+    }
+    @keyframes ringVis { 0%, 28% { opacity: 0; transform: scale(.6); } 36%, 54% { opacity: 1; transform: scale(1); } 66%, 100% { opacity: 0; transform: scale(.6); } }
+    .fsm-badge { position: absolute; left: 0; right: 0; bottom: 5px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 5.5px; letter-spacing: .1em; }
+    .fsm-m { color: #3DBB8F; animation: mVis 4.4s linear infinite; }
+    .fsm-f { color: #FF4757; position: absolute; left: 0; right: 0; animation: fVis 4.4s linear infinite; }
+    @keyframes mVis { 0%, 20% { opacity: 1; } 32%, 56% { opacity: 0; } 70%, 100% { opacity: 1; } }
+    @keyframes fVis { 0%, 20% { opacity: 0; } 32%, 56% { opacity: 1; } 70%, 100% { opacity: 0; } }
+
+    /* 监控终端展示区（flex 弹性填充） */
+    .hudbox { position: relative; z-index: 5; margin-top: 8px; flex: 1 1 auto; min-height: 96px; display: flex; flex-direction: column; }
+    .hud-header { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D5DAE0; margin-bottom: 4px; flex-shrink: 0; }
+    .hud-header::after { content: ''; flex: 1; height: 1px; background: rgba(240, 242, 245, .06); }
+    .hud-window {
+      flex: 1 1 auto; min-height: 80px;
+      background: #080B0F;
+      border: 1px solid rgba(255, 71, 87, .3);
+      border-radius: 8px; overflow: hidden;
+      font-family: 'JetBrains Mono', monospace;
+      cursor: pointer; transition: all .25s;
+      display: flex; flex-direction: column;
+    }
+    .hud-window:active { border-color: rgba(255, 123, 133, .55); }
+    .hud-bar {
+      display: flex; align-items: center; gap: 5px; padding: 5px 9px;
+      background: rgba(255, 71, 87, .1); border-bottom: 1px solid rgba(255, 71, 87, .15);
+      flex-shrink: 0;
+    }
+    .hud-bar span { width: 7px; height: 7px; border-radius: 50%; }
+    .hud-bar .r { background: #FF5F57; } .hud-bar .y { background: #FFB020; } .hud-bar .g { background: #28C840; }
+    .hud-bar b { margin-left: 6px; font-size: 7px; font-weight: 400; color: #C7838F; letter-spacing: .06em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .hud-body { flex: 1 1 auto; padding: 8px 11px 9px; font-size: 8.5px; line-height: 1.8; overflow: hidden; color: #B8A8B0; display: flex; flex-direction: column; justify-content: center; gap: 2px; }
+    .hud-body .u { color: #9AA3AD; }
+    .hud-body .u::before { content: '❯ '; color: #6E7683; }
+    .hud-body .a { color: #FF7B85; }
+    .hud-body .a::before { content: '◆ '; color: #FF4757; }
+    .hud-body .sys { color: #5A6470; font-size: 7.5px; }
+    .hud-body .sys::before { content: '⚙ '; }
+    .hud-body .ok { color: #3DBB8F; }
+    .hud-body .ok::before { content: '● '; }
+    .caret-blink { display: inline-block; width: 6px; height: 10px; background: #3DBB8F; vertical-align: -2px; animation: blink 1s steps(1) infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    .stats-section { position: relative; z-index: 5; margin-top: 8px; flex-shrink: 0; }
+    .stats-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .stats-title { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D5DAE0; }
+    .stats-badge { font-family: 'JetBrains Mono', monospace; font-size: 6px; letter-spacing: .16em; color: #3DBB8F; border: 1px solid rgba(61, 187, 143, .3); padding: 1px 5px; border-radius: 2px; }
+    .stats-chart { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .stat-card {
+      background: rgba(240, 242, 245, .02); border: 1px solid rgba(240, 242, 245, .07);
+      border-radius: 7px; padding: 7px 6px 5px; cursor: pointer; transition: all .25s; min-width: 0;
+    }
+    .stat-card:active { background: rgba(255, 71, 87, .07); border-color: rgba(255, 71, 87, .3); transform: scale(.96); }
+    .stat-num { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; color: #F0F2F5; line-height: 1; white-space: nowrap; }
+    .stat-num .accent { color: var(--stat-color, #FF4757); }
+    .stat-label { font-size: 7px; color: #6E7683; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .stat-mini-chart { display: flex; align-items: flex-end; gap: 2px; height: 12px; margin-top: 4px; }
+    .stat-bar { width: 4px; background: var(--stat-color, #FF4757); opacity: .55; border-radius: 1px; transform-origin: bottom; }
+    @keyframes chartGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+    .chart-animate { animation: chartGrow .6s cubic-bezier(.4, 0, .2, 1) forwards; }
+
+    .flow-section { position: relative; z-index: 5; margin-top: 8px; flex-shrink: 0; }
+    .flow-header { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D5DAE0; margin-bottom: 4px; }
+    .flow-header::after { content: ''; flex: 1; height: 1px; background: rgba(240, 242, 245, .06); }
+    .flow-svg { width: 100%; height: auto; display: block; }
+    .flow-node { cursor: pointer; }
+    .flow-node:active { opacity: .7; }
+    .flow-arrow { animation: flowPulse 2s ease-in-out infinite; }
+    @keyframes flowPulse { 0%, 100% { stroke-opacity: .4; } 50% { stroke-opacity: 1; } }
+
+    .features { position: relative; z-index: 5; margin-top: 7px; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+    .feature {
+      display: flex; align-items: center; gap: 9px;
+      background: rgba(240, 242, 245, .02); border: 1px solid rgba(240, 242, 245, .07);
+      border-radius: 7px; padding: 6px 9px; cursor: pointer; transition: all .25s;
+    }
+    .feature:active { background: rgba(255, 71, 87, .05); border-color: rgba(255, 71, 87, .22); }
+    .feature-icon {
+      width: 24px; height: 24px; border-radius: 6px; background: rgba(255, 71, 87, .1);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .feature-icon svg { width: 13px; height: 13px; stroke: #FF4757; fill: none; stroke-width: 1.5; }
+    .feature-content { flex: 1; min-width: 0; }
+    .feature-title { font-family: 'Noto Sans SC', sans-serif; font-size: 9.5px; font-weight: 500; color: #F0F2F5; letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .feature-desc { font-size: 7.5px; color: #6E7683; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .feature-arrow { font-size: 11px; color: #FF4757; opacity: 0; transform: translateX(-2px); transition: all .25s; flex-shrink: 0; }
+    .feature:active .feature-arrow { opacity: 1; transform: translateX(2px); }
+    .feature-progress { height: 2px; background: rgba(240, 242, 245, .06); border-radius: 1px; margin-top: 4px; overflow: hidden; }
+    .feature-progress-bar { height: 100%; background: linear-gradient(90deg, #FF4757, #FF7B85); border-radius: 1px; transform-origin: left; animation: progressIn .8s cubic-bezier(.4, 0, .2, 1) forwards; transform: scaleX(0); }
+    @keyframes progressIn { to { transform: scaleX(1); } }
+
+    .tech-section { position: relative; z-index: 5; margin-top: 8px; flex-shrink: 0; }
+    .tech-header { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D5DAE0; margin-bottom: 4px; }
+    .tech-pills { display: flex; flex-wrap: wrap; gap: 4px; }
+    .tech-pill {
+      font-family: 'JetBrains Mono', monospace; font-size: 6.5px; letter-spacing: .08em;
+      color: #9AA3AD; border: 1px solid rgba(240, 242, 245, .1);
+      padding: 2px 7px; border-radius: 10px; cursor: pointer;
+      background: rgba(240, 242, 245, .02); transition: all .2s;
+    }
+    .tech-pill:active { background: rgba(240, 242, 245, .08); }
+    .tech-pill.accent { border-color: rgba(255, 71, 87, .35); color: #FF7B85; }
+    .tech-pill.okp { border-color: rgba(61, 187, 143, .3); color: #3DBB8F; }
+
+    .bottombar {
+      position: relative; z-index: 5; margin-top: 8px; padding-top: 8px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0; border-top: 1px solid rgba(240, 242, 245, .06);
+    }
+    .site-link { display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 8px; color: #D5DAE0; text-decoration: none; max-width: 65%; }
+    .site-link svg { width: 13px; height: 13px; stroke: #9AA3AD; fill: none; stroke-width: 1.5; transition: stroke .25s; flex-shrink: 0; }
+    .site-link:active svg { stroke: #FF4757; }
+    .site-link .lnk-txt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .visit-btn {
+      font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .14em;
+      color: #0A0C10; background: linear-gradient(90deg, #FF4757, #FF7B85);
+      padding: 6px 13px; border-radius: 5px; text-decoration: none;
+      font-weight: 500; transition: all .25s; flex-shrink: 0;
+    }
+    .visit-btn:active { transform: scale(.95); filter: brightness(1.15); }
+
+    .overlay {
+      position: absolute; inset: 0; z-index: 100;
+      display: flex; align-items: flex-end;
+      background: rgba(0, 0, 0, .5);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      opacity: 0; pointer-events: none; transition: opacity .35s;
+    }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+    .sheet {
+      width: 100%; max-height: 76%;
+      background: linear-gradient(180deg, #101820, #0A0E13);
+      border: 1px solid rgba(255, 71, 87, .2); border-bottom: none;
+      border-radius: 16px 16px 0 0; padding: 14px 18px 18px;
+      transform: translateY(101%); transition: transform .45s cubic-bezier(.7, 0, .3, 1);
+      overflow-y: auto;
+    }
+    .overlay.active .sheet { transform: translateY(0); }
+    .sheet-handle { width: 32px; height: 3px; background: #3A2A2E; border-radius: 2px; margin: 0 auto 12px; }
+    .sheet-title { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; color: #F0F2F5; margin-bottom: 7px; }
+    .sheet-title em { color: #FF4757; font-style: normal; }
+    .sheet-desc { font-size: 10.5px; line-height: 1.65; color: #B0B6BE; }
+    .sheet-code {
+      margin-top: 10px; background: #05070A;
+      border: 1px solid rgba(240, 242, 245, .08);
+      border-radius: 6px; padding: 10px 12px;
+      font-family: 'JetBrains Mono', monospace; font-size: 9px; line-height: 1.7;
+      color: #3DBB8F; overflow-x: auto; white-space: pre;
+    }
+    .sheet-points { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+    .sheet-point { display: flex; align-items: flex-start; gap: 8px; font-family: 'Noto Sans SC', sans-serif; font-size: 10px; color: #D0D4DA; line-height: 1.55; }
+    .sheet-point::before { content: ''; width: 5px; height: 5px; background: #FF4757; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .sheet-close {
+      margin-top: 14px; width: 100%; padding: 10px;
+      background: rgba(255, 71, 87, .08); border: 1px solid rgba(255, 71, 87, .25);
+      border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 10px;
+      letter-spacing: .15em; color: #FF7B85; cursor: pointer; transition: all .2s;
+    }
+    .sheet-close:active { background: #FF4757; color: #0A0C10; }
+
+    .toast {
+      position: absolute; bottom: 50px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #FF4757; color: #0A0C10; padding: 7px 14px; border-radius: 5px;
+      font-family: 'Noto Sans SC', sans-serif; font-size: 10px; font-weight: 500;
+      opacity: 0; pointer-events: none; transition: all .3s; z-index: 200;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .reveal { opacity: 0; transform: translateY(10px); transition: all .45s cubic-bezier(.4, 0, .2, 1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @media (max-height: 730px) {
+      .fd-title { font-size: 18px; }
+      .fd-stamp { width: 34px; height: 34px; font-size: 14px; }
+      .hud3d { width: 92px; }
+      .tagline { font-size: 9px; }
+      .hud-body { font-size: 7.5px; line-height: 1.7; padding: 6px 9px; }
+      .feature { padding: 5px 9px; }
+      .feature-title { font-size: 9px; }
+      .stat-num { font-size: 13.5px; }
+      .sheet { max-height: 80%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="topbar reveal">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <span>Young's Insight</span>
+      </div>
+      <button class="share-btn" id="shareBtn">SHARE <span class="arr">↗</span></button>
+    </div>
+
+    <div class="hero reveal">
+      <div class="hud3d" id="hud3d">
+        <div class="hud-inner">
+          <div class="corner tl"></div><div class="corner tr"></div>
+          <div class="corner bl"></div><div class="corner br"></div>
+          <div class="scanline"></div>
+          <div class="alert-ring"></div>
+          <div class="skel-wrap">
+            <svg class="skel-svg" viewBox="0 0 60 62">
+              <g stroke="#3DBB8F" stroke-width="1.6" stroke-linecap="round" fill="none">
+                <line x1="30" y1="14" x2="30" y2="40"/>
+                <line x1="30" y1="20" x2="17" y2="31"/>
+                <line x1="30" y1="20" x2="43" y2="31"/>
+                <line x1="30" y1="40" x2="20" y2="58"/>
+                <line x1="30" y1="40" x2="40" y2="58"/>
+              </g>
+              <circle cx="30" cy="7" r="5.5" fill="none" stroke="#3DBB8F" stroke-width="1.6"/>
+              <g fill="#F5B041">
+                <circle cx="30" cy="7" r="1.5"/><circle cx="30" cy="14" r="1.3"/>
+                <circle cx="17" cy="31" r="1.3"/><circle cx="43" cy="31" r="1.3"/>
+                <circle cx="30" y="0" cy="40" r="1.5"/><circle cx="20" cy="58" r="1.3"/><circle cx="40" cy="58" r="1.3"/>
+              </g>
+            </svg>
+          </div>
+          <div class="fsm-badge">
+            <span class="fsm-m">● MONITORING</span>
+            <span class="fsm-f">⚠ FALL DETECTED</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-side">
+        <div class="meta-row">
+          <span class="vol">ELDERLY CARE · CV</span>
+          <span>2026.08.21</span>
+        </div>
+        <div class="title-block">
+          <div class="fd-stamp" id="stamp">守</div>
+          <div class="title-text">
+            <div class="fd-title">Fall<span class="dot"> Detection</span></div>
+            <div class="by-line">
+              <span class="by">Real-Time Person &amp; Elderly Fall Detection System</span>
+              <span class="v-tag">PYTHON</span>
+            </div>
+          </div>
+        </div>
+        <div class="tagline">严重遮挡也能<em>瞬时抓住跌倒</em>，睡觉系鞋带<em>零误报</em>——纯 CPU 边缘 AI，养老场景即插即用</div>
+      </div>
+    </div>
+
+    <div class="hudbox reveal">
+      <div class="hud-header">run.py · 一条命令跑起来</div>
+      <div class="hud-window" id="hudWin">
+        <div class="hud-bar">
+          <span class="r"></span><span class="y"></span><span class="g"></span>
+          <b>fall_detection — 点击看完整架构</b>
+        </div>
+        <div class="hud-body">
+          <div class="u">python run.py</div>
+          <div class="sys">[1] Live Webcam · [2] Video · [3] 合成遮挡演示</div>
+          <div class="sys">v_y = 0.82 h/s · ω = 41°/s → 超阈值</div>
+          <div class="a">[ALERT] FALL DETECTED · 1.5s 静止确认 · 派发警报</div>
+          <div class="ok">卧床翻身 → MONITORING (RESTING) · 不报警<span class="caret-blink"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-section reveal">
+      <div class="stats-header">
+        <span class="stats-title">Traction</span>
+        <span class="stats-badge">7 DAYS OLD</span>
+      </div>
+      <div class="stats-chart">
+        <div class="stat-card" data-stat="stars" style="--stat-color: #FF4757">
+          <div class="stat-num"><span class="accent">138</span></div>
+          <div class="stat-label">Stars · 7天</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 7px; animation-delay: .1s"></div>
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .15s"></div>
+            <div class="stat-bar chart-animate" style="height: 12px; animation-delay: .2s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="forks" style="--stat-color: #FF7B85">
+          <div class="stat-num"><span class="accent">31</span></div>
+          <div class="stat-label">Forks</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .25s"></div>
+            <div class="stat-bar chart-animate" style="height: 11px; animation-delay: .3s"></div>
+            <div class="stat-bar chart-animate" style="height: 12px; animation-delay: .35s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="model" style="--stat-color: #3DBB8F">
+          <div class="stat-num"><span class="accent">6.5</span>MB</div>
+          <div class="stat-label">姿态引擎 · 免GPU</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 9px; animation-delay: .4s"></div>
+            <div class="stat-bar chart-animate" style="height: 11px; animation-delay: .45s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="adl" style="--stat-color: #3DBB8F">
+          <div class="stat-num" style="color: #3DBB8F">0<span style="font-size:10px">误报</span></div>
+          <div class="stat-label">ADL 基线测试</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 12px; animation-delay: .5s"></div>
+            <div class="stat-bar chart-animate" style="height: 6px; animation-delay: .55s"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-section reveal">
+      <div class="flow-header">Detection Pipeline</div>
+      <svg class="flow-svg" viewBox="0 0 350 44" fill="none">
+        <defs>
+          <marker id="fd-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L6,3 z" fill="#FF4757" fill-opacity=".6"/>
+          </marker>
+        </defs>
+        <g class="flow-node" id="flow-video">
+          <rect x="3" y="9" width="58" height="26" rx="5" fill="rgba(255,71,87,.08)" stroke="#FF4757" stroke-width="1" stroke-opacity=".5"/>
+          <text x="32" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#F0F2F5" text-anchor="middle">视频/摄像头</text>
+          <text x="32" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#6E7683" text-anchor="middle">实时流输入</text>
+        </g>
+        <path class="flow-arrow" d="M64 22 L74 22" stroke="#FF4757" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#fd-arrow)"/>
+        <g class="flow-node" id="flow-pose">
+          <rect x="77" y="9" width="62" height="26" rx="5" fill="rgba(255,123,133,.1)" stroke="#FF7B85" stroke-width="1.2"/>
+          <text x="108" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#FF7B85" text-anchor="middle">YOLOv8-Pose</text>
+          <text x="108" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#6E7683" text-anchor="middle">关键点提取</text>
+        </g>
+        <path class="flow-arrow" d="M142 22 L152 22" stroke="#FF4757" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#fd-arrow)" style="animation-delay: .3s"/>
+        <g class="flow-node" id="flow-occ">
+          <rect x="155" y="9" width="58" height="26" rx="5" fill="rgba(61,187,143,.08)" stroke="#3DBB8F" stroke-width="1" stroke-opacity=".5"/>
+          <text x="184" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#3DBB8F" text-anchor="middle">遮挡恢复</text>
+          <text x="184" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#6E7683" text-anchor="middle">骨骼插补·外推</text>
+        </g>
+        <path class="flow-arrow" d="M216 22 L226 22" stroke="#FF4757" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#fd-arrow)" style="animation-delay: .6s"/>
+        <g class="flow-node" id="flow-fsm">
+          <rect x="229" y="9" width="56" height="26" rx="5" fill="rgba(255,71,87,.08)" stroke="#FF4757" stroke-width="1" stroke-opacity=".5"/>
+          <text x="257" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#F0F2F5" text-anchor="middle">Fall FSM</text>
+          <text x="257" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#6E7683" text-anchor="middle">运动学判定</text>
+        </g>
+        <path class="flow-arrow" d="M288 22 L298 22" stroke="#FF7B85" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#fd-arrow)" style="animation-delay: .9s"/>
+        <g class="flow-node" id="flow-alert">
+          <rect x="301" y="9" width="46" height="26" rx="5" fill="rgba(255,71,87,.14)" stroke="#FF4757" stroke-width="1.2"/>
+          <text x="324" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#FF7B85" text-anchor="middle">告警</text>
+          <text x="324" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#6E7683" text-anchor="middle">HUD+派发</text>
+        </g>
+        <circle cx="69" cy="22" r="2" fill="#FF4757">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="147" cy="22" r="2" fill="#3DBB8F">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0.5s"/>
+        </circle>
+        <circle cx="221" cy="22" r="2" fill="#FF7B85">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="1s"/>
+        </circle>
+        <circle cx="293" cy="22" r="2" fill="#FF4757">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0.7s"/>
+        </circle>
+      </svg>
+    </div>
+
+    <div class="features reveal">
+      <div class="feature" data-f="0">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">瞬时触发：毫秒级抓住下坠</div>
+          <div class="feature-desc">v_y &gt; 0.7 h/s 或姿态崩塌 ω &gt; 35°/s · 立即视觉+派发告警</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 100%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="1">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">零误报：睡觉不响警报</div>
+          <div class="feature-desc">生物力学区分跌倒 vs 静卧 · MONITORING (RESTING) 安静绿色</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 95%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="2">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">四层遮挡恢复：家具挡住也能测</div>
+          <div class="feature-desc">骨骼解剖插补 · 速度外推 · 家具ROI追踪 · 骨骼长度钳制</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 90%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="3">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">100% 边缘 CPU：无需 GPU</div>
+          <div class="feature-desc">6.5MB 轻量姿态引擎 · 标准CPU满速跑 · 免自定义训练</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 92%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="4">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">一键运行：自带基准测试集</div>
+          <div class="feature-desc">python run.py 交互菜单 · 5条真实跌倒/正常活动测试视频</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 88%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+    </div>
+
+    <div class="tech-section reveal">
+      <div class="tech-header">Tech Stack</div>
+      <div class="tech-pills">
+        <span class="tech-pill accent">YOLOv8-Pose</span>
+        <span class="tech-pill okp">Kalman 外推</span>
+        <span class="tech-pill">生物力学</span>
+        <span class="tech-pill okp">Fall FSM</span>
+        <span class="tech-pill">边缘计算</span>
+        <span class="tech-pill">Python</span>
+      </div>
+    </div>
+
+    <div class="bottombar reveal">
+      <a href="https://github.com/AwaisShah75/Real-Time-Person-Elderly-Fall-Detection-System" target="_blank" class="site-link">
+        <svg viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77 5.44 5.44 0 0 0 3.5 8.55c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+        <span class="lnk-txt">AwaisShah75 · Fall-Detection-System</span>
+      </a>
+      <a href="https://github.com/AwaisShah75/Real-Time-Person-Elderly-Fall-Detection-System" target="_blank" class="visit-btn">VISIT →</a>
+    </div>
+
+    <div class="overlay" id="overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title" id="sheetTitle"></div>
+        <div class="sheet-desc" id="sheetDesc"></div>
+        <div class="sheet-code" id="sheetCode" style="display:none"></div>
+        <div class="sheet-points" id="sheetPoints"></div>
+        <button class="sheet-close" id="sheetClose">CLOSE</button>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script>
+  (function(){
+    var $=function(s){return document.querySelector(s)};
+    var overlay=$('#overlay'), sheetTitle=$('#sheetTitle'), sheetDesc=$('#sheetDesc'),
+        sheetPoints=$('#sheetPoints'), sheetCode=$('#sheetCode'), toast=$('#toast');
+
+    var DATA = {
+      stamp: {
+        title: '跌倒检测 <em>· 为什么值得做</em>',
+        desc: '全球老龄化的隐形杀手：老年人跌倒后"长躺"（long lie）是致残致死主因之一，摄像头方案比可穿戴设备更被动、无感。这个项目瞄准两个真实痛点：家具遮挡导致漏检、日常行为导致误报。2026-08-14 发布，7天138星31fork——养老科技刚需的直接证据。',
+        points: ['跌倒后无法自救的"独居长躺"是核心场景', '摄像头无感监测 vs 手环/吊坠的佩戴依从性', '两条 issue 都在求测试视频：需求真实', '⚠ 无 License，商用前需联系作者授权', '仓库含设计文档 DESIGN.md：完整数学推导']
+      },
+      stars: {
+        title: '138 Stars <em>· 七天冷启动</em>',
+        desc: '2026-08-14 首次提交，2026-08-18 最后更新（加 SECURITY.md），一周拿下 138 星 31 fork。没有任何宣传的情况下靠"养老+CV+边缘"的选题自然增长——跌倒检测是被反复验证的高需求赛道。',
+        points: ['首次提交 2026-08-14 · 仅 2 个 commit', '138★ / 31 fork / 6.1MB 代码', 'Python 95K 行 + Batch 一键启动', 'Issue 区 2 条都在求 sample_videos', '⚠ 仓库无 description 无 topics，纯靠 README 传播']
+      },
+      forks: {
+        title: '31 Forks <em>· 高于平均的复用率</em>',
+        desc: 'fork/star 比 22%，高于一般 showcase 项目——说明大量开发者在真正部署改造而非围观。养老机构、智能家居、课程作业都是典型复用场景。',
+        points: ['fork/star 比 22%（热门项目通常 8-12%）', '单文件版 fall_detection_all_in_one.py 零子依赖', 'core/ 模块化拆分便于二次开发', 'requirements.txt 极简依赖清单']
+      },
+      model: {
+        title: '6.5MB <em>· 轻量姿态引擎</em>',
+        desc: '基于 YOLOv8-Pose 的轻量姿态估计骨干（约 6.5MB），标准 CPU 满速运行，不需要 GPU 也不需要自定义训练。这是它能进养老院/家庭等无 GPU 边缘设备的关键。',
+        points: ['YOLOv8-Pose 骨干 + 关键点提取', '~6.5MB，CPU 满速实时', '零自定义训练：开箱即用', '多人时间序列 tracklet 管理']
+      },
+      adl: {
+        title: '0 误报 <em>· ADL 基线</em>',
+        desc: '基准视频 normal_activity_no_fall.mp4（走路+坐下+睡觉的日常活动 ADL）预期结果：MONITORING (RESTING)，零误报。误报是跌倒检测落地的头号障碍——狼来了三次，护工就关掉系统了。',
+        points: ['ADL = Activities of Daily Living 日常活动', '坐下/系鞋带/卧床 → 绿色 RESTING 不报警', '生物力学特征区分：跌倒有速度+角度突变', '静卧能量 Emotion 判定落地后静止']
+      },
+      video: {
+        title: '视频/摄像头 <em>· 三种输入</em>',
+        desc: '支持实时摄像头流（含 HUD 遥测）、自定义视频文件（自动发现+拖放 .mp4/.avi）、以及合成遮挡演示场景（内置测试生成器，程序化生成"走到遮挡物后跌倒"）。',
+        points: ['Live Webcam：设备 0 实时监控', '视频文件：自动列表 + 一键选择 + 拖放', '合成演示：test_generator.py 程序化生成遮挡场景', '输出可保存为结果视频 --save output.mp4']
+      },
+      pose: {
+        title: 'YOLOv8-Pose <em>· 关键点提取</em>',
+        desc: '骨干网络提取人体关键点（头/肩/髋/膝/踝），为多人目标维护时间序列 tracklet。后续所有生物力学计算都建立在关键点轨迹之上。',
+        points: ['17 个人体关键点实时提取', '多人追踪：tracklet 时序管理', '关键点置信度参与遮挡判定', '~6.5MB 权重 CPU 实时']
+      },
+      occ: {
+        title: '遮挡恢复 <em>· 四层防御</em>',
+        desc: '核心创新：家具挡住人也不丢。①骨骼解剖插补：用人体测量学比例数学重构被挡的膝踝；②时间速度外推：Kalman 式动量矢量穿越遮挡区；③家具ROI追踪：监控向已知遮挡物（桌/床/沙发）后下坠的轨迹；④近端骨骼钳制：强制骨骼长度边界消灭蛛网线。',
+        points: ['L1 解剖比例插补：膝踝数学重构', 'L2 速度外推：动量穿越遮挡', 'L3 家具 ROI：桌/床/沙发后轨迹监控', 'L4 骨骼钳制：长度边界防噪声骨架']
+      },
+      fsm: {
+        title: 'Fall FSM <em>· 状态机判定</em>',
+        desc: '多阶段状态机：MONITORING →（v_y>0.7 h/s 或 ω>35°/s）→ FALL_DETECTED →（>1.5s 静止）→ CONFIRMED_FALL →（起身直立运动）→ MONITORING。生物力学特征：躯干角θ、垂直下坠率v_y、角崩塌率ω、静止能量E。',
+        points: ['躯干角 θ：90°站立 ↔ 0°平躺', '下坠率 v_y 单位 h/s（身高/秒）', '角崩塌率 ω = dθ/dt，阈值 35°/s', '1.5s 静止确认防瞬时误触发']
+      },
+      alert: {
+        title: '告警输出 <em>· HUD+派发</em>',
+        desc: '视觉 HUD 显示遥测与告警横幅，同时触发派发警报（dispatch alert）。确认跌倒后持续跟踪，检测到起身直立运动自动回到监控态。',
+        points: ['HUD 实时遥测：v_y/θ/ω 全显示', 'ALERT 横幅 + 派发警报', 'RESTING 状态安静绿色显示', '自动恢复：起身回到 MONITORING']
+      },
+      f0: {
+        title: '瞬时触发 <em>· 毫秒级响应</em>',
+        desc: '下坠率 v_y > 0.7 身高/秒或姿态角崩塌率 ω > 35°/秒的瞬间立即触发——不等落地、不等静止。触发即出视觉告警+派发警报，把响应延迟压到毫秒级。',
+        points: ['v_y > 0.7 h/s：标准化下坠速率', 'ω > 35°/s：躯干角度崩塌速率', '触发即告警，不等静止确认', '适合头部着地等高危场景']
+      },
+      f1: {
+        title: '零误报 <em>· 静卧识别</em>',
+        desc: '生物力学上，跌倒是"高速+角度突变的非受控姿态变化"，而睡觉/坐下是"低速受控"。系统把后者标为 MONITORING (RESTING) 安静绿色——零误报不是营销词，是基准视频的预期结果。',
+        points: ['区分受控 vs 非受控姿态变化', '卧床/沙发 → RESTING 不报警', '系鞋带/坐椅子 → 正常 MONITORING', '误报疲劳是监测系统被弃用的主因']
+      },
+      f2: {
+        title: '四层遮挡恢复 <em>· 核心创新</em>',
+        desc: '传统姿态检测在家具遮挡下关键点直接丢失。本项目用四层机制叠加：解剖比例插补重构被挡关节、动量外推穿越遮挡区、家具ROI追踪"消失轨迹"、骨骼钳制防噪声——跌倒在桌后床后也能持续判定。',
+        points: ['人体测量学比例：大腿/小腿长度恒定', 'Kalman 式速度外推保持动量', '家具 ROI 注册：遮挡物成为先验', '骨骼长度钳制消灭蜘蛛网骨架']
+      },
+      f3: {
+        title: '纯 CPU 边缘 <em>· 部署友好</em>',
+        desc: '6.5MB 姿态引擎 + 标准CPU满速 = 树莓派/旧笔记本/养老院网关都能跑。零 GPU 依赖、零自定义训练，clone 下来一条命令就能验证——这是它 7 天 138 星的传播基础。',
+        points: ['无 GPU 要求：任意 x86/ARM CPU', '免训练：预训练权重直接用', '边缘部署：数据不出本地，隐私友好', '6.1MB 仓库，下载即用']
+      },
+      f4: {
+        title: '一键运行 <em>· 自带基准集</em>',
+        desc: 'python run.py（Windows 双击 run.bat）进入交互循环菜单：摄像头/视频文件/合成遮挡演示三选一。仓库自带 5 条真实基准视频：站立跌倒×2、椅子跌倒、床滚落、正常活动零误报——验收标准全部写死在 README 表格里。',
+        points: ['run.py 交互菜单 + 视频自动发现', '拖放 .mp4/.avi 直接分析', '5 条基准视频含预期结果表', '单文件版零子依赖可直接嵌入']
+      }
+    };
+
+    function openSheet(key){
+      var d = DATA[key]; if(!d) return;
+      sheetTitle.innerHTML = d.title;
+      sheetDesc.textContent = d.desc;
+      sheetPoints.innerHTML = d.points.map(function(p){
+        return '<div class="sheet-point">' + p + '</div>';
+      }).join('');
+      overlay.classList.add('active');
+    }
+    function closeSheet(){ overlay.classList.remove('active'); }
+
+    document.querySelectorAll('.stat-card').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet(el.dataset.stat); });
+    });
+    document.querySelectorAll('.flow-node').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet(el.id.replace('flow-','')); });
+    });
+    document.querySelectorAll('.feature').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet('f'+el.dataset.f); });
+    });
+    $('#hudWin').addEventListener('click', function(){ openSheet('fsm'); });
+    $('#hud3d').addEventListener('click', function(){ openSheet('occ'); });
+    $('#sheetClose').addEventListener('click', closeSheet);
+    overlay.addEventListener('click', function(e){ if(e.target===overlay) closeSheet(); });
+
+    $('#shareBtn').addEventListener('click', function(){
+      var text = 'Fall Detection：家具遮挡也能抓住老人跌倒、睡觉零误报的纯CPU边缘AI，7天138星。\nhttps://mindresonance.online/youngsinsight/pages/elderly-fall-detection.html\n\n你可以用任何AI工具订阅我的博客文章：https://mindresonance.online/youngsinsight/subscribe.html';
+      if(navigator.share){
+        navigator.share({title:'Fall Detection — 老人跌倒实时检测', text:text}).catch(function(){});
+      }else if(navigator.clipboard){
+        navigator.clipboard.writeText(text).then(function(){
+          toast.textContent = '已复制：介绍 + 链接 + 订阅推荐';
+          toast.classList.add('show');
+          setTimeout(function(){ toast.classList.remove('show'); }, 1800);
+        });
+      }
+    });
+
+    var stampHits = 0;
+    $('#stamp').addEventListener('click', function(){
+      stampHits++;
+      var s = $('#stamp');
+      s.style.transform = 'rotate(180deg) scale(.9)';
+      setTimeout(function(){ s.style.transform=''; }, 400);
+      if(stampHits >= 5){
+        stampHits = 0;
+        toast.textContent = '守护每一次跌倒 ⚠';
+        toast.classList.add('show');
+        setTimeout(function(){ toast.classList.remove('show'); }, 2200);
+        if(navigator.vibrate) navigator.vibrate(30);
+      } else {
+        openSheet('stamp');
+      }
+    });
+
+    var stage = document.querySelector('.stage'), tiltLock = 0;
+    function tilt(cx, cy){
+      var now = Date.now();
+      if(now - tiltLock < 16) return;
+      tiltLock = now;
+      var r = stage.getBoundingClientRect();
+      var dx = (cx - r.left - r.width/2) / (r.width/2);
+      var dy = (cy - r.top - r.height/2) / (r.height/2);
+      stage.style.transform = 'rotateX(' + (-dy*3).toFixed(2) + 'deg) rotateY(' + (dx*4).toFixed(2) + 'deg)';
+    }
+    function untilt(){ stage.style.transform = ''; }
+    document.addEventListener('mousemove', function(e){ tilt(e.clientX, e.clientY); });
+    document.addEventListener('mouseleave', untilt);
+    document.addEventListener('touchmove', function(e){ var t=e.touches[0]; tilt(t.clientX, t.clientY); }, {passive:true});
+    document.addEventListener('touchend', untilt);
+
+    document.querySelectorAll('.reveal').forEach(function(x){ x.classList.add('visible'); });
+  })();
+  </script>
+</body>
+</html>

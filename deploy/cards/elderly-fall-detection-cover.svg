@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="356" viewBox="0 0 200 356">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#12080A"/>
+      <stop offset="1" stop-color="#070809"/>
+    </linearGradient>
+    <radialGradient id="alertGrad" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FF7B85"/>
+      <stop offset="0.55" stop-color="#FF4757"/>
+      <stop offset="1" stop-color="#8F1B25"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <pattern id="grid" width="16" height="16" patternUnits="userSpaceOnUse">
+      <path d="M16 0H0V16" fill="none" stroke="#2A1618" stroke-width="0.5"/>
+    </pattern>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="200" height="356" fill="url(#bg)"/>
+  <rect width="200" height="356" fill="url(#grid)" opacity="0.3"/>
+
+  <!-- 顶部栏 -->
+  <rect x="0" y="0" width="200" height="2" fill="#FF4757" opacity="0.9"/>
+  <text x="16" y="24" font-family="monospace" font-size="7" fill="#7A6A6E" letter-spacing="2">FALL DETECTION</text>
+  <text x="184" y="24" font-family="monospace" font-size="7" fill="#FF4757" text-anchor="end">EDGE AI · CPU</text>
+
+  <!-- 中心: HUD取景器 + 跌倒骨架 -->
+  <g transform="translate(100,124)">
+    <!-- 取景器边角 -->
+    <g stroke="#3DBB8F" stroke-width="1.5" fill="none" opacity="0.8">
+      <path d="M-64,-58 L-64,-50 M-64,-58 L-56,-58"/>
+      <path d="M64,-58 L64,-50 M64,-58 L56,-58"/>
+      <path d="M-64,52 L-64,44 M-64,52 L-56,52"/>
+      <path d="M64,52 L64,44 M64,52 L56,52"/>
+    </g>
+    <!-- 扫描线 -->
+    <line x1="-56" y1="-30" x2="56" y2="-30" stroke="#3DBB8F" stroke-width="0.7" opacity="0.5">
+      <animate attributeName="y1" values="-46;44;-46" dur="4s" repeatCount="indefinite"/>
+      <animate attributeName="y2" values="-46;44;-46" dur="4s" repeatCount="indefinite"/>
+    </line>
+
+    <!-- 家具遮挡（沙发） -->
+    <g>
+      <rect x="28" y="10" width="42" height="34" rx="5" fill="#1A1214" stroke="#3A2226" stroke-width="0.8"/>
+      <rect x="28" y="10" width="42" height="8" rx="4" fill="#241619" stroke="#3A2226" stroke-width="0.6"/>
+    </g>
+
+    <!-- 跌倒中的人体骨架（向左倒） -->
+    <g>
+      <animateTransform attributeName="transform" type="rotate" values="0;0;-72;-72;0;0" keyTimes="0;0.14;0.3;0.55;0.75;1" dur="4.4s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1;0.5 0 0.8 0.4;0 0 1 1;0.4 0 0.6 1;0 0 1 1"/>
+      <g stroke="#3DBB8F" stroke-width="2" stroke-linecap="round" fill="none">
+        <line x1="0" y1="-34" x2="0" y2="4"/>
+        <line x1="0" y1="-28" x2="-10" y2="-16"/>
+        <line x1="0" y1="-28" x2="10" y2="-16"/>
+        <line x1="0" y1="4" x2="-8" y2="26"/>
+        <line x1="0" y1="4" x2="8" y2="26"/>
+      </g>
+      <circle cx="0" cy="-42" r="7" fill="none" stroke="#3DBB8F" stroke-width="2"/>
+      <g fill="#F5B041">
+        <circle cx="0" cy="-42" r="1.8"/><circle cx="0" cy="-34" r="1.5"/>
+        <circle cx="-10" cy="-16" r="1.5"/><circle cx="10" cy="-16" r="1.5"/>
+        <circle cx="0" cy="4" r="1.8"/><circle cx="-8" cy="26" r="1.5"/><circle cx="8" cy="26" r="1.5"/>
+      </g>
+    </g>
+    <!-- 旋转轴心标记 -->
+    <circle cx="0" cy="30" r="1.2" fill="#5A3A40"/>
+
+    <!-- 警报环（跌倒时出现） -->
+    <circle cx="-30" cy="16" r="16" fill="none" stroke="#FF4757" stroke-width="1.5" filter="url(#glow)">
+      <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.28;0.36;0.56;0.7;1" dur="4.4s" repeatCount="indefinite"/>
+      <animateTransform attributeName="transform" type="scale" values="0.7;0.7;1;1.15;1.2;0.7" keyTimes="0;0.28;0.36;0.56;0.7;1" dur="4.4s" repeatCount="indefinite" additive="sum"/>
+    </circle>
+    <!-- 告警闪电 -->
+    <path d="M-33,8 L-27,8 L-30,14 L-25,14 L-34,26 L-31,16 L-36,16 Z" fill="#FFD34D">
+      <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.28;0.36;0.56;0.7;1" dur="4.4s" repeatCount="indefinite"/>
+    </path>
+
+    <!-- HUD 遥测数字 -->
+    <text x="-62" y="-52" font-family="monospace" font-size="5.5" fill="#3DBB8F">v_y 0.0 h/s</text>
+    <text x="-62" y="-40" font-family="monospace" font-size="5.5" fill="#F5B041">θ 90° · MONITOR</text>
+    <g>
+      <text x="-62" y="-40" font-family="monospace" font-size="5.5" fill="#FF4757" font-weight="bold">v_y 0.82 h/s ▲</text>
+      <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.24;0.32;0.58;0.72;1" dur="4.4s" repeatCount="indefinite"/>
+    </g>
+
+    <!-- 状态徽章 -->
+    <g>
+      <rect x="-44" y="62" width="88" height="13" rx="6.5" fill="#0A0908" stroke="#3DBB8F" stroke-width="0.6">
+        <animate attributeName="stroke" values="#3DBB8F;#3DBB8F;#FF4757;#FF4757;#3DBB8F;#3DBB8F" keyTimes="0;0.24;0.32;0.58;0.72;1" dur="4.4s" repeatCount="indefinite"/>
+      </rect>
+      <text x="0" y="71.5" text-anchor="middle" font-family="monospace" font-size="6.5" fill="#3DBB8F">● MONITORING
+        <animate attributeName="fill" values="#3DBB8F;#3DBB8F;#FF4757;#FF4757;#3DBB8F;#3DBB8F" keyTimes="0;0.24;0.32;0.58;0.72;1" dur="4.4s" repeatCount="indefinite"/>
+      </text>
+      <text x="0" y="71.5" text-anchor="middle" font-family="monospace" font-size="6.5" fill="#FF4757" font-weight="bold">⚠ FALL DETECTED
+        <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.24;0.32;0.58;0.72;1" dur="4.4s" repeatCount="indefinite"/>
+      </text>
+    </g>
+  </g>
+
+  <!-- 标题区 -->
+  <text x="100" y="240" text-anchor="middle" font-family="Georgia,serif" font-size="23" font-weight="bold" fill="#F5F0EC">Fall Detection</text>
+  <text x="100" y="276" text-anchor="middle" font-family="monospace" font-size="6" fill="#FF4757" letter-spacing="1.5">OCCLUSION-RESILIENT · ZERO FALSE ALARM</text>
+  <text x="100" y="290" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#B89DA2">遮挡恢复跌倒检测 · 睡觉零误报 · 纯CPU边缘</text>
+
+  <!-- 数据条 -->
+  <rect x="24" y="302" width="152" height="24" rx="12" fill="#100A0C" stroke="#2E1A1E" stroke-width="0.8"/>
+  <text x="100" y="318" text-anchor="middle" font-family="monospace" font-size="7" fill="#F5F0EC">138★ · 7天 · YOLOv8-Pose · CPU实时</text>
+
+  <!-- 底部 -->
+  <text x="100" y="338" text-anchor="middle" font-family="monospace" font-size="6.5" fill="#7A6A6E" letter-spacing="1">MIND RESONANCE · 反共识观察</text>
+</svg>
