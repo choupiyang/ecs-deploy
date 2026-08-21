@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="356" viewBox="0 0 200 356">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#070B14"/>
+      <stop offset="1" stop-color="#0B0A10"/>
+    </linearGradient>
+    <radialGradient id="coreGrad" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#6C8AFF" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#2563EB" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <pattern id="grid" width="14" height="14" patternUnits="userSpaceOnUse">
+      <path d="M14 0H0V14" fill="none" stroke="#161D2E" stroke-width="0.4"/>
+    </pattern>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="200" height="356" fill="url(#bg)"/>
+  <rect width="200" height="356" fill="url(#grid)" opacity="0.35"/>
+  <circle cx="100" cy="128" r="70" fill="url(#coreGrad)"/>
+
+  <!-- 顶部栏 -->
+  <rect x="0" y="0" width="200" height="2" fill="#2563EB" opacity="0.9"/>
+  <text x="16" y="24" font-family="monospace" font-size="7" fill="#5A6480" letter-spacing="2">MEMORAX CODE</text>
+  <text x="184" y="24" font-family="monospace" font-size="7" fill="#6C8AFF" text-anchor="end">NEVER START OVER</text>
+
+  <!-- 中心: 四层记忆节点 + 中心核心 -->
+  <g transform="translate(100,128)">
+    <!-- 外层轨道环 -->
+    <circle r="42" fill="none" stroke="#1E2A45" stroke-width="0.5" stroke-dasharray="3,3" opacity="0.6"/>
+    <circle r="24" fill="none" stroke="#1E2A45" stroke-width="0.4" stroke-dasharray="2,2" opacity="0.4"/>
+
+    <!-- 核心发光体 -->
+    <circle r="8" fill="#2563EB" opacity="0.8" filter="url(#glow)">
+      <animate attributeName="r" values="7;9;7" dur="3s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="3" fill="#A5B4FC" opacity="0.9"/>
+
+    <!-- 4个记忆节点在轨道上浮动 -->
+    <!-- Coding Memory (top) -->
+    <g>
+      <circle r="6" fill="#0F172A" stroke="#3B82F6" stroke-width="0.8" filter="url(#glow)">
+        <animateMotion dur="8s" repeatCount="indefinite" path="M0,-38 C12,-38 12,-38 0,-38 Z"/>
+      </circle>
+      <text x="0" y="2" text-anchor="middle" font-family="monospace" font-size="4" fill="#60A5FA">
+        <animateMotion dur="8s" repeatCount="indefinite" path="M0,-38 C12,-38 12,-38 0,-38 Z"/>
+        CODE
+      </text>
+    </g>
+    <!-- Repo Memory (right) -->
+    <g>
+      <circle r="6" fill="#0F172A" stroke="#8B5CF6" stroke-width="0.8" filter="url(#glow)">
+        <animateMotion dur="10s" repeatCount="indefinite" path="M38,0 C38,10 38,10 38,0 Z" begin="2s"/>
+      </circle>
+      <text x="0" y="2" text-anchor="middle" font-family="monospace" font-size="3.5" fill="#A78BFA">
+        <animateMotion dur="10s" repeatCount="indefinite" path="M38,0 C38,10 38,10 38,0 Z" begin="2s"/>
+        REPO
+      </text>
+    </g>
+    <!-- Personal Memory (bottom) -->
+    <g>
+      <circle r="6" fill="#0F172A" stroke="#06B6D4" stroke-width="0.8" filter="url(#glow)">
+        <animateMotion dur="9s" repeatCount="indefinite" path="M0,38 C-10,38 -10,38 0,38 Z" begin="4s"/>
+      </circle>
+      <text x="0" y="2" text-anchor="middle" font-family="monospace" font-size="3" fill="#22D3EE">
+        <animateMotion dur="9s" repeatCount="indefinite" path="M0,38 C-10,38 -10,38 0,38 Z" begin="4s"/>
+        PERS
+      </text>
+    </g>
+    <!-- Procedure Memory (left) -->
+    <g>
+      <circle r="6" fill="#0F172A" stroke="#F59E0B" stroke-width="0.8" filter="url(#glow)">
+        <animateMotion dur="11s" repeatCount="indefinite" path="M-38,0 C-38,-10 -38,-10 -38,0 Z" begin="6s"/>
+      </circle>
+      <text x="0" y="2" text-anchor="middle" font-family="monospace" font-size="3" fill="#FBBF24">
+        <animateMotion dur="11s" repeatCount="indefinite" path="M-38,0 C-38,-10 -38,-10 -38,0 Z" begin="6s"/>
+        FLOW
+      </text>
+    </g>
+
+    <!-- 连接线脉冲（核心→节点） -->
+    <line x1="0" y1="-8" x2="0" y2="-32" stroke="#3B82F6" stroke-width="0.4" opacity="0.5">
+      <animate attributeName="opacity" values="0.2;0.7;0.2" dur="2.5s" repeatCount="indefinite"/>
+    </line>
+    <line x1="8" y1="0" x2="32" y2="0" stroke="#8B5CF6" stroke-width="0.4" opacity="0.5">
+      <animate attributeName="opacity" values="0.2;0.7;0.2" dur="2.8s" repeatCount="indefinite" begin="0.5s"/>
+    </line>
+    <line x1="0" y1="8" x2="0" y2="32" stroke="#06B6D4" stroke-width="0.4" opacity="0.5">
+      <animate attributeName="opacity" values="0.2;0.7;0.2" dur="2.6s" repeatCount="indefinite" begin="1s"/>
+    </line>
+    <line x1="-8" y1="0" x2="-32" y2="0" stroke="#F59E0B" stroke-width="0.4" opacity="0.5">
+      <animate attributeName="opacity" values="0.2;0.7;0.2" dur="3s" repeatCount="indefinite" begin="1.5s"/>
+    </line>
+
+    <!-- 数据粒子沿连线移动 -->
+    <circle r="1.2" fill="#60A5FA">
+      <animateMotion dur="2s" repeatCount="indefinite" path="M0,-8 L0,-32"/>
+    </circle>
+    <circle r="1.2" fill="#A78BFA">
+      <animateMotion dur="2.2s" repeatCount="indefinite" path="M8,0 L32,0" begin="0.5s"/>
+    </circle>
+    <circle r="1.2" fill="#22D3EE">
+      <animateMotion dur="1.8s" repeatCount="indefinite" path="M0,8 L0,32" begin="1s"/>
+    </circle>
+    <circle r="1.2" fill="#FBBF24">
+      <animateMotion dur="2.4s" repeatCount="indefinite" path="M-8,0 L-32,0" begin="1.5s"/>
+    </circle>
+  </g>
+
+  <!-- 标题区 -->
+  <text x="100" y="240" text-anchor="middle" font-family="Georgia,serif" font-size="24" font-weight="bold" fill="#F0F0F5">MemoraX Code</text>
+  <text x="100" y="276" text-anchor="middle" font-family="monospace" font-size="6" fill="#6C8AFF" letter-spacing="1.5">NEVER LOSE CONTEXT · NEVER START OVER</text>
+  <text x="100" y="290" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#8890A4">四层记忆边界 · 跨会话工程记忆 · 4大编码Agent</text>
+
+  <!-- 数据条 -->
+  <rect x="24" y="302" width="152" height="24" rx="12" fill="#070B14" stroke="#1E2A45" stroke-width="0.8"/>
+  <text x="100" y="318" text-anchor="middle" font-family="monospace" font-size="7" fill="#F0F0F5">468★ · 20天 · MIT · Node.js 20+</text>
+
+  <!-- 底部 -->
+  <text x="100" y="338" text-anchor="middle" font-family="monospace" font-size="6.5" fill="#5A6480" letter-spacing="1">MIND RESONANCE · 反共识观察</text>
+</svg>
