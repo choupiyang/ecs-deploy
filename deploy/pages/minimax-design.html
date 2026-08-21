@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0C0C0E">
+  <title>MiniMax Design — 多模态创作 Agent，从操作像素到操作语义</title>
+  <link rel="preconnect" href="https://fonts.googleapis.cn">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.cn/css2?family=Noto+Serif+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0C0C0E;
+      --bg-2: #161618;
+      --accent: #FF6B35;
+      --accent-light: #FF8F66;
+      --text: #F2F0ED;
+      --muted: #7A7A7A;
+      --surface: #1A1512;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; background: #080708; font-family: 'Noto Sans SC', sans-serif; color: #F2F0ED; -webkit-font-smoothing: antialiased; }
+    body { display: flex; align-items: center; justify-content: center; }
+
+    .stage {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      height: min(100svh, calc(100vw * 16 / 9));
+      width: min(100vw, calc(100svh * 9 / 16));
+      background: #0C0C0E;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,.6);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 16px 10px;
+      perspective: 1000px;
+    }
+    @supports not (height: 100svh) { .stage { height: min(100vh, calc(100vw * 16 / 9)); width: min(100vw, calc(100vh * 9 / 16)); } }
+    .stage::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 38% at 78% 2%, rgba(255, 107, 53, .12) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 35% at 8% 45%, rgba(255, 143, 102, .05) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 50% 100%, rgba(26, 21, 18, .95) 0%, transparent 60%);
+    }
+    .stage::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(rgba(242, 240, 237, .012) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(242, 240, 237, .012) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    /* 顶部条 */
+    .topbar {
+      position: relative; z-index: 10;
+      display: flex; justify-content: space-between; align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px; letter-spacing: .16em; color: #7A7A7A;
+      text-transform: uppercase; flex-shrink: 0;
+      padding-bottom: 8px; border-bottom: 1px solid rgba(242, 240, 237, .06);
+    }
+    .brand { display: flex; align-items: center; gap: 6px; color: #F2F0ED; }
+    .brand-dot { width: 5px; height: 5px; background: #FF6B35; border-radius: 50%; box-shadow: 0 0 8px #FF6B35; animation: pulse 2.2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .3; transform: scale(.6); } }
+    .share-btn {
+      background: none; border: 1px solid rgba(242, 240, 237, .2);
+      padding: 4px 8px 3px; font: inherit; color: #F2F0ED;
+      cursor: pointer; letter-spacing: .12em; transition: all .3s;
+      display: flex; align-items: center; gap: 4px; font-size: 7.5px;
+    }
+    .share-btn:active { background: #FF6B35; color: #0C0C0E; border-color: #FF6B35; }
+
+    /* Hero: 左3D特效方块 + 右文字 */
+    .hero { position: relative; z-index: 5; flex-shrink: 0; margin-top: 8px; display: flex; gap: 12px; align-items: stretch; transform-style: preserve-3d; }
+    .hero-side { flex: 1; min-width: 0; }
+    .meta-row {
+      display: flex; justify-content: space-between; align-items: center;
+      font-family: 'JetBrains Mono', monospace; font-size: 7px; letter-spacing: .2em;
+      color: #7A7A7A; margin-bottom: 4px;
+    }
+    .vol { color: #FF8F66; }
+    .title-block { display: flex; align-items: flex-start; gap: 8px; }
+    .mm-stamp {
+      width: 38px; height: 38px; border-radius: 50%;
+      border: 1.5px solid rgba(255, 107, 53, .6);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Noto Serif SC', serif; font-size: 17px; font-weight: 900;
+      color: #FF6B35; flex-shrink: 0; position: relative;
+      box-shadow: 0 0 18px rgba(255, 107, 53, .2) inset, 0 0 12px rgba(255, 107, 53, .12);
+      cursor: pointer; transition: transform .3s;
+    }
+    .mm-stamp::before {
+      content: ''; position: absolute; inset: -4px; border-radius: 50%;
+      border: 1px dashed rgba(255, 143, 102, .35); animation: spin 9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .title-text { min-width: 0; }
+    .mm-title {
+      font-family: 'Noto Serif SC', serif; font-size: 22px; font-weight: 900;
+      letter-spacing: -.02em; line-height: 1.05; color: #F2F0ED;
+    }
+    .mm-title .dot { color: #FF6B35; }
+    .by-line { display: flex; align-items: center; gap: 8px; margin-top: 3px; flex-wrap: wrap; }
+    .by { font-family: 'JetBrains Mono', monospace; font-size: 7px; letter-spacing: .14em; color: #9A9A9A; }
+    .v-tag {
+      font-family: 'JetBrains Mono', monospace; font-size: 6px; letter-spacing: .14em;
+      color: #FF8F66; border: 1px solid rgba(255, 143, 102, .3);
+      padding: 1px 5px; border-radius: 2px; background: rgba(255, 143, 102, .06);
+    }
+    .tagline { margin-top: 5px; font-family: 'Noto Sans SC', sans-serif; font-size: 10px; color: #D8D5D0; line-height: 1.45; }
+    .tagline em { color: #FF6B35; font-style: normal; font-weight: 500; }
+
+    /* 3D 画布节点特效方块 */
+    .canvas3d {
+      width: 108px; flex-shrink: 0; position: relative;
+      transform-style: preserve-3d; transform: rotateX(8deg);
+      cursor: pointer;
+    }
+    .canvas3d-inner {
+      position: absolute; inset: 0;
+      background: linear-gradient(145deg, #16120E, #0E0C0A);
+      border: 1px solid rgba(255, 107, 53, .25);
+      border-radius: 10px; overflow: hidden;
+      box-shadow: 0 0 24px rgba(255, 107, 53, .1), inset 0 0 30px rgba(255, 107, 53, .04);
+    }
+    .nd { position: absolute; border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-size: 5px; color: #FF8F66; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255, 107, 53, .5); background: rgba(255, 107, 53, .1); animation: ndFloat 3.2s ease-in-out infinite; }
+    .nd.core { border-color: #FF6B35; background: rgba(255, 107, 53, .22); color: #FFB499; font-weight: 500; box-shadow: 0 0 10px rgba(255, 107, 53, .4); }
+    @keyframes ndFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+    .edge { position: absolute; height: 1px; background: linear-gradient(90deg, transparent, rgba(255, 107, 53, .5), transparent); animation: edgeFlow 2.4s linear infinite; }
+    @keyframes edgeFlow { 0% { opacity: .15; } 50% { opacity: .8; } 100% { opacity: .15; } }
+    .spark { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: #FF6B35; box-shadow: 0 0 6px #FF6B35; animation: sparkMove 2.8s ease-in-out infinite; }
+    @keyframes sparkMove { 0% { transform: translate(0, 0); opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { transform: translate(42px, 26px); opacity: 0; } }
+    .glow-core { position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; transform: translate(-50%, -50%); background: radial-gradient(circle, rgba(255, 107, 53, .25), transparent 70%); animation: corePulse 2.6s ease-in-out infinite; }
+    @keyframes corePulse { 0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: .6; } 50% { transform: translate(-50%, -50%) scale(1.25); opacity: 1; } }
+
+    /* 核心展示区：Agent 对话终端（flex 弹性填充） */
+    .agentbox { position: relative; z-index: 5; margin-top: 8px; flex: 1 1 auto; min-height: 96px; display: flex; flex-direction: column; }
+    .agent-header { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D8D5D0; margin-bottom: 4px; flex-shrink: 0; }
+    .agent-header::after { content: ''; flex: 1; height: 1px; background: rgba(242, 240, 237, .06); }
+    .agent-window {
+      flex: 1 1 auto; min-height: 80px;
+      background: #0A0908;
+      border: 1px solid rgba(255, 107, 53, .3);
+      border-radius: 8px; overflow: hidden;
+      font-family: 'JetBrains Mono', monospace;
+      cursor: pointer; transition: all .25s;
+      display: flex; flex-direction: column;
+    }
+    .agent-window:active { border-color: rgba(255, 143, 102, .55); }
+    .agent-bar {
+      display: flex; align-items: center; gap: 5px; padding: 5px 9px;
+      background: rgba(255, 107, 53, .1); border-bottom: 1px solid rgba(255, 107, 53, .15);
+      flex-shrink: 0;
+    }
+    .agent-bar span { width: 7px; height: 7px; border-radius: 50%; }
+    .agent-bar .r { background: #FF5F57; } .agent-bar .y { background: #FFB020; } .agent-bar .g { background: #28C840; }
+    .agent-bar b { margin-left: 6px; font-size: 7px; font-weight: 400; color: #C78F6F; letter-spacing: .06em; }
+    .agent-body { flex: 1 1 auto; padding: 8px 11px 9px; font-size: 8.5px; line-height: 1.8; overflow: hidden; color: #D8B8A3; display: flex; flex-direction: column; justify-content: center; gap: 2px; }
+    .agent-body .u { color: #9A9A9A; }
+    .agent-body .u::before { content: '❯ '; color: #7A7A7A; }
+    .agent-body .a { color: #FFB499; }
+    .agent-body .a::before { content: '◆ '; color: #FF6B35; }
+    .agent-body .sys { color: #6B5A4E; font-size: 7.5px; }
+    .agent-body .sys::before { content: '⚙ '; }
+    .caret-blink { display: inline-block; width: 6px; height: 10px; background: #FF8F66; vertical-align: -2px; animation: blink 1s steps(1) infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* Stats */
+    .stats-section { position: relative; z-index: 5; margin-top: 8px; flex-shrink: 0; }
+    .stats-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .stats-title { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D8D5D0; }
+    .stats-badge { font-family: 'JetBrains Mono', monospace; font-size: 6px; letter-spacing: .16em; color: #FF8F66; border: 1px solid rgba(255, 143, 102, .3); padding: 1px 5px; border-radius: 2px; }
+    .stats-chart { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .stat-card {
+      background: rgba(242, 240, 237, .02); border: 1px solid rgba(242, 240, 237, .07);
+      border-radius: 7px; padding: 7px 6px 5px; cursor: pointer; transition: all .25s; min-width: 0;
+    }
+    .stat-card:active { background: rgba(255, 107, 53, .07); border-color: rgba(255, 107, 53, .3); transform: scale(.96); }
+    .stat-num { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; color: #F2F0ED; line-height: 1; white-space: nowrap; }
+    .stat-num .accent { color: var(--stat-color, #FF6B35); }
+    .stat-label { font-size: 7px; color: #7A7A7A; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .stat-mini-chart { display: flex; align-items: flex-end; gap: 2px; height: 12px; margin-top: 4px; }
+    .stat-bar { width: 4px; background: var(--stat-color, #FF6B35); opacity: .55; border-radius: 1px; transform-origin: bottom; }
+    @keyframes chartGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+    .chart-animate { animation: chartGrow .6s cubic-bezier(.4, 0, .2, 1) forwards; }
+
+    /* Flow */
+    .flow-section { position: relative; z-index: 5; margin-top: 8px; flex-shrink: 0; }
+    .flow-header { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D8D5D0; margin-bottom: 4px; }
+    .flow-header::after { content: ''; flex: 1; height: 1px; background: rgba(242, 240, 237, .06); }
+    .flow-svg { width: 100%; height: auto; display: block; }
+    .flow-node { cursor: pointer; }
+    .flow-node:active { opacity: .7; }
+    .flow-arrow { animation: flowPulse 2s ease-in-out infinite; }
+    @keyframes flowPulse { 0%, 100% { stroke-opacity: .4; } 50% { stroke-opacity: 1; } }
+
+    /* Features */
+    .features { position: relative; z-index: 5; margin-top: 7px; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+    .feature {
+      display: flex; align-items: center; gap: 9px;
+      background: rgba(242, 240, 237, .02); border: 1px solid rgba(242, 240, 237, .07);
+      border-radius: 7px; padding: 6px 9px; cursor: pointer; transition: all .25s;
+    }
+    .feature:active { background: rgba(255, 107, 53, .05); border-color: rgba(255, 107, 53, .22); }
+    .feature-icon {
+      width: 24px; height: 24px; border-radius: 6px; background: rgba(255, 107, 53, .1);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .feature-icon svg { width: 13px; height: 13px; stroke: #FF6B35; fill: none; stroke-width: 1.5; }
+    .feature-content { flex: 1; min-width: 0; }
+    .feature-title { font-family: 'Noto Sans SC', sans-serif; font-size: 9.5px; font-weight: 500; color: #F2F0ED; letter-spacing: .02em; }
+    .feature-desc { font-size: 7.5px; color: #7A7A7A; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .feature-arrow { font-size: 11px; color: #FF6B35; opacity: 0; transform: translateX(-2px); transition: all .25s; flex-shrink: 0; }
+    .feature:active .feature-arrow { opacity: 1; transform: translateX(2px); }
+    .feature-progress { height: 2px; background: rgba(242, 240, 237, .06); border-radius: 1px; margin-top: 4px; overflow: hidden; }
+    .feature-progress-bar { height: 100%; background: linear-gradient(90deg, #FF6B35, #FF8F66); border-radius: 1px; transform-origin: left; animation: progressIn .8s cubic-bezier(.4, 0, .2, 1) forwards; transform: scaleX(0); }
+    @keyframes progressIn { to { transform: scaleX(1); } }
+
+    /* Tech */
+    .tech-section { position: relative; z-index: 5; margin-top: 8px; flex-shrink: 0; }
+    .tech-header { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .18em; color: #D8D5D0; margin-bottom: 4px; }
+    .tech-pills { display: flex; flex-wrap: wrap; gap: 4px; }
+    .tech-pill {
+      font-family: 'JetBrains Mono', monospace; font-size: 6.5px; letter-spacing: .08em;
+      color: #9A9A9A; border: 1px solid rgba(242, 240, 237, .1);
+      padding: 2px 7px; border-radius: 10px; cursor: pointer;
+      background: rgba(242, 240, 237, .02); transition: all .2s;
+    }
+    .tech-pill:active { background: rgba(242, 240, 237, .08); }
+    .tech-pill.accent { border-color: rgba(255, 107, 53, .35); color: #FF8F66; }
+    .tech-pill.cyan { border-color: rgba(255, 143, 102, .25); color: #FFB499; }
+
+    /* Bottom bar */
+    .bottombar {
+      position: relative; z-index: 5; margin-top: 8px; padding-top: 8px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0; border-top: 1px solid rgba(242, 240, 237, .06);
+    }
+    .site-link { display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 8px; color: #D8D5D0; text-decoration: none; }
+    .site-link svg { width: 13px; height: 13px; stroke: #9A9A9A; fill: none; stroke-width: 1.5; transition: stroke .25s; }
+    .site-link:active svg { stroke: #FF6B35; }
+    .visit-btn {
+      font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: .14em;
+      color: #0C0C0E; background: linear-gradient(90deg, #FF6B35, #FF8F66);
+      padding: 6px 13px; border-radius: 5px; text-decoration: none;
+      font-weight: 500; transition: all .25s;
+    }
+    .visit-btn:active { transform: scale(.95); filter: brightness(1.15); }
+
+    /* Overlay + Sheet */
+    .overlay {
+      position: absolute; inset: 0; z-index: 100;
+      display: flex; align-items: flex-end;
+      background: rgba(0, 0, 0, .5);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      opacity: 0; pointer-events: none; transition: opacity .35s;
+    }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+    .sheet {
+      width: 100%; max-height: 76%;
+      background: linear-gradient(180deg, #1A1512, #0E0C0A);
+      border: 1px solid rgba(255, 107, 53, .2); border-bottom: none;
+      border-radius: 16px 16px 0 0; padding: 14px 18px 18px;
+      transform: translateY(101%); transition: transform .45s cubic-bezier(.7, 0, .3, 1);
+      overflow-y: auto;
+    }
+    .overlay.active .sheet { transform: translateY(0); }
+    .sheet-handle { width: 32px; height: 3px; background: #4A3A30; border-radius: 2px; margin: 0 auto 12px; }
+    .sheet-title { font-family: 'Noto Serif SC', serif; font-size: 15px; font-weight: 700; color: #F2F0ED; margin-bottom: 7px; }
+    .sheet-title em { color: #FF6B35; font-style: normal; }
+    .sheet-desc { font-size: 10.5px; line-height: 1.65; color: #B8B4AE; }
+    .sheet-desc code { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #FF8F66; background: rgba(255, 143, 102, .08); padding: 1px 4px; border-radius: 2px; }
+    .sheet-points { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+    .sheet-point { display: flex; align-items: flex-start; gap: 8px; font-family: 'Noto Sans SC', sans-serif; font-size: 10px; color: #D0CCC6; line-height: 1.55; }
+    .sheet-point::before { content: ''; width: 5px; height: 5px; background: #FF6B35; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .sheet-close {
+      margin-top: 14px; width: 100%; padding: 10px;
+      background: rgba(255, 107, 53, .08); border: 1px solid rgba(255, 107, 53, .25);
+      border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 10px;
+      letter-spacing: .15em; color: #FF8F66; cursor: pointer; transition: all .2s;
+    }
+    .sheet-close:active { background: #FF6B35; color: #0C0C0E; }
+
+    /* Toast */
+    .toast {
+      position: absolute; bottom: 50px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #FF6B35; color: #0C0C0E; padding: 7px 14px; border-radius: 5px;
+      font-family: 'Noto Sans SC', sans-serif; font-size: 10px; font-weight: 500;
+      opacity: 0; pointer-events: none; transition: all .3s; z-index: 200;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .reveal { opacity: 0; transform: translateY(10px); transition: all .45s cubic-bezier(.4, 0, .2, 1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* 小屏兜底 */
+    @media (max-height: 730px) {
+      .mm-title { font-size: 19px; }
+      .mm-stamp { width: 34px; height: 34px; font-size: 15px; }
+      .canvas3d { width: 92px; }
+      .tagline { font-size: 9px; }
+      .agent-body { font-size: 7.5px; line-height: 1.7; padding: 6px 9px; }
+      .feature { padding: 5px 9px; }
+      .feature-title { font-size: 9px; }
+      .stat-num { font-size: 13.5px; }
+      .sheet { max-height: 80%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <!-- Topbar -->
+    <div class="topbar reveal">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <span>Young's Insight</span>
+      </div>
+      <button class="share-btn" id="shareBtn">SHARE <span class="arr">↗</span></button>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero reveal">
+      <div class="canvas3d" id="canvas3d">
+        <div class="canvas3d-inner">
+          <div class="glow-core"></div>
+          <div class="nd core" style="left:34px; top:40px; width:36px; height:16px;">H3</div>
+          <div class="nd" style="left:10px; top:12px; width:26px; height:13px; animation-delay:.3s">SCRIPT</div>
+          <div class="nd" style="left:66px; top:16px; width:24px; height:13px; animation-delay:.7s">IMG</div>
+          <div class="nd" style="left:70px; top:62px; width:26px; height:13px; animation-delay:1.1s">AUDIO</div>
+          <div class="nd" style="left:8px; top:66px; width:28px; height:13px; animation-delay:.5s">VIDEO</div>
+          <div class="edge" style="left:30px; top:19px; width:28px;"></div>
+          <div class="edge" style="left:68px; top:26px; width:14px; transform:rotate(90deg); animation-delay:.8s"></div>
+          <div class="edge" style="left:50px; top:52px; width:26px; transform:rotate(32deg); animation-delay:.4s"></div>
+          <div class="edge" style="left:24px; top:44px; width:16px; transform:rotate(-70deg); animation-delay:1.2s"></div>
+          <div class="spark" style="left:30px; top:20px;"></div>
+          <div class="spark" style="left:46px; top:66px; animation-delay:1.4s"></div>
+        </div>
+      </div>
+      <div class="hero-side">
+        <div class="meta-row">
+          <span class="vol">MULTIMODAL AGENT</span>
+          <span>2026.08.21</span>
+        </div>
+        <div class="title-block">
+          <div class="mm-stamp" id="stamp">M</div>
+          <div class="title-text">
+            <div class="mm-title">MiniMax<span class="dot"> Design</span></div>
+            <div class="by-line">
+              <span class="by">by MiniMax · H3 驱动</span>
+              <span class="v-tag">DESKTOP</span>
+            </div>
+          </div>
+        </div>
+        <div class="tagline">从<em>操作像素</em>到<em>操作语义和表达意图</em>——把多模态模型能力组织成真实生产力的创作 Harness</div>
+      </div>
+    </div>
+
+    <!-- Agent 对话展示区 -->
+    <div class="agentbox reveal">
+      <div class="agent-header">Agent Mode · 说想法，不用学软件</div>
+      <div class="agent-window" id="agentWin">
+        <div class="agent-bar">
+          <span class="r"></span><span class="y"></span><span class="g"></span>
+          <b>design.minimaxi.com — 点击看完整流程</b>
+        </div>
+        <div class="agent-body">
+          <div class="u">给运动鞋拍一支 15 秒带货短片，街头感，日落</div>
+          <div class="sys">拆解任务 → 分镜 ×4 · 脚本 · 配音 · 音乐</div>
+          <div class="sys">3D 导演台摆机位 → 作为 H3 生成参考</div>
+          <div class="a">已生成 4 镜头 + 自动剪辑字幕，成片 00:12</div>
+          <div class="u" style="opacity:.6">换成雨天夜景版，再来 3 版<span class="caret-blink"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-section reveal">
+      <div class="stats-header">
+        <span class="stats-title">Ecosystem</span>
+        <span class="stats-badge">H3 OPEN WEIGHTS</span>
+      </div>
+      <div class="stats-chart">
+        <div class="stat-card" data-stat="h3" style="--stat-color: #FF6B35">
+          <div class="stat-num"><span class="accent">2305</span></div>
+          <div class="stat-label">h3.c Stars · 12天</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 7px; animation-delay: .1s"></div>
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .15s"></div>
+            <div class="stat-bar chart-animate" style="height: 12px; animation-delay: .2s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="hn" style="--stat-color: #FF8F66">
+          <div class="stat-num"><span class="accent">440</span>pts</div>
+          <div class="stat-label">HN H3-metal · 99评</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 10px; animation-delay: .25s"></div>
+            <div class="stat-bar chart-animate" style="height: 11px; animation-delay: .3s"></div>
+            <div class="stat-bar chart-animate" style="height: 12px; animation-delay: .35s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="cui" style="--stat-color: #FF6B35">
+          <div class="stat-num"><span class="accent">3300</span>+</div>
+          <div class="stat-label">ComfyUI 生态 Stars</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 9px; animation-delay: .4s"></div>
+            <div class="stat-bar chart-animate" style="height: 11px; animation-delay: .45s"></div>
+          </div>
+        </div>
+        <div class="stat-card" data-stat="flow" style="--stat-color: #FFB499">
+          <div class="stat-num"><span class="accent">5</span>步</div>
+          <div class="stat-label">灵感 → 成片全链路</div>
+          <div class="stat-mini-chart">
+            <div class="stat-bar chart-animate" style="height: 12px; animation-delay: .5s"></div>
+            <div class="stat-bar chart-animate" style="height: 6px; animation-delay: .55s"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flow -->
+    <div class="flow-section reveal">
+      <div class="flow-header">Creative Pipeline</div>
+      <svg class="flow-svg" viewBox="0 0 350 44" fill="none">
+        <defs>
+          <marker id="mm-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L6,3 z" fill="#FF6B35" fill-opacity=".6"/>
+          </marker>
+        </defs>
+        <g class="flow-node" id="flow-agent">
+          <rect x="3" y="9" width="62" height="26" rx="5" fill="rgba(255,107,53,.08)" stroke="#FF6B35" stroke-width="1" stroke-opacity=".5"/>
+          <text x="34" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#F2F0ED" text-anchor="middle">AGENT 输入</text>
+          <text x="34" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#7A7A7A" text-anchor="middle">理解意图·拆任务</text>
+        </g>
+        <path class="flow-arrow" d="M68 22 L82 22" stroke="#FF6B35" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#mm-arrow)"/>
+        <g class="flow-node" id="flow-canvas">
+          <rect x="85" y="9" width="64" height="26" rx="5" fill="rgba(255,143,102,.1)" stroke="#FF8F66" stroke-width="1.2"/>
+          <text x="117" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#FF8F66" text-anchor="middle">画布编排</text>
+          <text x="117" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#7A7A7A" text-anchor="middle">多模态节点连线</text>
+        </g>
+        <path class="flow-arrow" d="M152 22 L166 22" stroke="#FF6B35" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#mm-arrow)" style="animation-delay: .3s"/>
+        <g class="flow-node" id="flow-h3">
+          <rect x="169" y="9" width="64" height="26" rx="5" fill="rgba(255,107,53,.08)" stroke="#FF6B35" stroke-width="1" stroke-opacity=".5"/>
+          <text x="201" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#F2F0ED" text-anchor="middle">H3 生成</text>
+          <text x="201" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#7A7A7A" text-anchor="middle">视频·音频·参考控制</text>
+        </g>
+        <path class="flow-arrow" d="M236 22 L250 22" stroke="#FF8F66" stroke-width="1.5" stroke-opacity=".5" marker-end="url(#mm-arrow)" style="animation-delay: .6s"/>
+        <g class="flow-node" id="flow-out">
+          <rect x="253" y="9" width="72" height="26" rx="5" fill="rgba(255,107,53,.08)" stroke="#FF6B35" stroke-width="1" stroke-opacity=".5"/>
+          <text x="289" y="22" font-family="JetBrains Mono, monospace" font-size="6.5" fill="#F2F0ED" text-anchor="middle">审核 → 成片</text>
+          <text x="289" y="31" font-family="JetBrains Mono, monospace" font-size="4.5" fill="#7A7A7A" text-anchor="middle">剪辑·字幕·交付</text>
+        </g>
+        <circle cx="75" cy="22" r="2" fill="#FF6B35">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="159" cy="22" r="2" fill="#FF8F66">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0.5s"/>
+        </circle>
+        <circle cx="243" cy="22" r="2" fill="#FF6B35">
+          <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="1s"/>
+        </circle>
+      </svg>
+    </div>
+
+    <!-- Features -->
+    <div class="features reveal">
+      <div class="feature" data-f="0">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">语义层创作：说意图，不抠像素</div>
+          <div class="feature-desc">自然语言为核心接口 · 模型理解"想要什么"再生成修改重组</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 100%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="1">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">多模态画布：告别工具割裂</div>
+          <div class="feature-desc">脚本分镜图视频音乐剪辑同画布 · 节点自动连线</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 95%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="2">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">3D 导演台：试错前移到分镜</div>
+          <div class="feature-desc">3D 空间摆角色调姿态选机位 → 结果作 H3 生成参考</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 90%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="3">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">Skill 复用 + 开源生态</div>
+          <div class="feature-desc">对话生成专属 Skill · ComfyUI 本地工作流可接入</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 92%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+      <div class="feature" data-f="4">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-title">本地衔接 + 审核闭环</div>
+          <div class="feature-desc">本地素材资产中心 · 直连剪辑软件 · Agent 主动确认方向</div>
+          <div class="feature-progress"><div class="feature-progress-bar" style="width: 88%"></div></div>
+        </div>
+        <span class="feature-arrow">→</span>
+      </div>
+    </div>
+
+    <!-- Tech -->
+    <div class="tech-section reveal">
+      <div class="tech-header">Tech Stack</div>
+      <div class="tech-pills">
+        <span class="tech-pill accent">MiniMax H3</span>
+        <span class="tech-pill">Agent + Skills</span>
+        <span class="tech-pill cyan">ComfyUI</span>
+        <span class="tech-pill">Canvas</span>
+        <span class="tech-pill cyan">3D 导演台</span>
+        <span class="tech-pill">macOS / Win</span>
+      </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="bottombar reveal">
+      <a href="https://github.com/antirez/h3.c" target="_blank" class="site-link">
+        <svg viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77 5.44 5.44 0 0 0 3.5 8.55c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+        antirez/h3.c · H3 推理引擎
+      </a>
+      <a href="https://design.minimaxi.com" target="_blank" class="visit-btn">下载 →</a>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title" id="sheetTitle"></div>
+        <div class="sheet-desc" id="sheetDesc"></div>
+        <div class="sheet-points" id="sheetPoints"></div>
+        <button class="sheet-close" id="sheetClose">CLOSE</button>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script>
+  (function(){
+    var $=function(s){return document.querySelector(s)};
+    var overlay=$('#overlay'), sheetTitle=$('#sheetTitle'), sheetDesc=$('#sheetDesc'),
+        sheetPoints=$('#sheetPoints'), toast=$('#toast');
+
+    var DATA = {
+      stamp: {
+        title: 'MiniMax Design <em>· 为什么是 Harness</em>',
+        desc: '2026 年 8 月发布的多模态创作 Agent 桌面应用（macOS 13+ / Win10 x64）。官方定义：把多模态模型能力变成真实可用生产力的 Harness——用户提出创作需求，它理解目标、拆解任务、调用模型与 Skills，完成素材处理、生成编辑到最终交付的完整过程。底层是开源多模态视频模型 H3。',
+        points: ['官网 design.minimaxi.com · 微信官宣当日上线', 'H3 开源权重 + 原生多模态（视频+音频）', '免费试用 + 积分制，年卡用户 H3 消耗降 20%', '桌面端优先：本地素材直接调用，资产本地化存储', '口号：Intelligence with Everyone']
+      },
+      h3: {
+        title: '2305 Stars <em>· h3.c 十二天</em>',
+        desc: 'antirez（Redis 作者）写的 MiniMax H3 Apple Silicon 原生推理引擎，2026-08-09 创建，十二天拿下 2305 星 156 fork。加上 ComfyUI 生态（audio-T8 ★765 / Director ★710 / Motion-Context ★672 等），H3 开源生态前五仓库合计 3300+ 星。',
+        points: ['antirez/h3.c · Mac 原生 H3 推理引擎', 'HN 440 分 99 评论（H3-metal 帖）', 'ComfyUI-MiniMaxH3-audio-T8 ★765', 'ComfyUI_MiniMaxH3_Director ★710', 'ComfyUI-H3-Motion-Context ★672']
+      },
+      hn: {
+        title: '440pts <em>· HN 热议 H3-metal</em>',
+        desc: 'H3 开源后英文社区反应热烈：「H3-metal – Native MiniMax-H3 inference for Apple Silicon」拿 440 分 99 评论；「MiniMax H3 Day-0 Support in ComfyUI: Open Weights, Native Audio, and 2K Video」334 分 94 评论。开源策略直接带火了社区生态。',
+        points: ['H3-metal 帖：440 分 / 99 评论', 'ComfyUI Day-0 支持帖：334 分 / 94 评论', '开放权重 + 原生音频 + 2K 视频是讨论焦点', 'Reddit 检索被拦（403），英文口碑以 HN 为准']
+      },
+      cui: {
+        title: '3300+ <em>ComfyUI 生态星标</em>',
+        desc: 'H3 开源数周内 ComfyUI 社区涌现大量工作流节点包。MiniMax Design 直接拥抱这个生态：精选 H3 工作流集合进产品，本地部署的 ComfyUI 工作流也能接入，Agent 可对话协助编辑节点和调整生成参数。',
+        points: ['top5 H3 ComfyUI 包合计 ★3300+', '云端或本地运行方式自由选择', 'Agent 对话式编辑工作流节点', '精细调整生成参数（专业创作者向）', '官方精选社区工作流进 Skill 广场']
+      },
+      flow: {
+        title: '5 步 <em>· 灵感到成片全链路</em>',
+        desc: '官方把创作拆成五步连续链路：①灵感输入 Agent Mode ②画布编排 Canvas Flow ③方法复用 Skill Ready ④本地衔接 Local Index ⑤审核节点 Output Sync。每步可独立介入，也可全自动交给 Agent。',
+        points: ['01 灵感输入：说话或丢策划文档', '02 画布编排：多模态节点自动连线', '03 方法复用：专属 Skill + 专业插件', '04 本地衔接：本地文件 + 直连剪辑软件', '05 审核节点：Agent 主动确认 + 多轮校验']
+      },
+      agent: {
+        title: 'AGENT 输入 <em>· 理解意图拆任务</em>',
+        desc: '说出想法，或直接丢进一份策划文档——主 Agent 理解意图后自动拆解任务分配，自动（也可手动）适配最优模型，开始执行。这是"自然语言成为人机交互核心接口"判断的产品化落地。',
+        points: ['语音/文字描述灵感即可启动', '支持直接导入策划文档作为输入', '自动拆解任务 + 分配给 Skills', '自动适配最优模型，也可手动指定']
+      },
+      canvas: {
+        title: '画布编排 <em>· 一块画布装下一切</em>',
+        desc: '脚本、分镜、图片、视频、音乐、剪辑全在一块画布上，节点自动连线。从调研到成片不再在十几个专业工具间来回切换——这是对"工具割裂"这个创作痛点的正面回答。',
+        points: ['六种内容形态统一画布管理', '节点自动连线，手动可调', '调研素材直接进画布', '告别 Premiere/AE/PS 来回导出导入']
+      },
+      h3gen: {
+        title: 'H3 生成 <em>· 原生多模态引擎</em>',
+        desc: 'MiniMax H3 是原生多模态视频模型：理解多模态上下文（同时提供几张图、几段视频和指令）、视频生成、视频编辑、参考控制。尤其适合 Video Editing 这类对理解、控制与修改要求更高的场景。',
+        points: ['原生多模态：一次输入图+视频+指令', '视频编辑与参考控制能力突出', '开源权重，社区已有 2K 视频工作流', '保持角色/画风一致性的连续生成']
+      },
+      out: {
+        title: '审核 → 成片 <em>· 把关交付质量</em>',
+        desc: '在关键节点 Agent 会主动询问你的核心方向；Agent + Harness 后台调用专业知识库、多轮校验质量。镜头完成后继续自动剪辑和字幕添加，把素材组织成完整视频。',
+        points: ['Agent 主动询问，不是闷头生成', '专业知识库 + 多轮质量校验', '自动剪辑 + 自动字幕', '适合：短剧全流程 · 电商批量 · 品牌 TVC · 投放素材']
+      },
+      f0: {
+        title: '语义层创作 <em>· 操作意图而非像素</em>',
+        desc: '官方核心判断：未来的创作修改不停留在传统 Editing，而是语义层面。用户不必精确告诉系统每个像素和时间点如何变化，只需表达高层意图，模型理解"想要什么"再完成生成修改重组编辑。',
+        points: ['从"操作像素"到"操作语义和表达意图"', '自然语言成为人机交互核心接口', '用户表达意图，系统理解并执行', '类似 LLM 的 Context 演进：从单次输入到整个 Project']
+      },
+      f1: {
+        title: '多模态画布 <em>· 消灭工具割裂</em>',
+        desc: 'Canvas Flow 把脚本、分镜、图片、视频、音乐、剪辑统一在一块画布上，节点自动连线。创作者不再需要在多个专业工具之间来回切换导出导入，一条链路从调研走到成片。',
+        points: ['六种模态一块画布', '节点自动连线', '从调研到成片连续链路', '减少切换成本 = 减少创意损耗']
+      },
+      f2: {
+        title: '3D 导演台 <em>· 试错前移</em>',
+        desc: '描述场景、人物动作和镜头要求后，在 3D 空间中摆放角色、调整姿态与机位，从不同视角检查画面；也可随时手动调整。确认构图后作为 H3 生成参考——把试错提前到分镜阶段，减少无效生成。',
+        points: ['3D 空间摆角色 + 调姿态 + 选机位', '多视角检查构图与人物关系', '结果作为 H3 生成的参考控制', '少烧无效生成的积分']
+      },
+      f3: {
+        title: 'Skill 复用 <em>· 经验资产化</em>',
+        desc: '对话生成专属 Skill，或一键调用广场成熟工作流；搭配专业级插件解锁影视级特效。已用 ComfyUI 的专业创作者：原有本地部署和成熟工作流直接接入，Agent 对话协助编辑节点、调整参数。',
+        points: ['对话生成专属 Skill，越用越懂你', 'Skill 广场：一键调用社区成熟工作流', 'ComfyUI 本地工作流无缝接入', 'Agent 协助编辑节点 + 调参']
+      },
+      f4: {
+        title: '本地衔接 + 审核 <em>· 安全闭环</em>',
+        desc: '画布资料自动本地化存储，图片与工作流一键沉淀至资产中心，Agent 无缝调用本地文件，支持一键直连专业剪辑软件。审核节点上 Agent 主动询问核心方向，Harness 后台多轮校验质量。',
+        points: ['本地素材资产中心，安全可控', '一键直连专业剪辑软件', 'Agent 主动确认方向，不闷头跑', '多轮校验把住交付质量']
+      }
+    };
+
+    function openSheet(key){
+      var d = DATA[key]; if(!d) return;
+      sheetTitle.innerHTML = d.title;
+      sheetDesc.textContent = d.desc;
+      sheetPoints.innerHTML = d.points.map(function(p){
+        return '<div class="sheet-point">' + p + '</div>';
+      }).join('');
+      overlay.classList.add('active');
+    }
+    function closeSheet(){ overlay.classList.remove('active'); }
+
+    document.querySelectorAll('.stat-card').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet(el.dataset.stat); });
+    });
+    document.querySelectorAll('.flow-node').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet(el.id.replace('flow-','')==='h3'?'h3gen':el.id.replace('flow-','')); });
+    });
+    document.querySelectorAll('.feature').forEach(function(el){
+      el.addEventListener('click', function(){ openSheet('f'+el.dataset.f); });
+    });
+    $('#agentWin').addEventListener('click', function(){ openSheet('stamp'); });
+    $('#canvas3d').addEventListener('click', function(){ openSheet('canvas'); });
+    $('#sheetClose').addEventListener('click', closeSheet);
+    overlay.addEventListener('click', function(e){ if(e.target===overlay) closeSheet(); });
+
+    // 分享：三段式文案（text 已含链接，不传 url 防重复追加）
+    $('#shareBtn').addEventListener('click', function(){
+      var text = 'MiniMax Design：从操作像素到操作语义的多模态创作 Agent，H3 开源模型驱动，说想法就能出成片。\nhttps://mindresonance.online/youngsinsight/pages/minimax-design.html\n\n你可以用任何AI工具订阅我的博客文章：https://mindresonance.online/youngsinsight/subscribe.html';
+      if(navigator.share){
+        navigator.share({title:'MiniMax Design — 多模态创作 Agent', text:text}).catch(function(){});
+      }else if(navigator.clipboard){
+        navigator.clipboard.writeText(text).then(function(){
+          toast.textContent = '已复制：介绍 + 链接 + 订阅推荐';
+          toast.classList.add('show');
+          setTimeout(function(){ toast.classList.remove('show'); }, 1800);
+        });
+      }
+    });
+
+    // stamp 连点 5 次彩蛋
+    var stampHits = 0, stampTimer = null;
+    $('#stamp').addEventListener('click', function(){
+      stampHits++;
+      var s = $('#stamp');
+      s.style.transform = 'rotate(180deg) scale(.9)';
+      setTimeout(function(){ s.style.transform=''; }, 400);
+      if(stampHits >= 5){
+        stampHits = 0;
+        toast.textContent = 'Intelligence with Everyone.';
+        toast.classList.add('show');
+        setTimeout(function(){ toast.classList.remove('show'); }, 2200);
+        if(navigator.vibrate) navigator.vibrate(30);
+      } else {
+        openSheet('stamp');
+      }
+    });
+
+    // 手势倾斜视差（节流 16ms）
+    var stage = document.querySelector('.stage'), tiltLock = 0;
+    function tilt(cx, cy){
+      var now = Date.now();
+      if(now - tiltLock < 16) return;
+      tiltLock = now;
+      var r = stage.getBoundingClientRect();
+      var dx = (cx - r.left - r.width/2) / (r.width/2);
+      var dy = (cy - r.top - r.height/2) / (r.height/2);
+      stage.style.transform = 'rotateX(' + (-dy*3).toFixed(2) + 'deg) rotateY(' + (dx*4).toFixed(2) + 'deg)';
+    }
+    function untilt(){ stage.style.transform = ''; }
+    document.addEventListener('mousemove', function(e){ tilt(e.clientX, e.clientY); });
+    document.addEventListener('mouseleave', untilt);
+    document.addEventListener('touchmove', function(e){ var t=e.touches[0]; tilt(t.clientX, t.clientY); }, {passive:true});
+    document.addEventListener('touchend', untilt);
+
+    document.querySelectorAll('.reveal').forEach(function(x){ x.classList.add('visible'); });
+  })();
+  </script>
+</body>
+</html>
