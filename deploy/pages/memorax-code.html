@@ -2,345 +2,548 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>MemoraX Code — 信息卡片</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#060B18">
+<title>MemoraX Code · AI 编码记忆层</title>
 <style>
 :root{
-  --bg:#070B14;--bg2:#0D1220;--accent:#2563EB;--accent-l:#6C8AFF;--purple:#8B5CF6;
-  --cyan:#06B6D4;--amber:#F59E0B;--txt:#F0F0F5;--muted:#6B7494;
+  --bg:#060B18; --bg-card:#0B1226; --bg-2:#0D1530;
+  --accent:#2563EB; --accent-light:#60A5FA; --accent-glow:rgba(37,99,235,.4);
+  --mem1:#22D3EE; --mem2:#A78BFA; --mem3:#F472B6; --mem4:#FBBF24;
+  --text:#E8EEFF; --text-dim:#93A4CC; --text-mute:#56618A;
+  --border:#1B2A55; --warn:#FBBF24;
 }
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,sans-serif;
-  min-height:100vh;display:flex;justify-content:center;overflow-x:hidden}
-.stage{width:100%;max-width:430px;min-height:100vh;position:relative;perspective:1000px}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:#04070F;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Noto Sans SC',sans-serif;overflow:hidden;height:100%}
 
-/* 顶部栏 */
-.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px}
-.topbar-logo{font-family:monospace;font-size:9px;color:var(--muted);letter-spacing:2.5px}
-.topbar-share{font-family:monospace;font-size:9px;color:var(--accent-l);cursor:pointer;padding:4px 10px;border:1px solid #1E2A45;border-radius:10px}
-.topbar-share:active{background:rgba(37,99,235,.15)}
+/* ── 9:16 舞台 ── */
+.stage{
+  position:relative;aspect-ratio:9/16;
+  height:min(100svh, calc(100vw * 16 / 9));
+  width:min(100vw, calc(100svh * 9 / 16));
+  margin:0 auto;
+  background:radial-gradient(130% 90% at 50% 0%, #0A1630 0%, var(--bg) 55%);
+  overflow:hidden;perspective:1000px;transform-style:preserve-3d;
+  display:flex;flex-direction:column;user-select:none;
+  color:var(--text);
+}
+@supports not (height:100svh){.stage{height:min(100vh, calc(100vw * 16 / 9));}}
+.tilt-deep{transform:translateZ(-60px)}
+.tilt-mid{transform:translateZ(0)}
 
-/* Hero */
-.hero{display:flex;align-items:flex-start;gap:14px;padding:8px 20px 20px}
-.hero-3d{width:88px;height:88px;flex-shrink:0;position:relative;border-radius:14px;
-  background:radial-gradient(circle at 40% 40%,#1E2A45,#070B14);overflow:hidden;
-  transform-style:preserve-3d;animation:tiltSlow 6s ease-in-out infinite}
-@keyframes tiltSlow{0%,100%{transform:rotateX(4deg) rotateY(-4deg)}50%{transform:rotateX(-2deg) rotateY(4deg)}}
-.core-orb{position:absolute;width:28px;height:28px;top:50%;left:50%;transform:translate(-50%,-50%);
-  background:radial-gradient(circle,#6C8AFF,#2563EB);border-radius:50%;filter:blur(1px);
-  animation:pulse 2.5s ease-in-out infinite}
-@keyframes pulse{0%,100%{box-shadow:0 0 12px #2563EB88,0 0 24px #2563EB44}50%{box-shadow:0 0 20px #2563EBaa,0 0 40px #2563EB66}}
-.orbit{position:absolute;border:0.5px dashed #1E2A45;border-radius:50%;animation:spin linear infinite}
-.orbit1{width:68px;height:68px;top:10px;left:10px;animation-duration:10s}
-.orbit2{width:48px;height:48px;top:20px;left:20px;animation-duration:7s;animation-direction:reverse}
-@keyframes spin{to{transform:rotate(360deg)}}
-.mnode{position:absolute;width:12px;height:12px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  font-family:monospace;font-size:4px;font-weight:700;animation:spin linear infinite}
-.mn1{background:#0F172A;border:0.8px solid #3B82F6;color:#60A5FA;top:-1px;left:50%;transform:translateX(-50%);animation-duration:10s}
-.mn2{background:#0F172A;border:0.8px solid #8B5CF6;color:#A78BFA;top:50%;right:-1px;transform:translateY(-50%);animation-duration:10s;animation-direction:reverse}
-.mn3{background:#0F172A;border:0.8px solid #06B6D4;color:#22D3EE;bottom:-1px;left:50%;transform:translateX(-50%);animation-duration:10s}
-.mn4{background:#0F172A;border:0.8px solid #F59E0B;color:#FBBF24;top:50%;left:-1px;transform:translateY(-50%);animation-duration:10s;animation-direction:reverse}
+/* ── Topbar ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 0;flex-shrink:0;z-index:5}
+.brand{font-family:monospace;font-size:10px;letter-spacing:.26em;color:var(--accent-light);display:flex;align-items:center;gap:8px}
+.brand .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent-glow);animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.share-btn{background:none;border:1px solid var(--border);color:var(--text-dim);width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;font-size:15px}
+.share-btn:active{transform:scale(.9);border-color:var(--accent);color:var(--accent)}
 
+/* ── Hero（左文字 + 右 3D 记忆核心）── */
+.hero{display:flex;align-items:center;gap:12px;padding:14px 20px 8px;flex-shrink:0;z-index:4}
 .hero-side{flex:1;min-width:0}
-.stamp{display:inline-block;width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#1E2A45,#0D1220);
-  border:1.2px solid #2563EB66;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-bottom:8px;
-  font-family:monospace;font-size:8px;color:var(--accent-l);letter-spacing:0.5px;transition:all .2s}
-.stamp:active{transform:scale(1.08);box-shadow:0 0 16px #2563EB44}
-.hero-title{font-family:Georgia,serif;font-size:22px;font-weight:700;line-height:1.2;margin-bottom:2px}
-.hero-title em{font-style:normal;color:var(--accent-l)}
-.hero-by{font-family:monospace;font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;margin-bottom:6px}
-.hero-tags{display:flex;flex-wrap:wrap;gap:4px}
-.hero-tags span{font-family:monospace;font-size:8px;padding:2px 7px;border-radius:8px;border:0.5px solid #1E2A45;color:var(--muted)}
+.meta-row{display:flex;justify-content:space-between;align-items:center;font-family:monospace;font-size:8px;letter-spacing:.14em;color:var(--text-mute);margin-bottom:8px}
+.vol{color:var(--accent);letter-spacing:.16em}
+.title-block{display:flex;align-items:flex-start;gap:9px}
+.mx-stamp{width:34px;height:34px;flex-shrink:0;border-radius:12px;background:linear-gradient(135deg,var(--accent),#1D4ED8);color:#fff;font-weight:900;font-size:15px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 14px var(--accent-glow);transition:transform .2s}
+.mx-stamp:active{transform:scale(.9) rotate(10deg)}
+.title-text{min-width:0}
+.mx-title{font-size:22px;font-weight:800;letter-spacing:.01em;color:var(--text);line-height:1.1}
+.mx-title .dot{color:var(--accent)}
+.superdesign-line{display:flex;align-items:center;gap:7px;margin-top:3px;flex-wrap:wrap}
+.superdesign{font-size:8.5px;color:var(--text-mute);letter-spacing:.06em;font-family:monospace}
+.v-tag{font-family:monospace;font-size:7.5px;padding:2px 6px;border-radius:4px;background:rgba(37,99,235,.12);border:1px solid rgba(37,99,235,.35);color:var(--accent-light)}
+.tagline{font-size:10.5px;color:var(--text-dim);line-height:1.6;margin-top:6px}
+.tagline em{color:var(--accent-light);font-style:normal;font-weight:600}
+.hint-badge{font-size:8.5px;color:var(--text-mute);margin-top:5px;letter-spacing:.04em}
+.hint-badge::before{content:'◈ ';color:var(--accent)}
 
-/* Agent 终端区 */
-.terminal{margin:0 16px;border-radius:12px;background:#0A0E18;border:0.8px solid #1E2A45;overflow:hidden;flex:1;min-height:160px;display:flex;flex-direction:column}
-.term-header{display:flex;align-items:center;gap:5px;padding:10px 14px;border-bottom:0.5px solid #1E2A45}
-.term-dot{width:7px;height:7px;border-radius:50%}
-.term-title{font-family:monospace;font-size:8px;color:var(--muted);margin-left:6px;letter-spacing:1px}
-.term-body{padding:12px 14px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.65;overflow-y:auto;flex:1}
-.term-body .prompt{color:var(--accent-l)}
-.term-body .user-input{color:#E2E8F0}
-.term-body .agent-reply{color:var(--muted);margin:4px 0}
-.term-body .hl{color:var(--accent-l)}
-.term-body .hl2{color:var(--amber)}
-.term-body .hl3{color:var(--cyan)}
-.term-body .cursor{display:inline-block;width:7px;height:13px;background:var(--accent-l);animation:blink 1s step-end infinite;vertical-align:middle;margin-left:2px}
-@keyframes blink{50%{opacity:0}}
+/* ── 3D 记忆核心：中心晶体 + 四层记忆轨道 + 召回粒子 ── */
+.mx3d{position:relative;flex-shrink:0;width:96px;height:96px;z-index:2;pointer-events:none;overflow:visible}
+.mx3d .core{
+  position:absolute;top:50%;left:50%;width:30px;height:30px;margin:-15px 0 0 -15px;
+  border-radius:8px;
+  background:linear-gradient(135deg,#93C5FD,var(--accent) 55%,#1E3A8A);
+  box-shadow:0 0 22px var(--accent-glow),0 0 60px rgba(37,99,235,.2);
+  animation:coreFloat 3.2s ease-in-out infinite;
+  transform-style:preserve-3d;
+}
+.core .f1{position:absolute;inset:0;border-radius:8px;border:1.5px solid rgba(255,255,255,.5);transform:translateZ(5px)}
+.core .f2{position:absolute;inset:3px;border-radius:6px;border:1px solid rgba(255,255,255,.35);transform:translateZ(-4px)}
+@keyframes coreFloat{0%,100%{transform:translateY(0) rotateX(0) rotateY(0)}50%{transform:translateY(-4px) rotateX(8deg) rotateY(8deg)}}
+.mx3d .ring{position:absolute;top:50%;left:50%;border-radius:50%;border:1px solid;transform-style:preserve-3d;opacity:.85}
+.mx3d .ring.r1{width:84px;height:84px;margin:-42px 0 0 -42px;border-color:rgba(34,211,238,.6);animation:spinR1 9s linear infinite}
+.mx3d .ring.r2{width:72px;height:72px;margin:-36px 0 0 -36px;border-color:rgba(167,139,250,.5);animation:spinR2 12s linear infinite reverse}
+.mx3d .ring.r3{width:58px;height:58px;margin:-29px 0 0 -29px;border-color:rgba(244,114,182,.45);animation:spinR1 15s linear infinite}
+.mx3d .ring.r4{width:46px;height:46px;margin:-23px 0 0 -23px;border-color:rgba(251,191,36,.4);animation:spinR2 8s linear infinite reverse}
+@keyframes spinR1{from{transform:rotateX(68deg) rotateZ(0)}to{transform:rotateX(68deg) rotateZ(360deg)}}
+@keyframes spinR2{from{transform:rotateX(68deg) rotateZ(0)}to{transform:rotateX(68deg) rotateZ(-360deg)}}
+/* 四色记忆点：沿各自轨道绕行（写入/召回） */
+.mx3d .mp{position:absolute;top:50%;left:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;box-shadow:0 0 6px currentColor}
+.mx3d .mp.p1{color:var(--mem1);animation:orbR1 4.5s linear infinite}
+.mx3d .mp.p2{color:var(--mem2);animation:orbR2 5.5s linear infinite}
+.mx3d .mp.p3{color:var(--mem3);animation:orbR1 6.5s linear infinite}
+.mx3d .mp.p4{color:var(--mem4);animation:orbR2 7.5s linear infinite}
+@keyframes orbR1{0%{transform:rotateX(68deg) rotateZ(0) translateX(42px)}100%{transform:rotateX(68deg) rotateZ(360deg) translateX(42px)}}
+@keyframes orbR2{0%{transform:rotateX(68deg) rotateZ(0) translateX(36px)}100%{transform:rotateX(68deg) rotateZ(-360deg) translateX(36px)}}
+/* 召回脉冲：粒子被核心吸入 */
+.mx3d .recall{position:absolute;top:50%;left:50%;width:4px;height:4px;margin:-2px 0 0 -2px;border-radius:50%;background:#93C5FD;box-shadow:0 0 8px #60A5FA;opacity:0;animation:recallIn 3.6s ease-in infinite}
+@keyframes recallIn{0%{transform:translateX(44px);opacity:0}12%{opacity:1}55%{transform:translateX(8px);opacity:1}70%{transform:translateX(0) scale(1.6);opacity:0}100%{transform:translateX(0);opacity:0}}
 
-/* Stats */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:16px 16px 8px}
-.stat{background:#0D1220;border-radius:10px;padding:10px 6px;text-align:center;cursor:pointer;border:0.5px solid transparent;transition:border-color .2s}
-.stat:active{border-color:var(--accent)}
-.stat-val{font-family:Georgia,serif;font-size:18px;font-weight:700;color:var(--accent-l)}
-.stat-lbl{font-family:monospace;font-size:7px;color:var(--muted);margin-top:3px;letter-spacing:0.5px}
+/* ── 核心展示区：记忆终端（flex 弹性撑满）── */
+.showcase{flex:1 1 auto;display:flex;flex-direction:column;padding:0 20px 6px;min-height:0;z-index:3;position:relative}
+.term{
+  flex:1 1 auto;min-height:60px;display:flex;flex-direction:column;
+  background:rgba(6,11,24,.92);border:1px solid var(--border);border-radius:12px;
+  overflow:hidden;cursor:pointer;transition:border-color .2s;
+}
+.term:active{border-color:var(--accent)}
+.term-bar{display:flex;align-items:center;gap:5px;padding:6px 10px;border-bottom:1px solid var(--border);flex-shrink:0}
+.tdot{width:7px;height:7px;border-radius:50%}
+.tdot.r{background:#F87171}.tdot.y{background:#FBBF24}.tdot.g{background:#34D399}
+.term-title{font-family:monospace;font-size:7.5px;color:var(--text-mute);margin-left:6px;letter-spacing:.08em}
+.term-body{flex:1 1 auto;padding:8px 12px;font-family:'SF Mono',Consolas,monospace;font-size:8.5px;line-height:1.7;color:#C7D6F5;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-start}
+.tl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl .pm{color:var(--accent-light)}
+.tl .cmd{color:#E8EEFF}
+.tl .out{color:var(--text-dim)}
+.tl .ok{color:#34D399}
+.tl .rec{color:var(--mem1)}
+.tl .mem{color:var(--mem2)}
+.tl .per{color:var(--mem3)}
+.tl .pro{color:var(--mem4)}
+.tl .blink{display:inline-block;width:5px;height:9px;background:var(--accent);vertical-align:-1px;animation:blink .9s step-end infinite}
+.showcase-hint{position:absolute;bottom:10px;right:22px;font-family:monospace;font-size:7px;color:var(--accent);opacity:.8;letter-spacing:.06em;animation:blink 2.5s ease-in-out infinite;z-index:4}
 
-/* Flow */
-.flow{padding:12px 16px}
-.flow-title{font-family:monospace;font-size:9px;color:var(--muted);letter-spacing:1.5px;margin-bottom:10px}
-.flow-nodes{display:flex;align-items:center;justify-content:space-between;position:relative}
-.flow-line{position:absolute;top:50%;left:20px;right:20px;height:1px;background:linear-gradient(90deg,#3B82F6,#8B5CF6,#06B6D4,#F59E0B);opacity:0.3}
-.fnode{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}
-.fnode-circle{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  font-family:monospace;font-size:7px;font-weight:700;transition:all .2s}
-.fnode:nth-child(2) .fnode-circle{background:#0F172A;border:0.8px solid #3B82F6;color:#60A5FA}
-.fnode:nth-child(3) .fnode-circle{background:#0F172A;border:0.8px solid #8B5CF6;color:#A78BFA}
-.fnode:nth-child(4) .fnode-circle{background:#0F172A;border:0.8px solid #06B6D4;color:#22D3EE}
-.fnode:nth-child(5) .fnode-circle{background:#0F172A;border:0.8px solid #F59E0B;color:#FBBF24}
-.fnode:nth-child(6) .fnode-circle{background:#0F172A;border:0.8px solid #10B981;color:#34D399}
-.fnode:active .fnode-circle{box-shadow:0 0 12px currentColor}
-.fnode-lbl{font-family:monospace;font-size:7px;color:var(--muted);white-space:nowrap}
+/* ── Stats ── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;padding:0 20px 7px;flex-shrink:0;z-index:3}
+.stat-card{background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:7px 5px;text-align:center;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.stat-card:active{transform:scale(.94);border-color:var(--accent)}
+.stat-card::before{content:'';position:absolute;left:0;right:0;top:0;height:2px;background:var(--accent);opacity:.4}
+.stat-num{font-size:12.5px;font-weight:800;color:var(--text);font-family:monospace;letter-spacing:-.02em}
+.stat-num .accent{color:var(--accent)}
+.stat-label{font-size:7px;color:var(--text-mute);margin-top:3px;letter-spacing:.02em}
 
-/* Features */
-.features{padding:8px 16px 16px}
-.feat{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:0.5px solid #1E2A4544;cursor:pointer}
-.feat:last-child{border-bottom:none}
-.feat-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px}
-.feat:nth-child(1) .feat-icon{background:#1E1240;color:#8B5CF6}
-.feat:nth-child(2) .feat-icon{background:#0C1E2E;color:#3B82F6}
-.feat:nth-child(3) .feat-icon{background:#0C1E1E;color:#10B981}
-.feat:nth-child(4) .feat-icon{background:#1E1A0C;color:#F59E0B}
-.feat:nth-child(5) .feat-icon{background:#1E0C1E;color:#EC4899}
-.feat-body{flex:1;min-width:0}
-.feat-title{font-size:12px;font-weight:600;margin-bottom:1px}
-.feat-desc{font-size:9.5px;color:var(--muted);line-height:1.4}
+/* ── Flow：四层记忆 → 新会话 ── */
+.flow{padding:0 20px 7px;flex-shrink:0;z-index:3}
+.flow svg{display:block;width:100%;height:auto}
+.flow-node{cursor:pointer;transition:opacity .2s}
+.flow-node:hover{opacity:.75}
+.flow-node text{font-size:6.5px;fill:var(--text-dim);font-family:monospace}
+.flow-node .ic{fill:var(--bg-2);stroke:var(--accent);stroke-width:1}
+.flow-node .ic.c1{stroke:var(--mem1)}
+.flow-node .ic.c2{stroke:var(--mem2)}
+.flow-node .ic.c3{stroke:var(--mem3)}
+.flow-node .ic.c4{stroke:var(--mem4)}
+.flow-line{stroke:var(--border);stroke-width:1;fill:none}
 
-/* Tech pills */
-.pills{display:flex;flex-wrap:wrap;gap:5px;padding:0 16px 16px}
-.pill{font-family:monospace;font-size:8px;padding:3px 9px;border-radius:8px;border:0.5px solid #1E2A45;color:var(--muted)}
+/* ── Features ── */
+.features{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;padding:0 20px 7px;flex-shrink:0;z-index:3}
+.feature{background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:7px 9px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:7px;min-width:0}
+.feature:active{transform:scale(.95);border-color:var(--accent)}
+.feature .ficon{width:21px;height:21px;flex-shrink:0;border-radius:6px;background:rgba(37,99,235,.1);display:flex;align-items:center;justify-content:center;font-size:10px}
+.feature .ftxt{min-width:0}
+.feature .ft{font-size:9.5px;color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.feature .fd{font-size:7px;color:var(--text-mute);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-/* Bottom bar */
-.bottom{display:flex;justify-content:space-between;padding:12px 16px 20px;border-top:0.5px solid #1E2A45}
-.bottom a{font-family:monospace;font-size:9px;color:var(--accent-l);text-decoration:none;padding:5px 12px;border-radius:8px;border:0.5px solid #1E2A45}
-.bottom a:active{background:rgba(37,99,235,.1)}
+/* ── Tech Pills ── */
+.tech{display:flex;flex-wrap:wrap;gap:5px;align-items:center;padding:0 20px 8px;flex-shrink:0;z-index:3;max-width:100%}
+.tech-pill{font-family:monospace;font-size:7.5px;color:var(--text-dim);border:1px solid var(--border);border-radius:20px;padding:2.5px 8px;cursor:pointer;transition:all .2s;background:var(--bg-2);max-width:100%;box-sizing:border-box}
+.tech-pill:active{transform:scale(.92);color:var(--accent);border-color:var(--accent)}
 
-/* Modal */
-.modal-overlay{position:fixed;inset:0;background:rgba(7,11,20,.88);backdrop-filter:blur(6px);z-index:100;display:none;align-items:flex-end;justify-content:center}
-.modal-overlay.active{display:flex}
-.modal{width:100%;max-width:430px;background:#0D1220;border-radius:18px 18px 0 0;padding:20px;max-height:70vh;overflow-y:auto;animation:slideUp .25s ease-out}
-@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.modal-handle{width:36px;height:4px;border-radius:2px;background:#2A3050;margin:0 auto 14px}
-.modal h3{font-size:15px;font-weight:600;margin-bottom:6px;color:var(--accent-l)}
-.modal h3 em{font-style:normal;color:var(--txt)}
-.modal .modal-desc{font-size:10.5px;color:var(--muted);line-height:1.6;margin-bottom:10px}
-.modal ul{list-style:none;padding:0}
-.modal li{font-size:10px;color:#C0C8E0;line-height:1.55;padding:3px 0 3px 14px;position:relative}
-.modal li::before{content:'';position:absolute;left:0;top:10px;width:5px;height:5px;border-radius:50%}
-.modal li.code-li{background:#0A0E18;border-radius:6px;padding:8px 10px;margin:6px 0;font-family:'Courier New',monospace;font-size:9px;color:var(--accent-l);white-space:pre-wrap;word-break:break-all}
-.modal li.code-li::before{display:none}
+/* ── Bottom Bar ── */
+.bottombar{display:flex;gap:9px;padding:0 20px 14px;flex-shrink:0;z-index:3}
+.bbtn{flex:1;text-align:center;padding:9px 8px;border-radius:10px;font-size:10px;font-weight:600;text-decoration:none;transition:all .2s;letter-spacing:.03em}
+.bbtn:active{transform:scale(.95)}
+.bbtn.gh{background:var(--bg-2);color:var(--text);border:1px solid var(--border)}
+.bbtn.gh:active{border-color:var(--accent)}
+.bbtn.site{background:linear-gradient(135deg,var(--accent),#1D4ED8);color:#fff;box-shadow:0 4px 16px var(--accent-glow)}
+
+/* ── Overlay / Sheet ── */
+.overlay{position:absolute;inset:0;background:rgba(3,6,14,.65);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);opacity:0;pointer-events:none;transition:opacity .35s;z-index:20;display:flex;align-items:flex-end}
+.overlay.active{opacity:1;pointer-events:auto}
+.sheet{width:100%;background:var(--bg-card);border-top:1px solid var(--border);border-radius:20px 20px 0 0;padding:12px 22px 28px;transform:translateY(100%);transition:transform .45s cubic-bezier(.7,0,.3,1);max-height:78%;overflow-y:auto;position:relative}
+.overlay.active .sheet{transform:translateY(0)}
+.sheet-handle{width:36px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 14px}
+.sheet-title{font-size:15px;font-weight:800;color:var(--text);line-height:1.4;margin-bottom:9px}
+.sheet-title em{color:var(--accent);font-style:normal}
+.sheet-desc{font-size:11.5px;color:var(--text-dim);line-height:1.8;margin-bottom:11px}
+.sheet-points{display:flex;flex-direction:column;gap:7px;margin-bottom:12px}
+.sheet-point{font-size:10.5px;color:var(--text-dim);line-height:1.6;padding-left:13px;position:relative}
+.sheet-point::before{content:'▸';position:absolute;left:0;color:var(--accent)}
+.sheet-code{font-family:'SF Mono',Consolas,monospace;font-size:9px;line-height:1.7;color:#C7D6F5;background:#060B18;border:1px solid var(--border);border-radius:10px;padding:11px 13px;margin-bottom:12px;white-space:pre-wrap;word-break:break-all}
+.sheet-close{width:100%;padding:11px;border-radius:10px;border:none;cursor:pointer;background:linear-gradient(135deg,var(--accent),#1D4ED8);color:#fff;font-size:11.5px;font-weight:800;letter-spacing:.2em;transition:transform .15s}
+.sheet-close:active{transform:scale(.97)}
+
+/* ── Toast ── */
+.toast{position:absolute;left:50%;bottom:86px;transform:translateX(-50%) translateY(20px);background:rgba(6,11,24,.95);border:1px solid var(--border);color:var(--text);font-size:10.5px;padding:9px 16px;border-radius:30px;opacity:0;transition:all .35s cubic-bezier(.7,0,.3,1);z-index:30;white-space:nowrap;pointer-events:none;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── 小屏压缩 ── */
+@media (max-height:730px){
+  .hero{padding-top:10px;gap:10px}
+  .mx3d{width:82px;height:82px}
+  .mx3d .ring.r1{width:70px;height:70px;margin:-35px 0 0 -35px}
+  .mx3d .ring.r2{width:60px;height:60px;margin:-30px 0 0 -30px}
+  .mx3d .ring.r3{width:48px;height:48px;margin:-24px 0 0 -24px}
+  .mx3d .ring.r4{display:none}
+  .mx-title{font-size:19px}
+  .tagline{font-size:9.5px}
+  .stat-num{font-size:11px}
+  .feature .ft{font-size:8.5px}
+  .term-body{font-size:7.8px}
+  .flow-node text{font-size:6px}
+}
 </style>
 </head>
 <body>
 <div class="stage" id="stage">
-  <div class="topbar">
-    <span class="topbar-logo">MIND RESONANCE</span>
-    <span class="topbar-share" onclick="shareCard()">SHARE</span>
+
+  <!-- Topbar -->
+  <div class="topbar tilt-mid">
+    <div class="brand"><span class="dot"></span>MEMORAX CODE</div>
+    <button class="share-btn" id="shareBtn" aria-label="分享">↗</button>
   </div>
 
+  <!-- Hero：左文字 + 右 3D 记忆核心 -->
   <div class="hero">
-    <div class="hero-3d">
-      <div class="core-orb"></div>
-      <div class="orbit orbit1"></div>
-      <div class="orbit orbit2"></div>
-      <div class="mnode mn1">C</div>
-      <div class="mnode mn2">R</div>
-      <div class="mnode mn3">P</div>
-      <div class="mnode mn4">F</div>
+    <div class="hero-side tilt-mid">
+      <div class="meta-row">
+        <span class="vol">CODING MEMORY LAYER</span>
+        <span>2026.08.22</span>
+      </div>
+      <div class="title-block">
+        <div class="mx-stamp" id="stamp">M</div>
+        <div class="title-text">
+          <div class="mx-title">MemoraX<span class="dot">.</span></div>
+          <div class="superdesign-line">
+            <span class="superdesign">memorax-ai · 20 天 468★</span>
+            <span class="v-tag">MIT</span>
+          </div>
+        </div>
+      </div>
+      <div class="tagline">给 Codex / Claude Code / DeepSeek Harness / OpenCode 共享的<em>四层记忆边界</em> —— 新会话不再从零开始</div>
+      <div class="hint-badge">轻触探索 · 拖动看 3D 视差</div>
     </div>
-    <div class="hero-side">
-      <div class="stamp" onclick="openModal('stamp')">MX</div>
-      <div class="hero-title">MemoraX <em>Code</em></div>
-      <span class="hero-by">by memorax-ai · lizhaocst</span>
-      <div class="hero-tags">
-        <span>ai-agents</span><span>coding-memory</span><span>MIT</span><span>Node.js</span>
+    <div class="mx3d tilt-deep" id="mx3d">
+      <div class="ring r1"></div>
+      <div class="ring r2"></div>
+      <div class="ring r3"></div>
+      <div class="ring r4"></div>
+      <div class="core"><span class="f1"></span><span class="f2"></span></div>
+      <div class="mp p1"></div>
+      <div class="mp p2"></div>
+      <div class="mp p3"></div>
+      <div class="mp p4"></div>
+      <div class="recall"></div>
+    </div>
+  </div>
+
+  <!-- 核心展示区：记忆终端（flex 弹性撑满） -->
+  <div class="showcase tilt-mid">
+    <div class="term" id="term" data-sheet="term">
+      <div class="term-bar">
+        <span class="tdot r"></span><span class="tdot y"></span><span class="tdot g"></span>
+        <span class="term-title">memorax-code — cross-session memory</span>
+      </div>
+      <div class="term-body">
+        <div class="tl"><span class="pm">$</span> <span class="cmd">memorax-code recall</span></div>
+        <div class="tl"><span class="out">◆ Recalled for this task:</span></div>
+        <div class="tl"><span class="rec">▸ Issue #42 root cause: race condition →<span class="ok"> avoid in recall code</span></span></div>
+        <div class="tl"><span class="mem">▸ Entry: src/index.ts · Arch: monorepo</span></div>
+        <div class="tl"><span class="per">▸ Profile: zh-CN · explain concisely</span></div>
+        <div class="tl"><span class="pro">▸ Gate: run tests before PR</span></div>
+        <div class="tl"><span class="pm">$</span> <span class="cmd">memorax-code remember<span class="blink"></span></span></div>
       </div>
     </div>
+    <div class="showcase-hint">▲ 终端可点 · 四层召回演示</div>
   </div>
 
-  <div class="terminal">
-    <div class="term-header">
-      <span class="term-dot" style="background:#EF4444"></span>
-      <span class="term-dot" style="background:#F59E0B"></span>
-      <span class="term-dot" style="background:#10B981"></span>
-      <span class="term-title">CROSS-SESSION MEMORY DEMO</span>
+  <!-- Stats -->
+  <div class="stats tilt-mid">
+    <div class="stat-card" data-sheet="stars">
+      <div class="stat-num"><span class="accent">468</span>★</div>
+      <div class="stat-label">20 天 · GitHub</div>
     </div>
-    <div class="term-body">
-      <div><span class="prompt">claude@repo</span> <span class="user-input">/$memorax-code build Repo Memory</span></div>
-      <div class="agent-reply">Scanning 127 files, 12.4K LOC...<br>  <span class="hl">Architecture:</span> monorepo, src/ + tests/<br>  <span class="hl">Entry:</span> src/index.ts<br>  <span class="hl2">Issue #42</span> was caused by race condition — <span class="hl">avoided in future recall</span></div>
-      <div style="margin-top:8px"><span class="prompt">codex@repo</span> <span class="user-input">$memorax-code remember</span></div>
-      <div class="agent-reply">Saved <span class="hl3">coding lesson:</span> mutex before shared-state write<br>  Linked to: Issue #42, src/worker.ts:87</div>
-      <div style="margin-top:8px"><span class="prompt">opencode@repo</span> <span class="user-input">$memorax-code recall race</span></div>
-      <div class="agent-reply">Found <span class="hl">2 memories:</span><br>  1. [Coding] mutex before shared-state write<br>  2. [Repo] src/worker.ts:87 is the critical section</div>
-      <div style="margin-top:6px"><span class="cursor"></span></div>
+    <div class="stat-card" data-sheet="agents">
+      <div class="stat-num"><span class="accent">4</span></div>
+      <div class="stat-label">编码 Agent</div>
     </div>
-  </div>
-
-  <div class="stats">
-    <div class="stat" onclick="openModal('stars')">
-      <div class="stat-val">468</div><div class="stat-lbl">STARS</div>
+    <div class="stat-card" data-sheet="memlayers">
+      <div class="stat-num"><span class="accent">4</span>层</div>
+      <div class="stat-label">记忆边界</div>
     </div>
-    <div class="stat" onclick="openModal('days')">
-      <div class="stat-val">20</div><div class="stat-lbl">DAYS</div>
-    </div>
-    <div class="stat" onclick="openModal('agents')">
-      <div class="stat-val">4</div><div class="stat-lbl">AGENTS</div>
-    </div>
-    <div class="stat" onclick="openModal('commits')">
-      <div class="stat-val">215</div><div class="stat-lbl">COMMITS</div>
+    <div class="stat-card" data-sheet="perf">
+      <div class="stat-num">-<span class="accent">48</span>%</div>
+      <div class="stat-label">任务耗时</div>
     </div>
   </div>
 
-  <div class="flow">
-    <div class="flow-title">MEMORY BOUNDARIES</div>
-    <div class="flow-nodes">
-      <div class="flow-line"></div>
-      <div class="fnode" onclick="openModal('coding')"><div class="fnode-circle">C</div><div class="fnode-lbl">Coding</div></div>
-      <div class="fnode" onclick="openModal('repo')"><div class="fnode-circle">R</div><div class="fnode-lbl">Repo</div></div>
-      <div class="fnode" onclick="openModal('personal')"><div class="fnode-circle">P</div><div class="fnode-lbl">Personal</div></div>
-      <div class="fnode" onclick="openModal('procedure')"><div class="fnode-circle">F</div><div class="fnode-lbl">Procedure</div></div>
+  <!-- Flow：四层记忆 → 新会话 -->
+  <div class="flow tilt-mid">
+    <svg viewBox="0 0 330 42" fill="none">
+      <line class="flow-line" x1="52" y1="21" x2="98" y2="21"/>
+      <path d="M98 21 L106 17 V25 Z" fill="var(--accent)"/>
+      <line class="flow-line" x1="142" y1="21" x2="188" y2="21"/>
+      <path d="M188 21 L196 17 V25 Z" fill="var(--accent)"/>
+      <line class="flow-line" x1="232" y1="21" x2="278" y2="21"/>
+      <path d="M278 21 L286 17 V25 Z" fill="var(--accent)"/>
+      <g class="flow-node" data-sheet="fc1">
+        <rect class="ic c1" x="6" y="7" width="46" height="28" rx="8"/>
+        <text x="29" y="24" text-anchor="middle">工程经验</text>
+      </g>
+      <g class="flow-node" data-sheet="fc2">
+        <rect class="ic c2" x="108" y="7" width="34" height="28" rx="8"/>
+        <text x="125" y="24" text-anchor="middle">仓库知识</text>
+      </g>
+      <g class="flow-node" data-sheet="fc3">
+        <rect class="ic c3" x="198" y="7" width="34" height="28" rx="8"/>
+        <text x="215" y="24" text-anchor="middle">偏好流程</text>
+      </g>
+      <g class="flow-node" data-sheet="fc4">
+        <rect class="ic" x="290" y="7" width="36" height="28" rx="8" stroke="#FBBF24"/>
+        <text x="308" y="24" text-anchor="middle">新会话</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- Features -->
+  <div class="features tilt-mid">
+    <div class="feature" data-sheet="f_writeback">
+      <div class="ficon">📥</div>
+      <div class="ftxt"><div class="ft">后台记忆回写</div><div class="fd">完成即沉淀经验</div></div>
+    </div>
+    <div class="feature" data-sheet="f_pref">
+      <div class="ficon">👤</div>
+      <div class="ftxt"><div class="ft">偏好连续性</div><div class="fd">跨会话注入</div></div>
+    </div>
+    <div class="feature" data-sheet="f_repo">
+      <div class="ficon">🗂️</div>
+      <div class="ftxt"><div class="ft">Repo 自动维护</div><div class="fd">架构地图+证据</div></div>
+    </div>
+    <div class="feature" data-sheet="f_active">
+      <div class="ficon">🎛️</div>
+      <div class="ftxt"><div class="ft">主动记忆控制</div><div class="fd">skill / CLI 搜索</div></div>
     </div>
   </div>
 
-  <div class="features">
-    <div class="feat" onclick="openModal('bg-write')">
-      <div class="feat-icon">✦</div>
-      <div class="feat-body"><div class="feat-title">后台记忆回写</div><div class="feat-desc">任务完成后自动提取可复用知识，无需手动调用</div></div>
-    </div>
-    <div class="feat" onclick="openModal('pref-contin')">
-      <div class="feat-icon">↻</div>
-      <div class="feat-body"><div class="feat-title">偏好连续性</div><div class="feat-desc">用户沟通偏好自动注入未来会话</div></div>
-    </div>
-    <div class="feat" onclick="openModal('active-ctrl')">
-      <div class="feat-icon">⌘</div>
-      <div class="feat-body"><div class="feat-title">主动记忆控制</div><div class="feat-desc">搜索、添加、遗忘——记忆读写全在掌控</div></div>
-    </div>
-    <div class="feat" onclick="openModal('sem-dedup')">
-      <div class="feat-icon">⊞</div>
-      <div class="feat-body"><div class="feat-title">语义去重与合并</div><div class="feat-desc">相同语义不重复写入，演进版本自动替换</div></div>
-    </div>
-    <div class="feat" onclick="openModal('local-view')">
-      <div class="feat-icon">◎</div>
-      <div class="feat-body"><div class="feat-title">本地可视化</div><div class="feat-desc">Memory Viewer 查看 4 个 Agent 的活动状态</div></div>
+  <!-- Tech Pills -->
+  <div class="tech tilt-mid">
+    <span class="tech-pill" data-sheet="p_npm">npm 0.1.5</span>
+    <span class="tech-pill" data-sheet="p_node">Node 20+</span>
+    <span class="tech-pill" data-sheet="p_viewer">Memory Viewer</span>
+    <span class="tech-pill" data-sheet="p_hermes">Hermes 集成中</span>
+  </div>
+
+  <!-- Bottom Bar -->
+  <div class="bottombar tilt-mid">
+    <a class="bbtn gh" href="https://github.com/memorax-ai/memorax-code" target="_blank" rel="noopener">GitHub · 468★</a>
+    <a class="bbtn site" href="https://code.memorax.net/" target="_blank" rel="noopener">官网 code.memorax.net</a>
+  </div>
+
+  <!-- Overlay / Sheet -->
+  <div class="overlay" id="overlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" id="sheetTitle"></div>
+      <div class="sheet-desc" id="sheetDesc"></div>
+      <div class="sheet-code" id="sheetCode" style="display:none"></div>
+      <div class="sheet-points" id="sheetPoints"></div>
+      <button class="sheet-close" id="sheetClose">CLOSE</button>
     </div>
   </div>
 
-  <div class="pills">
-    <span>TypeScript</span><span>npm global</span><span>MIT License</span><span>Node.js 20+</span>
-    <span>MemoraX Cloud</span><span>8787 Viewer</span><span>Discord</span><span>WeChat</span>
-  </div>
-
-  <div class="bottom">
-    <a href="https://github.com/memorax-ai/memorax-code" target="_blank">GitHub ★468</a>
-    <a href="https://code.memorax.net/" target="_blank">code.memorax.net</a>
-  </div>
-</div>
-
-<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
-  <div class="modal" id="modal-inner"></div>
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
 </div>
 
 <script>
-var D={
-  stamp:{
-    title:'MemoraX Code <em>· 编码 Agent 的记忆层</em>',
-    desc:'AI 编码 Agent 解决"一次会话一个大脑"的问题——新 session 丢失架构认知、失败教训、工作偏好。MemoraX Code 给 Codex / Claude Code / DeepSeek Harness / OpenCode 装上共享记忆层。核心哲学："不是记住一切，而是把当前任务相关的那一小撮记忆带回来"。',
-    points:['定位清晰：跨会话工程记忆，不是 RAG 检索增强','四层记忆边界——Coding / Repo / Personal / Procedure，各管各的','MIT 开源，npm global 一键安装，无需注册（试用期）','主贡献者 lizhaocst：206/215 commits，典型一人项目','2026-08-01 创建，20 天 468 星——编码 Agent 赛道需求被验证','org 下 4 个仓库：memorax-code 是唯一主产品','Trendshift Daily Badge：日增长趋势被追踪','支持中文（README.zh.md）+ 微信群，中国开发者友好']
-  },
-  stars:{
-    title:'468 Stars <em>· 20 天冷启动</em>',
-    desc:'2026-08-01 发布，20 天内获得 468 星 34 fork。增长曲线平稳——没有单次爆发式传播（无 HN 首页），靠 AI 编码社区口碑自然增长。',
-    points:['日均 ~23 星/天（468/20）','无 HN/GitHub Trending 爆发，纯社区传播','34 forks、12 open issues','同类项目（Memora MCP）2-4 星——MemoraX Code 量级领先 100x+','高活跃维护：最近 3 天 6 个 PR merged']
-  },
-  days:{
-    title:'20 天 <em>· 从 0 到 468</em>',
-    desc:'2026-08-01 创建仓库，8月21日仍在密集发版（v0.1.5）。开发节奏极快：215 commits / 5 contributors / 12 open issues + 18 closed。',
-    points:['创建：2026-08-01','最新推送：2026-08-21（今天还在发版）','215 commits、30 个 issue（12 open / 18 closed）','最近 PR：legacy 迁移修复、OpenCode 配额提醒、Node 20 支持','npm 6+ 个版本迭代','Issues 质量高：有人问"openclaw 不支持吗"——社区在主动求集成']
-  },
-  agents:{
-    title:'4 大编码 Agent <em>· 统一记忆接口</em>',
-    desc:'同时支持 OpenAI Codex、Anthropic Claude Code、DeepSeek Harness、OpenCode 四个主流编码 Agent。每个 Agent 保留自己的运行时，MemoraX 作为外挂记忆层通过 skill/CLI 注入。',
-    points:['Codex：$memorax-code 调用','Claude Code：/memorax-code 调用','DeepSeek Harness：/memorax-code 调用','OpenCode：通过名称调用 memorax-code skill','每个 Agent 独立配置 trace capture 和自动回写','OpenCode 最新加入配额提醒（Issue #93 刚 closed）','有用户求 openclaw 支持（Issue #85 open）——需求溢出到非主流 Agent']
-  },
-  commits:{
-    title:'215 Commits <em>· 一人主笔</em>',
-    desc:'5 个贡献者中 lizhaocst 独占 206 commits（96%）。项目处于强个人驱动的早期阶段——好处是方向一致，风险是 bus factor = 1。',
-    points:['lizhaocst: 206 commits（96%）','Squirtle-gpj: 5 commits','zan22ye: 2 commits','Imliuxc + a36600248-eng: 各 1 commit','commit 风格规范：feat:/fix:/chore:/test: 前缀','最近 3 天的 commit 全是 bug 修复和功能补全——在打磨质量']
-  },
-  coding:{
-    title:'Coding Memory <em>· 工程教训跨会话传递</em>',
-    desc:'回答："哪些工程教训应该带入下一个任务？" 包括已验证的修复、失败的方法、设计决策理由、坑点和回归检查。后台自动回写，无需手动调用。',
-    points:['来源：任务完成后的 turn 被自动提取','内容：verified fixes, failed approaches, design rationale','写入时机：后台异步，不阻塞 Agent 工作','语义去重：相同含义不重复写入','演进合并：新版本自动替换旧版本','遗忘机制：可以明确删除过时记忆','类比 Hermes memory：但 MemoraX 是跨 Agent 的，不绑定单个 Agent']
-  },
-  repo:{
-    title:'Repo Memory <em>· 仓库知识自动维护</em>',
-    desc:'回答："Agent 应该了解这个仓库的什么？" 包括架构地图、模块归属、入口点、commit/PR/MR/issue 证据链。自动在后台组织和更新。',
-    points:['自动扫描仓库结构（文件树 + 入口点 + 依赖关系）','关联 issue/PR/commit 形成证据链','按策略更新，减少重复搜索和总结','需要 Python 3 做 Repo Memory 操作','Demo：build Repo Memory → 新 session recall → 直接拿到架构认知']
-  },
-  personal:{
-    title:'Personal Memory <em>· 你的偏好自动延续</em>',
-    desc:'回答："Agent 应该怎么和你沟通协作？" 语言、语气、解释深度、结果格式——这些偏好记录后注入未来所有会话。',
-    points:['存储在 .repo_memory/ 目录下','语义比较后写入：等价请求不重复','显式遗忘只删命名条目，不影响无关记忆','按配置的节奏（cadence）自动注入','类比：比 Hermes USER.md 更细粒度，可按项目区分']
-  },
-  procedure:{
-    title:'Procedure Memory <em>· 可复用工作流</em>',
-    desc:'回答："这类任务应该怎么执行？" 可复用步骤、检查清单、前置条件、异常处理、验证门——形成团队级的操作手册。',
-    points:['类比 Hermes skill：都是可复用流程','但 MemoraX 的 procedure 是 Agent 自己从实践中提炼的','新会话自动提醒适用 procedure','支持分步验证门（validation gates）','可以手动添加/修改 procedure']
-  },
-  'bg-write':{
-    title:'后台记忆回写 <em>· 自动化知识提取</em>',
-    desc:'任务完成后，MemoraX 自动从最终 Agent 回复中提取可复用知识，写入 Coding Memory。不阻塞工作流，不需要用户手动调用。',
-    points:['提取对象：用户指令 + Agent 最终回复（trusted workspace turns）','不上传完整 trace，只传选定内容','云存储需要 MemoraX 账号（支持试用期）','自动回写可配置开关','配额提醒：Codex / Claude Code / OpenCode 已支持','本地 trace 可设为 metadata-only 或关闭']
-  },
-  'pref-contin':{
-    title:'偏好连续性 <em>· 每次对话都像老搭档</em>',
-    desc:'记录你在 Claude Code 里说"用中文"、在 Codex 里说"给详细解释"——下次新 session 自动应用，不用每次重新说。',
-    points:['跨会话：关掉重开，偏好还在','跨 Agent：在 Claude 设的偏好，Codex 也能用','按 cadence 注入：不是每次都注入，避免噪音','存储在 .repo_memory/ 下，随项目走']
-  },
-  'active-ctrl':{
-    title:'主动记忆控制 <em>· 搜索 / 添加 / 遗忘</em>',
-    desc:'不只是被动记录——你可以主动搜索记忆、添加新记忆、让 Agent 遗忘过时信息。通过 bundled skill 或 CLI 操作。',
-    points:['搜索：memorax-code search <query>','添加：memorax-code add <content>','遗忘：只删命名的条目，不影响无关记忆','安全边界：自动检索默认关闭，需显式启用','MemoraX Console：网页端查看/编辑/删除所有记忆']
-  },
-  'sem-dedup':{
-    title:'语义去重与合并 <em>· 记忆不膨胀</em>',
-    desc:'当保存的内容与已有记忆语义等价时，不写入。当新内容是旧内容的演进版本时，自动替换。当范围不匹配时自动修正。只有完全过时的条目才会被删除。',
-    points:['语义等价检测 → 零写入','演进版本 → 替换旧版本（保留历史链）','范围修正 → 自动归类到正确记忆类型','完全过时 → 才执行删除','一次任务指令不会改变已保存记忆','意图不明确时 Agent 会先问你']
-  },
-  'local-view':{
-    title:'本地可视化 <em>· Memory Viewer :8787</em>',
-    desc:'本地启动 Memory Viewer，在浏览器中查看 4 个 Agent 的活动计数、检索和回写状态。',
-    points:['地址：http://127.0.0.1:8787/memory-viewer','按 Agent 切换查看','展示 activity counts / retrieval / writeback','内容脱敏：只展示状态，不展示 trace 内容','本地运行，数据不离开机器']
-  }
-};
-
-var stampClicks=0;
-function openModal(k){
-  var d=D[k];if(!d)return;
-  if(k==='stamp'){stampClicks++;if(stampClicks>=5){d={title:'<em>?</em> 彩蛋','desc':'MemoraX Code 的核心理念和 Hermes 的 memory 系统高度相似——都是在解决"跨会话上下文丢失"。区别：MemoraX 跨 4 个 Agent，Hermis 绑定自己的 session。',points:['Hermes 有 memory tool + user profile','MemoraX 有 4 层记忆 + 语义去重 + 云端同步','MemoraX 的 procedure memory ≈ Hermes skill','MemoraX 的 personal memory ≈ Hermes USER.md','两个项目都在回答同一个问题：怎么让 AI 有连续记忆']}}}
-  var h='<div class="modal-handle"></div><h3>'+d.title+'</h3>'+(d.desc?'<div class="modal-desc">'+d.desc+'</div>':'');
-  if(d.points){h+='<ul>';d.points.forEach(function(p,i){var isCode=p.match(/^[\$>]/);h+='<li'+(isCode?' class="code-li"':'')+'>'+(isCode?'':p)+'</li>'});h+='</ul>'}
-  document.getElementById('modal-inner').innerHTML=h;
-  document.getElementById('modal').classList.add('active');
-}
-function closeModal(){document.getElementById('modal').classList.remove('active')}
-
-function shareCard(){
-  var t='MemoraX Code — AI编码Agent的记忆层 | 468★ 20天 MIT';
-  var u=location.href;
-  if(navigator.share){navigator.share({title:t,url:u}).catch(function(){})}
-  else if(navigator.clipboard){navigator.clipboard.writeText(u).then(function(){
-    var el=document.querySelector('.topbar-share');el.textContent='COPIED';setTimeout(function(){el.textContent='SHARE'},1200)
-  })}
-}
-
 (function(){
-  var s=document.getElementById('stage'),mx=0,my=0,curX=0,curY=0;
-  s.addEventListener('mousemove',function(e){var r=s.getBoundingClientRect();mx=(e.clientX-r.left)/r.width-0.5;my=(e.clientY-r.top)/r.height-0.5});
-  s.addEventListener('touchmove',function(e){var t=e.touches[0],r=s.getBoundingClientRect();mx=(t.clientX-r.left)/r.width-0.5;my=(t.clientY-r.top)/r.height-0.5},{passive:true});
-  s.addEventListener('mouseleave',function(){mx=0;my=0});
-  function tick(){curX+=(mx*4-curX)*0.08;curY+=(my*4-curY)*0.08;
-    s.style.transform='rotateY('+curX+'deg) rotateX('+-curY+'deg)';
-    requestAnimationFrame(tick)}
-  tick()})();
+  'use strict';
+  var $=function(s){return document.querySelector(s)};
+  var stage=$('#stage'), overlay=$('#overlay'), sheetTitle=$('#sheetTitle'),
+      sheetDesc=$('#sheetDesc'), sheetPoints=$('#sheetPoints'), sheetCode=$('#sheetCode'),
+      toast=$('#toast');
+
+  var DATA={
+    story:{
+      title:'从"记不住"到"记得住" <em>· MemoraX 的故事</em>',
+      desc:'MemoraX Code 是 memorax-ai 出品的 AI 编码 Agent 记忆层插件：让 Codex、Claude Code、DeepSeek Harness、OpenCode 四个编码 Agent 共享一套跨会话记忆。2026-08-01 发布，20 天冲到 468★（34 forks），MIT 许可。核心理念是一句话——"Never lose context. Never start over."（永不丢上下文，永不从头再来）。',
+      points:['2026-08-01 发布 · 20 天 468★ (Trendshift 收录)','memorax-ai 团队 · lizhaocst 主导','MIT 开源 · JavaScript/TypeScript','官网 code.memorax.net · 中英双语','npm @memorax/memorax-code · 0.1.5','Discord + 微信群社区','社区 PR 活跃：DSH 支持(#43)/Hermes 集成(#81)']
+    },
+    term:{
+      title:'记忆终端 <em>· 四层召回演示</em>',
+      desc:'终端演示一条"召回-记忆"闭环：新会话里输入 memorax-code recall，Agent 自动带回归档的工程经验（Coding Memory）、仓库结构（Repo Memory）、你偏好的协作方式（Personal Memory）和工作流程（Procedure Memory）。完成任务后再输入 remember，经验自动写回。',
+      code:'$ memorax-code recall\n◆ Recalled for this task:\n▸ Issue #42 root cause: race condition\n▸ Entry: src/index.ts · Arch: monorepo\n▸ Profile: zh-CN · explain concisely\n▸ Gate: run tests before PR\n$ memorax-code remember',
+      points:['召回：按当前任务检索最相关的少量记忆','写回：任务完成后后台提取可复用经验','四层记忆按边界分储，按需召回','Memory Viewer 本地可视化检索/写回状态']
+    },
+    stars:{
+      title:'468★ / 20 天 <em>· 增速信号</em>',
+      desc:'2026-08-01 创建，8 月 21 日仍在高频提交（当天 4+ 次 merge/commit），20 天 468★、34 forks、12 个 open issues。被 Trendshift 收录（trendshift.io/repositories/105791），npm 版本 0.1.5（2026-08-20 发布）——发布 3 周就跑出了 6 个 npm 版本，迭代非常快。',
+      points:['468★ / 34 forks / 12 open issues','created 2026-08-01 · pushed 2026-08-21','npm 6 个版本 · latest 0.1.5','Trendshift badge 挂在 README 顶部','MIT License']
+    },
+    agents:{
+      title:'4 个编码 Agent <em>· 一个共享记忆层</em>',
+      desc:'MemoraX Code 给四种主流编码 Agent 提供统一记忆接口：OpenAI Codex、Anthropic Claude Code、DeepSeek Harness (DSH)、OpenCode。安装后 setup 自动检测已装的 Agent 完成接入，无需账号（有账号可 --existing-account 绑定云端记忆）。',
+      points:['Codex · Claude Code · DSH · OpenCode','setup 自动检测 + 免账号接入','skill 入口：$memorax-code / /memorax-code','Memory Viewer 可在四者间切换查看','自动配额提醒已在 Codex/Claude/OpenCode 生效']
+    },
+    memlayers:{
+      title:'四层记忆边界 <em>· 各司其职</em>',
+      desc:'MemoraX Code 把记忆按"回答什么问题"分成四层，每层独立沉淀、按需召回：Coding Memory（工程经验）、Repo Memory（仓库知识）、Personal Memory（你的偏好）、Procedure Memory（流程标准）。',
+      points:['Coding Memory: 已验证修复/失败方案/设计理由/坑','Repo Memory: 架构地图/模块归属/入口/提交证据','Personal Memory: 语言/语气/解释深度/结果格式','Procedure Memory: 步骤/清单/前置条件/验收门禁','Personal+Procedure 存 .repo_memory/ 本地目录']
+    },
+    perf:{
+      title:'-48% 任务耗时 <em>· 官方实测案例</em>',
+      desc:'官网真实实验回放：同一个"连续修复三个与 UNSET 有关的问题"任务，开记忆 vs 关记忆对比——耗时 -48%，执行路径从 5 步减到 3 步。核心机制：开记忆时 Agent 不用重新摸索，直接调用已沉淀的工程经验。',
+      points:['耗时 -48%（官方真实实验回放）','执行路径 OFF 5 步 → ON 3 步','案例 01: Coding Memory 复用避免重试','案例 02: Procedure Memory 延续工作偏好','案例 03: Context Continuity 跨压缩保持设计意图']
+    },
+    fc1:{
+      title:'Coding Memory <em>· 工程经验</em>',
+      desc:'保存真实代码任务中形成、可跨任务复用的工程判断——不是记流水账，而是沉淀"对了/错了/为什么"的经验。',
+      points:['已验证的问题定位与修复经验','无效方案与失败原因','架构理由、实现边界与常见陷阱','测试策略、覆盖范围与回归要求','后台自动从完成的任务中提取写回']
+    },
+    fc2:{
+      title:'Repo Memory <em>· 仓库知识</em>',
+      desc:'保存代码仓库的结构化理解与持续演变的关键证据，Agent 进仓库不用再从头扫描。',
+      points:['仓库身份、技术栈与主要目录','模块职责、依赖关系与架构地图','关键入口、调用关系与定位路径','提交、评审与 Issue 演变证据','后台自动维护，按策略更新减少重复搜索']
+    },
+    fc3:{
+      title:'Personal + Procedure <em>· 偏好与流程</em>',
+      desc:'Personal Memory 记录你跨项目稳定的协作偏好；Procedure Memory 沉淀已验证的方法步骤。都存在当前仓库 .repo_memory/ 下。',
+      points:['Personal: 语言/语气/解释深度/交付形式','Personal: 工具/环境/授权边界/确认方式','Procedure: 任务步骤/前置条件/检查清单','Procedure: 完成标准/测试验证/发布门禁','重复内容不重复写入，冲突时更新并删除被取代的旧表述']
+    },
+    fc4:{
+      title:'新会话 <em>· 带记忆继续</em>',
+      desc:'新会话只需一句指令，MemoraX Code 会补回与当前任务相关的项目背景、历史决定和工作要求——从"已确认的位置"继续，无需重述背景。',
+      points:['新会话自动检索相关记忆','找回项目背景、历史决定、工作偏好','核对当前项目代码/文档/最新状态','从已确认的位置继续任务','可跨压缩：设计中途的决策理由不丢']
+    },
+    f_writeback:{
+      title:'后台记忆回写 <em>· 完成即沉淀</em>',
+      desc:'从已完成对话轮次中自动提取可复用知识，写入 Coding Memory——不需要你手动记，Agent 干活的过程本身就是记忆来源。',
+      points:['完成后台提取 + 存储','不用手动调用 skill 也会自动记录','只上传选中的指令与最终回复做提取','不上传完整对话痕迹或本地路径','MemoraX Console 可随时查看/编辑/删除']
+    },
+    f_pref:{
+      title:'偏好连续性 <em>· 你的工作方式</em>',
+      desc:'记录 User Profile 偏好（语言、语气、解释深度、结果格式），按配置节奏注入未来任务。默认提交风格、中文 feat 规范这类偏好自动延续。',
+      points:['语言/语气/解释深度偏好自动延续','按配置节奏注入未来任务','常用工具/工作环境偏好','授权边界与确认方式','跨 Session 延续个人工作偏好']
+    },
+    f_repo:{
+      title:'Repo Memory 自动维护 <em>· 少搜多干</em>',
+      desc:'后台自动整理仓库结构、入口点、历史证据，按政策更新——减少 Agent 反复搜索和总结的开销。',
+      points:['自动组织仓库结构/入口/历史证据','按策略更新避免过期','支持 Terminal 仓库浏览器（社区 PR #64）','可演进为 wiki 页带可配置历史（PR #39）','文档: docs/configuration.md #troubleshooting']
+    },
+    f_active:{
+      title:'主动记忆控制 <em>· 搜索与添加</em>',
+      desc:'通过内置 MemoraX Code skill 或 CLI 主动搜索/添加记忆——查询或所选内容会发给 MemoraX 处理。自动检索默认关闭，需显式开启，强调"你的记忆你做主"。',
+      points:['skill 入口: $memorax-code / /memorax-code','CLI 搜索与添加','自动检索默认关闭（显式开启）','配额提醒：add/search 用量提醒','显式 forget 只删指定条目，不误伤其他记忆']
+    },
+    p_npm:{
+      title:'npm @memorax/memorax-code <em>· 0.1.5</em>',
+      desc:'全局 npm 包，一条命令完成安装与连接。0.1.5 于 2026-08-20 发布，6 个版本迭代。',
+      code:'npm install -g @memorax/memorax-code\nmemorax-code setup',
+      points:['全局安装 + setup 自动检测 Agent','--existing-account 绑定已有账号','更新: memorax-code update','卸载: memorax-code uninstall（保留本地数据）','Node.js 20+（24 LTS 推荐）']
+    },
+    p_node:{
+      title:'Node 20+ <em>· Python 3 可选</em>',
+      desc:'需要 Node.js 20+（24 LTS 推荐）；Repo Memory 操作需要 Python 3。DSH 当前版本要求 Node ^22.19.0 || >=24.0.0。',
+      points:['Node.js 20+ 必需（24 LTS 推荐）','Python 3 用于 Repo Memory 操作','DSH: ^22.19.0 || >=24.0.0','macOS / Windows / Linux 三平台']
+    },
+    p_viewer:{
+      title:'Memory Viewer <em>· 本地可视化</em>',
+      desc:'本地 Memory Viewer (127.0.0.1:8787/memory-viewer) 汇总活动计数、检索与写回状态，可在 Codex/Claude Code/DSH/OpenCode 四者间切换查看。',
+      points:['127.0.0.1:8787/memory-viewer','四 Agent 切换查看','活动计数 / 检索 / 写回状态','本地数据，不上传云端']
+    },
+    p_hermes:{
+      title:'Hermes 集成 <em>· 进行中</em>',
+      desc:'GitHub issue #81（2026-08-18 开源中）：为 Hermes 加 shell-hook 记忆集成——意味着 MemoraX 正从四大编码 Agent 向更广泛的 Agent 生态扩展，Hermes 用户在列表上。',
+      points:['Issue #81: add Hermes shell-hook memory integration','znuaibot 发起 · open 状态','Hermes 也是 MemoraX 的潜在记忆接入对象','四 Agent 之外的新生态信号']
+    }
+  };
+
+  // 打开弹窗
+  function openSheet(key){
+    var d=DATA[key]; if(!d) return;
+    sheetTitle.innerHTML=d.title;
+    sheetDesc.textContent=d.desc;
+    if(d.code){sheetCode.style.display='block';sheetCode.textContent=d.code;}
+    else{sheetCode.style.display='none';}
+    sheetPoints.innerHTML=d.points.map(function(p){return '<div class="sheet-point">'+p+'</div>';}).join('');
+    overlay.classList.add('active');
+    if(navigator.vibrate) navigator.vibrate(15);
+  }
+  function closeSheet(){overlay.classList.remove('active');}
+
+  // 绑定所有 data-sheet 元素（addEventListener，零 inline onclick）
+  document.querySelectorAll('[data-sheet]').forEach(function(el){
+    el.addEventListener('click',function(){openSheet(this.getAttribute('data-sheet'));});
+  });
+  $('#sheetClose').addEventListener('click',closeSheet);
+  overlay.addEventListener('click',function(e){if(e.target===overlay) closeSheet();});
+  $('#stamp').addEventListener('click',function(){openSheet('story');});
+
+  // 分享（三段式，text 含链接不传 url 参数）
+  var shareBtn=$('#shareBtn');
+  function shareText(){
+    return 'MemoraX Code：给 Codex/Claude Code/DSH/OpenCode 共享的四层记忆层——跨会话不再从零开始，官方实测任务耗时 -48%。20天468★· MIT。\nhttps://mindresonance.online/youngsinsight/pages/memorax-code.html\n\n你可以用任何AI工具订阅我的博客文章：https://mindresonance.online/youngsinsight/subscribe.html';
+  }
+  function showToast(msg){
+    toast.textContent=msg;
+    toast.classList.add('show');
+    setTimeout(function(){toast.classList.remove('show');},2200);
+  }
+  shareBtn.addEventListener('click',function(){
+    var text=shareText();
+    if(navigator.share){
+      navigator.share({title:'MemoraX Code · AI 编码记忆层',text:text}).catch(function(){});
+    }else if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){showToast('已复制：介绍 + 链接 + 订阅推荐');});
+    }else{
+      var ta=document.createElement('textarea');
+      ta.value=text;document.body.appendChild(ta);ta.select();
+      try{document.execCommand('copy');showToast('已复制：介绍 + 链接 + 订阅推荐');}catch(e){}
+      document.body.removeChild(ta);
+    }
+  });
+
+  // 3D 视差倾斜（节流）
+  var tiltRaf=null;
+  function onTilt(x,y){
+    if(tiltRaf) return;
+    tiltRaf=requestAnimationFrame(function(){
+      var w=stage.clientWidth,h=stage.clientHeight;
+      var nx=(x/w)*2-1, ny=(y/h)*2-1;
+      stage.style.transform='rotateX('+(-ny*6)+'deg) rotateY('+(nx*6)+'deg)';
+      tiltRaf=null;
+    });
+  }
+  stage.addEventListener('mousemove',function(e){
+    var r=stage.getBoundingClientRect();
+    onTilt(e.clientX-r.left,e.clientY-r.top);
+  });
+  stage.addEventListener('touchmove',function(e){
+    var t=e.touches[0];if(!t)return;
+    var r=stage.getBoundingClientRect();
+    onTilt(t.clientX-r.left,t.clientY-r.top);
+  },{passive:true});
+  stage.addEventListener('mouseleave',function(){stage.style.transform='rotateX(0) rotateY(0)';});
+
+  // 彩蛋：stamp 连点 5 次 → 全层记忆召回
+  var stampCount=0;
+  $('#stamp').addEventListener('click',function(){
+    stampCount++;
+    if(stampCount>=5){
+      stampCount=0;
+      var spin=0, iv=setInterval(function(){
+        spin+=18;
+        var s=$('#stamp');
+        s.style.transform='rotate('+spin+'deg) scale(1.2)';
+        if(spin>=360){clearInterval(iv);s.style.transform='';}
+      },16);
+      showToast('◈ 四层记忆已召回：经验 + 仓库 + 偏好 + 流程');
+      if(navigator.vibrate) navigator.vibrate([20,40,20]);
+    }
+  });
+})();
 </script>
 </body>
 </html>
