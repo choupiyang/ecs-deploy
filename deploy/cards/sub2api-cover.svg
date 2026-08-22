@@ -82,7 +82,7 @@
   <!-- 数据条 -->
   <rect x="24" y="268" width="152" height="24" rx="12" fill="none" stroke="#22D3EE" stroke-width="1" opacity="0.5"/>
   <rect x="25" y="269" width="150" height="22" rx="11" fill="url(#bar)" opacity="0.14"/>
-  <text x="100" y="284" text-anchor="middle" font-family="monospace" font-size="8" fill="#67E8F9" letter-spacing="1">38.5K★ · 4 大订阅 · ≈1/10 成本</text>
+  <text x="100" y="284" text-anchor="middle" font-family="monospace" font-size="7" fill="#67E8F9" letter-spacing="1">38.5K★ · 4 上游 · ≈1/10 成本</text>
 
   <!-- 底部 -->
   <text x="100" y="318" text-anchor="middle" font-family="monospace" font-size="6" fill="#56688F" letter-spacing="2">MIND RESONANCE · 反共识观察</text>
