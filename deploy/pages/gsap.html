@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#10130A">
+<title>GSAP · 现代 Web 动效标准</title>
+<style>
+:root{
+  --bg:#10130A; --bg-card:#171B0E; --bg-2:#1A1F10;
+  --accent:#88CE02; --accent-light:#C6F04E; --accent-glow:rgba(136,206,2,.32);
+  --warn:#F5B700; --warn-glow:rgba(245,183,0,.25);
+  --cap1:#88CE02; --cap2:#4FC3F7; --cap3:#F5B700; --cap4:#F06292;
+  --text:#F2F7E6; --text-dim:#A8B892; --text-mute:#5C6B48;
+  --border:#2A341C;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:#070903;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Noto Sans SC',sans-serif;overflow:hidden;height:100%}
+
+/* ── 9:16 舞台 ── */
+.stage{
+  position:relative;aspect-ratio:9/16;
+  height:min(100svh, calc(100vw * 16 / 9));
+  width:min(100vw, calc(100svh * 9 / 16));
+  margin:0 auto;
+  background:radial-gradient(130% 90% at 50% 0%, #1B230C 0%, var(--bg) 55%);
+  overflow:hidden;perspective:1000px;transform-style:preserve-3d;
+  display:flex;flex-direction:column;user-select:none;
+  color:var(--text);
+}
+@supports not (height:100svh){.stage{height:min(100vh, calc(100vw * 16 / 9));}}
+.tilt-deep{transform:translateZ(-60px)}
+.tilt-mid{transform:translateZ(0)}
+
+/* ── Topbar ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 0;flex-shrink:0;z-index:5}
+.brand{font-family:monospace;font-size:10px;letter-spacing:.26em;color:var(--accent-light);display:flex;align-items:center;gap:8px}
+.brand .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent-glow);animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.share-btn{background:none;border:1px solid var(--border);color:var(--text-dim);width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;font-size:15px}
+.share-btn:active{transform:scale(.9);border-color:var(--accent);color:var(--accent)}
+
+/* ── Hero ── */
+.hero{display:flex;align-items:center;gap:12px;padding:14px 20px 8px;flex-shrink:0;z-index:4}
+.hero-side{flex:1;min-width:0}
+.meta-row{display:flex;justify-content:space-between;align-items:center;font-family:monospace;font-size:8px;letter-spacing:.14em;color:var(--text-mute);margin-bottom:8px}
+.vol{color:var(--accent);letter-spacing:.16em}
+.title-block{display:flex;align-items:flex-start;gap:9px}
+.gp-stamp{width:34px;height:34px;flex-shrink:0;border-radius:12px;background:linear-gradient(135deg,var(--accent),#4A7A00);color:#0B1203;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 14px var(--accent-glow);transition:transform .2s}
+.gp-stamp:active{transform:scale(.9) rotate(10deg)}
+.title-text{min-width:0}
+.gp-title{font-size:22px;font-weight:800;letter-spacing:.02em;color:var(--text);line-height:1.1}
+.gp-title .dot{color:var(--accent)}
+.superdesign-line{display:flex;align-items:center;gap:7px;margin-top:3px;flex-wrap:wrap}
+.superdesign{font-size:8.5px;color:var(--text-mute);letter-spacing:.06em;font-family:monospace}
+.v-tag{font-family:monospace;font-size:7.5px;padding:2px 6px;border-radius:4px;background:rgba(136,206,2,.12);border:1px solid rgba(136,206,2,.35);color:var(--accent-light)}
+.tagline{font-size:10.5px;color:var(--text-dim);line-height:1.6;margin-top:6px}
+.tagline em{color:var(--accent-light);font-style:normal;font-weight:600}
+.hint-badge{font-size:8.5px;color:var(--text-mute);margin-top:5px;letter-spacing:.04em}
+.hint-badge::before{content:'▶ ';color:var(--accent)}
+
+/* ── 3D 时间线曲线核心：弹性曲线 + 沿曲线运动的方块 + 进度环 ── */
+.tl3d{position:relative;flex-shrink:0;width:96px;height:96px;z-index:2;pointer-events:none;overflow:visible}
+.tl3d svg{position:absolute;inset:0;width:100%;height:100%}
+.tl3d .pathline{fill:none;stroke:rgba(136,206,2,.35);stroke-width:1.5;stroke-dasharray:4 4}
+.tl3d .pathmain{fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linecap:round;filter:drop-shadow(0 0 4px var(--accent-glow))}
+.tl3d .dot{
+  fill:var(--accent-light);
+  filter:drop-shadow(0 0 5px var(--accent-glow));
+}
+.tl3d .dot2{fill:var(--warn);filter:drop-shadow(0 0 5px var(--warn-glow))}
+.tl3d .ring{position:absolute;top:50%;left:50%;width:84px;height:84px;margin:-42px 0 0 -42px;border-radius:50%;border:1px solid rgba(136,206,2,.4);opacity:.7;animation:ringSpin 16s linear infinite}
+.tl3d .ring .rk{position:absolute;top:-3px;left:50%;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent-glow)}
+@keyframes ringSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+
+/* ── 核心展示区：性能对比 + 能力墙 ── */
+.showcase{flex:1 1 auto;display:flex;flex-direction:column;padding:0 20px 6px;min-height:0;z-index:3;position:relative}
+
+.compare{
+  display:flex;align-items:stretch;gap:7px;flex-shrink:0;cursor:pointer;
+  background:rgba(23,27,14,.9);border:1px solid var(--border);border-radius:12px;
+  padding:7px 9px;margin-bottom:7px;transition:border-color .2s;
+}
+.compare:active{border-color:var(--accent)}
+.cmp-col{flex:1;min-width:0;text-align:center;padding:3px 2px}
+.cmp-col.off .cmp-tag{color:#5C6B48}
+.cmp-col.off .cmp-num{color:#84975F}
+.cmp-col.on .cmp-tag{color:var(--accent-light)}
+.cmp-col.on .cmp-num{color:var(--accent-light)}
+.cmp-tag{font-size:7.5px;letter-spacing:.05em;font-family:monospace}
+.cmp-num{font-size:15px;font-weight:900;margin-top:1px;font-family:monospace}
+.cmp-sub{font-size:6.8px;color:var(--text-mute);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cmp-win{flex-shrink:0;text-align:center;padding:3px 6px;margin:-3px -2px;background:linear-gradient(150deg,rgba(136,206,2,.2),rgba(74,122,0,.1));border-radius:10px;border:1px solid rgba(136,206,2,.4);min-width:54px;justify-content:center;align-items:center;display:flex;flex-direction:column}
+.cw-num{font-size:18px;font-weight:900;color:var(--accent-light);font-family:monospace;line-height:1;text-shadow:0 0 16px var(--accent-glow)}
+.cw-lbl{font-size:6.8px;color:var(--text-dim);margin-top:3px}
+.cw-src{font-size:6px;color:var(--text-mute);margin-top:1px;font-family:monospace}
+
+/* 能力墙 */
+.capwall{
+  flex:1 1 auto;min-height:0;
+  display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:1fr;gap:7px;
+}
+.ccell{
+  background:var(--bg-2);border:1px solid var(--border);border-radius:11px;
+  padding:8px 10px;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;min-height:0;position:relative;overflow:hidden;
+}
+.ccell:active{transform:scale(.95);border-color:var(--mc)}
+.ccell::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--mc);opacity:.85;box-shadow:0 0 12px var(--mc)}
+.cc-head{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.cc-ico{font-size:11px;line-height:1}
+.cc-en{font-family:monospace;font-size:6.5px;letter-spacing:.14em;color:var(--mc);flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.cc-name{font-size:11px;font-weight:800;color:var(--text);margin-top:5px;flex-shrink:0}
+.cc-desc{font-size:7px;color:var(--text-mute);margin-top:2px;line-height:1.5;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* 迷你终端 */
+.term-mini{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0;
+  background:rgba(7,9,3,.9);border:1px solid var(--border);border-radius:10px;
+  padding:6px 12px;margin-top:7px;
+}
+.tm-cmd{font-family:'SF Mono',Consolas,monospace;font-size:8px;color:#DFF4BC;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.tm-cmd .pm{color:var(--accent-light)}
+.tm-tag{font-size:7px;color:var(--text-mute);flex-shrink:0;font-family:monospace}
+.showcase-hint{position:absolute;bottom:8px;right:22px;font-family:monospace;font-size:7px;color:var(--accent);opacity:.8;letter-spacing:.06em;animation:blink 2.5s ease-in-out infinite;z-index:4}
+
+/* ── Stats ── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;padding:0 20px 7px;flex-shrink:0;z-index:3}
+.stat-card{background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:7px 5px;text-align:center;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.stat-card:active{transform:scale(.94);border-color:var(--accent)}
+.stat-card::before{content:'';position:absolute;left:0;right:0;top:0;height:2px;background:var(--accent);opacity:.4}
+.stat-num{font-size:12.5px;font-weight:800;color:var(--text);font-family:monospace;letter-spacing:-.02em}
+.stat-num .accent{color:var(--accent)}
+.stat-label{font-size:7px;color:var(--text-mute);margin-top:3px;letter-spacing:.02em}
+
+/* ── Flow ── */
+.flow{padding:0 20px 7px;flex-shrink:0;z-index:3}
+.flow svg{display:block;width:100%;height:auto}
+.flow-node{cursor:pointer;transition:opacity .2s}
+.flow-node:hover{opacity:.75}
+.flow-node text{font-size:6.5px;fill:var(--text-dim);font-family:monospace}
+.flow-node .ic{fill:var(--bg-2);stroke:var(--accent);stroke-width:1}
+.flow-line{stroke:var(--border);stroke-width:1;fill:none}
+
+/* ── Features ── */
+.features{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;padding:0 20px 7px;flex-shrink:0;z-index:3}
+.feature{background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:7px 9px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:7px;min-width:0}
+.feature:active{transform:scale(.95);border-color:var(--accent)}
+.feature .ficon{width:21px;height:21px;flex-shrink:0;border-radius:6px;background:rgba(136,206,2,.1);display:flex;align-items:center;justify-content:center;font-size:10px}
+.feature .ftxt{min-width:0}
+.feature .ft{font-size:9.5px;color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.feature .fd{font-size:7px;color:var(--text-mute);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── Tech Pills ── */
+.tech{display:flex;flex-wrap:wrap;gap:5px;align-items:center;padding:0 20px 8px;flex-shrink:0;z-index:3;max-width:100%}
+.tech-pill{font-family:monospace;font-size:7.5px;color:var(--text-dim);border:1px solid var(--border);border-radius:20px;padding:2.5px 8px;cursor:pointer;transition:all .2s;background:var(--bg-2);max-width:100%;box-sizing:border-box}
+.tech-pill:active{transform:scale(.92);color:var(--accent);border-color:var(--accent)}
+
+/* ── Bottom Bar ── */
+.bottombar{display:flex;gap:9px;padding:0 20px 14px;flex-shrink:0;z-index:3}
+.bbtn{flex:1;text-align:center;padding:9px 8px;border-radius:10px;font-size:10px;font-weight:600;text-decoration:none;transition:all .2s;letter-spacing:.03em}
+.bbtn:active{transform:scale(.95)}
+.bbtn.gh{background:var(--bg-2);color:var(--text);border:1px solid var(--border)}
+.bbtn.gh:active{border-color:var(--accent)}
+.bbtn.site{background:linear-gradient(135deg,var(--accent),#4A7A00);color:#0B1203;box-shadow:0 4px 16px var(--accent-glow)}
+
+/* ── Overlay / Sheet ── */
+.overlay{position:absolute;inset:0;background:rgba(4,6,1,.65);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);opacity:0;pointer-events:none;transition:opacity .35s;z-index:20;display:flex;align-items:flex-end}
+.overlay.active{opacity:1;pointer-events:auto}
+.sheet{width:100%;background:var(--bg-card);border-top:1px solid var(--border);border-radius:20px 20px 0 0;padding:12px 22px 28px;transform:translateY(100%);transition:transform .45s cubic-bezier(.7,0,.3,1);max-height:78%;overflow-y:auto;position:relative}
+.overlay.active .sheet{transform:translateY(0)}
+.sheet-handle{width:36px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 14px}
+.sheet-title{font-size:15px;font-weight:800;color:var(--text);line-height:1.4;margin-bottom:9px}
+.sheet-title em{color:var(--accent);font-style:normal}
+.sheet-desc{font-size:11.5px;color:var(--text-dim);line-height:1.8;margin-bottom:11px}
+.sheet-points{display:flex;flex-direction:column;gap:7px;margin-bottom:12px}
+.sheet-point{font-size:10.5px;color:var(--text-dim);line-height:1.6;padding-left:13px;position:relative}
+.sheet-point::before{content:'▸';position:absolute;left:0;color:var(--accent)}
+.sheet-code{font-family:'SF Mono',Consolas,monospace;font-size:9px;line-height:1.7;color:#DFF4BC;background:#070A03;border:1px solid var(--border);border-radius:10px;padding:11px 13px;margin-bottom:12px;white-space:pre-wrap;word-break:break-all}
+.sheet-close{width:100%;padding:11px;border-radius:10px;border:none;cursor:pointer;background:linear-gradient(135deg,var(--accent),#4A7A00);color:#0B1203;font-size:11.5px;font-weight:800;letter-spacing:.2em;transition:transform .15s}
+.sheet-close:active{transform:scale(.97)}
+
+/* ── Toast ── */
+.toast{position:absolute;left:50%;bottom:86px;transform:translateX(-50%) translateY(20px);background:rgba(7,9,3,.95);border:1px solid var(--border);color:var(--text);font-size:10.5px;padding:9px 16px;border-radius:30px;opacity:0;transition:all .35s cubic-bezier(.7,0,.3,1);z-index:30;white-space:nowrap;pointer-events:none;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── 小屏压缩 ── */
+@media (max-height:730px){
+  .hero{padding-top:10px;gap:10px}
+  .tl3d{width:82px;height:82px}
+  .gp-title{font-size:19px}
+  .tagline{font-size:9.5px}
+  .stat-num{font-size:11px}
+  .feature .ft{font-size:8.5px}
+  .compare{padding:5px 8px}
+  .cmp-num{font-size:13px}
+  .cw-num{font-size:15px}
+  .ccell{padding:5px 8px}
+  .cc-name{font-size:9.5px;margin-top:3px}
+  .cc-desc{display:none}
+  .term-mini{padding:4px 10px}
+}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+
+  <!-- Topbar -->
+  <div class="topbar tilt-mid">
+    <div class="brand"><span class="dot"></span>GSAP</div>
+    <button class="share-btn" id="shareBtn" aria-label="分享">↗</button>
+  </div>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-side tilt-mid">
+      <div class="meta-row">
+        <span class="vol">ANIMATION PLATFORM</span>
+        <span>2026.08.22</span>
+      </div>
+      <div class="title-block">
+        <div class="gp-stamp" id="stamp">GS</div>
+        <div class="title-text">
+          <div class="gp-title">GSAP<span class="dot">.</span></div>
+          <div class="superdesign-line">
+            <span class="superdesign">GreenSock · 2008 起</span>
+            <span class="v-tag">12M+ 站点</span>
+          </div>
+        </div>
+      </div>
+      <div class="tagline"><em>Animate anything</em>——零依赖 JS 动效库，比 jQuery 快 20×，ScrollTrigger 是滚动动画行业标准，Webflow 加持后全插件免费</div>
+      <div class="hint-badge">轻触探索 · 拖动看 3D 视差</div>
+    </div>
+    <div class="tl3d tilt-deep" id="tl3d">
+      <svg viewBox="0 0 96 96">
+        <!-- 虚线参考网格 -->
+        <path class="pathline" d="M6 80 C 30 80, 30 30, 48 30 S 70 62, 90 62"/>
+        <!-- 弹性缓动主曲线：easeOutBack 样式 -->
+        <path class="pathmain" d="M8 82 C 26 82, 24 36, 40 36 C 54 36, 58 66, 76 66 L 88 66"/>
+        <!-- 沿曲线运动的方块 -->
+        <circle class="dot" r="4">
+          <animateMotion dur="2.6s" repeatCount="indefinite" rotate="auto"
+            path="M8 82 C 26 82, 24 36, 40 36 C 54 36, 58 66, 76 66 L 88 66"/>
+        </circle>
+        <circle class="dot2" r="3">
+          <animateMotion dur="2.6s" begin="1.3s" repeatCount="indefinite" rotate="auto"
+            path="M8 82 C 26 82, 24 36, 40 36 C 54 36, 58 66, 76 66 L 88 66"/>
+        </circle>
+      </svg>
+      <div class="ring"><span class="rk"></span></div>
+    </div>
+  </div>
+
+  <!-- 核心展示区：性能对比 + 能力墙 -->
+  <div class="showcase tilt-mid">
+    <!-- 性能对比条 -->
+    <div class="compare" id="compare" data-sheet="perf">
+      <div class="cmp-col off">
+        <div class="cmp-tag">jQuery 动画</div>
+        <div class="cmp-num">1×</div>
+        <div class="cmp-sub">传统逐帧 DOM 操作</div>
+      </div>
+      <div class="cmp-win">
+        <div class="cw-num">20×</div>
+        <div class="cw-lbl">性能差距</div>
+        <div class="cw-src">官方基准</div>
+      </div>
+      <div class="cmp-col on">
+        <div class="cmp-tag">GSAP</div>
+        <div class="cmp-num">20×</div>
+        <div class="cmp-sub">高速属性操纵器</div>
+      </div>
+    </div>
+
+    <!-- 能力墙 -->
+    <div class="capwall">
+      <div class="ccell" data-sheet="cap_scroll" style="--mc:#88CE02">
+        <div class="cc-head"><span class="cc-ico">📜</span><span class="cc-en">SCROLLTRIGGER</span></div>
+        <div class="cc-name">滚动触发动画</div>
+        <div class="cc-desc">行业标准滚动动画插件</div>
+      </div>
+      <div class="ccell" data-sheet="cap_tl" style="--mc:#4FC3F7">
+        <div class="cc-head"><span class="cc-ico">⏱️</span><span class="cc-en">TIMELINE</span></div>
+        <div class="cc-name">时间线编排</div>
+        <div class="cc-desc">精确序列+重叠控制</div>
+      </div>
+      <div class="ccell" data-sheet="cap_plugin" style="--mc:#F5B700">
+        <div class="cc-head"><span class="cc-ico">🧩</span><span class="cc-en">PLUGINS</span></div>
+        <div class="cc-name">15+ 插件生态</div>
+        <div class="cc-desc">SplitText/MorphSVG/Flip</div>
+      </div>
+      <div class="ccell" data-sheet="cap_react" style="--mc:#F06292">
+        <div class="cc-head"><span class="cc-ico">⚛️</span><span class="cc-en">REACT</span></div>
+        <div class="cc-name">@gsap/react</div>
+        <div class="cc-desc">useGSAP hook 无缝集成</div>
+      </div>
+    </div>
+
+    <!-- 迷你终端 -->
+    <div class="term-mini">
+      <span class="tm-cmd"><span class="pm">$</span>&nbsp;gsap.to('.box', {x: 400, ease: 'back.out'})<span class="blink"></span></span>
+      <span class="tm-tag">▶ 一行代码动起来</span>
+    </div>
+    <div class="showcase-hint">▲ 性能对比与能力墙均可点</div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats tilt-mid">
+    <div class="stat-card" data-sheet="stars">
+      <div class="stat-num"><span class="accent">27.9</span>K★</div>
+      <div class="stat-label">GitHub · 2012</div>
+    </div>
+    <div class="stat-card" data-sheet="sites">
+      <div class="stat-num"><span class="accent">12</span>M+</div>
+      <div class="stat-label">使用站点</div>
+    </div>
+    <div class="stat-card" data-sheet="zero">
+      <div class="stat-num"><span class="accent">0</span>依赖</div>
+      <div class="stat-label">框架无关</div>
+    </div>
+    <div class="stat-card" data-sheet="free">
+      <div class="stat-num"><span class="accent">100</span>%</div>
+      <div class="stat-label">免费 · Webflow</div>
+    </div>
+  </div>
+
+  <!-- Flow：属性 → 缓动 → 时间线 → 滚动 -->
+  <div class="flow tilt-mid">
+    <svg viewBox="0 0 330 42" fill="none">
+      <line class="flow-line" x1="46" y1="21" x2="92" y2="21"/>
+      <path d="M92 21 L100 17 V25 Z" fill="var(--accent)"/>
+      <line class="flow-line" x1="140" y1="21" x2="186" y2="21"/>
+      <path d="M186 21 L194 17 V25 Z" fill="var(--accent)"/>
+      <line class="flow-line" x1="234" y1="21" x2="280" y2="21"/>
+      <path d="M280 21 L288 17 V25 Z" fill="var(--accent)"/>
+      <g class="flow-node" data-sheet="fl1">
+        <rect class="ic" x="4" y="7" width="42" height="28" rx="8"/>
+        <text x="25" y="24" text-anchor="middle">属性操纵</text>
+      </g>
+      <g class="flow-node" data-sheet="fl2">
+        <rect class="ic" x="100" y="7" width="40" height="28" rx="8"/>
+        <text x="120" y="24" text-anchor="middle">缓动曲线</text>
+      </g>
+      <g class="flow-node" data-sheet="fl3">
+        <rect class="ic" x="196" y="7" width="38" height="28" rx="8"/>
+        <text x="215" y="24" text-anchor="middle">时间线</text>
+      </g>
+      <g class="flow-node" data-sheet="fl4">
+        <rect class="ic" x="284" y="7" width="42" height="28" rx="8" stroke="#F5B700"/>
+        <text x="305" y="24" text-anchor="middle">滚动/交互</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- Features -->
+  <div class="features tilt-mid">
+    <div class="feature" data-sheet="f_any">
+      <div class="ficon">✨</div>
+      <div class="ftxt"><div class="ft">Animate anything</div><div class="fd">CSS/SVG/canvas/React/WebGL</div></div>
+    </div>
+    <div class="feature" data-sheet="f_match">
+      <div class="ficon">📱</div>
+      <div class="ftxt"><div class="ft">matchMedia 响应式</div><div class="fd">无障碍友好</div></div>
+    </div>
+    <div class="feature" data-sheet="f_motion">
+      <div class="ficon">🛤️</div>
+      <div class="ftxt"><div class="ft">MotionPath</div><div class="fd">沿路径运动</div></div>
+    </div>
+    <div class="feature" data-sheet="f_util">
+      <div class="ficon">🛠️</div>
+      <div class="ftxt"><div class="ft">工具方法</div><div class="fd">interpolate/mapRange/snap</div></div>
+    </div>
+  </div>
+
+  <!-- Tech Pills -->
+  <div class="tech tilt-mid">
+    <span class="tech-pill" data-sheet="p_cdn">CDN · npm</span>
+    <span class="tech-pill" data-sheet="p_draggable">Draggable</span>
+    <span class="tech-pill" data-sheet="p_smoother">ScrollSmoother</span>
+    <span class="tech-pill" data-sheet="p_webflow">Webflow 收购</span>
+  </div>
+
+  <!-- Bottom Bar -->
+  <div class="bottombar tilt-mid">
+    <a class="bbtn gh" href="https://github.com/greensock/GSAP" target="_blank" rel="noopener">GitHub · 27.9K★</a>
+    <a class="bbtn site" href="https://gsap.com/" target="_blank" rel="noopener">官网 gsap.com</a>
+  </div>
+
+  <!-- Overlay / Sheet -->
+  <div class="overlay" id="overlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" id="sheetTitle"></div>
+      <div class="sheet-desc" id="sheetDesc"></div>
+      <div class="sheet-code" id="sheetCode" style="display:none"></div>
+      <div class="sheet-points" id="sheetPoints"></div>
+      <button class="sheet-close" id="sheetClose">CLOSE</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var $=function(s){return document.querySelector(s)};
+  var stage=$('#stage'), overlay=$('#overlay'), sheetTitle=$('#sheetTitle'),
+      sheetDesc=$('#sheetDesc'), sheetPoints=$('#sheetPoints'), sheetCode=$('#sheetCode'),
+      toast=$('#toast');
+
+  var DATA={
+    story:{
+      title:'14 年动画传奇 <em>· GSAP 的故事</em>',
+      desc:'GSAP 由 Jack Doyle 于 2008 年发起（GreenSock），2012 年开源上 GitHub。它从 Flash 时代一路活到现代 Web，解决了无数浏览器不一致问题。2024-10 被 Webflow 收购，2025-05 Webflow 宣布 GSAP 100% 免费（包括原本 Club 会员专属的 SplitText/MorphSVG 等全部插件）——HN 热帖 136↑。如今 27.9K★，12M+ 站点使用，几乎所有主流广告网络都减免它的体积配额。',
+      points:['2008 创立 · 2012 开源 · 2026 仍活跃','Jack Doyle 创造 · GreenSock 公司','2024-10 Webflow 收购','2025-05 全插件免费（HN 136↑/42评）','27.9K★ / 2.1K forks / 2012-09 创建','12M+ 网站 · 广告网络豁免体积配额']
+    },
+    perf:{
+      title:'20× 性能 <em>· 为什么比 jQuery 快</em>',
+      desc:'GSAP 本质是"高速属性操纵器"：内部用 RAF 驱动、直接写 transform（GPU 合成层）、缓存属性查找、避免布局抖动。README 官方基准：比 jQuery 快 20×。动画"just work"——它处理了无数浏览器不一致。',
+      points:['官方基准：比 jQuery 快 20×','RAF 驱动 + 直接写 transform','GPU 合成加速','精确到 0.001s 的时序控制','零依赖、框架无关','12M+ 网站生产验证']
+    },
+    cap_scroll:{
+      title:'ScrollTrigger <em>· 滚动动画行业标准</em>',
+      desc:'GSAP 最著名的插件，用最小代码实现令人惊艳的滚动驱动动画：元素进入视口触发、滚动进度驱动、固定/擦除/视差效果。滚动动画领域的"事实标准"。',
+      code:'gsap.to(".panel", {\n  scrollTrigger: {\n    trigger: ".panel",\n    start: "top center",\n    end: "bottom top",\n    scrub: true\n  },\n  x: 400\n});',
+      points:['滚动触发：start/end 精确控制','scrub: 滚动进度驱动动画','固定/视差/擦除效果','配套 ScrollSmoother 平滑滚动','移动端触摸事件标准化']
+    },
+    cap_tl:{
+      title:'Timeline <em>· 精确序列编排</em>',
+      desc:'gsap.timeline() 让你像导演一样编排多个动画：精确 sequencing、重叠控制（position 参数）、嵌套时间线。这是 GSAP 相对单动画库的核心优势。',
+      code:'const tl = gsap.timeline();\ntl.to(".a", {x: 100, duration: 1})\n  .to(".b", {y: 200, duration: 1}, "<")\n  .to(".c", {opacity: 1}, "-=0.5");',
+      points:['精确 sequencing + position 控制','重叠：相对前一动画起止','嵌套时间线','时间缩放/暂停/倒放','回调：onStart/onComplete/onUpdate']
+    },
+    cap_plugin:{
+      title:'15+ 插件 <em>· 高级效果生态</em>',
+      desc:'从减震动画到文本分裂，插件扩展核心能力：SplitText（文本拆字）、MorphSVG（SVG 形变）、Flip（FLIP 技术动画）、MotionPath（沿路径）、Draggable（拖拽）、Observer（事件归一化）。Webflow 收购后全部免费。',
+      points:['SplitText: 文本拆字动画','MorphSVG: SVG 平滑形变','Flip: FLIP 技术布局动画','MotionPath: 沿贝塞尔路径运动','Draggable: 拖拽交互','Observer: 跨设备事件归一化']
+    },
+    cap_react:{
+      title:'@gsap/react <em>· useGSAP hook</em>',
+      desc:'官方 React 集成包：useGSAP() 是 useEffect/useLayoutEffect 的即插即用替代，自动处理清理（cleanup），避免 React StrictMode 下的重复动画问题。',
+      code:'import { useGSAP } from "@gsap/react";\nuseGSAP(() => {\n  gsap.to(".box", { x: 100 });\n}, { scope: containerRef });',
+      points:['useGSAP hook 替代 useEffect','自动 cleanup 防泄漏','React StrictMode 安全','scope 限定选择器范围','Nuxt/Vue/Svelte 也有方案']
+    },
+    stars:{
+      title:'27.9K★ / 14 年 <em>· 长青项目</em>',
+      desc:'2012-09-21 开源，14 年持续活跃（2026-04 还在 push）。27.9K★、2.1K forks，仅 5 个 open issues——维护质量极高。从 Flash 时代转型 HTML5，扛过了 jQuery→React 两个时代。',
+      points:['27.9K★ / 2.1K forks','created 2012-09-21 · 2026-04 仍 push','仅 5 个 open issues','JavaScript · master 分支','月经线性：v3.15+ 稳定更新']
+    },
+    sites:{
+      title:'12M+ 站点 <em>· 无处不在</em>',
+      desc:'官方声称超过 1200 万站点使用 GSAP。所有主要广告网络都把 GSAP 排除在文件大小计算之外，且多数有自建 CDN 分发——说明它是 Web 基础设施级别的存在。',
+      points:['12M+ 网站在用','主要广告网络豁免体积计算','广告网自建 CDN 分发','苹果/三星/迪士尼等知名站点案例','Webflow 全家桶内置']
+    },
+    zero:{
+      title:'零依赖 <em>· 框架无关</em>',
+      desc:'GSAP 核心零依赖：不要求 jQuery（v1 时代曾依赖，v2 起移除），不绑定框架。CSS/SVG/canvas/WebGL、颜色/字符串/路径/普通对象都能动画。',
+      points:['核心零依赖','不依赖 jQuery（v2 起移除）','React/Vue/Svelte 均可','CSS/SVG/canvas/WebGL 全支持','颜色、字符串、路径、对象都能动']
+    },
+    free:{
+      title:'100% 免费 <em>· Webflow 加持</em>',
+      desc:'2025-05 起，Webflow 让 GSAP 全部插件免费——包括原 Club 会员专属的 SplitText、MorphSVG 等，商用也免费。HN 热帖"Webflow makes GSAP 100% free"136 赞 42 评，社区反应热烈。',
+      points:['2025-05-02 Webflow 宣布全免费','SplitText/MorphSVG 原付费插件开放','商用免费','HN 热帖 136↑/42评','标准许可：https://gsap.com/standard-license']
+    },
+    f_any:{
+      title:'Animate anything <em>· 什么都能动</em>',
+      desc:'GSAP 的口号。核心能力：CSS 属性、SVG attributes、canvas、React/Vue 组件、WebGL、颜色、字符串、motion path、普通 JS 对象——只要 JS 能碰到，它就能动。',
+      points:['CSS 属性 + 变量','SVG attributes + 形变','canvas / WebGL','React / Vue / Svelte 组件','颜色/字符串/对象插值','motion path 沿路径']
+    },
+    f_match:{
+      title:'matchMedia <em>· 响应式动画</em>',
+      desc:'gsap.matchMedia() 让动画按视口/偏好响应：桌面一套、移动一套、prefers-reduced-motion 无障碍降级，一套代码多套适配。',
+      code:'gsap.matchMedia().add("(min-width: 768px)", () => {\n  gsap.to(".hero", { x: 300 });\n  return () => {}; // cleanup\n});',
+      points:['视口断点动画','prefers-reduced-motion 无障碍','进入/离开视口自动切换','cleanup 防泄漏','响应式 + 可访问友好']
+    },
+    f_motion:{
+      title:'MotionPath <em>· 沿路径飞行</em>',
+      desc:'MotionPathPlugin 让元素沿任意 SVG 路径/贝塞尔曲线运动，支持 align（对齐路径）、拖拽时实时更新路径——用在动画演示、图标轨迹、引导动画。',
+      points:['沿 SVG 路径运动','贝塞尔曲线自定义','align: 元素对齐路径','拖动路径实时重算','方向/旋转/起始偏移控制']
+    },
+    f_util:{
+      title:'工具方法 <em>· 插值/映射/吸附</em>',
+      desc:'核心自带实用方法：interpolate()（任意值插值）、mapRange()（值域映射）、snap()（吸附）、clamp()、distribute()——供动画参数计算与数据可视化。',
+      code:'gsap.utils.mapRange(0, 100, 0, 1, 50); // 0.5\ngsap.utils.snap(25, 80); // 75',
+      points:['interpolate: 通用插值器','mapRange: 值域线性映射','snap: 步进吸附','clamp: 钳制范围','distribute: 分布式计算']
+    },
+    fl1:{
+      title:'Step 1 · <em>属性操纵</em>',
+      desc:'GSAP 核心是高速属性操纵器：在时间上精确更新任意属性值，直接写 transform/opacity 等 GPU 加速属性。',
+      points:['RAF 驱动','直接写 transform 合成层','缓存属性查找','避免布局抖动','0.001s 级时序精度']
+    },
+    fl2:{
+      title:'Step 2 · <em>缓动曲线</em>',
+      desc:'内置 30+ 缓动函数（back/elastic/bounce/power），支持 CustomEase 绘制任意贝塞尔缓动曲线——动画的灵魂在缓动。',
+      code:'gsap.to(".x", {x: 400, ease: "elastic.out(1, 0.3)"});',
+      points:['30+ 内置缓动','back/elastic/bounce/power 系列','CustomEase 任意贝塞尔','ease 可视化器（gsap.com/docs/v3/Eases）','easeOutBack 弹性回弹']
+    },
+    fl3:{
+      title:'Step 3 · <em>时间线编排</em>',
+      desc:'timeline() 把多个动画排列成精确序列，position 参数控制相对时间点，可嵌套、可缩放、可控制播放。',
+      points:['精确 sequencing','position: "<" / "-=0.5" 相对控制','嵌套时间线','tl.timeScale() 整体调速','onComplete 回调']
+    },
+    fl4:{
+      title:'Step 4 · <em>滚动与交互</em>',
+      desc:'ScrollTrigger 把动画绑定滚动进度，Draggable 加交互拖拽，Observer 归一化事件——让动画与用户行为联动。',
+      points:['ScrollTrigger 滚动驱动','Draggable 拖拽物理','Observer 滚轮/触摸归一','matchMedia 响应式','prefers-reduced-motion 降级']
+    },
+    p_cdn:{
+      title:'CDN / npm <em>· 秒级接入</em>',
+      desc:'CDN 一行 script 引入；npm 安装后 ES module 导入 + registerPlugin。jsdelivr 有 GSAP 专属页。',
+      code:'<script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/gsap.min.js"><\/script>\n\nnpm install gsap\nimport gsap from "gsap";',
+      points:['CDN: jsdelivr 一行引入','npm: gsap 包','ES modules + UMD 双格式','@gsap/react 独立包','版本 3.15+']
+    },
+    p_draggable:{
+      title:'Draggable <em>· 拖拽交互</em>',
+      desc:'拖拽插件：元素跟随指针/触摸，支持惯性、吸附、边界限制、旋转拖动——Slider/相册/游戏交互常用。',
+      code:'Draggable.create(".drag", { type: "x,y", bounds: ".stage", inertia: true });',
+      points:['x/y/rotation 拖拽','inertia 惯性','bounds 边界','snap 吸附','mouse + touch 全支持']
+    },
+    p_smoother:{
+      title:'ScrollSmoother <em>· 丝滑滚动</em>',
+      desc:'滚动平滑插件：给页面加黄油般顺滑的滚动，配合 ScrollTrigger 自动结合，现代高端站标配。',
+      points:['页面级滚动平滑','与 ScrollTrigger 自动协作','视差分层','移动端禁用降级']
+    },
+    p_webflow:{
+      title:'Webflow 收购 <em>· 2024-10</em>',
+      desc:'2024-10 GSAP 被 Webflow 收购（HN 12↑），2025-05 Webflow 宣布 GSAP 全插件免费（HN 136↑/42评）。Webflow 视觉开发平台内置 GSAP，让数百万无代码用户也用上了它。',
+      points:['2024-10 被 Webflow 收购','2025-05 全插件免费公告','Webflow 内置 GSAP 引擎','开源仓库保留 MIT 生态','@gsap/react 官方维护']
+    }
+  };
+
+  function openSheet(key){
+    var d=DATA[key]; if(!d) return;
+    sheetTitle.innerHTML=d.title;
+    sheetDesc.textContent=d.desc;
+    if(d.code){sheetCode.style.display='block';sheetCode.textContent=d.code;}
+    else{sheetCode.style.display='none';}
+    sheetPoints.innerHTML=d.points.map(function(p){return '<div class="sheet-point">'+p+'</div>';}).join('');
+    overlay.classList.add('active');
+    if(navigator.vibrate) navigator.vibrate(15);
+  }
+  function closeSheet(){overlay.classList.remove('active');}
+
+  document.querySelectorAll('[data-sheet]').forEach(function(el){
+    el.addEventListener('click',function(){openSheet(this.getAttribute('data-sheet'));});
+  });
+  $('#sheetClose').addEventListener('click',closeSheet);
+  overlay.addEventListener('click',function(e){if(e.target===overlay) closeSheet();});
+  $('#stamp').addEventListener('click',function(){openSheet('story');});
+
+  var shareBtn=$('#shareBtn');
+  function shareText(){
+    return 'GSAP：骨架动画之王——零依赖 JS 动效库，比 jQuery 快 20×，ScrollTrigger 滚动动画行业标准，Webflow 加持后全插件免费。12M+ 站点·27.9K★·14年长青。\nhttps://mindresonance.online/youngsinsight/pages/gsap.html\n\n你可以用任何AI工具订阅我的博客文章：https://mindresonance.online/youngsinsight/subscribe.html';
+  }
+  function showToast(msg){
+    toast.textContent=msg;
+    toast.classList.add('show');
+    setTimeout(function(){toast.classList.remove('show');},2200);
+  }
+  shareBtn.addEventListener('click',function(){
+    var text=shareText();
+    if(navigator.share){
+      navigator.share({title:'GSAP · 现代 Web 动效标准',text:text}).catch(function(){});
+    }else if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){showToast('已复制：介绍 + 链接 + 订阅推荐');});
+    }else{
+      var ta=document.createElement('textarea');
+      ta.value=text;document.body.appendChild(ta);ta.select();
+      try{document.execCommand('copy');showToast('已复制：介绍 + 链接 + 订阅推荐');}catch(e){}
+      document.body.removeChild(ta);
+    }
+  });
+
+  var tiltRaf=null;
+  function onTilt(x,y){
+    if(tiltRaf) return;
+    tiltRaf=requestAnimationFrame(function(){
+      var w=stage.clientWidth,h=stage.clientHeight;
+      var nx=(x/w)*2-1, ny=(y/h)*2-1;
+      stage.style.transform='rotateX('+(-ny*6)+'deg) rotateY('+(nx*6)+'deg)';
+      tiltRaf=null;
+    });
+  }
+  stage.addEventListener('mousemove',function(e){
+    var r=stage.getBoundingClientRect();
+    onTilt(e.clientX-r.left,e.clientY-r.top);
+  });
+  stage.addEventListener('touchmove',function(e){
+    var t=e.touches[0];if(!t)return;
+    var r=stage.getBoundingClientRect();
+    onTilt(t.clientX-r.left,t.clientY-r.top);
+  },{passive:true});
+  stage.addEventListener('mouseleave',function(){stage.style.transform='rotateX(0) rotateY(0)';});
+
+  var stampCount=0;
+  $('#stamp').addEventListener('click',function(){
+    stampCount++;
+    if(stampCount>=5){
+      stampCount=0;
+      var spin=0, iv=setInterval(function(){
+        spin+=18;
+        var s=$('#stamp');
+        s.style.transform='rotate('+spin+'deg) scale(1.2)';
+        if(spin>=360){clearInterval(iv);s.style.transform='';}
+      },16);
+      showToast('▶ 动画已播放：elastic.out(1, 0.3)');
+      if(navigator.vibrate) navigator.vibrate([20,40,20]);
+    }
+  });
+})();
+</script>
+</body>
+</html>

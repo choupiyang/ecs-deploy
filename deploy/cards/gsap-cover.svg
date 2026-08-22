@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="356" viewBox="0 0 200 356">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1B230C"/>
+      <stop offset="1" stop-color="#0B0F05"/>
+    </linearGradient>
+    <radialGradient id="core" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#C6F04E"/>
+      <stop offset="55%" stop-color="#88CE02"/>
+      <stop offset="100%" stop-color="#4A7A00"/>
+    </radialGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="200" height="356" fill="url(#bg)"/>
+
+  <!-- 网格 -->
+  <g stroke="#2A341C" stroke-width="0.5" opacity="0.5">
+    <path d="M0 40 H200 M0 80 H200 M0 120 H200 M0 160 H200 M0 200 H200 M0 240 H200 M0 280 H200 M0 320 H200"/>
+    <path d="M40 0 V356 M80 0 V356 M120 0 V356 M160 0 V356"/>
+  </g>
+
+  <!-- 顶部品牌栏 -->
+  <line x1="16" y1="33" x2="184" y2="33" stroke="#88CE02" stroke-width="1" opacity="0.35"/>
+  <text x="16" y="24" font-family="monospace" font-size="7" fill="#C6F04E" letter-spacing="2.5">GSAP</text>
+  <text x="184" y="24" font-family="monospace" font-size="6.5" fill="#5C6B48" text-anchor="end" letter-spacing="1">27.9K ★</text>
+
+  <!-- 缓动曲线核心：easeOutBack 样式 + 沿曲线运动方块 + 时间环 -->
+  <g transform="translate(100,118)">
+    <!-- 参考网格 -->
+    <g stroke="#2A341C" stroke-width="0.6" opacity="0.7">
+      <line x1="-46" y1="30" x2="46" y2="30"/>
+      <line x1="-46" y1="15" x2="46" y2="15"/>
+      <line x1="-46" y1="0" x2="46" y2="0"/>
+      <line x1="-46" y1="-15" x2="46" y2="-15"/>
+      <line x1="-46" y1="-30" x2="46" y2="-30"/>
+      <line x1="-38" y1="-36" x2="-38" y2="36"/>
+      <line x1="0" y1="-36" x2="0" y2="36"/>
+      <line x1="38" y1="-36" x2="38" y2="36"/>
+    </g>
+    <!-- 虚线路径 -->
+    <path d="M-42 32 C -16 32, -14 -8, 0 -8 S 20 26, 42 26" fill="none" stroke="#88CE02" stroke-width="1" stroke-dasharray="3 3" opacity="0.35"/>
+    <!-- 主曲线 easeOutBack -->
+    <path id="easeCurve" d="M-44 32 C -18 32, -16 -10, 0 -10 C 14 -10, 20 26, 44 26" fill="none" stroke="#C6F04E" stroke-width="2.2" stroke-linecap="round" filter="url(#glow)"/>
+    <!-- 沿曲线运动的方块 -->
+    <g>
+      <circle r="4.5" fill="#88CE02" filter="url(#glow)">
+        <animateMotion dur="2.8s" repeatCount="indefinite" rotate="auto" path="M-44 32 C -18 32, -16 -10, 0 -10 C 14 -10, 20 26, 44 26"/>
+      </circle>
+    </g>
+    <g>
+      <circle r="3.2" fill="#F5B700" filter="url(#glow)" opacity="0">
+        <animate attributeName="opacity" values="0;1;1;0" dur="2.8s" begin="1.4s" repeatCount="indefinite"/>
+        <animateMotion dur="2.8s" begin="1.4s" repeatCount="indefinite" rotate="auto" path="M-44 32 C -18 32, -16 -10, 0 -10 C 14 -10, 20 26, 44 26"/>
+      </circle>
+    </g>
+    <!-- 时间进度环 -->
+    <circle cx="0" cy="-44" r="5.5" fill="none" stroke="#88CE02" stroke-width="1.2" opacity="0.7">
+      <animate attributeName="stroke-dashoffset" values="0;-34.5" dur="2.8s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="2" fill="#C6F04E" filter="url(#glow)">
+      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="2.8s" repeatCount="indefinite"/>
+      <animateMotion dur="2.8s" repeatCount="indefinite" path="M0,-38 A38,38 0 1,1 -0.1,-38 Z"/>
+    </circle>
+  </g>
+
+  <!-- 标题区 -->
+  <text x="100" y="238" text-anchor="middle" font-family="Georgia,serif" font-size="24" font-weight="bold" fill="#F2F7E6">GSAP</text>
+  <text x="100" y="254" text-anchor="middle" font-family="monospace" font-size="7" fill="#88CE02" letter-spacing="1.8">ANIMATE ANYTHING</text>
+  <text x="100" y="270" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#A8B892">零依赖 · 快 20× · ScrollTrigger 标杆</text>
+
+  <!-- 数据条 -->
+  <rect x="24" y="290" width="152" height="24" rx="12" fill="none" stroke="#88CE02" stroke-width="1" opacity="0.5"/>
+  <rect x="25" y="291" width="150" height="22" rx="11" fill="#88CE02" opacity="0.12"/>
+  <text x="100" y="306" text-anchor="middle" font-family="monospace" font-size="8" fill="#C6F04E" letter-spacing="1">27.9K★ · 12M+ 站点 · 100% 免费</text>
+
+  <!-- 底部 -->
+  <text x="100" y="340" text-anchor="middle" font-family="monospace" font-size="6" fill="#5C6B48" letter-spacing="2">MIND RESONANCE · 反共识观察</text>
+</svg>
