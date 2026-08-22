@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="356" viewBox="0 0 200 356">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0B1428"/>
+      <stop offset="1" stop-color="#060A16"/>
+    </linearGradient>
+    <radialGradient id="core" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#A5F3FC"/>
+      <stop offset="55%" stop-color="#22D3EE"/>
+      <stop offset="100%" stop-color="#0E7490"/>
+    </radialGradient>
+    <linearGradient id="bar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#22D3EE"/>
+      <stop offset="1" stop-color="#0891B2"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="200" height="356" fill="url(#bg)"/>
+
+  <!-- 网格 -->
+  <g stroke="#1B2A52" stroke-width="0.5" opacity="0.5">
+    <path d="M0 40 H200 M0 80 H200 M0 120 H200 M0 160 H200 M0 200 H200 M0 240 H200 M0 280 H200 M0 320 H200"/>
+    <path d="M40 0 V356 M80 0 V356 M120 0 V356 M160 0 V356"/>
+  </g>
+
+  <!-- 顶部品牌栏 -->
+  <line x1="16" y1="33" x2="184" y2="33" stroke="#22D3EE" stroke-width="1" opacity="0.35"/>
+  <text x="16" y="24" font-family="monospace" font-size="7" fill="#67E8F9" letter-spacing="2.5">SUB2API</text>
+  <text x="184" y="24" font-family="monospace" font-size="6.5" fill="#56688F" text-anchor="end" letter-spacing="1">38.5K ★</text>
+
+  <!-- 订阅池核心：中心立方 + 双层轨道 + 4 账号节点 + 请求粒子 -->
+  <g transform="translate(100,118)">
+    <!-- 轨道 -->
+    <ellipse rx="52" ry="19" fill="none" stroke="#1D3A66" stroke-width="1" transform="rotate(-12)"/>
+    <ellipse rx="38" ry="14" fill="none" stroke="#1D3A66" stroke-width="1" transform="rotate(14)"/>
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="14s" repeatCount="indefinite"/>
+      <ellipse rx="52" ry="19" fill="none" stroke="#22D3EE" stroke-width="1" opacity="0.55" transform="rotate(-12)"/>
+      <circle r="3.2" fill="#22D3EE">
+        <animateMotion dur="8s" repeatCount="indefinite" path="M-52,0 A52,19 -12 1,1 -51.9,-0.1 Z"/>
+      </circle>
+    </g>
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="360 0 0" to="0 0 0" dur="11s" repeatCount="indefinite"/>
+      <ellipse rx="38" ry="14" fill="none" stroke="#A78BFA" stroke-width="1" opacity="0.5" transform="rotate(14)"/>
+      <circle r="2.8" fill="#A78BFA">
+        <animateMotion dur="6.5s" repeatCount="indefinite" path="M-38,0 A38,14 14 1,1 -37.9,-0.1 Z"/>
+      </circle>
+    </g>
+    <!-- 中心核心 -->
+    <rect x="-15" y="-15" width="30" height="30" rx="8" fill="url(#core)" filter="url(#glow)">
+      <animate attributeName="opacity" values="1;0.75;1" dur="2.4s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="-8" y="-8" width="16" height="16" rx="4" fill="#E0FBFF" opacity="0.9">
+      <animate attributeName="transform" type="scale" values="1;1.15;1" dur="2.4s" repeatCount="indefinite" additive="sum"/>
+      <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="120 0 0" dur="6s" repeatCount="indefinite" additive="sum"/>
+    </rect>
+    <!-- 账号节点 -->
+    <circle r="2.6" fill="#FBBF24"><animateMotion dur="5.5s" repeatCount="indefinite" path="M0,-46 A46,46 0 1,1 -0.1,-46 Z"/></circle>
+    <circle r="2.6" fill="#F472B6"><animateMotion dur="6.5s" repeatCount="indefinite" path="M0,46 A46,46 0 1,1 0.1,46 Z"/></circle>
+    <circle r="2.2" fill="#E0FBFF" opacity="0">
+      <animate attributeName="opacity" values="0;1;1;0;0" dur="3.2s" repeatCount="indefinite"/>
+      <animateMotion dur="3.2s" repeatCount="indefinite" path="M0,-44 L0,-8"/>
+      <animate attributeName="r" values="1.6;2.6;3.2" dur="3.2s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="2.2" fill="#E0FBFF" opacity="0">
+      <animate attributeName="opacity" values="0;0;1;1;0" dur="3.2s" begin="1.6s" repeatCount="indefinite"/>
+      <animateMotion dur="3.2s" begin="1.6s" repeatCount="indefinite" path="M44,10 L18,4"/>
+      <animate attributeName="r" values="1.6;2.6;3.2" dur="3.2s" begin="1.6s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- 标题区（Semantica 布局：y236 标题 + 252 副标题 + 268 描述） -->
+  <text x="100" y="236" text-anchor="middle" font-family="Georgia,serif" font-size="24" font-weight="bold" fill="#E8F2FF">Sub2API</text>
+  <text x="100" y="252" text-anchor="middle" font-family="monospace" font-size="7" fill="#22D3EE" letter-spacing="2">SUBSCRIPTION → API</text>
+  <text x="100" y="268" text-anchor="middle" font-family="sans-serif" font-size="7.5" fill="#93A8CC">订阅池化 · 拼车省钱 · 开源中转</text>
+
+  <!-- 数据条 -->
+  <rect x="24" y="288" width="152" height="24" rx="12" fill="none" stroke="#22D3EE" stroke-width="1" opacity="0.5"/>
+  <rect x="25" y="289" width="150" height="22" rx="11" fill="url(#bar)" opacity="0.14"/>
+  <text x="100" y="304" text-anchor="middle" font-family="monospace" font-size="8" fill="#67E8F9" letter-spacing="1">38.5K★ · 4 大订阅 · ≈1/10 成本</text>
+
+  <!-- 底部 -->
+  <text x="100" y="338" text-anchor="middle" font-family="monospace" font-size="6" fill="#56688F" letter-spacing="2">MIND RESONANCE · 反共识观察</text>
+</svg>
